@@ -7,7 +7,7 @@ import ThreemaMacros
 import UIKit
 @preconcurrency import WebKit
 
-@objc class SettingsWebViewViewController: ThemedViewController {
+class SettingsWebViewViewController: ThemedViewController {
     
     // MARK: - Public property
 

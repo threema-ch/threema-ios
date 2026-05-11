@@ -261,7 +261,7 @@ final class GroupCallContextTests: XCTestCase {
                 
                 XCTAssertEqual(mockDataChannelCtx.getNumberOfSentMessages(), 1)
                 
-                var helloMessage = Groupcall_ParticipantToParticipant.Handshake.Hello()
+                var helloMessage = GroupCall_ParticipantToParticipant.Handshake.Hello()
                 helloMessage.identity = "ECHOECHO"
                 helloMessage.nickname = "ECHOECHO"
                 // The random bytes of the crypto mock also returns 0x01 thus we have to use something different here
@@ -270,7 +270,7 @@ final class GroupCallContextTests: XCTestCase {
             
                 let nonce = Data(repeating: 0x03, count: 24)
             
-                var handshakeHello = Groupcall_ParticipantToParticipant.Handshake.HelloEnvelope()
+                var handshakeHello = GroupCall_ParticipantToParticipant.Handshake.HelloEnvelope()
                 handshakeHello.hello = helloMessage
                 handshakeHello.padding = nonce
             
@@ -281,7 +281,7 @@ final class GroupCallContextTests: XCTestCase {
                 var data = nonce
                 data.append(encrypted)
             
-                var envelope = Groupcall_ParticipantToParticipant.OuterEnvelope()
+                var envelope = GroupCall_ParticipantToParticipant.OuterEnvelope()
                 envelope.encryptedData = data
                 envelope.receiver = 0
                 envelope.sender = 1

@@ -204,18 +204,19 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
                 return
             }
             
-            DDLogVerbose("[GroupCall] Group Call Join Button tapped")
+            DDLogInfo("[GroupCall] Group Call Join Button tapped")
             GlobalGroupCallManagerSingleton.shared.startGroupCall(
                 in: group,
                 intent: .join
             )
         }
         
-        var buttonConfig = UIButton.Configuration.bordered()
+        var buttonConfig = UIButton.Configuration.borderedProminent()
         let imageConfig = UIImage.SymbolConfiguration(scale: .small)
         buttonConfig.title = #localize("group_call_join_button_title")
         buttonConfig.buttonSize = .small
         buttonConfig.cornerStyle = .capsule
+        buttonConfig.baseForegroundColor = Colors.textProminentButton
 
         let button = UIButton(configuration: buttonConfig, primaryAction: action)
         
@@ -912,6 +913,12 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
 
         var accessibilityText = "\(nameLabel.text ?? ""). "
 
+        if !conversation.isGroup, let contact = conversation.contact,
+           let status: WorkAvailabilityStatus = Contact(contactEntity: contact).workAvailabilityStatus,
+           let label = status.accessibilityLabelWithoutText {
+            accessibilityText += "\(label); "
+        }
+        
         var pushSetting = getPushSetting()
         if pushSetting.type == .on,
            pushSetting.muted {

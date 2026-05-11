@@ -69,4 +69,8 @@ extension UIColor {
     @objc public static var primaryColorWork = UIColor { _ in
         UIColor(resource: .accentColorWork)
     }
+
+    public static func dynamic(dark: UIColor, light: UIColor) -> UIColor {
+        UIColor { $0.userInterfaceStyle == .dark ? dark : light }
+    }
 }

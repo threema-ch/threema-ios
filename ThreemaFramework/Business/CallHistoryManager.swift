@@ -24,7 +24,7 @@ import Foundation
         )
         
         return await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
-            businessInjector.entityManager.performBlock {
+            businessInjector.entityManager.perform {
                 guard let contactEntity = self.businessInjector.entityManager.entityFetcher
                     .contactEntity(for: self.identity)
                 else {
@@ -56,7 +56,7 @@ import Foundation
     
     private func fetchCallList(identity: String, callID: UInt32) async -> [CallEntity] {
         await withCheckedContinuation { continuation in
-            businessInjector.entityManager.performBlock {
+            businessInjector.entityManager.perform {
                 guard let calls = self.businessInjector.entityManager.entityFetcher
                     .callEntities(with: identity, and: callID) else {
                     DDLogError("Could not fetch calls.")
@@ -75,14 +75,14 @@ extension CallHistoryManager {
     }
     
     public static func removeCallsOlderThanChatServerTimeout(businessInjector: BusinessInjectorProtocol) {
-        businessInjector.entityManager.performAsyncBlockAndSafe {
+        businessInjector.entityManager.performSave {
             businessInjector.entityManager.entityDestroyer.deleteMissedCallsCacheOlderThanTwoWeeks()
         }
     }
     
     public static func removeCallsOlderThanChatServerTimeout(businessInjector: BusinessInjectorProtocol) async {
         await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
-            businessInjector.entityManager.performAsyncBlockAndSafe {
+            businessInjector.entityManager.performSave {
                 businessInjector.entityManager.entityDestroyer.deleteMissedCallsCacheOlderThanTwoWeeks()
                 continuation.resume()
             }

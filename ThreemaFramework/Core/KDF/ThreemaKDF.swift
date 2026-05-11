@@ -2,7 +2,7 @@ import Foundation
 import ThreemaBlake2b
 
 @available(*, deprecated, message: "In Swift use ThreemaBlake2b instead", renamed: "ThreemaBlake2b")
-@objc final class ThreemaKDF: NSObject {
+final class ThreemaKDF: NSObject {
     static let THREEMA_KDF_KEYBYTES = 32
     
     private let personal: Data

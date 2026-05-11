@@ -19,7 +19,7 @@ extension ServerAPIConnector {
                 categories: categoryIdentifiers,
                 page: Int32(page),
                 for: businessInjector.licenseStore,
-                for: businessInjector.myIdentityStore as? MyIdentityStore
+                for: businessInjector.myIdentityStore
             ) { results, paging in
 
                 guard let paging = paging as? [String: Any], let results else {

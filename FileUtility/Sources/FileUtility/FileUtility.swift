@@ -1,7 +1,7 @@
 import CocoaLumberjackSwift
 import Foundation
 
-@objc public final class FileUtility: NSObject, FileUtilityProtocol {
+public final class FileUtility: NSObject, FileUtilityProtocol {
     
     public private(set) nonisolated(unsafe) static var shared: FileUtilityProtocol!
     

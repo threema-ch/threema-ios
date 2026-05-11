@@ -1,7 +1,7 @@
 import CocoaLumberjackSwift
 import Foundation
 
-@objc final class VoIPCallMessageDecoder: NSObject {
+final class VoIPCallMessageDecoder: NSObject {
     @objc class func decodeVoIPCallOffer(from: BoxVoIPCallOfferMessage) -> VoIPCallOfferMessage? {
         decode(from.jsonData)
     }

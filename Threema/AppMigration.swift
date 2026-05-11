@@ -4,6 +4,7 @@ import Foundation
 import Keychain
 import OSLog
 import ThreemaEssentials
+import ThreemaFramework
 import ThreemaMacros
 
 /// Migrate app to a new version
@@ -58,18 +59,22 @@ public final class AppMigration {
         }
     }
 
-    #if DEBUG
-        init(businessInjector: BusinessInjectorProtocol) {
-            self.businessInjector = businessInjector
-        }
-    #endif
-
-    public init(reset: Bool = false) {
-        self.businessInjector = BusinessInjector(forBackgroundProcess: !Thread.isMainThread)
-
+    public init(
+        businessInjector: BusinessInjectorProtocol,
+        reset: Bool = false
+    ) {
+        self.businessInjector = businessInjector
+        
         if reset {
             businessInjector.userSettings.appMigratedToVersion = AppMigrationVersion.none.rawValue
         }
+    }
+
+    public convenience init(reset: Bool = false) {
+        self.init(
+            businessInjector: BusinessInjector(forBackgroundProcess: !Thread.isMainThread),
+            reset: reset
+        )
     }
 
     /// Runs all necessary migrations

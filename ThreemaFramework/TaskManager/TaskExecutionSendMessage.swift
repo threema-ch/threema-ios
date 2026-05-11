@@ -31,7 +31,7 @@ final class TaskExecutionSendMessage: TaskExecution, TaskExecutionProtocol {
                     return
                 }
 
-                self.frameworkInjector.entityManager.performBlock {
+                self.frameworkInjector.entityManager.perform {
                     var conversation: ConversationEntity
                     do {
                         conversation = try self.getConversation(for: task)

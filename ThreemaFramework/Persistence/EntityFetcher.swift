@@ -55,10 +55,10 @@ public final class EntityFetcher: NSObject {
         let sortDescriptors = [NSSortDescriptor(key: "date", ascending: true)]
         let twoWeeksAgo = Date().addingTimeInterval(-60 * 60 * 24 * 14)
         let predicate = NSPredicate(
-            format: "contact.identity == %@ AND callID == %u AND date > %@",
+            format: "contact.identity == %@ AND date > %@ AND callID == %u",
             identity,
-            callID,
-            twoWeeksAgo as CVarArg
+            twoWeeksAgo as CVarArg,
+            callID
         )
         
         return fetchEntities(entityName: "Call", predicate: predicate, sortDescriptors: sortDescriptors)
@@ -73,17 +73,15 @@ public final class EntityFetcher: NSObject {
         let messagePredicate =
             if let creator {
                 NSPredicate(
-                    format: "message.id == %@ AND creator == %@",
-                    messageID as CVarArg,
+                    format: "creator == %@ AND message.id == %@",
                     creator,
-                    reaction
+                    messageID as CVarArg
                 )
             }
             else {
                 NSPredicate(
-                    format: "message.id == %@ AND creator == nil",
-                    messageID as CVarArg,
-                    reaction
+                    format: "creator == nil AND message.id == %@",
+                    messageID as CVarArg
                 )
             }
 
@@ -121,10 +119,10 @@ public final class EntityFetcher: NSObject {
     ) -> [MessageReactionEntity]? {
         let predicate =
             if let creator {
-                NSPredicate(format: "message == %@ AND creator == %@", message, creator)
+                NSPredicate(format: "creator == %@ AND message == %@", creator, message)
             }
             else {
-                NSPredicate(format: "message == %@ AND creator == nil", message)
+                NSPredicate(format: "creator == nil AND message == %@", message)
             }
         return fetchEntities(entityName: "MessageReaction", predicate: predicate)
     }

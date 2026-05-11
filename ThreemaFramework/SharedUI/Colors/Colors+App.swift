@@ -18,10 +18,6 @@ extension Colors {
             UIImage(resource: .threemaBlue)
         }
     }
-
-    @objc public class var darkConsumerLogo: UIImage {
-        UIImage(resource: .threemaBlackLogo)
-    }
         
     @objc public class var threemaLogoForPasscode: UIImage {
         switch TargetManager.current {
@@ -40,21 +36,16 @@ extension Colors {
         }
     }
     
-    @objc public class var consumerAppIcon: UIImage {
-        switch TargetManager.current {
-        case .blue:
-            UIImage(resource: .passcodeLogoGreen)
-        case .threema, .work, .onPrem, .customOnPrem, .green:
-            UIImage(resource: .passcodeLogo)
-        }
+    public class var callKitLogo: UIImage {
+        UIImage(resource: callKitLogoResource)
     }
-    
-    @objc public class var callKitLogo: UIImage {
+
+    public class var callKitLogoResource: ImageResource {
         switch TargetManager.current {
         case .threema, .work, .onPrem, .green, .blue:
-            UIImage(resource: .voipThreema)
+            .voipThreema
         case .customOnPrem:
-            UIImage(resource: .voipCustom)
+            .voipCustom
         }
     }
 }

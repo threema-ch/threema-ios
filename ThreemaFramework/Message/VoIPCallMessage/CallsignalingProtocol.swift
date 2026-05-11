@@ -95,8 +95,8 @@ extension CallsignalingProtocol {
     // MARK: Encode / Decode
     
     public static func encodeMute(_ isMicrophoneMuted: Bool) -> Data? {
-        var envelop = Callsignaling_Envelope()
-        var captureState = Callsignaling_CaptureState()
+        var envelop = O2oCall_Envelope()
+        var captureState = O2oCall_CaptureState()
         captureState.device = .microphone
         captureState.state = isMicrophoneMuted ? .off : .on
         envelop.captureStateChange = captureState
@@ -104,8 +104,8 @@ extension CallsignalingProtocol {
     }
     
     public static func encodeVideoCapture(_ isCapture: Bool) -> Data? {
-        var envelop = Callsignaling_Envelope()
-        var captureState = Callsignaling_CaptureState()
+        var envelop = O2oCall_Envelope()
+        var captureState = O2oCall_CaptureState()
         captureState.device = .camera
         captureState.state = isCapture ? .on : .off
         envelop.captureStateChange = captureState
@@ -114,10 +114,10 @@ extension CallsignalingProtocol {
     
     public static func encodeVideoQuality(_ profile: ThreemaVideoCallQualityProfiles) -> Data? {
         let threemaVideoCallQualityProfile = profile.qualityProfile()
-        var envelop = Callsignaling_Envelope()
-        var videoQualityProfile = Callsignaling_VideoQualityProfile()
+        var envelop = O2oCall_Envelope()
+        var videoQualityProfile = O2oCall_VideoQualityProfile()
         
-        videoQualityProfile.profile = Callsignaling_VideoQualityProfile
+        videoQualityProfile.profile = O2oCall_VideoQualityProfile
             .QualityProfile(rawValue: threemaVideoCallQualityProfile.profile!.rawValue)!
         videoQualityProfile.maxBitrateKbps = threemaVideoCallQualityProfile.bitrate
         videoQualityProfile.maxFps = threemaVideoCallQualityProfile.maxFps
@@ -135,7 +135,7 @@ extension CallsignalingProtocol {
         var threemaVideoCallQualityProfile: ThreemaVideoCallQualityProfile?
         var threemaVideoCallCaputreState: ThreemaVideoCallCaputreState?
         
-        let envelop = try? Callsignaling_Envelope(serializedData: data)
+        let envelop = try? O2oCall_Envelope(serializedData: data)
                 
         switch envelop?.content {
         case .captureStateChange(envelop?.captureStateChange):

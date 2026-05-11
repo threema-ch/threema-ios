@@ -1,7 +1,7 @@
 import Foundation
 import ThreemaEssentials
 
-@objc final class TaskDefinitionSendLocationMessage: TaskDefinitionSendBaseMessage {
+final class TaskDefinitionSendLocationMessage: TaskDefinitionSendBaseMessage {
     override var description: String {
         "<\(Swift.type(of: self))>"
     }

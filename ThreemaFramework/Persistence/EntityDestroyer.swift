@@ -67,10 +67,10 @@ public final class EntityDestroyer: NSObject {
             if let olderThan {
                 if let conversation {
                     mediaMetaInfo.fetchMessages.predicate = NSPredicate(
-                        format: "%K != nil AND date < %@ AND conversation == %@",
+                        format: "conversation == %@ AND %K != nil AND date < %@",
+                        conversation,
                         mediaMetaInfo.relationship,
-                        olderThan as NSDate,
-                        conversation
+                        olderThan as NSDate
                     )
                 }
                 else {
@@ -84,9 +84,9 @@ public final class EntityDestroyer: NSObject {
             else {
                 if let conversation {
                     mediaMetaInfo.fetchMessages.predicate = NSPredicate(
-                        format: "%K != nil AND conversation == %@",
-                        mediaMetaInfo.relationship,
-                        conversation
+                        format: "conversation == %@ AND %K != nil",
+                        conversation,
+                        mediaMetaInfo.relationship
                     )
                 }
                 else {
@@ -335,9 +335,9 @@ public final class EntityDestroyer: NSObject {
         if let conversation {
             if let olderThan {
                 fetchMessages.predicate = NSPredicate(
-                    format: "date < %@ && conversation == %@",
-                    olderThan as NSDate,
-                    conversation
+                    format: "conversation == %@ && date < %@",
+                    conversation,
+                    olderThan as NSDate
                 )
             }
             else {
@@ -495,6 +495,10 @@ public final class EntityDestroyer: NSObject {
 
     public func delete(webClientSessionEntity: WebClientSessionEntity) {
         delete(entity: webClientSessionEntity)
+    }
+    
+    @objc public func delete(workAvailabilityStatus: WorkAvailabilityStatusEntity) {
+        delete(entity: workAvailabilityStatus)
     }
 
     /// Delete particular DB object.

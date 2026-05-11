@@ -53,26 +53,6 @@ final class AppLaunchManagerAdapter: AppLaunchManagerProtocol {
     }
     
     func runLaunchSetup(window: UIWindow) {
-        // Setup app group
-        AppGroup.setGroupID(BundleUtil.threemaAppGroupIdentifier())
-        BundleUtil.mainBundle()?.bundleIdentifier.map(AppGroup.setAppID(_:))
-        
-        // Setup file utility
-        FileUtilityObjCSetter.setInitialFileUtility()
-        
-        // Initialize logger
-        #if DEBUG
-            LogManager.initializeGlobalLogger(debug: true)
-        #else
-            LogManager.initializeGlobalLogger(debug: false)
-        #endif
-        
-        // Log app version for debugging
-        DebugLog.logAppVersion()
-        
-        // Register if database file exists (for setup state tracking)
-        AppSetup.registerIfADatabaseFileExists()
-        
         // Register background tasks
         _ = ThreemaBGTaskManager.shared
         
@@ -88,15 +68,6 @@ final class AppLaunchManagerAdapter: AppLaunchManagerProtocol {
         // Resolve theme
         Colors.resolveTheme()
         Colors.update(window: window)
-        
-        // TODO: RootCoordinator: Move this to `AppCoordinator`.
-        // Setup notification center delegate
-        // Note: The delegate is set to SceneDelegate or handled separately
-        // We just request authorization here
-        let center = UNUserNotificationCenter.current()
-        center.requestAuthorization(
-            options: [.badge, .sound, .alert, .providesAppNotificationSettings]
-        ) { _, _ in }
         
         // Setup VoIP push registry
         let pushRegistry = PKPushRegistry(queue: .main)
@@ -145,18 +116,12 @@ final class AppLaunchManagerAdapter: AppLaunchManagerProtocol {
     }
     
     private func runWorkDataUpdate() async {
-        await withCheckedContinuation { continuation in
-            WorkDataFetcher.checkUpdateWorkDataForce(
-                true,
-                onCompletion: {
-                    continuation.resume()
-                },
-                onError: { error in
-                    DDLogError("Error while checking for work data update post-onboarding: \(error ?? "N/A")")
-                    
-                    continuation.resume()
-                }
-            )
+        do {
+            let fetcher = BusinessInjector.ui.workDataFetcher
+            try await fetcher.checkUpdateWorkData(force: true, forceSendMDM: false)
+        }
+        catch {
+            DDLogError("Error while checking for work data update post-onboarding: \(error)")
         }
     }
     

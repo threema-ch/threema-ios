@@ -88,7 +88,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 - (NSSet *)selectedConversations {
     NSMutableSet *conversations = [NSMutableSet setWithCapacity:[_selectedGroups count]];
     for (Group *group in _selectedGroups) {
-        [_entityManager performBlockAndWait:^{
+        [_entityManager performAndWait:^{
             ConversationEntity *conversationEntity = [[_entityManager entityFetcher] groupConversationEntityFor:group.groupID creatorID:group.groupCreatorIdentity myIdentity:[[MyIdentityStore sharedMyIdentityStore] identity]];
             [conversations addObject:conversationEntity];
         }];

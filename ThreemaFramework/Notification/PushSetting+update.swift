@@ -3,20 +3,7 @@ import Foundation
 import ThreemaProtocols
 
 extension PushSetting {
-    mutating func update(syncContact: Sync_Contact) {
-        if syncContact.hasNotificationSoundPolicyOverride {
-            switch syncContact.notificationSoundPolicyOverride.override {
-            case .default:
-                muted = false
-            case .policy(.muted):
-                muted = true
-            case .policy(.UNRECOGNIZED(_)):
-                DDLogError("Unknown type of notification sound policy")
-            case .none:
-                break
-            }
-        }
-
+    mutating func update(syncContact: D2dSync_Contact) {
         if syncContact.hasNotificationTriggerPolicyOverride {
             switch syncContact.notificationTriggerPolicyOverride.override {
             case .default:
@@ -42,20 +29,7 @@ extension PushSetting {
         }
     }
 
-    mutating func update(syncGroup: Sync_Group) {
-        if syncGroup.hasNotificationSoundPolicyOverride {
-            switch syncGroup.notificationSoundPolicyOverride.override {
-            case .default:
-                muted = false
-            case .policy(.muted):
-                muted = true
-            case .policy(.UNRECOGNIZED(_)):
-                DDLogError("Unknown type of notification sound policy")
-            case .none:
-                break
-            }
-        }
-
+    mutating func update(syncGroup: D2dSync_Group) {
         if syncGroup.hasNotificationTriggerPolicyOverride {
             switch syncGroup.notificationTriggerPolicyOverride.override {
             case .default:

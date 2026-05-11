@@ -127,19 +127,19 @@ final class ConnectedTests: XCTestCase {
     // MARK: - Helper Functions
     
     private func joinMessage(for id: UInt32) throws -> Data {
-        var participantJoined = Groupcall_SfuToParticipant.ParticipantJoined()
+        var participantJoined = GroupCall_SfuToParticipant.ParticipantJoined()
         participantJoined.participantID = id
         
-        var envelope = Groupcall_SfuToParticipant.Envelope()
+        var envelope = GroupCall_SfuToParticipant.Envelope()
         envelope.participantJoined = participantJoined
         
         return try envelope.ownSerializedData()
     }
     
     private func relayMessage() throws -> Data {
-        let hello = Groupcall_ParticipantToParticipant.Handshake.Hello()
+        let hello = GroupCall_ParticipantToParticipant.Handshake.Hello()
         
-        var envelope = Groupcall_ParticipantToParticipant.Handshake.HelloEnvelope()
+        var envelope = GroupCall_ParticipantToParticipant.Handshake.HelloEnvelope()
         envelope.hello = hello
         
         return try envelope.ownSerializedData()

@@ -119,7 +119,7 @@
     }
     else {
         ContactCell *cell = [tableView dequeueReusableCellWithIdentifier:@"ContactCell"];
-        cell._contact = conversation.contact;
+        cell._contactEntity = conversation.contact;
         
         return cell;
     }

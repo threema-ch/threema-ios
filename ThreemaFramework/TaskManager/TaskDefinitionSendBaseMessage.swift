@@ -1,7 +1,7 @@
 import Foundation
 import ThreemaEssentials
 
-@objc class TaskDefinitionSendBaseMessage: TaskDefinitionSendMessage {
+class TaskDefinitionSendBaseMessage: TaskDefinitionSendMessage {
     override func create(
         frameworkInjector: FrameworkInjectorProtocol,
         taskContext: TaskContextProtocol

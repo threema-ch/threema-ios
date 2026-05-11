@@ -1,8 +1,20 @@
 import Coordinator
+import Keychain
+import ThreemaEssentials
 import ThreemaFramework
 
 final class RootCoordinator: Coordinator {
     var childCoordinators: [any Coordinator] = []
+    
+    var appCoordinator: AppCoordinator? {
+        childCoordinators.first(where: {
+            $0 is AppCoordinator
+        }) as? AppCoordinator
+    }
+    
+    var tabBarController: UITabBarController? {
+        appCoordinator?.tabBarController
+    }
     
     private lazy var rootNavigationController: UINavigationController = {
         let navigationController = UINavigationController()
@@ -22,6 +34,7 @@ final class RootCoordinator: Coordinator {
     
     private let window: UIWindow
     private let bootstrap: BootstrapContainer
+    private let launchManager: AppLaunchSequenceManager
     
     init(
         window: UIWindow,
@@ -29,6 +42,7 @@ final class RootCoordinator: Coordinator {
     ) {
         self.window = window
         self.bootstrap = bootstrap
+        self.launchManager = AppLaunchSequenceManager(bootstrap: bootstrap)
     }
     
     func start() {
@@ -46,47 +60,28 @@ final class RootCoordinator: Coordinator {
     private func performLaunchSequence() async {
         loadingCoordinator.showLoading()
         
-        // Run pre-launch setup
         bootstrap.appLaunchManager.runLaunchSetup(window: window)
         
-        // TODO: Replace with AppLaunchSequenceManager
-        // For now, simulate launch and go to onboarding for fresh install
-        try? await Task.sleep(for: .seconds(0.5))
-        
-        let launchResult = determineLaunchDestination()
-        await handleLaunchResult(launchResult)
+        let result = await launchManager.run()
+        await handleLaunchResult(result)
     }
     
-    @MainActor
-    private func determineLaunchDestination() -> LaunchResult {
-        guard bootstrap.appLaunchManager.isAppSetupCompleted else {
-            return .needsOnboarding
-        }
-        
-        // TODO: Handle existing user flows:
-        // - .needsRemoteSecretInitialization
-        // - .needsPasscode
-        // - .ready(appContainer)
-        // For now, fall through to onboarding as placeholder
-        return .needsOnboarding
-    }
-    
-    private func handleLaunchResult(_ result: LaunchResult) async {
+    private func handleLaunchResult(_ result: AppLaunchSequenceManager.LaunchResult) async {
         switch result {
         case .needsOnboarding:
             await goToOnboarding()
             
-        case .needsPasscode:
-            await goToPasscode()
+        case let .needsPasscode(businessInjector):
+            await goToPasscode(businessInjector: businessInjector)
             
-        case .needsRemoteSecretInitialization:
-            await handleRemoteSecretInitialization()
+        case .needsRemoteSecretFetch:
+            await handleRemoteSecretFetch()
             
         case .protectedDataUnavailable:
             showProtectedDataUnavailable()
             
         case let .ready(appContainer):
-            await goToMainApp(appContainer: appContainer)
+            await goToApp(appContainer: appContainer)
             
         case let .failed(error):
             showError(error)
@@ -96,10 +91,19 @@ final class RootCoordinator: Coordinator {
     // MARK: - Transitions
     
     private func goToOnboarding() async {
+        let remoteSecretResolver = RemoteSecretResolver(
+            appLaunchManager: bootstrap.appLaunchManager,
+            licenseStore: bootstrap.licenseStore.store,
+            myIdentityStore: bootstrap.bootstrapIdentityStore.store,
+            mdmSetup: MDMSetup(),
+            flavorService: AppFlavorService(),
+            hasPreexistingData: bootstrap.appLaunchManager.hasPreexistingDatabaseFile
+        )
         let onboardingCoordinator = OnboardingCoordinator(
             bootstrap: bootstrap,
             delegate: self,
-            window: window
+            window: window,
+            remoteSecretResolver: remoteSecretResolver
         )
         
         childCoordinators.append(onboardingCoordinator)
@@ -108,30 +112,61 @@ final class RootCoordinator: Coordinator {
         childDidFinish(loadingCoordinator)
     }
     
-    private func goToPasscode() async {
-        // TODO: Implement PasscodeCoordinator
-        // We'll need to re-add the loading coordinator here.
-        // Also to consider, do we need the loading right away?
-        // Or only after remote secret / onboarding
+    private func goToPasscode(businessInjector: BusinessInjectorProtocol) async {
+        // TODO: Implement PasscodeCoordinator (Phase 1)
         loadingCoordinator.showLoading(message: "Passcode required...")
     }
     
-    private func handleRemoteSecretInitialization() async {
-        // TODO: Present RemoteSecret UI using `rootNavigationController`
-        // Then call continueAfterRemoteSecret on AppLaunchSequenceManager
-        // We'll need to re-add the loading coordinator here.
-        // Also to consider, do we need the loading right away?
-        // Or only after remote secret / onboarding
-        loadingCoordinator.showLoading(message: "Initializing security...")
+    /// Presents RemoteSecret fetch UI (spinner + error recovery) on the loading
+    /// coordinator's navigation controller, then continues the launch sequence.
+    private func handleRemoteSecretFetch() async {
+        let navigationController = loadingCoordinator.presentingNavigationViewController
+        
+        let viewsManager = RemoteSecretInitializeViewsManager(
+            navigationController: navigationController,
+            showDeleteAfterRetries: 0
+        )
+        
+        do {
+            let identity = bootstrap.bootstrapIdentityStore.store.identity
+                .map { ThreemaIdentity($0) }
+            
+            let remoteSecretManager = try await viewsManager.start(
+                identity: identity,
+                onDelete: { [weak self] in
+                    try? self?.bootstrap.bootstrapKeychainManager.deleteAllItems()
+                    exit(0)
+                },
+                onCancel: nil
+            )
+            
+            // Restore loading view after fetch UI
+            loadingCoordinator.showLoading()
+            
+            let result = await launchManager.continueAfterRemoteSecretFetch(
+                remoteSecretManager: remoteSecretManager
+            )
+            await handleLaunchResult(result)
+        }
+        catch {
+            loadingCoordinator.showLoading()
+            showError(LaunchError.remoteSecretSetupFailed(error))
+        }
     }
     
-    private func goToMainApp(appContainer: AppDependencyContainer) async {
-        // TODO: Got to AppCoordinator
-        // Then call continueAfterRemoteSecret on AppLaunchSequenceManager
-        // We'll need to re-add the loading coordinator here.
-        // Also to consider, do we need the loading right away?
-        // Or only after remote secret / onboarding
-        loadingCoordinator.showLoading(message: "Loading...")
+    private func goToApp(appContainer: AppDependencyContainer) async {
+        let appCoordinator = AppCoordinator(
+            window: window,
+            appContainer: appContainer
+        )
+        childCoordinators.append(appCoordinator)
+        
+        window.rootViewController = appCoordinator.rootViewController
+        window.makeKeyAndVisible()
+        
+        appCoordinator.start()
+        
+        childDidFinish(loadingCoordinator)
     }
     
     private func showProtectedDataUnavailable() {
@@ -148,7 +183,7 @@ final class RootCoordinator: Coordinator {
     
     private func showError(_ error: LaunchError) {
         loadingCoordinator.showError(
-            message: error.message,
+            message: error.localizedDescription,
             isRetryable: error.isRetryable,
             onRetry: error.isRetryable
                 ? { [weak self] in
@@ -161,65 +196,19 @@ final class RootCoordinator: Coordinator {
     }
 }
 
-// MARK: - RootCoordinator.LaunchResult
-
-extension RootCoordinator {
-    
-    /// Result of the launch sequence.
-    /// Will be moved to AppLaunchSequenceManager.
-    enum LaunchResult {
-        // TODO: RootCoordinator: case needsIDCleanUp?
-        case needsOnboarding
-        case needsPasscode
-        case needsRemoteSecretInitialization
-        case protectedDataUnavailable
-        case ready(AppDependencyContainer)
-        // TODO: RootCoordinator: Should we also have a migration?
-        case failed(LaunchError)
-    }
-}
-
-// MARK: - LaunchError
-
-struct LaunchError: Error {
-    let message: String
-    let isRetryable: Bool
-    
-    static let databaseMigrationFailed = LaunchError(
-        message: "Database migration failed. Please contact support.",
-        isRetryable: false
-    )
-    
-    static let keychainError = LaunchError(
-        message: "Unable to access secure storage. Please try again.",
-        isRetryable: true
-    )
-}
-
-// MARK: - AppContainer Placeholder
-
-/// Placeholder for AppContainer - will be implemented later on
-@MainActor
-final class AppDependencyContainer {
-    let bootstrap: BootstrapContainer
-    
-    init(bootstrap: BootstrapContainer) {
-        self.bootstrap = bootstrap
-    }
-}
-
-// MARK: - RootCoordinator + OnboardingCoordinatorDelegate
+// MARK: - OnboardingCoordinatorDelegate
 
 extension RootCoordinator: OnboardingCoordinatorDelegate {
     
-    func onboardingDidComplete(_ coordinator: OnboardingCoordinator, businessInjector: BusinessInjectorProtocol) {
-        // TODO: Use businessInjector to create AppContainer and transition to .ready state
-        // For now, show WIP coordinator as placeholder
-        let wipCoordinator = RCWorkInProgressCoordinator(
-            window: window,
-            presentingViewController: rootNavigationController
-        )
-        childCoordinators.append(wipCoordinator)
-        wipCoordinator.start()
+    func onboardingDidComplete(_ coordinator: OnboardingCoordinator, appContainer: AppDependencyContainer) {
+        Task { [weak self] in
+            guard let self else {
+                return
+            }
+            
+            await goToApp(appContainer: appContainer)
+            
+            childDidFinish(coordinator)
+        }
     }
 }

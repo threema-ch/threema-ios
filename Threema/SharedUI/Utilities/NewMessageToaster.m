@@ -37,7 +37,7 @@
     NSManagedObjectID *messageObjectID = (NSManagedObjectID *)notification.object;
     if (messageObjectID) {
         EntityManager *entityManager = [[BusinessInjector ui] entityManager];
-        [entityManager performBlock:^{
+        [entityManager perform:^{
             BaseMessageEntity *message = (BaseMessageEntity *)[[entityManager entityFetcher] existingObjectWith:messageObjectID];
             
             if(message == nil){

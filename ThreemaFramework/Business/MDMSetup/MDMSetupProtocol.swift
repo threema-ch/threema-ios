@@ -18,6 +18,9 @@ public protocol MDMSetupProtocol {
     func safeServerPassword() -> String?
 
     func disableIDExport() -> Bool
+    func disableWorkDirectory() -> Bool
+    
+    func applyThreemaMdm(_ workData: [AnyHashable: Any]?, sendForce: Bool)
 }
 
 // MARK: - MDMSetup + MDMSetupProtocol
@@ -45,6 +48,7 @@ extension MDMSetup: MDMSetupProtocol { /* already conforming */ }
         var mockSafeServerPassword: String?
 
         var mockDisableIDExport = false
+        var mockDisableWorkDirectory = false
 
         public init() { /* no-op */ }
 
@@ -79,6 +83,12 @@ extension MDMSetup: MDMSetupProtocol { /* already conforming */ }
         public func safeServerPassword() -> String? { mockSafeServerPassword }
 
         public func disableIDExport() -> Bool { mockDisableIDExport }
+        
+        public func disableWorkDirectory() -> Bool { mockDisableWorkDirectory }
+        
+        public func applyThreemaMdm(_ workData: [AnyHashable: Any]?, sendForce: Bool) {
+            // No-op for mock - override in test subclasses if needed
+        }
     }
 
     extension MDMSetupProtocol where Self == MockMDMSetup {

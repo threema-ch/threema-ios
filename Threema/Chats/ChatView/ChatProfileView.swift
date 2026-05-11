@@ -409,23 +409,23 @@ final class ChatProfileView: UIStackView {
         
         // Observe changes of the member list and the name of each member
         observe(group, \.members) { [weak self] in
-            guard let weakSelf = self else {
+            guard let self else {
                 return
             }
             
             // 1. Unsubscribe from all member observers
-            for observer in weakSelf.memberObservers {
+            for observer in memberObservers {
                 observer.invalidate()
             }
             
             // 2. Remove all references
-            weakSelf.memberObservers.removeAll()
+            memberObservers.removeAll()
             
             // 3. Observe name changes of all current members (we need to update the name list on a change)
-            weakSelf.addMemberObservers(for: weakSelf.group)
+            addMemberObservers(for: group)
             
             // 4. Update label
-            weakSelf.updateGroupMembersListLabel()
+            membersListLabel.text = group.membersList
         }
         
         verificationLevelImageView.isHidden = true
@@ -451,8 +451,17 @@ final class ChatProfileView: UIStackView {
 
         for member in group.members {
             let memberNameObserver = member.observe(\.displayName) { [weak self] _, _ in
-                DispatchQueue.main.async {
-                    self?.updateGroupMembersListLabel()
+                Task { @MainActor in
+                    guard let self else {
+                        return
+                    }
+                    
+                    let businessInjector = BusinessInjector.ui
+                    businessInjector.entityManager.performAndWait {
+                        let group = businessInjector.groupManager.getGroup(conversation: self.conversation)
+                        // We always want at least one space in the label to keep it at a constant height
+                        self.membersListLabel.text = group?.membersList ?? " "
+                    }
                 }
             }
             memberObservers.append(memberNameObserver)
@@ -545,7 +554,17 @@ final class ChatProfileView: UIStackView {
                 ChatViewConfiguration.Profile.combinedLeadingAndTrailingOffset
             }
         
-        let newConstant = safeAreaAdjustedNavigationBarWidth - (scaler * constant)
+        // On iPhone Air & Pro Max (26.4) the unread count breaks if it's >= 10. Because we want to use as much space as
+        // possible on smaller screens we only slightly adjust it for bigger screens (IOS-6119)
+        let biggerScreenConstant: CGFloat =
+            if safeAreaAdjustedNavigationBarWidth > 410 {
+                2 * 3
+            }
+            else {
+                0
+            }
+        
+        let newConstant = safeAreaAdjustedNavigationBarWidth - (scaler * constant) - biggerScreenConstant
         
         guard newConstant != widthConstraint.constant else {
             DDLogDebug("No need to update width constraint constant")
@@ -558,12 +577,8 @@ final class ChatProfileView: UIStackView {
     }
         
     private func updateGroupMembersListLabel() {
-        let businessInjector = BusinessInjector.ui
-        businessInjector.entityManager.performAndWait {
-            let group = businessInjector.groupManager.getGroup(conversation: self.conversation)
-            // We always want at least one space in the label to keep it at a constant height
-            self.membersListLabel.text = group?.membersList ?? " "
-        }
+        // We always want at least one space in the label to keep it at a constant height
+        self.membersListLabel.text = self.group?.membersList ?? " "
     }
     
     private func updateDistributionListRecipientsLabel() {

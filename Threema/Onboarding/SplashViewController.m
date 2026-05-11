@@ -211,21 +211,24 @@
             [self performLicenseCheck];
         }
         else {
-            [WorkDataFetcher checkUpdateThreemaMDM:^{
-                // Reload MDM parameter, could be changed after work data fetch
-                [mdmSetup loadIDCreationValues];
-                [mdmSetup loadRenewableValues];
+            WorkDataThreemaMDMFetcherObjCBridge* fetcher = [[WorkDataThreemaMDMFetcherObjCBridge alloc] initWithLicenseStore:[LicenseStore sharedLicenseStore]];
+            [fetcher checkUpdateThreemaMDMWithCompletionHandler:^(NSError * _Nullable error) {
+                if (error == nil) {
+                    // Reload MDM parameter, could be changed after work data fetch
+                    [mdmSetup loadIDCreationValues];
+                    [mdmSetup loadRenewableValues];
                 [[[AppDelegate sharedAppDelegate]window]makeSecure];
-                didWorkApiFetch = YES;
-
-                [self presentUI];
-            } onError:^(NSError *error) {
-                NSString *title = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"work_data_fetch_failed_title"], TargetManagerObjC.appName];
-                NSString *message = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"work_data_fetch_failed_message"], TargetManagerObjC.appName];
-                [UIAlertTemplate showAlertWithOwner:self title:title message:message actionOk:^(UIAlertAction *action __unused)  {
-                    exit(0);
-                }];
-                return;
+                    didWorkApiFetch = YES;
+                    
+                    [self presentUI];
+                } else {
+                    NSString *title = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"work_data_fetch_failed_title"], TargetManagerObjC.appName];
+                    NSString *message = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"work_data_fetch_failed_message"], TargetManagerObjC.appName];
+                    [UIAlertTemplate showAlertWithOwner:self title:title message:message actionOk:^(UIAlertAction *action __unused)  {
+                        exit(0);
+                    }];
+                    return;
+                }
             }];
         }
     }
@@ -1044,10 +1047,8 @@
 /// - Parameter onCompletion: Called when update succeeds and fails
 - (void)runWorkDataUpdateWithCompletion:(nonnull void(^)(void))onCompletion {
     [[AppDelegate sharedAppDelegate] setIsWorkContactsLoading:true];
-    [WorkDataFetcher checkUpdateWorkDataForce:YES onCompletion:^{
-        [[AppDelegate sharedAppDelegate] setIsWorkContactsLoading:false];
-        onCompletion();
-    } onError:^(NSError *error) {
+    WorkDataFetcherObjCBridge* fetcher = [WorkDataFetcherObjCBridge new];
+    [fetcher updateWorkDataWithForce:YES completionHandler:^(NSError * _Nullable error) {
         [[AppDelegate sharedAppDelegate] setIsWorkContactsLoading:false];
         onCompletion();
     }];
@@ -1088,6 +1089,10 @@
     return;
     #endif
     
+    [self cancelIDCreation];
+}
+
+- (void)cancelIDCreation {
     [self slideOut:_randomSeedViewController fromRightToLeft:NO onCompletion:nil];
     [self slideIn:self fromLeftToRight:NO onCompletion:nil];
 }
@@ -1101,7 +1106,6 @@
     [self.delegate splashViewController:self didSelectRestoreOption:RestoreOptionKeepLocalData];
     return;
     #endif
-    
     [self showRestoreOptionBackupViewController];
     [self slideOut:_restoreOptionDataViewController fromRightToLeft:YES onCompletion:nil];
     [self slideIn:_restoreOptionBackupViewController fromLeftToRight:YES onCompletion:nil];
@@ -1114,7 +1118,6 @@
     [self.delegate splashViewControllerDidCancelRestore:self];
     return;
     #endif
-    
     [self slideOut:_restoreOptionDataViewController fromRightToLeft:NO onCompletion:nil];
     [self slideIn:self fromLeftToRight:NO onCompletion:nil];
 }
@@ -1128,7 +1131,6 @@
     [self.delegate splashViewController:self didSelectRestoreOption:RestoreOptionSafe];
     return;
     #endif
-    
     [self showRestoreSafeViewController:NO];
     [self slideOut:_restoreOptionBackupViewController fromRightToLeft:YES onCompletion:nil];
     [self slideIn:_restoreSafeViewController fromLeftToRight:YES  onCompletion:nil];
@@ -1141,7 +1143,6 @@
     [self.delegate splashViewController:self didSelectRestoreOption:RestoreOptionSafeIdentityOnly];
     return;
     #endif
-    
     [self showRestoreSafeViewController:YES];
     [self slideOut:_restoreOptionBackupViewController fromRightToLeft:YES onCompletion:nil];
     [self slideIn:_restoreSafeViewController fromLeftToRight:YES  onCompletion:nil];
@@ -1149,12 +1150,11 @@
 
 - (void)restoreIdentity {
     _restoreOptionBackupViewController.delegate = nil;
-
+    
     #if SCENE_DELEGATE_ROOT_COORDINATOR_DEVELOPMENT
     [self.delegate splashViewController:self didSelectRestoreOption:RestoreOptionIdBackup];
     return;
     #endif
-    
     [self slideOut:_restoreOptionBackupViewController fromRightToLeft:YES onCompletion:nil];
 
     _isRestoreOptionBackupDisplayed = YES;
@@ -1169,10 +1169,9 @@
     _restoreOptionBackupViewController.delegate = nil;
     
     #if SCENE_DELEGATE_ROOT_COORDINATOR_DEVELOPMENT
-    [self.delegate splashViewControllerDidCancelRestore:self];
+    [self.delegate splashViewControllerDidCancelRestoreOptionBackup:self];
     return;
     #endif
-    
     _isRestoreOptionBackupDisplayed = NO;
     [self slideOut:_restoreOptionBackupViewController fromRightToLeft:NO onCompletion:nil];
 
@@ -1190,10 +1189,9 @@
     _restoreSafeViewController.delegate = nil;
     
     #if SCENE_DELEGATE_ROOT_COORDINATOR_DEVELOPMENT
-    [self.delegate splashViewControllerDidCancelRestore:self];
+    [self.delegate splashViewControllerDidCancelRestoreSafe:self];
     return;
     #endif
-    
     [self showRestoreOptionBackupViewController];
     [self slideOut:_restoreSafeViewController fromRightToLeft:NO onCompletion:nil];
     [self slideIn:_restoreOptionBackupViewController fromLeftToRight:NO onCompletion:nil];
@@ -1210,9 +1208,19 @@
     [self.delegate splashViewControllerDidCompleteRestore:self];
     return;
     #endif
-    
     [self completedIDSetup];
 }
+
+#if SCENE_DELEGATE_ROOT_COORDINATOR_DEVELOPMENT
+- (void)restoreSafeViewController:(RestoreSafeViewController *)viewController
+            didRequestRestoreWith:(NSString *)identity
+                         password:(NSString *)password {
+    [self.delegate splashViewController:self
+                  didRequestSafeRestore:viewController
+                               identity:identity
+                               password:password];
+}
+#endif
 
 #pragma mark - RestoreIdentityViewControllerDelegate
 
@@ -1220,7 +1228,7 @@
     _restoreIdentityViewController.delegate = nil;
     
     #if SCENE_DELEGATE_ROOT_COORDINATOR_DEVELOPMENT
-    [self.delegate splashViewControllerDidCancelRestore:self];
+    [self.delegate splashViewControllerDidCancelRestoreIdentity:self];
     return;
     #endif
     
@@ -1306,12 +1314,21 @@
 
 #pragma mark - New Public Methods for Coordinator
 
+/// Returns the currently visible child view controller, or `self` if no child is displayed.
+- (UIViewController *)currentVisibleViewController {
+    if ([self.childViewControllers count] > 0) {
+        return [self.childViewControllers lastObject];
+    }
+    return self;
+}
+
 - (void)showRandomSeedViewController {
     _randomSeedViewController = [self.storyboard instantiateViewControllerWithIdentifier:@"RandomSeedViewController"];
     _randomSeedViewController.delegate = self;
     [_randomSeedViewController setup];
     
-    [self slideOut:self fromRightToLeft:YES onCompletion:nil];
+    UIViewController *current = [self currentVisibleViewController];
+    [self slideOut:current fromRightToLeft:YES onCompletion:nil];
     [self slideIn:_randomSeedViewController fromLeftToRight:YES onCompletion:nil];
 }
 
@@ -1324,11 +1341,60 @@
     _restoreIdentityViewController.passwordData = password;
     [_restoreIdentityViewController setup];
     
-    [self slideOut:self fromRightToLeft:YES onCompletion:nil];
+    UIViewController *current = [self currentVisibleViewController];
+    [self slideOut:current fromRightToLeft:YES onCompletion:nil];
     [self slideIn:_restoreIdentityViewController fromLeftToRight:YES onCompletion:^{
         if (error != nil) {
             [_restoreIdentityViewController handleError:error];
         }
+    }];
+}
+
+- (void)navigateToRestoreOptionDataViewController {
+    [self showRestoreOptionDataViewController];
+    
+    UIViewController *current = [self currentVisibleViewController];
+    [self slideOut:current fromRightToLeft:YES onCompletion:nil];
+    [self slideIn:_restoreOptionDataViewController fromLeftToRight:YES onCompletion:nil];
+}
+
+- (void)navigateToRestoreOptionBackupViewController {
+    [self showRestoreOptionBackupViewController];
+    
+    UIViewController *current = [self currentVisibleViewController];
+    [self slideOut:current fromRightToLeft:YES onCompletion:nil];
+    [self slideIn:_restoreOptionBackupViewController fromLeftToRight:YES onCompletion:nil];
+}
+
+- (void)navigateToRestoreSafeViewController:(BOOL)identityOnly {
+    [self showRestoreSafeViewController:identityOnly];
+    
+    UIViewController *current = [self currentVisibleViewController];
+    [self slideOut:current fromRightToLeft:YES onCompletion:nil];
+    [self slideIn:_restoreSafeViewController fromLeftToRight:YES onCompletion:nil];
+}
+
+- (void)navigateBackToRestoreOptionDataViewController {
+    [self showRestoreOptionDataViewController];
+    
+    UIViewController *current = [self currentVisibleViewController];
+    [self slideOut:current fromRightToLeft:NO onCompletion:nil];
+    [self slideIn:_restoreOptionDataViewController fromLeftToRight:NO onCompletion:nil];
+}
+
+- (void)navigateBackToRestoreOptionBackupViewController {
+    [self showRestoreOptionBackupViewController];
+    
+    UIViewController *current = [self currentVisibleViewController];
+    [self slideOut:current fromRightToLeft:NO onCompletion:nil];
+    [self slideIn:_restoreOptionBackupViewController fromLeftToRight:NO onCompletion:nil];
+}
+
+- (void)navigateBackToSplash {
+    UIViewController *current = [self currentVisibleViewController];
+    [self slideOut:current fromRightToLeft:NO onCompletion:nil];
+    [self slideIn:self fromLeftToRight:NO onCompletion:^{
+        [self showPrivacyControls];
     }];
 }
 

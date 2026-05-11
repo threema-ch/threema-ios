@@ -22,7 +22,7 @@ use crate::{
     model::contact::PredefinedContact,
     utils::{
         debug::debug_str_redacted,
-        serde::{base64, from_str},
+        serde::{base64, string},
         time::Duration,
     },
 };
@@ -39,11 +39,11 @@ use crate::{
     tsify(from_wasm_abi)
 )]
 pub struct WorkCredentials {
-    /// Work username
+    /// Work username.
     #[educe(Debug(method(debug_str_redacted)))]
     pub username: String,
 
-    /// Work password
+    /// Work password.
     #[educe(Debug(method(debug_str_redacted)))]
     pub password: String,
 }
@@ -101,6 +101,18 @@ pub struct WorkContext {
 
 /// General flavour of the application.
 #[derive(Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "uniffi", derive(uniffi::Enum))]
+#[cfg_attr(
+    feature = "wasm",
+    derive(tsify::Tsify, serde::Deserialize),
+    serde(
+        tag = "flavor",
+        content = "value",
+        rename_all = "kebab-case",
+        rename_all_fields = "camelCase"
+    ),
+    tsify(from_wasm_abi)
+)]
 pub enum Flavor {
     /// Consumer application.
     Consumer,
@@ -114,11 +126,11 @@ pub enum Flavor {
 #[cfg_attr(test, derive(PartialEq))]
 pub enum UrlError {
     /// URL is invalid.
-    #[error("Invalid URL")]
+    #[error("Invalid URL: {0}")]
     InvalidUrl(&'static str),
 
-    /// URL is not a valid base URL (must end with a trailing slash)
-    #[error("Invalid base URL")]
+    /// URL is not a valid base URL (must end with a trailing slash).
+    #[error("Invalid base URL: {0}")]
     InvalidBaseUrl(&'static str),
 
     /// URL uses an unexpected scheme.
@@ -154,7 +166,7 @@ fn map_placeholders<F: Fn(&'_ str) -> Option<String>>(string: &str, map_fn: F) -
         .into_owned()
 }
 
-/// A URL has the following syntax: `<scheme>://<host>/<path>`
+/// A URL has the following syntax: `<scheme>://<host>/<path>`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct Url(String);
 impl Url {
@@ -193,7 +205,7 @@ impl Url {
     }
 }
 
-/// A base URL has the following syntax: `<scheme>://<host>/<path>/`
+/// A base URL has the following syntax: `<scheme>://<host>/<path>/`.
 ///
 /// The trailing slash is required!
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -223,7 +235,7 @@ impl BaseUrl {
     }
 }
 
-/// An HTTPS URL has the following syntax: `https://<host>/<path>`
+/// An HTTPS URL has the following syntax: `https://<host>/<path>`.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(try_from = "String")]
 pub struct HttpsUrl(Url);
@@ -236,7 +248,7 @@ impl TryFrom<String> for HttpsUrl {
     }
 }
 
-/// An HTTPS base URL has the following syntax: `https://<host>/<path>/`
+/// An HTTPS base URL has the following syntax: `https://<host>/<path>/`.
 ///
 /// The trailing slash is required!
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -250,7 +262,7 @@ impl TryFrom<String> for HttpsBaseUrl {
     }
 }
 
-/// A (secure) WebSocket base URL has the following syntax: `wss://<host>/<path>/`
+/// A (secure) WebSocket base URL has the following syntax: `wss://<host>/<path>/`.
 ///
 /// The trailing slash is required!
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -409,7 +421,7 @@ mod device_group_id_template_url {
 }
 
 mod blob_id_template_url {
-    use data_encoding::HEXLOWER;
+    use data_encoding::HEXLOWER_PERMISSIVE;
 
     use crate::common::{BlobId, config::Url};
 
@@ -424,14 +436,14 @@ mod blob_id_template_url {
             .expect("Blob ID should contain at least one byte");
         url.map_placeholders(|key| match key {
             PREFIX_8 => Some(format!("{prefix:x}")),
-            FULL => Some(HEXLOWER.encode(&blob_id.0)),
+            FULL => Some(HEXLOWER_PERMISSIVE.encode(&blob_id.0)),
             _ => None,
         })
     }
 }
 
 mod device_group_id_and_blob_id_template_url {
-    use data_encoding::HEXLOWER;
+    use data_encoding::HEXLOWER_PERMISSIVE;
 
     use crate::common::{
         BlobId,
@@ -456,7 +468,7 @@ mod device_group_id_and_blob_id_template_url {
             },
             device_group_id_template_url::PREFIX_8 => Some(format!("{device_group_path_key_prefix:x}")),
             blob_id_template_url::PREFIX_8 => Some(format!("{blob_id_prefix:x}")),
-            blob_id_template_url::FULL => Some(HEXLOWER.encode(&blob_id.0)),
+            blob_id_template_url::FULL => Some(HEXLOWER_PERMISSIVE.encode(&blob_id.0)),
             _ => None,
         })
     }
@@ -465,11 +477,17 @@ mod device_group_id_and_blob_id_template_url {
 /// Chat server address (for non multi-device/legacy connections) with placeholders.
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "uniffi", derive(uniffi::Record))]
+#[cfg_attr(
+    feature = "wasm",
+    derive(tsify::Tsify, serde::Deserialize),
+    serde(rename_all = "camelCase"),
+    tsify(from_wasm_abi)
+)]
 pub struct ChatServerAddress {
-    /// Hostname of the chat server
+    /// Hostname of the chat server.
     pub hostname: String,
 
-    /// Available ports the chat server is listening on
+    /// Available ports the chat server is listening on.
     pub ports: Vec<u16>,
 }
 impl ChatServerAddress {
@@ -538,7 +556,7 @@ impl BlobServerDoneUrl {
     }
 }
 
-/// Blob server configuration
+/// Blob server configuration.
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[expect(clippy::struct_field_names, reason = "All fields intentionally end with URL")]
 pub struct BlobServerConfig {
@@ -552,6 +570,15 @@ pub struct BlobServerConfig {
     pub done_url: BlobServerDoneUrl,
 }
 
+/// Legacy work directory server base URL.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct WorkServerLegacyBaseUrl(HttpsBaseUrl);
+impl WorkServerLegacyBaseUrl {
+    pub(crate) fn request_contacts_path(&self) -> String {
+        self.0.0.path(format_args!("identities"))
+    }
+}
+
 /// Work directory server base URL.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct WorkServerBaseUrl(HttpsBaseUrl);
@@ -560,8 +587,8 @@ impl WorkServerBaseUrl {
         self.0.0.path(format_args!("api-client/v1/remote-secret"))
     }
 
-    pub(crate) fn request_contacts_path(&self) -> String {
-        self.0.0.path(format_args!("identities"))
+    pub(crate) fn work_properties_path(&self) -> String {
+        self.0.0.path(format_args!("api-client/v1/user-properties"))
     }
 }
 
@@ -621,7 +648,6 @@ impl RendezvousServerBaseUrl {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct MediatorServerBaseUrl(WssBaseUrl);
 impl MediatorServerBaseUrl {
-    #[expect(dead_code, reason = "Will use later")]
     pub(crate) fn path(&self, device_group_path_key: &DeviceGroupPathKey, path: fmt::Arguments) -> String {
         device_group_id_template_url::path(&self.0.0.0, device_group_path_key, Some(path))
     }
@@ -657,7 +683,7 @@ impl BlobMirrorServerDoneUrl {
     }
 }
 
-/// Blob mirror server configuration
+/// Blob mirror server configuration.
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[expect(clippy::struct_field_names, reason = "All fields intentionally end with URL")]
 pub struct BlobMirrorServerConfig {
@@ -671,7 +697,7 @@ pub struct BlobMirrorServerConfig {
     pub done_url: BlobMirrorServerDoneUrl,
 }
 
-/// Multi-device configuration
+/// Multi-device configuration.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct MultiDeviceConfig {
     /// Rendezvous server base URL.
@@ -680,7 +706,7 @@ pub struct MultiDeviceConfig {
     /// Mediator server base URL.
     pub mediator_server_url: MediatorServerBaseUrl,
 
-    /// Blob mirror server configuration
+    /// Blob mirror server configuration.
     pub blob_mirror_server: BlobMirrorServerConfig,
 }
 
@@ -691,6 +717,7 @@ pub struct MultiDeviceConfig {
     [ BlobServerUploadUrl ];
     [ BlobServerDownloadUrl ];
     [ BlobServerDoneUrl ];
+    [ WorkServerLegacyBaseUrl ];
     [ WorkServerBaseUrl ];
     [ GatewayAvatarBaseServerUrl ];
     [ SafeServerBaseUrl ];
@@ -710,11 +737,12 @@ impl url_type {
 
 #[duplicate_item(
     url_type                        inner_url_type;
-    [ OnPremConfigUrl ]      [ HttpsUrl ];
+    [ OnPremConfigUrl ]             [ HttpsUrl ];
     [ DirectoryServerBaseUrl ]      [ HttpsBaseUrl ];
     [ BlobServerUploadUrl ]         [ HttpsUrl ];
     [ BlobServerDownloadUrl ]       [ HttpsUrl ];
     [ BlobServerDoneUrl ]           [ HttpsUrl ];
+    [ WorkServerLegacyBaseUrl ]     [ HttpsBaseUrl ];
     [ WorkServerBaseUrl ]           [ HttpsBaseUrl ];
     [ GatewayAvatarBaseServerUrl ]  [ HttpsBaseUrl ];
     [ SafeServerBaseUrl ]           [ HttpsBaseUrl ];
@@ -736,10 +764,16 @@ impl TryFrom<String> for url_type {
 /// Version of an OnPrem configuration.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, EnumString)]
 #[cfg_attr(feature = "uniffi", derive(uniffi::Enum))]
+#[cfg_attr(
+    feature = "wasm",
+    derive(tsify::Tsify, serde::Deserialize),
+    tsify(from_wasm_abi)
+)]
 pub enum OnPremConfigVersion {
     /// Initial version... kinda. Historically, backwards compatible changes have not triggered a minor
     /// version bump.
     #[strum(serialize = "1.0")]
+    #[cfg_attr(feature = "wasm", serde(rename = "1.0"))]
     V1_0,
 }
 
@@ -809,7 +843,7 @@ struct RawOnPremMediatorAndBlobMirrorServerConfig {
 
 #[derive(Deserialize)]
 struct RawOnPremConfig {
-    #[serde(rename = "version", deserialize_with = "from_str::deserialize")]
+    #[serde(rename = "version", deserialize_with = "string::from_str::deserialize")]
     version: OnPremConfigVersion,
 
     #[serde(rename = "signatureKey", with = "base64::fixed_length")]
@@ -865,7 +899,7 @@ pub struct OnPremConfig {
     /// Configuration version.
     pub version: OnPremConfigVersion,
 
-    /// Configuration refresh interval
+    /// Configuration refresh interval.
     pub refresh_interval: Duration,
 
     /// Chat server address (for non multi-device/legacy connections) with placeholders.
@@ -879,7 +913,7 @@ pub struct OnPremConfig {
     /// Directory server URL.
     pub directory_server_url: DirectoryServerBaseUrl,
 
-    /// Blob server configuration
+    /// Blob server configuration.
     pub blob_server: BlobServerConfig,
 
     /// Work server URL.
@@ -891,7 +925,7 @@ pub struct OnPremConfig {
     /// Threema Safe server URL.
     pub safe_server_url: SafeServerBaseUrl,
 
-    /// Multi-device configuration
+    /// Multi-device configuration.
     pub multi_device: Option<MultiDeviceConfig>,
 }
 impl OnPremConfig {
@@ -1029,13 +1063,13 @@ impl OnPremConfig {
 /// Configuration environment.
 #[derive(Clone)]
 pub enum ConfigEnvironment {
-    /// Sandbox environment
+    /// Sandbox environment.
     Sandbox,
 
-    /// Production environment
+    /// Production environment.
     Production,
 
-    /// OnPrem environment
+    /// OnPrem environment.
     OnPrem(Box<OnPremConfig>),
 }
 
@@ -1053,8 +1087,11 @@ pub struct Config {
     /// Directory server URL.
     pub directory_server_url: DirectoryServerBaseUrl,
 
-    /// Blob server configuration
+    /// Blob server configuration.
     pub blob_server: BlobServerConfig,
+
+    /// Legacy work server URL.
+    pub work_server_legacy_url: WorkServerLegacyBaseUrl,
 
     /// Work server URL.
     pub work_server_url: WorkServerBaseUrl,
@@ -1065,7 +1102,7 @@ pub struct Config {
     /// Threema Safe server URL.
     pub safe_server_url: SafeServerBaseUrl,
 
-    /// Multi-device configuration
+    /// Multi-device configuration.
     pub multi_device: Option<MultiDeviceConfig>,
 
     /// Predefined contacts.
@@ -1126,8 +1163,13 @@ impl Config {
                 ),
             },
 
-            work_server_url: WorkServerBaseUrl(
+            work_server_legacy_url: WorkServerLegacyBaseUrl(
                 HttpsBaseUrl::try_from("https://ds-apip-work.threema.ch/".to_owned())
+                    .expect("Production Work Server (Legacy) URL invalid"),
+            ),
+
+            work_server_url: WorkServerBaseUrl(
+                HttpsBaseUrl::try_from("https://work.threema.ch/".to_owned())
                     .expect("Production Work Server URL invalid"),
             ),
 
@@ -1244,8 +1286,13 @@ impl Config {
                 ),
             },
 
-            work_server_url: WorkServerBaseUrl(
+            work_server_legacy_url: WorkServerLegacyBaseUrl(
                 HttpsBaseUrl::try_from("https://ds-apip-work.test.threema.ch/".to_owned())
+                    .expect("Sandbox Work Server (Legacy) URL invalid"),
+            ),
+
+            work_server_url: WorkServerBaseUrl(
+                HttpsBaseUrl::try_from("https://work.test.threema.ch/".to_owned())
                     .expect("Sandbox Work Server URL invalid"),
             ),
 
@@ -1363,8 +1410,13 @@ impl Config {
                 ),
             },
 
-            work_server_url: WorkServerBaseUrl(
+            work_server_legacy_url: WorkServerLegacyBaseUrl(
                 HttpsBaseUrl::try_from("https://ds-apip-work.example.threema.ch/".to_owned())
+                    .expect("Testing Work Server (Legacy) URL invalid"),
+            ),
+
+            work_server_url: WorkServerBaseUrl(
+                HttpsBaseUrl::try_from("https://work.example.threema.ch/".to_owned())
                     .expect("Testing Work Server URL invalid"),
             ),
 
@@ -1432,17 +1484,23 @@ impl Config {
                 },
             }),
 
-            predefined_contacts: HashMap::new(),
+            predefined_contacts: [PredefinedContact::testing()]
+                .into_iter()
+                .map(|contact| (contact.identity, contact))
+                .collect(),
         }
     }
 }
 impl From<OnPremConfig> for Config {
     fn from(config: OnPremConfig) -> Self {
+        // Note: For OnPrem, the work legacy and non-legacy endpoints are identical.
+        let work_server_legacy_url = WorkServerLegacyBaseUrl(config.work_server_url.0.clone());
         Self {
             chat_server_address: config.chat_server_address,
             chat_server_public_keys: config.chat_server_public_keys,
             directory_server_url: config.directory_server_url,
             blob_server: config.blob_server,
+            work_server_legacy_url,
             work_server_url: config.work_server_url,
             gateway_avatar_server_url: config.gateway_avatar_server_url,
             safe_server_url: config.safe_server_url,
@@ -1461,7 +1519,7 @@ impl From<ConfigEnvironment> for Config {
     }
 }
 
-/// Implementations for the CLI
+/// Implementations for the CLI.
 #[cfg(feature = "cli")]
 pub mod cli {
     use anyhow::bail;
@@ -1627,7 +1685,7 @@ mod tests {
                 config,
                 OnPremConfig {
                     version: OnPremConfigVersion::V1_0,
-                    refresh_interval: Duration::from_secs(86400),
+                    refresh_interval: Duration::from_hours(24),
                     chat_server_address: ChatServerAddress {
                         hostname: "chat.onprem.example.threema.ch".to_owned(),
                         ports: vec![5222, 443]
@@ -1675,7 +1733,7 @@ mod tests {
                 config,
                 OnPremConfig {
                     version: OnPremConfigVersion::V1_0,
-                    refresh_interval: Duration::from_secs(86400),
+                    refresh_interval: Duration::from_hours(24),
                     chat_server_address: ChatServerAddress {
                         hostname: "chat.onprem.example.threema.ch".to_owned(),
                         ports: vec![5222, 443]

@@ -118,7 +118,9 @@ final class DetailsHeaderView: UIStackView {
     
     // MARK: - Action
     
-    func showThreemaTypeTip() {
+    func showThreemaTypeTips() {
+        // Checking both tips at once is not an issue, they can never be shown togheter
         detailsHeaderProfileView.showThreemaTypeTip()
+        detailsHeaderProfileView.showThreemaWorkAvailabilityStatusTip()
     }
 }

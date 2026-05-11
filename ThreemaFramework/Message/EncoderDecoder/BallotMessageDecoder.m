@@ -97,7 +97,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     /* Create Message in DB */
     [_entityManager getOrCreateMessageFor:boxMessage sender:sender conversation:conversation thumbnail:nil myIdentity: [MyIdentityStore.sharedMyIdentityStore identity] onCompletion:^(BaseMessageEntity *message) {
         __block BOOL *thrownError = false;
-        [_entityManager performSyncBlockAndSafe:^{
+        [_entityManager performAndWaitSave:^{
             BallotEntity *ballot = [_entityManager.entityFetcher ballotEntityFor:ballotId];
             NSDate *conversationLastUpdate = conversation.lastUpdate;
             if (ballot != nil) {

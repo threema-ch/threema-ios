@@ -6,13 +6,60 @@ import RemoteSecretProtocol
 import ThreemaEssentials
 import ThreemaFramework
 import ThreemaMacros
+import UIKit
+
+// MARK: - WindowResolver
+
+enum WindowResolver {
+    static var window: UIWindow? {
+        #if SCENE_DELEGATE_ROOT_COORDINATOR_DEVELOPMENT
+            SceneDelegate.current?.window
+        #else
+            AppDelegate.shared().window
+        #endif
+    }
+}
+
+// MARK: - RemoteSecretConfiguration
+
+struct RemoteSecretConfiguration {
+    enum SetupState {
+        case availableAndEnabled
+        case availableAndDisabled
+        case notAvailableAndEnabled
+        case notAvailableAndDisabled
+    }
+    
+    let isRemoteSecretAvailable: Bool
+    let isRemoteSecretEnabled: Bool
+
+    var state: SetupState {
+        if isRemoteSecretAvailable, isRemoteSecretEnabled {
+            .availableAndEnabled
+        }
+        else if isRemoteSecretAvailable, isRemoteSecretEnabled == false {
+            .availableAndDisabled
+        }
+        else if isRemoteSecretAvailable == false, isRemoteSecretEnabled {
+            .notAvailableAndEnabled
+        }
+        else {
+            .notAvailableAndDisabled
+        }
+    }
+}
+
+// MARK: - SetupAppDelegate
 
 @objc protocol SetupAppDelegate {
     func mismatchCancelled()
     func encryptedDataDetected()
 }
 
-@MainActor final class SetupApp: NSObject {
+// MARK: - SetupApp
+
+@MainActor
+final class SetupApp: NSObject {
     enum SetupError: Error {
         case missingInfo
         case noIdentityFound
@@ -57,18 +104,18 @@ import ThreemaMacros
     @MainActor @objc func setupRemoteSecretAndKeychain() async throws -> RemoteSecretAndKeychainObjC? {
        
         // In some paths, we might enter this function twice, so we check if already completed the setup first.
-        guard AppLaunchManager.remoteSecretManager == nil else {
-            let keychainManager = KeychainManager(remoteSecretManager: AppLaunchManager.remoteSecretManager)
+        guard RemoteSecretProvider.isRemoteSecretManagerSet == false else {
+            let keychainManager = KeychainManager(remoteSecretManager: RemoteSecretProvider.remoteSecretManager)
             try handleKeychain(with: keychainManager)
             return RemoteSecretAndKeychainObjC(
-                remoteSecretManager: AppLaunchManager.remoteSecretManager,
+                remoteSecretManager: RemoteSecretProvider.remoteSecretManager,
                 keychainManager: keychainManager
             )
         }
         
         // We decide upon what to do, based on if RS is in keychain and whether it is enabled through MDM
-        let isRemoteSecretInKeychain = try KeychainManager.loadRemoteSecret() != nil
-        let isRemoteSecretInMDMEnabled = mdmSetup.enableRemoteSecret()
+        let isRemoteSecretAvailable = try KeychainManager.loadRemoteSecret() != nil
+        let isRemoteSecretEnabled = mdmSetup.enableRemoteSecret()
         
         // If the user quit the app during setup, the identity is already present in the keychain. We pre fill it to the
         // identity store, so possible existing remote secrets can be fetched.
@@ -76,17 +123,19 @@ import ThreemaMacros
             myIdentityStore.identity = identity.rawValue
         }
         
-        switch (isRemoteSecretInKeychain, isRemoteSecretInMDMEnabled) {
-        case (true, true):
+        let remoteSecretConfiguration = RemoteSecretConfiguration(
+            isRemoteSecretAvailable: isRemoteSecretAvailable,
+            isRemoteSecretEnabled: isRemoteSecretEnabled
+        )
+        
+        switch remoteSecretConfiguration.state {
+        case .availableAndEnabled:
             return try await setupRemoteSecretIsInKeychainAndStillEnabled()
-            
-        case (true, false):
+        case .availableAndDisabled:
             return try await setupRemoteSecretIsInKeychainButNoLongerEnabled()
-            
-        case (false, true):
+        case .notAvailableAndEnabled:
             return try await setupRemoteSecretIsNotInKeychainButEnabled()
-
-        case (false, false):
+        case .notAvailableAndDisabled:
             return try await setupRemoteSecretIsNotInKeychainAndNotEnabled()
         }
     }
@@ -102,7 +151,7 @@ import ThreemaMacros
         // 1.) Fetch the RS from the server
         let remoteSecretManager = try await setupRemoteSecretManagerFetch()
         
-        AppLaunchManager.remoteSecretManager = remoteSecretManager
+        RemoteSecretProvider.setRemoteSecretManager(remoteSecretManager)
         
         // 3.) Create KeychainManager and set up Keychain
         let keychainManager = KeychainManager(remoteSecretManager: remoteSecretManager)
@@ -127,7 +176,7 @@ import ThreemaMacros
         // 2.) Create RS Manager and store it in `AppLaunchManager`
         let remoteSecretManager = try await setupRemoteSecretManagerFetch()
         
-        AppLaunchManager.remoteSecretManager = remoteSecretManager
+        RemoteSecretProvider.setRemoteSecretManager(remoteSecretManager)
         
         // 3.) Create KeychainManager and set up Keychain
         let keychainManager = KeychainManager(remoteSecretManager: remoteSecretManager)
@@ -158,7 +207,7 @@ import ThreemaMacros
         
         // 2.) Create RS Manager and store it in `AppLaunchManager`
         let remoteSecretManager = try await setupRemoteSecretManagerCreate()
-        AppLaunchManager.remoteSecretManager = remoteSecretManager
+        RemoteSecretProvider.setRemoteSecretManager(remoteSecretManager)
         
         // 3.) Create KeychainManager and set up Keychain
         let keychainManager = KeychainManager(remoteSecretManager: remoteSecretManager)
@@ -183,8 +232,8 @@ import ThreemaMacros
         }
         
         // 3.) Create empty RS Manager and store it in `AppLaunchManager`
-        let remoteSecretManager = setupEmptyRemoteSecretManager()
-        AppLaunchManager.remoteSecretManager = remoteSecretManager
+        let remoteSecretManager = try await setupEmptyRemoteSecretManager()
+        RemoteSecretProvider.setRemoteSecretManager(remoteSecretManager)
         
         // 4.) Create KeychainManager and set up Keychain
         let keychainManager = KeychainManager(remoteSecretManager: remoteSecretManager)
@@ -195,8 +244,8 @@ import ThreemaMacros
     
     // MARK: - RemoteSecret
     
-    func setupEmptyRemoteSecretManager() -> RemoteSecretManagerProtocol {
-        remoteSecretManagerCreator.initializeEmptyRemoteSecretManager()
+    func setupEmptyRemoteSecretManager() async throws -> RemoteSecretManagerProtocol {
+        try await remoteSecretManagerCreator.initialize()
     }
     
     private func setupRemoteSecretManagerCreate() async throws -> RemoteSecretManagerProtocol {
@@ -221,12 +270,14 @@ import ThreemaMacros
     }
     
     private func setupRemoteSecretManagerFetch() async throws -> RemoteSecretManagerProtocol {
+        let window = WindowResolver.window
+        
         // Store current view hierarchy to restore it later
-        previousVC = AppDelegate.shared().window.rootViewController
+        previousVC = window?.rootViewController
        
         let navigationController = UINavigationController()
         navigationController.isNavigationBarHidden = true
-        AppDelegate.shared().window.rootViewController = navigationController
+        window?.rootViewController = navigationController
         
         // Initialize RS
         let remoteSecretInitializeViewsManager = RemoteSecretInitializeViewsManager(
@@ -241,15 +292,15 @@ import ThreemaMacros
                 try! KeychainManager.deleteAllItems()
                 exit(0)
             },
-            onCancel: {
+            onCancel: { [weak self, weak window] in
                 // User can also go back to setup and enter a new ID
-                AppDelegate.shared().window.rootViewController = self.previousVC
-                self.delegate?.mismatchCancelled()
+                window?.rootViewController = self?.previousVC
+                self?.delegate?.mismatchCancelled()
             }
         )
         
         // Restore view hierarchy
-        AppDelegate.shared().window.rootViewController = previousVC
+        window?.rootViewController = previousVC
         
         return remoteSecretManager
     }
@@ -310,7 +361,7 @@ import ThreemaMacros
             serverGroup: ServerGroup(serverGroup)
         )
 
-        try keychainManager.storeIdentity(myIdentity)
+        try keychainManager.storeIdentity(myIdentity, thisDeviceOnly: true)
         
         // We could already be further in the process when coming from a safe restore
         if AppSetup.state.rawValue < AppSetupState.identityAdded.rawValue {
@@ -319,10 +370,10 @@ import ThreemaMacros
     }
     
     private func updateMyIdentityStore(with identity: MyIdentity) {
-        myIdentityStore.identity = identity.identity.rawValue
-        myIdentityStore.clientKey = identity.clientKey.rawValue
-        myIdentityStore.publicKey = identity.publicKey.rawValue
-        myIdentityStore.serverGroup = identity.serverGroup.rawValue
+        myIdentityStore.identity = identity.$identity
+        myIdentityStore.clientKey = identity.$clientKey
+        myIdentityStore.publicKey = identity.$publicKey
+        myIdentityStore.serverGroup = identity.$serverGroup
     }
     
     // MARK: - License
@@ -384,13 +435,23 @@ import ThreemaMacros
         #endif
 
         if AppLaunchManager.shared.isRepairedDatabaseImportRequired {
-            try await AppDelegate.shared().presentSpinner(label: #localize("updating_database")) {
+            /// OC: This will be a problem for new flow, for now we add the window,
+            /// but we need to revisit it soon.
+            try await AppDelegate.shared().presentSpinner(
+                label: #localize("updating_database"),
+                window: WindowResolver.window
+            ) {
                 try AppLaunchManager.shared.importRepairedDatabase(databaseManager: databaseManager)
             }
         }
 
         if try AppLaunchManager.shared.isDatabaseMigrationRequired(databaseManager: databaseManager) {
-            try await AppDelegate.shared().presentSpinner(label: #localize("updating_database")) {
+            /// OC: This will be a problem for new flow, for now we add the window,
+            /// but we need to revisit it soon.
+            try await AppDelegate.shared().presentSpinner(
+                label: #localize("updating_database"),
+                window: WindowResolver.window
+            ) {
                 try AppLaunchManager.shared.migrateDatabase(databaseManager: databaseManager)
             }
         }
@@ -398,7 +459,8 @@ import ThreemaMacros
         return databaseManager
     }
 
-    @MainActor @objc static func runAppMigrationIsNeeded() async throws {
+    /// Legacy flow
+    @MainActor @objc static func runAppMigrationIfNeeded() async throws {
         guard AppLaunchManager.shared.isAppMigrationRequired else {
             return
         }
@@ -407,9 +469,29 @@ import ThreemaMacros
 
         // Do app migration only there are data (database) present
         if AppSetup.hasPreexistingDatabaseFile {
-            try await AppDelegate.shared().presentSpinner(label: #localize("updating_database")) {
+            try await AppDelegate.shared().presentSpinner(
+                label: #localize("updating_database"),
+                window: WindowResolver.window
+            ) {
                 try appMigration.run()
             }
+        }
+        else {
+            appMigration.updateAppMigrationVersionToLatest()
+        }
+    }
+    
+    @MainActor static func runAppMigrationIfNeeded(
+        businessInjector: BusinessInjectorProtocol
+    ) async throws {
+        guard AppLaunchManager.shared.isAppMigrationRequired else {
+            return
+        }
+        
+        let appMigration = AppMigration(businessInjector: businessInjector)
+        
+        if AppSetup.hasPreexistingDatabaseFile {
+            try appMigration.run()
         }
         else {
             appMigration.updateAppMigrationVersionToLatest()

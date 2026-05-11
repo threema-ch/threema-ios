@@ -172,11 +172,11 @@ final class MediatorMessageProtocolMock: MediatorMessageProtocolProtocol {
         D2d_Envelope()
     }
 
-    func getEnvelopeForProfileUpdate(userProfile: Sync_UserProfile) -> D2d_Envelope {
+    func getEnvelopeForProfileUpdate(userProfile: D2dSync_UserProfile) -> D2d_Envelope {
         D2d_Envelope()
     }
 
-    func getEnvelopeForContactSync(contact: Sync_Contact, syncAction: DeltaSyncContact.SyncAction) -> D2d_Envelope {
+    func getEnvelopeForContactSync(contact: D2dSync_Contact, syncAction: DeltaSyncContact.SyncAction) -> D2d_Envelope {
         D2d_Envelope()
     }
 
@@ -184,15 +184,15 @@ final class MediatorMessageProtocolMock: MediatorMessageProtocolProtocol {
         D2d_Envelope()
     }
 
-    func getEnvelopeForGroupSync(group: Sync_Group, syncAction: D2d_GroupSync.OneOf_Action) -> D2d_Envelope {
+    func getEnvelopeForGroupSync(group: D2dSync_Group, syncAction: D2d_GroupSync.OneOf_Action) -> D2d_Envelope {
         D2d_Envelope()
     }
 
-    func getEnvelopeForSettingsUpdate(settings: Sync_Settings) -> D2d_Envelope {
+    func getEnvelopeForSettingsUpdate(settings: D2dSync_Settings) -> D2d_Envelope {
         D2d_Envelope()
     }
 
-    func getEnvelopeForMdmParametersUpdate(mdmParameters: Sync_MdmParameters) -> D2d_Envelope {
+    func getEnvelopeForMdmParametersUpdate(mdmParameters: D2dSync_MdmParameters) -> D2d_Envelope {
         D2d_Envelope()
     }
 

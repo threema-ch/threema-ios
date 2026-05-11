@@ -1,9 +1,9 @@
 import ThreemaFramework
 
-// MARK: - LicenseStoreProtocol
+// MARK: - LicenseStoreAdapterProtocol
 
 @MainActor
-protocol LicenseStoreProtocol: AnyObject {
+protocol LicenseStoreAdapterProtocol: AnyObject {
     /// Direct access to underlying LicenseStore for legacy code
     var store: LicenseStore { get }
     
@@ -20,7 +20,7 @@ protocol LicenseStoreProtocol: AnyObject {
 // MARK: - LicenseStoreAdapter
 
 @MainActor
-final class LicenseStoreAdapter: LicenseStoreProtocol {
+final class LicenseStoreAdapter: LicenseStoreAdapterProtocol {
     
     var store: LicenseStore {
         LicenseStore.shared()

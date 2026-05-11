@@ -103,12 +103,6 @@ public final class RemoteSecretManagerCreator {
         }
     }
     
-    /// Initializes an empty remote secret manager
-    /// - Returns: Empty remote secret manager
-    public func initializeEmptyRemoteSecretManager() -> any RemoteSecretManagerProtocol {
-        EmptyRemoteSecretManager()
-    }
-    
     /// Initialize remote secret
     ///
     /// This fetches the remote secret from the sever and starts monitoring the RS changes
@@ -124,7 +118,7 @@ public final class RemoteSecretManagerCreator {
     public func initialize(
         identity: ThreemaIdentity? = nil,
         throwError: Bool = false,
-        workServerBaseURL: () async -> String?
+        workServerBaseURL: (() async -> String?)? = nil
     ) async throws -> any RemoteSecretManagerProtocol {
         // The closure for `workServerBaseURL` ensures that we attempt to load the server url only if RS is actually
         // setup (i.e. in keychain)
@@ -149,7 +143,7 @@ public final class RemoteSecretManagerCreator {
     private func initializeAndStartMonitor(
         identity: ThreemaIdentity,
         throwError: Bool,
-        workServerBaseURL: () async -> String?
+        workServerBaseURL: (() async -> String?)?
     ) async throws -> any RemoteSecretManagerProtocol {
         
         // Threema identity needs to be injected because during creation it cannot be loaded from Keychain
@@ -163,7 +157,7 @@ public final class RemoteSecretManagerCreator {
             return EmptyRemoteSecretManager()
         }
         
-        guard let workServerBaseURL = await workServerBaseURL() else {
+        guard let workServerBaseURL = await workServerBaseURL?() else {
             throw RemoteSecretManagerError.noWorkServerBaseURL
         }
         

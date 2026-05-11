@@ -59,9 +59,9 @@
 	<data>WpjyPeZWBdBQ3ABkvgfd3YEdoRalQ85DqiaH0Z8grzw=</data>
 	<key>ThreemaWebURL</key>
 	<string>https://web.threema.ch/</string>
-	<key>ThreemaWorkAPIURL</key>
+	<key>ThreemaWorkBaseServerURL</key>
 	<string></string>
-	<key>ThreemaWorkAPIURLv6</key>
+	<key>ThreemaWorkAPIURL</key>
 	<string></string>
 	<key>ThreemaWorkServerNamePrefix</key>
 	<string>w-</string>

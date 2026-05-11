@@ -262,7 +262,7 @@ struct ThreemaSafePasswordViewModelTests {
         #expect(
             sut.passwordSectionFooter == """
                 Your administrator enabled Threema Safe for your device.
-
+                
                 Please choose a password. You will need this password to restore your Threema Safe backup.
                 """
         )
@@ -344,7 +344,7 @@ struct ThreemaSafePasswordViewModelTests {
         #expect(
             sut.serverSectionFooter == """
                 Your administrator enabled Threema Safe for your device.
-
+                
                 You can use Threema’s server or specify a third-party backup server to use instead.
                 """
         )
@@ -371,7 +371,7 @@ struct ThreemaSafePasswordViewModelTests {
         #expect(
             sut.serverSectionFooter == """
                 Your administrator enabled Threema Safe for your device.
-
+                
                 Store your Threema Safe backup on your organization’s server, or specify a different backup server.
                 """
         )

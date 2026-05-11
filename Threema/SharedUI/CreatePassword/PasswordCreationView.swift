@@ -85,13 +85,15 @@ struct PasswordCreationView: View {
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
                 CancelButton { @MainActor in
-                    // swiftformat:disable preferKeyPath
-                    let dismissAction = coordinator.map {
-                        $0.dismiss
-                    } ?? onDismiss ?? dismiss.callAsFunction
-                    // swiftformat:enable preferKeyPath
-                    
-                    dismissAction?()
+                    if let coordinator {
+                        coordinator.dismiss()
+                    }
+                    else if let onDismiss {
+                        onDismiss()
+                    }
+                    else {
+                        dismiss()
+                    }
                 }
             }
             ToolbarItem(placement: .confirmationAction) {

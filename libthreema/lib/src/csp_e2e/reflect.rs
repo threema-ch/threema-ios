@@ -1,16 +1,15 @@
 //! Task for reflecting messages.
 use const_format::formatcp;
 use libthreema_macros::Name;
-use prost::Name as _;
 use tracing::{error, warn};
 
 use crate::{
     common::Nonce,
     crypto::aead::AeadRandomNonceAhead as _,
-    csp_e2e::{CspE2eProtocolError, D2xContext, ReflectId},
+    csp_e2e::{CspE2eProtocolError, CspE2eProtocolInternalErrorCause, D2xContext, ReflectId},
     model::message::{MessageLifetime, MessageProperties},
     protobuf::{self},
-    utils::bytes::ProtobufPaddedMessage as _,
+    utils::{debug::Name as _, protobuf::PaddedMessage as _},
 };
 
 /// 1. Let `reflect-ids` be the list of all reflect IDs of `reflect_messages` that do not have the _ephemeral_
@@ -29,7 +28,7 @@ pub struct ReflectResponse {
     pub acknowledged_reflect_ids: Vec<ReflectId>,
 }
 
-/// Flags applied when reflecting/reflected
+/// Flags applied when reflecting/reflected.
 #[derive(Default)]
 pub struct ReflectFlags {
     /// If `true`, the reflected message is only transmitted to other devices currently online.
@@ -51,7 +50,7 @@ impl From<&MessageProperties> for ReflectFlags {
 
 /// A message that should be reflected or has been reflected.
 ///
-/// TODO(LIB-16): Add a `From` for the D2M layer reflect payload / align with those structs
+/// TODO(LIB-16): Add a `From` for the D2M layer reflect payload / align with those structs.
 pub struct ReflectPayload {
     /// Flags used for the reflected message.
     pub flags: ReflectFlags,
@@ -81,7 +80,7 @@ impl ReflectPayload {
             .reflect_key()
             .0
             .encrypt_in_place_random_nonce_ahead(b"", &mut envelope)
-            .map_err(|_| CspE2eProtocolError::EncryptionFailed {
+            .map_err(|_| CspE2eProtocolInternalErrorCause::EncryptionFailed {
                 name: protobuf::d2d::Envelope::NAME,
             })?;
         Ok((
@@ -158,7 +157,7 @@ impl ReflectSubtask {
                 ?acknowledged_reflect_ids,
                 message,
             );
-            return Err(CspE2eProtocolError::DesyncError(message));
+            return Err(CspE2eProtocolError::DesyncError(message.to_owned()));
         }
         if !acknowledged_reflect_ids.is_empty() {
             warn!(

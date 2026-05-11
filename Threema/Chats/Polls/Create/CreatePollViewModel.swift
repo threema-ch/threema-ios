@@ -123,7 +123,7 @@ final class CreatePollViewModel: ObservableObject {
             .map { Choice(text: $0.text) }
         
         showIntermediateResult = poll.isIntermediate
-        allowMultipleSelection = poll.isMultiSelection
+        allowMultipleSelection = poll.isMultiselection
     }
     
     func deleteChoice(at index: Int) {

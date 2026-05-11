@@ -3,7 +3,7 @@ import Foundation
 import ThreemaEssentials
 import ThreemaProtocols
 
-@objc final class TaskDefinitionSendDeleteEditMessage: TaskDefinitionSendMessage {
+final class TaskDefinitionSendDeleteEditMessage: TaskDefinitionSendMessage {
     override func create(
         frameworkInjector: FrameworkInjectorProtocol,
         taskContext: TaskContextProtocol

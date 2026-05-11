@@ -13,6 +13,7 @@ use crate::{
         RemoteSecretSetupContext, RemoteSecretSetupError, RemoteSecretSetupInstruction,
         RemoteSecretSetupResponse,
     },
+    utils::debug::Name as _,
 };
 
 /// Result of polling a [`RemoteSecretDeleteTask`].
@@ -45,8 +46,8 @@ impl State {
         let request = work_directory::delete_remote_secret_authentication_request(
             &context.client_info,
             &context.work_server_url,
-            context.user_identity,
             &context.work_context,
+            context.user_identity,
             &state.remote_secret_authentication_token,
         );
         (
@@ -62,7 +63,7 @@ impl State {
         context: &RemoteSecretSetupContext,
         state: ChallengeState,
     ) -> Result<(Self, RemoteSecretDeleteLoop), RemoteSecretSetupError> {
-        // Ensure the caller provided the response
+        // Ensure the caller provided the response.
         let Some(response) = state.response else {
             return Err(RemoteSecretSetupError::InvalidState(formatcp!(
                 "{} result was not provided for '{}' state",
@@ -71,7 +72,7 @@ impl State {
             )));
         };
 
-        // Handle the authentication challenge and provide the final request to remove a remote secret
+        // Handle the authentication challenge and provide the final request to remove a remote secret.
         let authentication =
             work_directory::handle_authentication_challenge(&context.client_key, response.result)?;
         info!("Removing remote secret");
@@ -81,8 +82,8 @@ impl State {
                 request: work_directory::delete_remote_secret_request(
                     &context.client_info,
                     &context.work_server_url,
-                    context.user_identity,
                     &context.work_context,
+                    context.user_identity,
                     authentication,
                     &state.remote_secret_authentication_token,
                 ),
@@ -91,7 +92,7 @@ impl State {
     }
 
     fn poll_delete(state: DeleteState) -> Result<(Self, RemoteSecretDeleteLoop), RemoteSecretSetupError> {
-        // Ensure the caller provided the resonse
+        // Ensure the caller provided the response.
         let Some(response) = state.response else {
             return Err(RemoteSecretSetupError::InvalidState(formatcp!(
                 "{} result was not provided for '{}' state",
@@ -100,7 +101,7 @@ impl State {
             )));
         };
 
-        // Handle the result
+        // Handle the result.
         work_directory::handle_delete_remote_secret_result(response.result)?;
         info!("Remote secret removed");
         Ok((Self::Done, RemoteSecretDeleteLoop::Done(())))
@@ -346,17 +347,17 @@ mod tests {
 
     #[test]
     fn complete_task() -> anyhow::Result<()> {
-        // Init state
+        // Init state.
         let mut task =
             RemoteSecretDeleteTask::new(setup_context(), RemoteSecretAuthenticationToken([2_u8; 32]));
         assert_matches!(&task.state, State::Init(_));
 
-        // Challenge state
+        // Challenge state.
         let instruction = task.poll()?;
         assert_matches!(task.state, State::Challenge(_));
         assert_matches!(instruction, RemoteSecretDeleteLoop::Instruction(_));
 
-        // Create state
+        // Create state.
         task.response(RemoteSecretSetupResponse {
             result: Ok(HttpsResponse {
                 status: 200,
@@ -370,7 +371,7 @@ mod tests {
         assert_matches!(task.state, State::Delete(_));
         assert_matches!(instruction, RemoteSecretDeleteLoop::Instruction(_));
 
-        // Done state
+        // Done state.
         task.response(RemoteSecretSetupResponse {
             result: Ok(HttpsResponse {
                 status: 204,

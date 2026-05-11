@@ -7,7 +7,7 @@ import ThreemaEssentials
 import ThreemaFramework
 import ThreemaMacros
 
-@objc final class SafeStore: NSObject, SafeStoreProtocol {
+final class SafeStore: NSObject, SafeStoreProtocol {
     
     // MARK: - Static properties
     
@@ -18,23 +18,26 @@ import ThreemaMacros
     
     // MARK: - Properties
     
-    private let safeConfigManager: SafeConfigManagerProtocol
+    private let safeConfigManager: any SafeConfigManagerProtocol
     private let serverApiConnector: ServerAPIConnector
-    private let groupManager: GroupManagerProtocol
-    private let myIdentityStore: MyIdentityStoreProtocol
-    
+    private let groupManager: any GroupManagerProtocol
+    private let myIdentityStore: any MyIdentityStoreProtocol
+    private let phoneNumberNormalizer: any PhoneNumberNormalizerProtocol
+
     // MARK: - Lifecycle
     
     init(
-        safeConfigManager: SafeConfigManagerProtocol,
+        safeConfigManager: any SafeConfigManagerProtocol,
         serverApiConnector: ServerAPIConnector,
-        groupManager: GroupManagerProtocol,
-        myIdentityStore: MyIdentityStoreProtocol
+        groupManager: any GroupManagerProtocol,
+        myIdentityStore: any MyIdentityStoreProtocol,
+        phoneNumberNormalizer: any PhoneNumberNormalizerProtocol
     ) {
         self.safeConfigManager = safeConfigManager
         self.serverApiConnector = serverApiConnector
         self.groupManager = groupManager
         self.myIdentityStore = myIdentityStore
+        self.phoneNumberNormalizer = phoneNumberNormalizer
     }
     
     // NSObject thereby not the whole SafeConfigManagerProtocol interface must be like @objc
@@ -42,13 +45,15 @@ import ThreemaMacros
         safeConfigManagerAsObject safeConfigManager: NSObject,
         serverApiConnector: ServerAPIConnector,
         groupManager: GroupManager,
-        myIdentityStore: MyIdentityStore
+        myIdentityStore: MyIdentityStore,
+        phoneNumberNormalizer: PhoneNumberNormalizer
     ) {
         self.init(
             safeConfigManager: safeConfigManager as! SafeConfigManagerProtocol,
             serverApiConnector: serverApiConnector,
             groupManager: groupManager,
-            myIdentityStore: myIdentityStore
+            myIdentityStore: myIdentityStore,
+            phoneNumberNormalizer: phoneNumberNormalizer
         )
     }
     
@@ -150,7 +155,7 @@ import ThreemaMacros
         let encryptionKey = getEncryptionKey(key: key)
         
         guard backupID != nil, let encryptionKey else {
-            throw SafeError.restoreError(.invalidClientKey)
+            throw SafeError.restoreError(.invalidMasterKey)
         }
         
         let nonce = data[0..<SafeStore.nonceLength]
@@ -373,7 +378,7 @@ import ThreemaMacros
         let privateEntityManager = PersistenceManager(
             appGroupID: AppGroup.groupID(),
             userDefaults: AppGroup.userDefaults(),
-            remoteSecretManager: AppLaunchManager.remoteSecretManager
+            remoteSecretManager: RemoteSecretProvider.remoteSecretManager
         ).backgroundEntityManager
         
         // Get contacts
@@ -535,26 +540,18 @@ import ThreemaMacros
         if mdmSetup.existsMdmKey(MDM_KEY_LINKED_PHONE) ||
             mdmSetup.existsMdmKey(MDM_KEY_LINKED_EMAIL) ||
             mdmSetup.readonlyProfile() {
-            if let createIDPhone = myIdentityStore.createIDPhone,
-               !createIDPhone.isEmpty {
-                
-                let normalizer: PhoneNumberNormalizer! = PhoneNumberNormalizer.sharedInstance()
-                var prettyMobileNo: NSString?
-               
-                if let mobileNo = normalizer.phoneNumber(
-                    toE164: myIdentityStore.createIDPhone,
-                    withDefaultRegion: PhoneNumberNormalizer.userRegion(),
-                    prettyFormat: &prettyMobileNo
+            if
+                let createIDPhone = myIdentityStore.createIDPhone,
+                !createIDPhone.isEmpty,
+                let mobileNo = phoneNumberNormalizer.e164Format(
+                    from: createIDPhone,
+                    defaultRegion: phoneNumberNormalizer.userRegion()
                 ),
-                    !mobileNo.isEmpty {
-                    
-                    link(mobileNo: mobileNo)
-                }
+                !mobileNo.isEmpty {
+                link(mobileNo: mobileNo)
             }
             
-            if let createIDEmail = myIdentityStore.createIDEmail,
-               !createIDEmail.isEmpty {
-                
+            if let createIDEmail = myIdentityStore.createIDEmail, !createIDEmail.isEmpty {
                 link(email: createIDEmail)
             }
         }
@@ -1026,15 +1023,10 @@ import ThreemaMacros
     
     private func localizedMobileNo(_ mobileNo: String) -> (mobileNo: String?, prettyMobileNo: String?) {
         if !mobileNo.isEmpty {
-            let normalizer: PhoneNumberNormalizer! = PhoneNumberNormalizer.sharedInstance()
-            var prettyMobileNo: NSString?
-            
-            let localMobileNo = normalizer.phoneNumber(
-                toE164: mobileNo,
-                withDefaultRegion: PhoneNumberNormalizer.userRegion(),
-                prettyFormat: &prettyMobileNo
-            )
-            return (mobileNo: localMobileNo, prettyMobileNo: prettyMobileNo as String?)
+            let defaultRegion = phoneNumberNormalizer.userRegion()
+            let mobile = phoneNumberNormalizer.e164Format(from: mobileNo, defaultRegion: defaultRegion)
+            let prettyMobile = phoneNumberNormalizer.prettyFormat(from: mobileNo, defaultRegion: defaultRegion)
+            return (mobileNo: mobile, prettyMobileNo: prettyMobile)
         }
         return (mobileNo: nil, prettyMobileNo: nil)
     }
@@ -1053,7 +1045,7 @@ import ThreemaMacros
     }
     
     private func link(email: String) {
-        serverApiConnector.linkEmail(with: myIdentityStore as? MyIdentityStore, email: email, onCompletion: { _ in
+        serverApiConnector.linkEmail(with: myIdentityStore, email: email, onCompletion: { _ in
             DDLogInfo("Safe restore linking email with identity successfull")
         }, onError: { _ in
             DDLogError("Safe restore linking email with identity failed")

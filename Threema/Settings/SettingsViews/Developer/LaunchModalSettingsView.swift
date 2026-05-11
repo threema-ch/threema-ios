@@ -4,6 +4,7 @@ struct LaunchModalSettingsView: View {
     @State var showThreemaSafeIntroView = false
     @State var showNotificationReminderView = false
     @State var showNotificationTypeSelectionView = false
+    @State var showIdentityThisDeviceOnlyDecisionView = false
     @State var showRemoteSecretActivateView = false
     @State var showRemoteSecretDeactivateView = false
     @State var showFeedBackView = false
@@ -67,6 +68,15 @@ struct LaunchModalSettingsView: View {
                         )
                     )
                 }
+                
+                Button {
+                    showIdentityThisDeviceOnlyDecisionView.toggle()
+                } label: {
+                    Text(verbatim: "Identity This Device Only")
+                }
+                .sheet(isPresented: $showIdentityThisDeviceOnlyDecisionView) {
+                    IdentityThisDeviceOnlyDecisionView(businessInjector: BusinessInjector.ui)
+                }
             } header: {
                 Text(verbatim: "Show Modals")
             }
@@ -82,6 +92,12 @@ struct LaunchModalSettingsView: View {
                     resetSafeIntroShown()
                 } label: {
                     Text(verbatim: "Threema Safe Intro")
+                }
+                
+                Button(role: .destructive) {
+                    resetThisDeviceOnly()
+                } label: {
+                    Text(verbatim: "This Device Only")
                 }
             } header: {
                 Text(verbatim: "Reset")
@@ -108,6 +124,10 @@ struct LaunchModalSettingsView: View {
     
     private func resetSafeIntroShown() {
         UserSettings.shared().safeIntroShown = false
+    }
+    
+    private func resetThisDeviceOnly() {
+        UserSettings.shared().didShowIdentityThisDeviceOnly = false
     }
 }
 

@@ -22,13 +22,13 @@ protocol GroupCallContextProtocol: AnyObject {
     // MARK: - SFU Connection
     
     func outerEnvelope(for innerData: Data, to participant: RemoteParticipant)
-        -> Groupcall_ParticipantToParticipant.OuterEnvelope
+        -> GroupCall_ParticipantToParticipant.OuterEnvelope
     
-    func relay(_ relay: Groupcall_ParticipantToParticipant.OuterEnvelope) throws
+    func relay(_ relay: GroupCall_ParticipantToParticipant.OuterEnvelope) throws
     
     func send(_ data: Data)
     
-    func send(_ envelope: Groupcall_ParticipantToSfu.Envelope) throws
+    func send(_ envelope: GroupCall_ParticipantToSfu.Envelope) throws
     
     // MARK: Media Capture
 
@@ -55,9 +55,9 @@ protocol GroupCallContextProtocol: AnyObject {
     
     func myParticipantID() -> ParticipantID
     
-    func verifyReceiver(for message: Groupcall_ParticipantToParticipant.OuterEnvelope) -> Bool
+    func verifyReceiver(for message: GroupCall_ParticipantToParticipant.OuterEnvelope) -> Bool
     
-    func handle(_ message: Groupcall_ParticipantToParticipant.OuterEnvelope) async throws
+    func handle(_ message: GroupCall_ParticipantToParticipant.OuterEnvelope) async throws
         -> MessageResponseAction
     
     func mapLocalTransceivers(ownAudioMuteState: OwnMuteState, ownVideoMuteState: OwnMuteState) async throws
@@ -267,7 +267,7 @@ extension GroupCallContext {
 
 extension GroupCallContext {
     func handle(
-        _ message: Groupcall_ParticipantToParticipant.OuterEnvelope
+        _ message: GroupCall_ParticipantToParticipant.OuterEnvelope
     ) async throws -> MessageResponseAction {
         
         /// **Protocol Step: ParticipantToParticipant.OuterEnvelope (Receiving 1.)**
@@ -339,9 +339,9 @@ extension GroupCallContext {
     func outerEnvelope(
         for innerData: Data,
         to participant: RemoteParticipant
-    ) -> Groupcall_ParticipantToParticipant
+    ) -> GroupCall_ParticipantToParticipant
         .OuterEnvelope {
-        var outer = Groupcall_ParticipantToParticipant.OuterEnvelope()
+        var outer = GroupCall_ParticipantToParticipant.OuterEnvelope()
         outer.receiver = participant.participantID.id
         outer.sender = participantState.localParticipant.participantID.id
         outer.encryptedData = innerData
@@ -351,7 +351,7 @@ extension GroupCallContext {
     
     /// Are we the intended receiver?
     @inlinable
-    func verifyReceiver(for message: Groupcall_ParticipantToParticipant.OuterEnvelope) -> Bool {
+    func verifyReceiver(for message: GroupCall_ParticipantToParticipant.OuterEnvelope) -> Bool {
         message.receiver == participantState.localParticipant.participantID.id
     }
 }
@@ -394,11 +394,11 @@ extension GroupCallContext {
     }
     
     private func sendCallStateUpdateToSfu() throws {
-        let groupCallState = try Groupcall_ParticipantToSfu.UpdateCallState.with {
+        let groupCallState = try GroupCall_ParticipantToSfu.UpdateCallState.with {
             $0.encryptedCallState = try encryptedCallState(from: joinedParticipants)
         }
         
-        let outer = Groupcall_ParticipantToSfu.Envelope.with {
+        let outer = GroupCall_ParticipantToSfu.Envelope.with {
             $0.updateCallState = groupCallState
             $0.padding = dependencies.groupCallCrypto.padding()
         }
@@ -522,7 +522,7 @@ extension GroupCallContext {
 // MARK: - Connection
 
 extension GroupCallContext {
-    func relay(_ relay: Groupcall_ParticipantToParticipant.OuterEnvelope) throws {
+    func relay(_ relay: GroupCall_ParticipantToParticipant.OuterEnvelope) throws {
         try connectionContext.relay(relay)
     }
     
@@ -530,7 +530,7 @@ extension GroupCallContext {
         connectionContext.send(data)
     }
     
-    func send(_ envelope: Groupcall_ParticipantToSfu.Envelope) throws {
+    func send(_ envelope: GroupCall_ParticipantToSfu.Envelope) throws {
         let serialized = try envelope.ownSerializedData()
         connectionContext.send(serialized)
     }
@@ -554,8 +554,8 @@ extension GroupCallContext {
         return encrypted
     }
     
-    private func groupCallState(from participants: Set<JoinedRemoteParticipant>) -> Groupcall_CallState {
-        var callState = Groupcall_CallState()
+    private func groupCallState(from participants: Set<JoinedRemoteParticipant>) -> GroupCall_CallState {
+        var callState = GroupCall_CallState()
         callState.stateCreatedAt = UInt64(Date().timeIntervalSinceReferenceDate)
         callState.stateCreatedBy = participantState.localParticipant.participantID.id
         callState.participants = groupCallParticipants(from: participants)
@@ -564,16 +564,16 @@ extension GroupCallContext {
     }
     
     private func groupCallParticipants(from joinedRemoteParticipants: Set<JoinedRemoteParticipant>)
-        -> [UInt32: Groupcall_CallState.Participant] {
-        var dict = [UInt32: Groupcall_CallState.Participant]()
+        -> [UInt32: GroupCall_CallState.Participant] {
+        var dict = [UInt32: GroupCall_CallState.Participant]()
         
         for joinedRemoteParticipant in joinedRemoteParticipants {
-            var normalParticipant = Groupcall_CallState.Participant.Normal()
+            var normalParticipant = GroupCall_CallState.Participant.Normal()
             
             normalParticipant.identity = joinedRemoteParticipant.threemaIdentity.rawValue
             normalParticipant.nickname = joinedRemoteParticipant.nickname
             
-            var stateParticipant = Groupcall_CallState.Participant()
+            var stateParticipant = GroupCall_CallState.Participant()
             stateParticipant.threema = normalParticipant
             
             dict[joinedRemoteParticipant.participantID.id] = stateParticipant
@@ -581,11 +581,11 @@ extension GroupCallContext {
         
         // We also need to add the local participant
         let localParticipant = participantState.localParticipant
-        var localNormalParticipant = Groupcall_CallState.Participant.Normal()
+        var localNormalParticipant = GroupCall_CallState.Participant.Normal()
         localNormalParticipant.identity = localParticipant.threemaIdentity.rawValue
         localNormalParticipant.nickname = localParticipant.nickname
         
-        var localStateParticipant = Groupcall_CallState.Participant()
+        var localStateParticipant = GroupCall_CallState.Participant()
         localStateParticipant.threema = localNormalParticipant
         dict[localParticipant.participantID.id] = localStateParticipant
         

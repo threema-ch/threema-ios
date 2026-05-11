@@ -11,6 +11,12 @@ import SwiftUI
 import ThreemaFramework
 import ThreemaMacros
 
+final class RestoreDataURLProvider: NSObject {
+    @objc static var urlString: String?
+    
+    override private init() { }
+}
+
 extension AppDelegate {
 
     static var keyWindow: UIWindow? {
@@ -30,6 +36,10 @@ extension AppDelegate {
         }
         
         return appCoordinator.splitViewController.traitCollection.horizontalSizeClass == .compact
+    }
+    
+    @objc static func isAppInBackground() -> Bool {
+        SceneDelegate.isAppInBackground
     }
 
     // MARK: - App launch
@@ -65,12 +75,12 @@ extension AppDelegate {
                 try KeychainManager.deleteRemoteSecret()
             }
             
-            guard showOnboardingIfNeeded() == false else {
+            guard try await showOnboardingIfNeeded() == false else {
                 return nil
             }
 
             let remoteSecretManager: RemoteSecretManagerProtocol
-            if AppLaunchManager.remoteSecretManager == nil {
+            if RemoteSecretProvider.isRemoteSecretManagerSet == false {
                 
                 // We store the current view hierarchy to restore it later
                 let previousVC = window.rootViewController
@@ -95,7 +105,7 @@ extension AppDelegate {
             }
             else {
                 DDLogNotice("Remote secret was already initialized. This should only happen if setup run before")
-                remoteSecretManager = AppLaunchManager.remoteSecretManager
+                remoteSecretManager = RemoteSecretProvider.remoteSecretManager
             }
 
             DebugLog.logAppConfiguration()
@@ -115,7 +125,7 @@ extension AppDelegate {
             let databaseManager = try await SetupApp
                 .runDatabaseMigrationIfNeeded(remoteSecretManager: remoteSecretManager)
 
-            try await SetupApp.runAppMigrationIsNeeded()
+            try await SetupApp.runAppMigrationIfNeeded()
 
             // TODO: (IOS-5305) Fix with proper app setup
             // Hack to make app launch after setup work
@@ -161,6 +171,17 @@ extension AppDelegate {
                 exclude: mdmSetup?.disableBackups() ?? false || mdmSetup?.disableSystemBackups() ?? false
             )
 
+            // Make sure private key is this device only
+            if mdmSetup?.disableIOSSystemBackupsIDKeyInclusion() ?? false || mdmSetup?
+                .disableBackups() ?? false || mdmSetup?.disableSystemBackups() ?? false {
+                do {
+                    try keychainManager.changeIdentityAccessibility(thisDeviceOnly: true)
+                }
+                catch {
+                    DDLogError("Failed to change identity accessibility to this device only: \(error)")
+                }
+            }
+            
             registerMemoryWarningNotifications()
 
             return businessInjector
@@ -188,7 +209,7 @@ extension AppDelegate {
     
     /// Show the onboarding if needed
     /// - Returns: `true` if the onboarding is presented
-    private func showOnboardingIfNeeded() -> Bool {
+    private func showOnboardingIfNeeded() async throws -> Bool {
         guard AppLaunchManager.shared.isAppSetupCompleted == false else {
             return false
         }
@@ -208,7 +229,7 @@ extension AppDelegate {
                 )
                 
                 do {
-                    let keychainManager = KeychainManager(
+                    let keychainManager = try await KeychainManager(
                         remoteSecretManager: setupApp
                             .setupEmptyRemoteSecretManager()
                     )
@@ -237,8 +258,13 @@ extension AppDelegate {
 
     func presentSpinner<T>(
         label: String,
+        window: UIWindow?,
         while action: () throws -> T
     ) async throws -> T {
+        guard let window else {
+            fatalError("No window to present UI on")
+        }
+        
         let progressHUD = MBProgressHUD(view: window)
         progressHUD.label.numberOfLines = 0
         progressHUD.label.text = String(format: label, TargetManager.appName)
@@ -341,7 +367,8 @@ extension AppDelegate {
             with: callID,
             callPartnerIdentity: identity,
             callPartnerName: displayName,
-            ringtoneSound: ringtoneSound
+            ringtoneSound: ringtoneSound,
+            fromPush: true
         ) { task in
             self.runWhenBusinessReady(task: task)
             completion()

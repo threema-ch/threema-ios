@@ -16,14 +16,11 @@
 #import "IDCreationPageViewController.h"
 #import "RestoreIdentityViewController.h"
 #import "IntroQuestionView.h"
-#import "PhoneNumberNormalizer.h"
 #import "KKPasscodeSettingsViewController.h"
 #import "NibUtil.h"
 #import <MediaPlayer/MediaPlayer.h>
 #import "ZSWTappableLabel.h"
 #import "ThemedNavigationController.h"
-#import "TypingIndicatorManager.h"
-#import "ModalPresenter.h"
 #import <RSKImageCropper/RSKImageCropViewController.h>
 #import "VideoCaptionView.h"
 #import "PhotoCaptionView.h"
@@ -31,7 +28,6 @@
 #import "CaptionView.h"
 #import "NewMessageToaster.h"
 #import "GatewayAvatarMaker.h"
-#import "WorkDataFetcher.h"
 #import "SplashViewController.h"
 #import "CompletedIDViewController.h"
 #import "EnterLicenseViewController.h"

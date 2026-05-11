@@ -5,7 +5,7 @@ import ThreemaEssentials
 import ThreemaFramework
 import ThreemaMacros
 
-@objc final class SafeManager: NSObject, SafeManagerProtocol {
+final class SafeManager: NSObject, SafeManagerProtocol {
     
     // MARK: - Static poperties
     
@@ -62,11 +62,13 @@ import ThreemaMacros
         let configManager = SafeConfigManager()
         let serverAPIConnector = ServerAPIConnector()
         let safeAPIService = SafeApiService()
+        let phoneNumberNormalizer = PhoneNumberNormalizer()
         let store = SafeStore(
             safeConfigManager: configManager,
             serverApiConnector: serverAPIConnector,
             groupManager: groupManager,
-            myIdentityStore: MyIdentityStore.shared()
+            myIdentityStore: MyIdentityStore.shared(),
+            phoneNumberNormalizer: phoneNumberNormalizer
         )
         self.init(safeConfigManager: configManager, safeStore: store, safeAPIService: safeAPIService)
     }
@@ -907,7 +909,7 @@ import ThreemaMacros
                 object: nil,
                 queue: nil
             ) { notification in
-                if !AppDelegate.shared().isAppInBackground(), self.isActivated {
+                if !SceneDelegate.isAppInBackground, self.isActivated {
                     
                     // start background task to give time to create backup file, if the app is going into background
                     BackgroundTaskManager.shared.newBackgroundTask(

@@ -156,12 +156,10 @@ final class EditContactViewController: ThemedCodeModernGroupedTableViewControlle
             action: #selector(cancelButtonTapped)
         )
         
-        let saveBarButtonItem = UIBarButtonItem(
-            barButtonSystemItem: .save,
+        let saveBarButtonItem = UIBarButtonItem.saveButton(
             target: self,
-            action: #selector(saveButtonTapped)
+            selector: #selector(saveButtonTapped)
         )
-        saveBarButtonItem.style = .done
         
         navigationItem.leftBarButtonItem = cancelBarButtonItem
         navigationItem.rightBarButtonItem = saveBarButtonItem

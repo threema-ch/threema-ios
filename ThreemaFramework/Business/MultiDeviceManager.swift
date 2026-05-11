@@ -1,5 +1,6 @@
 import CocoaLumberjackSwift
 import Foundation
+import Keychain
 import PromiseKit
 import ThreemaEssentials
 
@@ -26,6 +27,9 @@ public protocol MultiDeviceManagerProtocol {
     
     /// Disable multi-device if we can ensure that no other device is left in the group
     func disableMultiDeviceIfNeeded()
+    
+    /// Reset `enableMultiDevice` if needed Keychain items are missing
+    func resetEnableMultiDeviceIfNeeded()
 }
 
 extension MultiDeviceManagerProtocol {
@@ -44,7 +48,8 @@ public final class MultiDeviceManager: MultiDeviceManagerProtocol {
     private let userSettings: UserSettingsProtocol
     private let taskManager: TaskManagerProtocol
     private let entityManager: EntityManager
-
+    private let keychainManager: any KeychainManagerProtocol
+    
     public var maximumNumberOfDeviceSlots: Int? {
         serverConnector.maximumNumberOfDeviceSlots?.intValue
     }
@@ -54,16 +59,19 @@ public final class MultiDeviceManager: MultiDeviceManagerProtocol {
         contactStore: ContactStoreProtocol,
         userSettings: UserSettingsProtocol,
         taskManager: TaskManagerProtocol,
-        entityManager: EntityManager
+        entityManager: EntityManager,
+        keychainManager: any KeychainManagerProtocol
     ) {
         self.serverConnector = serverConnector
         self.contactStore = contactStore
         self.userSettings = userSettings
         self.taskManager = taskManager
         self.entityManager = entityManager
+        self.keychainManager = keychainManager
     }
 
     public convenience init() {
+        let remoteSecretManager = RemoteSecretProvider.remoteSecretManager
         self.init(
             serverConnector: ServerConnector.shared(),
             contactStore: ContactStore.shared(),
@@ -72,8 +80,9 @@ public final class MultiDeviceManager: MultiDeviceManagerProtocol {
             entityManager: PersistenceManager(
                 appGroupID: AppGroup.groupID(),
                 userDefaults: AppGroup.userDefaults(),
-                remoteSecretManager: AppLaunchManager.remoteSecretManager
-            ).entityManager
+                remoteSecretManager: remoteSecretManager
+            ).entityManager,
+            keychainManager: KeychainManager(remoteSecretManager: remoteSecretManager)
         )
     }
 
@@ -249,5 +258,22 @@ public final class MultiDeviceManager: MultiDeviceManagerProtocol {
         
         let task = TaskDefinitionDisableMultiDeviceIfNeeded()
         taskManager.add(taskDefinition: task)
+    }
+    
+    public func resetEnableMultiDeviceIfNeeded() {
+        guard ThreemaEnvironment.allowEasyDeviceSwitch,
+              userSettings.enableMultiDevice else {
+            return
+        }
+        
+        do {
+            if try keychainManager.loadMultiDeviceID() == nil {
+                DDLogInfo("Resetting enableMultiDevice because keychain item is missing.")
+                userSettings.enableMultiDevice = false
+            }
+        }
+        catch {
+            DDLogError("Fetching multi-device ID to reset failed: \(error)")
+        }
     }
 }

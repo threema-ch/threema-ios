@@ -31,11 +31,11 @@ final class ConversationStoreMock: NSObject, ConversationStoreProtocol, Conversa
 
     // MARK: ConversationStoreInternalProtocol
 
-    func updateConversation(withContact syncContact: ThreemaProtocols.Sync_Contact) {
+    func updateConversation(withContact syncContact: ThreemaProtocols.D2dSync_Contact) {
         // no-op
     }
 
-    func updateConversation(withGroup syncGroup: ThreemaProtocols.Sync_Group) {
+    func updateConversation(withGroup syncGroup: ThreemaProtocols.D2dSync_Group) {
         // no-op
     }
 }

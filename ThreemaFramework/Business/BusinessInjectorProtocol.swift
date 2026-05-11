@@ -4,29 +4,31 @@ import RemoteSecretProtocol
 
 public protocol BusinessInjectorProtocol: AnyObject {
     var runsInBackground: Bool { get }
-    var contactStore: ContactStoreProtocol { get }
+    var contactStore: any ContactStoreProtocol { get }
     var conversationStore: any ConversationStoreProtocol { get }
     var entityManager: EntityManager { get }
-    var groupManager: GroupManagerProtocol { get }
-    var distributionListManager: DistributionListManagerProtocol { get }
-    var licenseStore: LicenseStore { get }
-    var messageSender: MessageSenderProtocol { get }
-    var multiDeviceManager: MultiDeviceManagerProtocol { get }
+    var groupManager: any GroupManagerProtocol { get }
+    var distributionListManager: any DistributionListManagerProtocol { get }
+    var licenseStore: any LicenseStoreProtocol { get }
+    var messageSender: any MessageSenderProtocol { get }
+    var multiDeviceManager: any MultiDeviceManagerProtocol { get }
     @available(
         *,
         deprecated,
         message: "To get My Identity use profileStore, and for other functions MyIdentityStore directly"
     )
-    var myIdentityStore: MyIdentityStoreProtocol { get }
-    var profileStore: ProfileStoreProtocol { get }
-    var serverConnector: ServerConnectorProtocol { get }
-    var unreadMessages: UnreadMessagesProtocol { get }
-    var messageRetentionManager: MessageRetentionManagerModelProtocol { get }
-    var userSettings: UserSettingsProtocol { get }
+    var myIdentityStore: any MyIdentityStoreProtocol { get }
+    var profileStore: any ProfileStoreProtocol { get }
+    var serverConnector: any ServerConnectorProtocol { get }
+    var unreadMessages: any UnreadMessagesProtocol { get }
+    var messageRetentionManager: any MessageRetentionManagerModelProtocol { get }
+    var userSettings: any UserSettingsProtocol { get }
     var settingsStore: any SettingsStoreProtocol { get }
-    var pushSettingManager: PushSettingManagerProtocol { get }
-    var keychainManager: KeychainManagerProtocol { get }
-
+    var pushSettingManager: any PushSettingManagerProtocol { get }
+    var keychainManager: any KeychainManagerProtocol { get }
+    var workAvailabilityStatusManager: any WorkAvailabilityStatusManagerProtocol { get }
+    var workDataFetcher: any WorkDataFetcherProtocol { get }
+    
     /// Do work with a background business injector. This runs on the thread of the caller!
     ///
     /// The closure will be called with a `BusinessInjector` initialized with a background Core Data child context. All
@@ -53,16 +55,16 @@ public protocol BusinessInjectorProtocol: AnyObject {
 }
 
 protocol BusinessInternalInjectorProtocol: AnyObject {
-    var mediatorMessageProtocol: MediatorMessageProtocolProtocol { get }
-    var mediatorReflectedProcessor: MediatorReflectedProcessorProtocol { get }
-    var messageProcessor: MessageProcessorProtocol { get }
-    var dhSessionStore: DHSessionStoreProtocol { get }
+    var mediatorMessageProtocol: any MediatorMessageProtocolProtocol { get }
+    var mediatorReflectedProcessor: any MediatorReflectedProcessorProtocol { get }
+    var messageProcessor: any MessageProcessorProtocol { get }
+    var dhSessionStore: any DHSessionStoreProtocol { get }
     var fsmp: ForwardSecurityMessageProcessor { get }
-    var conversationStoreInternal: ConversationStoreInternalProtocol { get }
-    var settingsStoreInternal: SettingsStoreInternalProtocol { get }
-    var userNotificationCenterManager: UserNotificationCenterManagerProtocol { get }
-    var nonceGuard: NonceGuardProtocol { get }
-    var blobUploader: BlobUploaderProtocol { get }
+    var conversationStoreInternal: any ConversationStoreInternalProtocol { get }
+    var settingsStoreInternal: any SettingsStoreInternalProtocol { get }
+    var userNotificationCenterManager: any UserNotificationCenterManagerProtocol { get }
+    var nonceGuard: any NonceGuardProtocol { get }
+    var blobUploader: any BlobUploaderProtocol { get }
 }
 
 typealias FrameworkInjectorProtocol = BusinessInjectorProtocol & BusinessInternalInjectorProtocol

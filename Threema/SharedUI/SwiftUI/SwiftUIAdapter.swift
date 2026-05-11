@@ -2,7 +2,7 @@ import Foundation
 import SwiftUI
 
 /// Adapter class to make SwiftUI-Views useable in Obj-C code
-@objc final class SwiftUIAdapter: NSObject {
+final class SwiftUIAdapter: NSObject {
     
     private static var injectedContainer: AppContainer = .defaultValue
         

@@ -3,7 +3,7 @@ import Foundation
 import PromiseKit
 import ThreemaFramework
 
-@objc final class IncomingMessageManager: NSObject {
+final class IncomingMessageManager: NSObject {
     
     @objc static let inAppNotificationNewMessage = "ThreemaNewMessageReceived"
 
@@ -20,7 +20,7 @@ import ThreemaFramework
     private lazy var dirtyObjectManager = PersistenceManager(
         appGroupID: AppGroup.groupID(),
         userDefaults: AppGroup.userDefaults(),
-        remoteSecretManager: AppLaunchManager.remoteSecretManager
+        remoteSecretManager: RemoteSecretProvider.remoteSecretManager
     ).dirtyObjectManager
 
     private var completionHandler: (() -> Void)?
@@ -167,7 +167,7 @@ import ThreemaFramework
                 }
                 
                 // For group calls there is no base message, so we need to check the abstract message to find out if we
-                // need to play a sound. LPaying sound logic should generally be moved to `NotificationBannerHelper`.
+                // need to play a sound. Paying sound logic should generally be moved to `NotificationBannerHelper`.
                 if pendingUserNotification.stage == .abstract,
                    let message = pendingUserNotification.abstractMessage as? GroupCallStartMessage,
                    message.receivedAfterInitialQueueSend,
@@ -184,7 +184,7 @@ import ThreemaFramework
                    pendingUserNotification.abstractMessage?.receivedAfterInitialQueueSend == true {
 
                     if pushSettingManager.canMasterDndSendPush() {
-                        entityManager.performBlock {
+                        entityManager.perform {
                             var pushSetting: PushSetting
                             if let group = groupManager.getGroup(conversation: message.conversation) {
                                 pushSetting = pushSettingManager.find(forGroup: group.groupIdentity)
@@ -425,8 +425,7 @@ extension IncomingMessageManager: MessageProcessorDelegate {
     public func reflectionQueueDry() { }
     
     public func processTypingIndicator(_ message: TypingIndicatorMessage) {
-        TypingIndicatorManager.sharedInstance()?
-            .setTypingIndicatorForIdentity(message.fromIdentity, typing: message.typing)
+        TypingIndicatorManager.sharedInstance.setTypingIndicator(for: message.fromIdentity, typing: message.typing)
     }
     
     func processVoIPCall(

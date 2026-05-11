@@ -119,4 +119,23 @@ extension TipKitManager {
         
         public init() { /* no-op */ }
     }
+    
+    public struct ThreemaWorkAvailabilityStatusChatTip: Tip {
+        
+        private var chat: Bool
+        
+        public var title: Text {
+            Text(#localize("work_availability_status_tip_title"))
+        }
+        
+        public var message: Text? {
+            chat ? Text(#localize("work_availability_status_chat_tip_text")) : Text(
+                #localize("work_availability_status_profile_tip_text")
+            )
+        }
+        
+        public init(forChat: Bool) {
+            self.chat = forChat
+        }
+    }
 }

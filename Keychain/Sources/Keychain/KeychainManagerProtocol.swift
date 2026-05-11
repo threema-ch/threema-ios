@@ -12,8 +12,14 @@ public protocol KeychainManagerProtocol: Sendable {
     static func loadThreemaIdentity() throws -> ThreemaIdentity?
     
     func loadIdentity() throws -> MyIdentity?
-    func storeIdentity(_ myIdentity: MyIdentity) throws
+    /// Stores the identity to the keychain
+    /// - Parameters:
+    ///   - myIdentity: Identity to store
+    ///   - thisDeviceOnly: If true, the identity is stored with `kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly`
+    func storeIdentity(_ myIdentity: MyIdentity, thisDeviceOnly: Bool) throws
     func deleteIdentity() throws
+    func isIdentityThisDeviceOnly() throws -> Bool
+    func changeIdentityAccessibility(thisDeviceOnly: Bool) throws
 
     static func loadIdentityBackup() throws -> String
     static func storeIdentityBackup(_ data: String) throws

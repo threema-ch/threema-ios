@@ -131,6 +131,8 @@ typedef NS_ENUM(NSInteger, ThreemaAudioMessagePlaySpeed) {
 @synthesize ipcSecretPrefix;
 @synthesize distributionListsEnabled;
 
+@synthesize didShowIdentityThisDeviceOnly;
+
 /// Deprecated Keys, please add keys if they are removed:
 /// - `featureFlagEnableNoMIMETypeFileMessagesFilter`
 /// - `PushShowNickname`
@@ -158,6 +160,7 @@ typedef NS_ENUM(NSInteger, ThreemaAudioMessagePlaySpeed) {
 /// - `showWorkReferral`
 /// - `DarkTheme`
 /// - `UseSystemTheme`
+/// - `FEATURE_WORK_AVAILABILITY_STATUS_ENABLED`
 
 static UserSettings *instance;
 
@@ -257,6 +260,7 @@ static UserSettings *instance;
                                         [NSNumber numberWithBool:NO], @"showWorkReferral",
                                         [NSNumber numberWithBool:NO], @"NewMessageForwarding",
                                         [NSNumber numberWithBool:NO], @"DistributionListsFeatureActive",
+                                        [NSNumber numberWithBool:NO], @"DidShowIdentityThisDeviceOnly",
                                         [NSData data], @"IPCSecretPrefix",
                                         [NSNumber numberWithUnsignedInteger:[TargetManagerObjC isBusinessApp] ? WallpaperTypeEmpty : WallpaperTypeThreema], @"WallpaperType",
                                         [NSNumber numberWithBool:NO], kFeatureDistributionListsEnabled,
@@ -408,7 +412,7 @@ static UserSettings *instance;
     }
 
     distributionListsEnabled = [defaults boolForKey:kFeatureDistributionListsEnabled];
-
+    
     if ([ThreemaEnvironment env] != EnvironmentTypeAppStore) {
         ipcCommunicationEnabled = [defaults boolForKey:@"IPCEnabled"];
     }
@@ -417,6 +421,7 @@ static UserSettings *instance;
     }
 
     ipcSecretPrefix = [defaults objectForKey:@"IPCSecretPrefix"];
+    didShowIdentityThisDeviceOnly = [defaults boolForKey:@"DidShowIdentityThisDeviceOnly"];
 }
 
 - (void)setAppMigratedToVersion:(NSInteger)newAppMigratedToVersion {
@@ -978,6 +983,12 @@ static UserSettings *instance;
 - (void)setIpcSecretPrefix:(NSData *)newIpcSecretPrefix {
     ipcSecretPrefix = newIpcSecretPrefix;
     [defaults setObject:ipcSecretPrefix forKey:@"IPCSecretPrefix"];
+    [defaults synchronize];
+}
+
+- (void)setDidShowIdentityThisDeviceOnly:(BOOL)newDidShowIdentityThisDeviceOnly {
+    didShowIdentityThisDeviceOnly = newDidShowIdentityThisDeviceOnly;
+    [defaults setBool:didShowIdentityThisDeviceOnly forKey:@"DidShowIdentityThisDeviceOnly"];
     [defaults synchronize];
 }
 

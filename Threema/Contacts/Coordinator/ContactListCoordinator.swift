@@ -205,7 +205,8 @@ extension ContactListCoordinator: ContactListSearchResultsDelegate {
                     csi: directoryContact.csi,
                     jobTitle: directoryContact.jobTitle,
                     department: directoryContact.department,
-                    acquaintanceLevel: .direct
+                    acquaintanceLevel: .direct,
+                    workAvailabilityStatus: directoryContact.workAvailabilityStatus
                 ) { addedContactEntity in
                     continuation.resume(returning: addedContactEntity)
                 } onError: { error in

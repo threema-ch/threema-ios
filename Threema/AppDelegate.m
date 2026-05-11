@@ -9,12 +9,10 @@
 #import "UIDefines.h"
 #import "ServerAPIConnector.h"
 #import "UserSettings.h"
-#import "TypingIndicatorManager.h"
 #import "MyIdentityStore.h"
 #import "PortraitNavigationController.h"
 #import "ThreemaUtilityObjC.h"
 #import "ProtocolDefines.h"
-#import "PhoneNumberNormalizer.h"
 #import "AbstractGroupMessage.h"
 #import "NSString+Hex.h"
 #import "NewMessageToaster.h"
@@ -28,7 +26,7 @@
 #import "AppGroup.h"
 #import "LicenseStore.h"
 #import "EnterLicenseViewController.h"
-#import "WorkDataFetcher.h"
+
 
 #import "MDMSetup.h"
 #import "NSString+Hex.h"
@@ -82,7 +80,6 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 @synthesize window = _window;
 @synthesize launchTaskManager;
 @synthesize isBusinessInjectorReady;
-@synthesize urlRestoreData;
 @synthesize appLaunchDate;
 @synthesize isAppLocked;
 @synthesize pendingUrl;
@@ -155,7 +152,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 
     /* Instantiate various singletons now */
     [NaClCrypto sharedCrypto];
-    [[ServerConnector sharedServerConnector] setIsAppInBackground:[self isAppInBackground]];
+    [[ServerConnector sharedServerConnector] setIsAppInBackground:[AppDelegate isAppInBackground]];
 
     self.window = [[ThemedWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
 
@@ -231,7 +228,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     [mdmSetup loadRenewableValues];
 
     [TypingIndicatorManager sharedInstance];
-    
+
     NSInteger state = [[VoIPCallStateManager shared] currentCallState];
     
     if ((state != CallStateIdle && state != CallStateSendOffer && state != CallStateReceivedOffer) | !([[KKPasscodeLock sharedLock] isPasscodeRequired] && isAppLocked)) {
@@ -343,7 +340,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
         dispatch_async(dispatch_get_main_queue(), ^{
             [_window makeSecure];
 
-            if ([self isAppInBackground] && isEnteringForeground == false) {
+            if ([AppDelegate isAppInBackground] && isEnteringForeground == false) {
                 shouldLoadUIForEnterForeground = true;
             } else {
                 if (lastViewController != nil) {
@@ -386,9 +383,6 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
                     }
                     [[WCSessionManager shared] connectAllRunningSessions];
                 }
-                
-                DeviceLinking *deviceLinking = [DeviceLinking new];
-                [deviceLinking disableMultiDeviceForVersionLessThan5];
                 
                 [AppDelegate setupConnection];
                 
@@ -618,7 +612,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 
 + (void)setupConnection {
     // Add received pushes into DB
-    if (![[AppDelegate sharedAppDelegate] isAppInBackground]) {
+    if (![AppDelegate isAppInBackground]) {
         [[ServerConnector sharedServerConnector] setIsAppInBackground:NO];
 
         // Maybe is already connected, called by identity created
@@ -660,21 +654,8 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 
 #pragma mark - Misc
 
-- (BOOL)isAppInBackground {
-    __block BOOL inBackground = false;
-    if ([NSThread isMainThread]) {
-        inBackground = [[UIApplication sharedApplication] applicationState] == UIApplicationStateBackground;
-    } else {
-        dispatch_sync(dispatch_get_main_queue(), ^{
-            inBackground = [[UIApplication sharedApplication] applicationState] == UIApplicationStateBackground;
-        });
-    }
-    
-    return inBackground;
-}
-
 - (void)checkForInvalidCountryCode {
-    if ([PhoneNumberNormalizer userRegion] != nil)
+    if ([[PhoneNumberNormalizer new] userRegion] != nil)
         return;
 
     [UIAlertTemplate showAlertWithOwner:[self currentTopViewController] title:[BundleUtil localizedStringForKey:@"invalid_country_code_title"] message:[BundleUtil localizedStringForKey:@"invalid_country_code_message"] actionOk:nil];
@@ -767,9 +748,15 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     [self runWhenBusinessReadyWithTask:^{
         dispatch_async(dispatch_get_main_queue(), ^{
             DDLogNotice(@"AppState: applicationDidEnterBackground executing task");
-
+            
             [[TypingIndicatorManager sharedInstance] stopObserving];
             [[ThreemaBGTaskManager shared] scheduleTasks];
+
+            if ([[UserSettings sharedUserSettings] enableThreemaGroupCalls]) {
+                [[GlobalGroupCallManagerSingleton shared] handleAppDidEnterBackgroundWithCompletionHandler:^{
+                    // Noop
+                }];
+            }
             
             [self showLockScreen];
             
@@ -926,10 +913,12 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
             [AppDelegate registerForLocalNotifications];
             
             [[TypingIndicatorManager sharedInstance] startObserving];
-            [[TypingIndicatorManager sharedInstance] resetTypingIndicators];
             [[NotificationPresenterWrapper shared] dismissAllPresentedNotifications];
             
             if ([[UserSettings sharedUserSettings] enableThreemaGroupCalls]) {
+                [[GlobalGroupCallManagerSingleton shared] handleAppWillEnterForegroundWithCompletionHandler:^{
+                    // Noop
+                }];
                 [[GlobalGroupCallManagerSingleton shared] loadCallsFromDBWithCompletionHandler:^{
                     // Noop
                 }];
@@ -1017,12 +1006,11 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
             }
             
             [self setIsWorkContactsLoading:true];
-            [WorkDataFetcher checkUpdateWorkDataForce:NO onCompletion:^{
-                [self setIsWorkContactsLoading:false];
-            } onError:^(NSError *error) {
+            WorkDataFetcherObjCBridge* fetcher = [WorkDataFetcherObjCBridge new];
+            [fetcher updateWorkDataWithForce:NO completionHandler:^(NSError * _Nullable error) {
                 [self setIsWorkContactsLoading:false];
             }];
-            
+
             [[GatewayAvatarMaker gatewayAvatarMaker] refresh];
             
             if ([[VoIPCallStateManager shared] currentCallState] != CallStateIdle && ![NavigationBarPromptHandler isCallActiveInBackground]) {
@@ -1060,11 +1048,6 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 - (BOOL)application:(UIApplication *)application continueUserActivity:(NSUserActivity *)userActivity restorationHandler:(void (^)(NSArray<id<UIUserActivityRestoring>> *restorationHandler))restorationHandler {
     return [self continueUserActivity:userActivity];
 }
-
-+ (BOOL)hasBottomSafeAreaInsets {
-    return [[[[UIApplication sharedApplication] delegate] window] safeAreaInsets].bottom > 0;
-}
-
 
 #pragma mark - Push notifications
 
@@ -1319,7 +1302,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 
 - (void)licenseConfirmed {
     [self.window.rootViewController dismissViewControllerAnimated:YES completion:^{
-        [[ServerConnector sharedServerConnector] setIsAppInBackground:[self isAppInBackground]];
+        [[ServerConnector sharedServerConnector] setIsAppInBackground:[AppDelegate isAppInBackground]];
         [[ServerConnector sharedServerConnector] connect:ConnectionInitiatorApp onCompletion:nil];
     }];
 }

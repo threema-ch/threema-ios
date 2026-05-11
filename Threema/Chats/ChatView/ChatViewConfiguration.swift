@@ -56,6 +56,7 @@ enum ChatViewConfiguration {
         /// count in it (only applies with non-regular horizontal size class)
         static let combinedLeadingAndTrailingOffsetWithUnreadMessages: CGFloat =
             if #available(iOS 26, *) {
+                // Works up to iPhone 17 Pro. See `ChatProfileView` for an adjustment for bigger screens
                 2 * 90
             }
             else {
@@ -376,7 +377,14 @@ enum ChatViewConfiguration {
         /// Maximal length of quoted string
         static let maxQuoteLength = 200
         /// Maximal lines of quote label
-        static let maxQuoteLines = 7
+        static let maxQuoteLines =
+            if #available(iOS 26.0, *) {
+                3
+            }
+            else {
+                7
+            }
+
         /// Corner radius of thumbnail
         static let thumbnailCornerRadius = ChatBubble.cornerRadius - ChatBubble.defaultLeadingTrailingInset
         /// Inset of trailing inset of thumbnail

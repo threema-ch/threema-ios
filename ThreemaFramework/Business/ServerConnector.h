@@ -100,19 +100,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (BOOL)completedProcessingMessage:(BoxedMessage *)boxmsg;
 
-@end
-
-@interface ServerConnector : NSObject <ServerConnectorProtocol, SocketProtocolDelegate>
-
-@property (nonatomic, readwrite) double lastRtt;
-
-
-+ (ServerConnector*)sharedServerConnector;
-- (instancetype) __unavailable init;
-
-- (void)completedProcessingAbstractMessage:(AbstractMessage *)msg;
-- (void)ping;
-
 /**
  Set Push Notification Token and send push type apple mc, for receiving Push Notifications in Notification Extension.
  
@@ -125,6 +112,19 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)removeVoIPPushToken;
 
 - (void)clearDeviceCookieChangedIndicator;
+
+@end
+
+@interface ServerConnector : NSObject <ServerConnectorProtocol, SocketProtocolDelegate>
+
+@property (nonatomic, readwrite) double lastRtt;
+
+
++ (ServerConnector*)sharedServerConnector;
+- (instancetype) __unavailable init;
+
+- (void)completedProcessingAbstractMessage:(AbstractMessage *)msg;
+- (void)ping;
 
 @end
 

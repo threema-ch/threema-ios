@@ -26,7 +26,10 @@ public final class AppSetup: NSObject {
             if !(state.rawValue <= newValue.rawValue || newValue == .notSetup) {
                 // TODO: (IOS-4531) There might be an illegal transition if `th_safe_restore_enable` is enabled
                 DDLogWarn("Illegal app setup state transition")
-                assertionFailure()
+                assertionFailure(
+                    "Illegal app setup state transition.\n"
+                        + "Update app setup state: old=\(state) new=\(newValue)."
+                )
             }
             
             if newValue == .complete {
@@ -106,9 +109,9 @@ public final class AppSetup: NSObject {
             return currentState
         }
         else {
+            // The second is not true if the app was deleted and identity still in the keychain. However we don't
+            // have a preexisting database at this time.
             let newState: AppSetupState =
-                // The second is not true if the app was deleted and identity still in the keychain. However we don't
-                // have a preexisting database at this time.
                 if !hasPreexistingDatabaseFile || !MyIdentityStore.shared().isValidIdentity {
                     .notSetup
                 }

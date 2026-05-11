@@ -26,7 +26,6 @@
 #import <ThreemaFramework/BundleUtil.h>
 #import <ThreemaFramework/Constants.h>
 #import <ThreemaFramework/ContactDeletePhotoMessage.h>
-#import <ThreemaFramework/ContactNameLabel.h>
 #import <ThreemaFramework/ContactPhotoSender.h>
 #import <ThreemaFramework/ContactUtil.h>
 #import <ThreemaFramework/ContactRequestPhotoMessage.h>
@@ -74,6 +73,7 @@
 #import <ThreemaFramework/QuotedMessageProtocol.h>
 #import <ThreemaFramework/ReceiptType.h>
 #import <ThreemaFramework/ServerAPIConnector.h>
+#import <ThreemaFramework/ServerAPIRequest.h>
 #import <ThreemaFramework/UnknownTypeMessage.h>
 #import <ThreemaFramework/UploadProgressDelegate.h>
 #import <ThreemaFramework/URLSenderItem.h>
@@ -92,7 +92,6 @@
 #import <ThreemaFramework/ThemedTableViewController.h>
 #import <ThreemaFramework/ThreemaError.h>
 #import <ThreemaFramework/ObjcCspE2eFs_Version.h>
-#import <ThreemaFramework/TypingIndicatorManager.h>
 
 //! Project version number for ThreemaFramework.
 FOUNDATION_EXPORT double ThreemaFrameworkVersionNumber;

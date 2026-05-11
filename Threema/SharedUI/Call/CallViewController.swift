@@ -64,7 +64,7 @@ class CallViewController: UIViewController {
     @IBOutlet var callInfoGradientView: UIView!
 
     private lazy var profilePictureView: ProfilePictureImageView = {
-        let profilePictureView = ProfilePictureImageView(typeIconConfiguration: .small)
+        let profilePictureView = ProfilePictureImageView(iconConfiguration: .small)
         profilePictureView.translatesAutoresizingMaskIntoConstraints = false
         return profilePictureView
     }()

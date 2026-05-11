@@ -95,7 +95,7 @@ final class DBLoadTests: XCTestCase {
         let em = PersistenceManager(
             appGroupID: AppGroup.groupID(),
             userDefaults: AppGroup.userDefaults(),
-            remoteSecretManager: AppLaunchManager.remoteSecretManager
+            remoteSecretManager: RemoteSecretProvider.remoteSecretManager
         ).backgroundEntityManager
 
         let allContactIdentity: [String] = await em.perform {
@@ -564,7 +564,7 @@ final class DBLoadTests: XCTestCase {
         let entityManager = PersistenceManager(
             appGroupID: AppGroup.groupID(),
             userDefaults: AppGroup.userDefaults(),
-            remoteSecretManager: AppLaunchManager.remoteSecretManager
+            remoteSecretManager: RemoteSecretProvider.remoteSecretManager
         ).entityManager
         entityManager.performAndWaitSave {
             if let contact = entityManager.entityFetcher.contactEntity(for: "ECHOECHO") {
@@ -596,7 +596,7 @@ final class DBLoadTests: XCTestCase {
         let entityManager = PersistenceManager(
             appGroupID: AppGroup.groupID(),
             userDefaults: AppGroup.userDefaults(),
-            remoteSecretManager: AppLaunchManager.remoteSecretManager
+            remoteSecretManager: RemoteSecretProvider.remoteSecretManager
         ).entityManager
 
         for conversation in entityManager.entityFetcher.conversationEntities() ?? [] {
@@ -664,7 +664,7 @@ final class DBLoadTests: XCTestCase {
         let entityManager = PersistenceManager(
             appGroupID: AppGroup.groupID(),
             userDefaults: AppGroup.userDefaults(),
-            remoteSecretManager: AppLaunchManager.remoteSecretManager
+            remoteSecretManager: RemoteSecretProvider.remoteSecretManager
         ).entityManager
         entityManager.performAndWaitSave {
             if let contact = entityManager.entityFetcher.contactEntity(for: "ECHOECHO") {
@@ -745,7 +745,7 @@ final class DBLoadTests: XCTestCase {
         let entityManager = PersistenceManager(
             appGroupID: AppGroup.groupID(),
             userDefaults: AppGroup.userDefaults(),
-            remoteSecretManager: AppLaunchManager.remoteSecretManager
+            remoteSecretManager: RemoteSecretProvider.remoteSecretManager
         ).entityManager
         entityManager.performAndWaitSave {
             if let contact = entityManager.entityFetcher.contactEntity(for: "ECHOECHO") {
@@ -814,7 +814,7 @@ final class DBLoadTests: XCTestCase {
         let entityManager = PersistenceManager(
             appGroupID: AppGroup.groupID(),
             userDefaults: AppGroup.userDefaults(),
-            remoteSecretManager: AppLaunchManager.remoteSecretManager
+            remoteSecretManager: RemoteSecretProvider.remoteSecretManager
         ).entityManager
         entityManager.performAndWaitSave {
             if let contact = entityManager.entityFetcher.contactEntity(for: "ECHOECHO") {

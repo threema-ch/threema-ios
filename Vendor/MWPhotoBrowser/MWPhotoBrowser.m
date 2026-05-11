@@ -1980,7 +1980,7 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
     if ([mdmSetup disableShareMedia] == true) {
         ModalNavigationController *navigationController = [ContactGroupPickerViewController pickerFromStoryboardWithDelegate:self];
         ContactGroupPickerViewController *picker = (ContactGroupPickerViewController *)navigationController.topViewController;
-        picker.enableMultiSelection = true;
+        picker.enableMultiselection = true;
         picker.enableTextInput = true;
         picker.submitOnSelect = false;
         

@@ -235,8 +235,8 @@ public final class DeviceJoin {
         
         //     ED ------- Begin ------> ND   [1]
         
-        let edToNdBegin = Join_EdToNd.with {
-            $0.begin = Join_Begin()
+        let edToNdBegin = D2dJoin_EdToNd.with {
+            $0.begin = D2dJoin_Begin()
         }
         
         let edToNdBeginData = try edToNdBegin.serializedData()
@@ -265,7 +265,7 @@ public final class DeviceJoin {
         //     ED --- EssentialData --> ND   [1]
         
         let identityData = try gatherIdentityData()
-        let deviceGroupData = Join_EssentialData.DeviceGroupData.with {
+        let deviceGroupData = D2dJoin_EssentialData.DeviceGroupData.with {
             $0.dgk = deviceGroupKey
         }
         try checkCancellation(of: task)
@@ -273,7 +273,7 @@ public final class DeviceJoin {
         let cspNonces = try await gatherCSPNonces()
         try checkCancellation(of: task)
 
-        let essentialData = try Join_EssentialData.with {
+        let essentialData = try D2dJoin_EssentialData.with {
             // $0.mediatorServer // This is only required for custom servers
             
             $0.identityData = identityData
@@ -304,7 +304,7 @@ public final class DeviceJoin {
         
         try checkCancellation(of: task)
 
-        let edToNdEssentialData = Join_EdToNd.with {
+        let edToNdEssentialData = D2dJoin_EdToNd.with {
             $0.essentialData = essentialData
         }
         
@@ -322,7 +322,7 @@ public final class DeviceJoin {
         
         DDLogNotice("Wait for 'registered' message...")
         let ndToEdRegisteredData = try await connection.receive()
-        let ndToEdRegisteredMessage = try Join_NdToEd(serializedData: ndToEdRegisteredData)
+        let ndToEdRegisteredMessage = try D2dJoin_NdToEd(serializedData: ndToEdRegisteredData)
         
         guard ndToEdRegisteredMessage.registered.isInitialized else {
             throw Error.registrationFailed
@@ -332,7 +332,7 @@ public final class DeviceJoin {
     // MARK: Gathering data
     
     private func gatherUserProfileAndSendPictureIfNeeded(over connection: EncryptedRendezvousConnection) async throws
-        -> Sync_UserProfile {
+        -> D2dSync_UserProfile {
         var (userProfile, profilePicture) = ProfileStore().profile.asSyncUserProfile
         if let profilePicture {
             let profilePictureCommonImage = try await sendBlobImage(data: profilePicture, over: connection)
@@ -345,12 +345,12 @@ public final class DeviceJoin {
     private func gatherContactsAndSendProfilePicturesIfNeeded(
         over connection: EncryptedRendezvousConnection,
         cancelation task: CancelableTask
-    ) async throws -> [Join_EssentialData.AugmentedContact] {
+    ) async throws -> [D2dJoin_EssentialData.AugmentedContact] {
         
         let mediatorSyncableContacts = MediatorSyncableContacts()
         let allDeltaContacts = mediatorSyncableContacts.getAllDeltaSyncContacts()
         
-        var augmentedContacts = [Join_EssentialData.AugmentedContact]()
+        var augmentedContacts = [D2dJoin_EssentialData.AugmentedContact]()
         for deltaContact in allDeltaContacts {
             var syncContact = deltaContact.syncContact
             
@@ -369,7 +369,7 @@ public final class DeviceJoin {
                 try checkCancellation(of: task)
             }
             
-            let augmentedContact = Join_EssentialData.AugmentedContact.with {
+            let augmentedContact = D2dJoin_EssentialData.AugmentedContact.with {
                 $0.contact = syncContact
                 if let lastUpdate = deltaContact.lastConversationUpdate {
                     $0.lastUpdateAt = lastUpdate.millisecondsSince1970
@@ -387,7 +387,7 @@ public final class DeviceJoin {
     private func gatherGroupsAndSendProfilePicturesIfNeeded(
         over connection: EncryptedRendezvousConnection,
         cancelation task: CancelableTask
-    ) async throws -> [Join_EssentialData.AugmentedGroup] {
+    ) async throws -> [D2dJoin_EssentialData.AugmentedGroup] {
         
         // Load groups from Core Data and map them to business objects
         let allGroups = try await businessInjector.entityManager.perform {
@@ -418,7 +418,7 @@ public final class DeviceJoin {
 
         // Process the loaded groups
             
-        var augmentedGroups = [Join_EssentialData.AugmentedGroup]()
+        var augmentedGroups = [D2dJoin_EssentialData.AugmentedGroup]()
         augmentedGroups.reserveCapacity(allGroups.count)
         
         for group in allGroups {
@@ -430,7 +430,7 @@ public final class DeviceJoin {
                 try checkCancellation(of: task)
             }
             
-            let augmentedGroup = Join_EssentialData.AugmentedGroup.with {
+            let augmentedGroup = D2dJoin_EssentialData.AugmentedGroup.with {
                 $0.group = syncGroup
                 if let lastUpdate = group.lastUpdate {
                     $0.lastUpdateAt = lastUpdate.millisecondsSince1970
@@ -451,7 +451,7 @@ public final class DeviceJoin {
         return augmentedGroups
     }
 
-    private func gatherIdentityData() throws -> Join_EssentialData.IdentityData {
+    private func gatherIdentityData() throws -> D2dJoin_EssentialData.IdentityData {
         guard let identity = businessInjector.myIdentityStore.identity,
               let privateClientKey = businessInjector.myIdentityStore.clientKey else {
             throw Error.failedToGatherData
@@ -465,7 +465,7 @@ public final class DeviceJoin {
             throw Error.failedToGatherData
         }
         
-        return Join_EssentialData.IdentityData.with {
+        return D2dJoin_EssentialData.IdentityData.with {
             $0.identity = identity
             $0.ck = privateClientKey
             $0.cspDeviceCookie = deviceCookie
@@ -473,13 +473,13 @@ public final class DeviceJoin {
         }
     }
     
-    private func gatherWorkCredentials() throws -> Sync_ThreemaWorkCredentials {
+    private func gatherWorkCredentials() throws -> D2dSync_ThreemaWorkCredentials {
         guard let username = LicenseStore.shared().licenseUsername,
               let password = LicenseStore.shared().licensePassword else {
             throw Error.noWorkCredentials
         }
 
-        return Sync_ThreemaWorkCredentials.with {
+        return D2dSync_ThreemaWorkCredentials.with {
             $0.username = username
             $0.password = password
         }
@@ -505,7 +505,7 @@ public final class DeviceJoin {
         }
     }
 
-    private func gatherMdmParameters() -> Sync_MdmParameters {
+    private func gatherMdmParameters() -> D2dSync_MdmParameters {
         MDMSetup().mdmParameters()
     }
 
@@ -522,7 +522,7 @@ public final class DeviceJoin {
             $0.data = data
         }
         
-        let edToNdCommonBlobData = Join_EdToNd.with {
+        let edToNdCommonBlobData = D2dJoin_EdToNd.with {
             $0.blobData = commonBlobData
         }
         
@@ -724,8 +724,8 @@ public final class DeviceJoin {
 // TODO: This will be replaces by `update` and `from` extensions on the Threema Protocol types (IOS-3869)
 
 extension ProfileStore.Profile {
-    fileprivate var asSyncUserProfile: (Sync_UserProfile, profileImage: Data?) {
-        var syncUserProfile = Sync_UserProfile()
+    fileprivate var asSyncUserProfile: (D2dSync_UserProfile, profileImage: Data?) {
+        var syncUserProfile = D2dSync_UserProfile()
         
         if let nickname {
             syncUserProfile.nickname = nickname
@@ -745,15 +745,26 @@ extension ProfileStore.Profile {
         syncUserProfile.identityLinks.links = []
         
         if !isLinkMobileNoPending, let mobilePhoneNo {
-            syncUserProfile.identityLinks.links.append(Sync_UserProfile.IdentityLinks.IdentityLink.with {
+            syncUserProfile.identityLinks.links.append(D2dSync_UserProfile.IdentityLinks.IdentityLink.with {
                 $0.phoneNumber = mobilePhoneNo
             })
         }
         
         if !isLinkEmailPending, let email {
-            syncUserProfile.identityLinks.links.append(Sync_UserProfile.IdentityLinks.IdentityLink.with {
+            syncUserProfile.identityLinks.links.append(D2dSync_UserProfile.IdentityLinks.IdentityLink.with {
                 $0.email = email
             })
+        }
+        
+        if let workAvailabilityStatus,
+           let category = D2dSync_WorkAvailabilityStatusCategory(
+               rawValue: workAvailabilityStatus.category
+                   .rawValue
+           ) {
+            var status = D2dSync_WorkAvailabilityStatus()
+            status.category = category
+            status.description_p = workAvailabilityStatus.text ?? ""
+            syncUserProfile.workAvailabilityStatus = status
         }
         
         return (syncUserProfile, profileImage)
@@ -763,7 +774,7 @@ extension ProfileStore.Profile {
     private func profilePictureShareWithPolicy(
         for sendProfilePicture: SendProfilePicture,
         identities: [String]
-    ) -> Sync_UserProfile.ProfilePictureShareWith.OneOf_Policy {
+    ) -> D2dSync_UserProfile.ProfilePictureShareWith.OneOf_Policy {
         switch sendProfilePicture {
         case SendProfilePictureNone:
             return .nobody(Common_Unit())
@@ -780,8 +791,8 @@ extension ProfileStore.Profile {
 }
 
 extension SettingsStoreProtocol {
-    fileprivate var asSyncSettings: Sync_Settings {
-        Sync_Settings.with {
+    fileprivate var asSyncSettings: D2dSync_Settings {
+        D2dSync_Settings.with {
             $0.contactSyncPolicy = syncContacts ? .sync : .notSynced
             $0.unknownContactPolicy = blockUnknown ? .blockUnknown : .allowUnknown
             $0.readReceiptPolicy = sendReadReceipts ? .sendReadReceipt : .dontSendReadReceipt
@@ -797,8 +808,8 @@ extension SettingsStoreProtocol {
 }
 
 extension Group {
-    fileprivate var asSyncGroup: (Sync_Group, groupProfileImage: Data?) {
-        var syncGroup = Sync_Group()
+    fileprivate var asSyncGroup: (D2dSync_Group, groupProfileImage: Data?) {
+        var syncGroup = D2dSync_Group()
         
         syncGroup.groupIdentity = Common_GroupIdentity.from(groupIdentity)
         
@@ -816,18 +827,17 @@ extension Group {
         
         syncGroup.update(state: state)
         
+        syncGroup.deprecatedNotificationSoundPolicyOverride.default = Common_Unit()
         // `notification_trigger_policy_override` is currently not supported on iOS: IOS-5207
         syncGroup.notificationTriggerPolicyOverride.default = Common_Unit()
-        // `notification_sound_policy_override` is currently not supported on iOS: IOS-5207
-        syncGroup.notificationSoundPolicyOverride.default = Common_Unit()
         
         syncGroup.memberIdentities.identities = allActiveMemberIdentitiesWithoutCreator
         
-        if let category = Sync_ConversationCategory(rawValue: conversationCategory.rawValue) {
+        if let category = D2dSync_ConversationCategory(rawValue: conversationCategory.rawValue) {
             syncGroup.conversationCategory = category
         }
         
-        if let visibility = Sync_ConversationVisibility(rawValue: conversationVisibility.rawValue) {
+        if let visibility = D2dSync_ConversationVisibility(rawValue: conversationVisibility.rawValue) {
             syncGroup.conversationVisibility = visibility
         }
         

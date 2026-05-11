@@ -180,7 +180,7 @@ public final class DatabaseManager: NSObject, DatabaseManagerProtocol {
 
     static let databaseModelName = "ThreemaData"
     static let databaseEncryptedModelName = "ThreemaDataEncrypted"
-    static let databaseModelVersion = 54
+    static let databaseModelVersion = 55
 
     // MARK: - Private properties
 

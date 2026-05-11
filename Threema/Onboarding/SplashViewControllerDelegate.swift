@@ -65,8 +65,33 @@ protocol SplashViewControllerDelegate: AnyObject {
     /// Called when restore flow completes successfully.
     func splashViewControllerDidCompleteRestore(_ viewController: SplashViewController)
     
-    /// Called when user cancels the restore flow.
+    /// Called when user cancels from the RestoreOptionData screen.
     func splashViewControllerDidCancelRestore(_ viewController: SplashViewController)
+    
+    /// Called when user cancels from the RestoreOptionBackup screen.
+    func splashViewControllerDidCancelRestoreOptionBackup(_ viewController: SplashViewController)
+    
+    /// Called when user cancels from the RestoreSafe screen.
+    func splashViewControllerDidCancelRestoreSafe(_ viewController: SplashViewController)
+    
+    /// Called when user cancels from the RestoreIdentity screen.
+    func splashViewControllerDidCancelRestoreIdentity(_ viewController: SplashViewController)
+    
+    /// Called when `RestoreSafeViewController` requests a safe restore in the coordinator flow.
+    /// The coordinator orchestrates the two-phase restore (prepare → resolve RS → perform).
+    /// - Parameters:
+    ///   - viewController: The SplashViewController
+    ///   - restoreSafeViewController: The `RestoreSafeViewController` initiating the restore,
+    ///     passed through so the coordinator can read its server/identity properties and
+    ///     dismiss its loading HUD on completion or error.
+    ///   - identity: The Threema ID entered by the user
+    ///   - password: The Safe password entered by the user
+    func splashViewController(
+        _ viewController: SplashViewController,
+        didRequestSafeRestore restoreSafeViewController: RestoreSafeViewController,
+        identity: String,
+        password: String
+    )
     
     // MARK: - License (Business/OnPrem)
     

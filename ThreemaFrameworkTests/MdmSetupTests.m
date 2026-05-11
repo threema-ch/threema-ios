@@ -166,15 +166,15 @@
         
     XCTAssertTrue([mdmSetup skipWizard]);
     XCTAssertTrue([mdmSetup safeEnable]);
-    XCTAssertEqual(@"87654321", [mdmSetup safePassword]);
-    XCTAssertEqual(@"http://test.com", [mdmSetup safeServerUrl]);
-    XCTAssertEqual(@"server-user", [mdmSetup safeServerUsername]);
-    XCTAssertEqual(@"server-password", [mdmSetup safeServerPassword]);
+    XCTAssertEqualObjects(@"87654321", [mdmSetup safePassword]);
+    XCTAssertEqualObjects(@"http://test.com", [mdmSetup safeServerUrl]);
+    XCTAssertEqualObjects(@"server-user", [mdmSetup safeServerUsername]);
+    XCTAssertEqualObjects(@"server-password", [mdmSetup safeServerPassword]);
     XCTAssertFalse([mdmSetup safeRestoreEnable]);
-    XCTAssertEqual(@"ECHOECHO", [mdmSetup safeRestoreId]);
-    XCTAssertEqual(@"^[0-9]{1,15}$", [mdmSetup safePasswordPattern]);
-    XCTAssertEqual(@"Wrong-password-pattern", [mdmSetup safePasswordMessage]);
-    XCTAssertEqual(@"threema.ch", [mdmSetup webHosts]);
+    XCTAssertEqualObjects(@"ECHOECHO", [mdmSetup safeRestoreId]);
+    XCTAssertEqualObjects(@"^[0-9]{1,15}$", [mdmSetup safePasswordPattern]);
+    XCTAssertEqualObjects(@"Wrong-password-pattern", [mdmSetup safePasswordMessage]);
+    XCTAssertEqualObjects(@"threema.ch", [mdmSetup webHosts]);
 }
 
 - (void)testLoadIDCreationValues {
@@ -220,16 +220,16 @@
     XCTAssertTrue([mdmSetup disableMultiDevice]);
     
     XCTAssertTrue([mdmSetup skipWizard]);
-    XCTAssertEqual(_yes, [mdmSetup safeEnable]);
-    XCTAssertEqual(@"87654321", [mdmSetup safePassword]);
-    XCTAssertEqual(@"http://test.com", [mdmSetup safeServerUrl]);
-    XCTAssertEqual(@"server-user", [mdmSetup safeServerUsername]);
-    XCTAssertEqual(@"server-password", [mdmSetup safeServerPassword]);
+    XCTAssertEqualObjects(_yes, [mdmSetup safeEnable]);
+    XCTAssertEqualObjects(@"87654321", [mdmSetup safePassword]);
+    XCTAssertEqualObjects(@"http://test.com", [mdmSetup safeServerUrl]);
+    XCTAssertEqualObjects(@"server-user", [mdmSetup safeServerUsername]);
+    XCTAssertEqualObjects(@"server-password", [mdmSetup safeServerPassword]);
     XCTAssertFalse([mdmSetup safeRestoreEnable]);
-    XCTAssertEqual(@"ECHOECHO", [mdmSetup safeRestoreId]);
-    XCTAssertEqual(@"^[0-9]{1,15}$", [mdmSetup safePasswordPattern]);
-    XCTAssertEqual(@"Wrong-password-pattern", [mdmSetup safePasswordMessage]);
-    XCTAssertEqual(@"threema.ch", [mdmSetup webHosts]);
+    XCTAssertEqualObjects(@"ECHOECHO", [mdmSetup safeRestoreId]);
+    XCTAssertEqualObjects(@"^[0-9]{1,15}$", [mdmSetup safePasswordPattern]);
+    XCTAssertEqualObjects(@"Wrong-password-pattern", [mdmSetup safePasswordMessage]);
+    XCTAssertEqualObjects(@"threema.ch", [mdmSetup webHosts]);
 }
 
 - (void)testHasIDBackup {
@@ -243,7 +243,7 @@
     BOOL result = [mdmSetup hasIDBackup];
     
     XCTAssertTrue(result);
-    XCTAssertEqual(@"XXXX-XXXX-...", mdmSetup.idBackup);
+    XCTAssertEqualObjects(@"XXXX-XXXX-...", mdmSetup.idBackup);
     XCTAssertNil(mdmSetup.idBackupPassword);
 }
 
@@ -302,16 +302,16 @@
     XCTAssertFalse([mdmSetup disableWorkDirectory]);
     
     XCTAssertTrue([mdmSetup skipWizard]); // not renewable
-    XCTAssertEqual(_no, [mdmSetup safeEnable]);
-    XCTAssertEqual(@"87654321", [mdmSetup safePassword]);
-    XCTAssertEqual(@"http://new-test.com", [mdmSetup safeServerUrl]);
-    XCTAssertEqual(@"new-server-user", [mdmSetup safeServerUsername]);
-    XCTAssertEqual(@"new-server-password", [mdmSetup safeServerPassword]);
+    XCTAssertEqualObjects(_no, [mdmSetup safeEnable]);
+    XCTAssertEqualObjects(@"87654321", [mdmSetup safePassword]);
+    XCTAssertEqualObjects(@"http://new-test.com", [mdmSetup safeServerUrl]);
+    XCTAssertEqualObjects(@"new-server-user", [mdmSetup safeServerUsername]);
+    XCTAssertEqualObjects(@"new-server-password", [mdmSetup safeServerPassword]);
     XCTAssertFalse([mdmSetup safeRestoreEnable]); // not renewable
-    XCTAssertEqual(@"ECHOECHO", [mdmSetup safeRestoreId]); // not renewable
-    XCTAssertEqual(@"new-^[0-9]{1,15}$", [mdmSetup safePasswordPattern]);
-    XCTAssertEqual(@"New-Wrong-password-pattern", [mdmSetup safePasswordMessage]);
-    XCTAssertEqual(@"new.threema.ch", [mdmSetup webHosts]);
+    XCTAssertEqualObjects(@"ECHOECHO", [mdmSetup safeRestoreId]); // not renewable
+    XCTAssertEqualObjects(@"new-^[0-9]{1,15}$", [mdmSetup safePasswordPattern]);
+    XCTAssertEqualObjects(@"New-Wrong-password-pattern", [mdmSetup safePasswordMessage]);
+    XCTAssertEqualObjects(@"new.threema.ch", [mdmSetup webHosts]);
 }
 
 /// Bestehende Firmen MDM-Parameter werden von renewable Threema MDM-Parameter überschrieben (kein "setup" sync)
@@ -366,16 +366,16 @@
     XCTAssertFalse([mdmSetup disableWorkDirectory]);
     
     XCTAssertTrue([mdmSetup skipWizard]); // not renewable
-    XCTAssertEqual(_no, [mdmSetup safeEnable]);
-    XCTAssertEqual(@"87654321", [mdmSetup safePassword]);
-    XCTAssertEqual(@"http://new-test.com", [mdmSetup safeServerUrl]);
-    XCTAssertEqual(@"new-server-user", [mdmSetup safeServerUsername]);
-    XCTAssertEqual(@"new-server-password", [mdmSetup safeServerPassword]);
+    XCTAssertEqualObjects(_no, [mdmSetup safeEnable]);
+    XCTAssertEqualObjects(@"87654321", [mdmSetup safePassword]);
+    XCTAssertEqualObjects(@"http://new-test.com", [mdmSetup safeServerUrl]);
+    XCTAssertEqualObjects(@"new-server-user", [mdmSetup safeServerUsername]);
+    XCTAssertEqualObjects(@"new-server-password", [mdmSetup safeServerPassword]);
     XCTAssertFalse([mdmSetup safeRestoreEnable]); // not renewable
-    XCTAssertEqual(@"ECHOECHO", [mdmSetup safeRestoreId]); // not renewable
-    XCTAssertEqual(@"new-^[0-9]{1,15}$", [mdmSetup safePasswordPattern]);
-    XCTAssertEqual(@"New-Wrong-password-pattern", [mdmSetup safePasswordMessage]);
-    XCTAssertEqual(@"new.threema.ch", [mdmSetup webHosts]);
+    XCTAssertEqualObjects(@"ECHOECHO", [mdmSetup safeRestoreId]); // not renewable
+    XCTAssertEqualObjects(@"new-^[0-9]{1,15}$", [mdmSetup safePasswordPattern]);
+    XCTAssertEqualObjects(@"New-Wrong-password-pattern", [mdmSetup safePasswordMessage]);
+    XCTAssertEqualObjects(@"new.threema.ch", [mdmSetup webHosts]);
 }
 
 /// Keine bestehende MDM-Parameter, alle renewable Threema MDM-Parameter werden übernommen (kein "setup" sync)
@@ -395,8 +395,8 @@
     
     // Threema MDM can't set the license username and password
     [verifyCount(_mockLicenseStore, times(0)) setLicenseUsername:anything()];
-    [verifyCount(_mockLicenseStore, times(0)) setLicenseUsername:anything()];
-    
+    [verifyCount(_mockLicenseStore, times(0)) setLicensePassword:anything()];
+
     [verifyCount(_mockMyIdentityStore, times(0)) setPushFromName:@"New-Heiri"];
     [verifyCount(_mockMyIdentityStore, times(1)) setFirstName:@"New-Heiri"];
     [verifyCount(_mockMyIdentityStore, times(1)) setLastName:@"New-Heirassa"];
@@ -432,16 +432,16 @@
     XCTAssertFalse([mdmSetup disableWorkDirectory]);
     
     XCTAssertFalse([mdmSetup skipWizard]); // not renewable
-    XCTAssertEqual(_no, [mdmSetup safeEnable]);
+    XCTAssertEqualObjects(_no, [mdmSetup safeEnable]);
     XCTAssertNil([mdmSetup safePassword]);
-    XCTAssertEqual(@"http://new-test.com", [mdmSetup safeServerUrl]);
-    XCTAssertEqual(@"new-server-user", [mdmSetup safeServerUsername]);
-    XCTAssertEqual(@"new-server-password", [mdmSetup safeServerPassword]);
+    XCTAssertEqualObjects(@"http://new-test.com", [mdmSetup safeServerUrl]);
+    XCTAssertEqualObjects(@"new-server-user", [mdmSetup safeServerUsername]);
+    XCTAssertEqualObjects(@"new-server-password", [mdmSetup safeServerPassword]);
     XCTAssertTrue([mdmSetup safeRestoreEnable]); // not renewable
     XCTAssertNil([mdmSetup safeRestoreId]); // not renewable
-    XCTAssertEqual(@"new-^[0-9]{1,15}$", [mdmSetup safePasswordPattern]);
-    XCTAssertEqual(@"New-Wrong-password-pattern", [mdmSetup safePasswordMessage]);
-    XCTAssertEqual(@"new.threema.ch", [mdmSetup webHosts]);
+    XCTAssertEqualObjects(@"new-^[0-9]{1,15}$", [mdmSetup safePasswordPattern]);
+    XCTAssertEqualObjects(@"New-Wrong-password-pattern", [mdmSetup safePasswordMessage]);
+    XCTAssertEqualObjects(@"new.threema.ch", [mdmSetup webHosts]);
     
     XCTAssertNil([_mockLicenseStore licenseUsername]);
     XCTAssertNil([_mockLicenseStore licensePassword]);
@@ -466,7 +466,7 @@
     
     // Threema MDM can't set the license username and password
     [verifyCount(_mockLicenseStore, times(0)) setLicenseUsername:anything()];
-    [verifyCount(_mockLicenseStore, times(0)) setLicenseUsername:anything()];
+    [verifyCount(_mockLicenseStore, times(0)) setLicensePassword:anything()];
 
     [verifyCount(_mockMyIdentityStore, times(0)) setPushFromName:anything()];
     [verifyCount(_mockMyIdentityStore, times(0)) setCreateIDEmail:anything()]; // not renewable
@@ -623,16 +623,16 @@
     XCTAssertTrue([mdmSetup disableMultiDevice]);
     
     XCTAssertFalse([mdmSetup skipWizard]);
-    XCTAssertEqual(_yes, [mdmSetup safeEnable]);
+    XCTAssertEqualObjects(_yes, [mdmSetup safeEnable]);
     XCTAssertNil([mdmSetup safePassword]);
-    XCTAssertEqual(@"http://test.com", [mdmSetup safeServerUrl]);
-    XCTAssertEqual(@"server-user", [mdmSetup safeServerUsername]);
-    XCTAssertEqual(@"server-password", [mdmSetup safeServerPassword]);
+    XCTAssertEqualObjects(@"http://test.com", [mdmSetup safeServerUrl]);
+    XCTAssertEqualObjects(@"server-user", [mdmSetup safeServerUsername]);
+    XCTAssertEqualObjects(@"server-password", [mdmSetup safeServerPassword]);
     XCTAssertTrue([mdmSetup safeRestoreEnable]);
     XCTAssertNil([mdmSetup safeRestoreId]);
-    XCTAssertEqual(@"^[0-9]{1,15}$", [mdmSetup safePasswordPattern]);
-    XCTAssertEqual(@"Wrong-password-pattern", [mdmSetup safePasswordMessage]);
-    XCTAssertEqual(@"threema.ch", [mdmSetup webHosts]);
+    XCTAssertEqualObjects(@"^[0-9]{1,15}$", [mdmSetup safePasswordPattern]);
+    XCTAssertEqualObjects(@"Wrong-password-pattern", [mdmSetup safePasswordMessage]);
+    XCTAssertEqualObjects(@"threema.ch", [mdmSetup webHosts]);
 }
 
 /// Bestehendes Firmen MDM wird mit Threema MDM aktualisiert ("normaler" sync: NICHT renewable Parameter werden NICHT übernommen)
@@ -695,15 +695,15 @@
     
     XCTAssertFalse([mdmSetup skipWizard]); // not renewable
     XCTAssertTrue([mdmSetup safeEnable]);
-    XCTAssertEqual(@"12345678", [mdmSetup safePassword]);
-    XCTAssertEqual(@"http://test.com", [mdmSetup safeServerUrl]);
-    XCTAssertEqual(@"server-user", [mdmSetup safeServerUsername]);
-    XCTAssertEqual(@"server-password", [mdmSetup safeServerPassword]);
+    XCTAssertEqualObjects(@"12345678", [mdmSetup safePassword]);
+    XCTAssertEqualObjects(@"http://test.com", [mdmSetup safeServerUrl]);
+    XCTAssertEqualObjects(@"server-user", [mdmSetup safeServerUsername]);
+    XCTAssertEqualObjects(@"server-password", [mdmSetup safeServerPassword]);
     XCTAssertTrue([mdmSetup safeRestoreEnable]); // not renewable
     XCTAssertNil([mdmSetup safeRestoreId]); // not renewable
-    XCTAssertEqual(@"^[0-9]{1,15}$", [mdmSetup safePasswordPattern]);
-    XCTAssertEqual(@"Wrong-password-pattern", [mdmSetup safePasswordMessage]);
-    XCTAssertEqual(@"new.threema.ch", [mdmSetup webHosts]);
+    XCTAssertEqualObjects(@"^[0-9]{1,15}$", [mdmSetup safePasswordPattern]);
+    XCTAssertEqualObjects(@"Wrong-password-pattern", [mdmSetup safePasswordMessage]);
+    XCTAssertEqualObjects(@"new.threema.ch", [mdmSetup webHosts]);
 }
 
 /// Bestehendes Firmen MDM wird mit Threema MDM aktulisiert ("setup" sync: NICHT renewable Parameter werden übernommen)
@@ -765,15 +765,15 @@
     
     XCTAssertTrue([mdmSetup skipWizard]); // not renewable
     XCTAssertTrue([mdmSetup safeEnable]);
-    XCTAssertEqual(@"12345678", [mdmSetup safePassword]);
-    XCTAssertEqual(@"http://test.com", [mdmSetup safeServerUrl]);
-    XCTAssertEqual(@"server-user", [mdmSetup safeServerUsername]);
-    XCTAssertEqual(@"server-password", [mdmSetup safeServerPassword]);
+    XCTAssertEqualObjects(@"12345678", [mdmSetup safePassword]);
+    XCTAssertEqualObjects(@"http://test.com", [mdmSetup safeServerUrl]);
+    XCTAssertEqualObjects(@"server-user", [mdmSetup safeServerUsername]);
+    XCTAssertEqualObjects(@"server-password", [mdmSetup safeServerPassword]);
     XCTAssertFalse([mdmSetup safeRestoreEnable]); // not renewable
-    XCTAssertEqual(@"ECHOECHO", [mdmSetup safeRestoreId]); // not renewable
-    XCTAssertEqual(@"^[0-9]{1,15}$", [mdmSetup safePasswordPattern]);
-    XCTAssertEqual(@"Wrong-password-pattern", [mdmSetup safePasswordMessage]);
-    XCTAssertEqual(@"new.threema.ch", [mdmSetup webHosts]);
+    XCTAssertEqualObjects(@"ECHOECHO", [mdmSetup safeRestoreId]); // not renewable
+    XCTAssertEqualObjects(@"^[0-9]{1,15}$", [mdmSetup safePasswordPattern]);
+    XCTAssertEqualObjects(@"Wrong-password-pattern", [mdmSetup safePasswordMessage]);
+    XCTAssertEqualObjects(@"new.threema.ch", [mdmSetup webHosts]);
 }
 
 /// Work-Lizenz nicht gültig, gewisse renewable "MDM" Settings werden zurückgesetzt
@@ -885,7 +885,7 @@
     
     MDMSetup *mdmSetup = [[MDMSetup alloc] initWithAppSetupStateRawValue:AppSetupStateNotSetup isBusinessApp:YES];
 
-    XCTAssertEqual(keep_message_days, [mdmSetup keepMessagesDays]);
+    XCTAssertEqualObjects(keep_message_days, [mdmSetup keepMessagesDays]);
 }
 
 - (void)testBackupForce {
@@ -1161,9 +1161,9 @@
     
     XCTAssertTrue([mdmSetup hasIDBackup]);
     
-    XCTAssertEqual(@"XXXX-XXXX-...", [mdmSetup idBackup]);
-    XCTAssertEqual(@"12345678", [mdmSetup safePassword]);
-    XCTAssertEqual(@"12345678", [mdmSetup idBackupPassword]);
+    XCTAssertEqualObjects(@"XXXX-XXXX-...", [mdmSetup idBackup]);
+    XCTAssertEqualObjects(@"12345678", [mdmSetup safePassword]);
+    XCTAssertEqualObjects(@"12345678", [mdmSetup idBackupPassword]);
 }
 
 - (void)testDiscardInThreemaMdmWithCompanyMdm {
@@ -1190,9 +1190,9 @@
     
     XCTAssertTrue([mdmSetup hasIDBackup]);
     
-    XCTAssertEqual(@"XXXX-XXXX-...", [mdmSetup idBackup]);
-    XCTAssertEqual(@"12345678", [mdmSetup safePassword]);
-    XCTAssertEqual(@"12345678", [mdmSetup idBackupPassword]);
+    XCTAssertEqualObjects(@"XXXX-XXXX-...", [mdmSetup idBackup]);
+    XCTAssertEqualObjects(@"12345678", [mdmSetup safePassword]);
+    XCTAssertEqualObjects(@"12345678", [mdmSetup idBackupPassword]);
 }
 
 - (void)testApplyDiscardInThreemaMdmWithoutCompanyMdm {

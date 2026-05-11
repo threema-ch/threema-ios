@@ -9,10 +9,10 @@ use crate::utils::{
 
 const HEADER_LENGTH: usize = 4;
 
-/// An incoming frame
+/// An incoming frame.
 #[derive(Educe)]
 #[educe(Debug)]
-pub struct IncomingFrame(#[educe(Debug(method(debug_slice_length)))] pub Vec<u8>);
+pub struct RendezvousIncomingFrame(#[educe(Debug(method(debug_slice_length)))] pub Vec<u8>);
 
 /// Incoming frame decoder.
 pub(super) type FrameDecoder =
@@ -27,11 +27,11 @@ impl FrameDecoder {
 
 /// An outgoing frame.
 ///
-/// TODO(LIB-30): Simplify
+/// TODO(LIB-30): Simplify.
 #[derive(Educe, Name)]
 #[educe(Debug)]
-pub struct OutgoingFrame(#[educe(Debug(method(debug_slice_length)))] pub(super) Vec<u8>);
-impl OutgoingFrame {
+pub struct RendezvousOutgoingFrame(#[educe(Debug(method(debug_slice_length)))] pub(super) Vec<u8>);
+impl RendezvousOutgoingFrame {
     /// Encode the frame to bytes (header bytes, followed by the payload).
     ///
     /// # Panics
@@ -51,8 +51,8 @@ impl OutgoingFrame {
     }
 }
 
-impl From<OutgoingFrame> for Vec<u8> {
-    fn from(frame: OutgoingFrame) -> Self {
+impl From<RendezvousOutgoingFrame> for Vec<u8> {
+    fn from(frame: RendezvousOutgoingFrame) -> Self {
         let (header, payload) = frame.encode();
         [header.as_slice(), payload].concat()
     }

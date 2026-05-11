@@ -41,4 +41,8 @@ final class MultiDeviceManagerMock: MultiDeviceManagerProtocol {
     func disableMultiDeviceIfNeeded() {
         // no-op
     }
+    
+    func resetEnableMultiDeviceIfNeeded() {
+        // no-op
+    }
 }

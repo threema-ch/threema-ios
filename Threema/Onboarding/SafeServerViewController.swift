@@ -33,6 +33,10 @@ final class SafeServerViewController: IDCreationPageViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        /// With a transparent background, the button is only accessible when
+        /// the finger is positioned over the text
+        cancelButton.backgroundColor = .black.withAlphaComponent(0.02)
+        
         overrideUserInterfaceStyle = .dark
 
         cancelSegueID = isServerForRestore ? "CancelRestoreSafeServer" : "CancelSafeServer"

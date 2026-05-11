@@ -25,88 +25,94 @@ final class BusinessInjectorMock: FrameworkInjectorProtocol {
     
     var remoteSecretManager: any RemoteSecretManagerProtocol
 
-    var contactStore: ContactStoreProtocol
+    var contactStore: any ContactStoreProtocol
 
-    var conversationStore: ConversationStoreProtocol
+    var conversationStore: any ConversationStoreProtocol
 
     var entityManager: EntityManager
 
-    var groupManager: GroupManagerProtocol
+    var groupManager: any GroupManagerProtocol
 
-    var distributionListManager: DistributionListManagerProtocol
+    var distributionListManager: any DistributionListManagerProtocol
     
-    var licenseStore: LicenseStore
+    var licenseStore: any LicenseStoreProtocol
 
-    var messageSender: MessageSenderProtocol
+    var messageSender: any MessageSenderProtocol
 
-    var multiDeviceManager: MultiDeviceManagerProtocol
+    var multiDeviceManager: any MultiDeviceManagerProtocol
 
-    var myIdentityStore: MyIdentityStoreProtocol
+    var myIdentityStore: any MyIdentityStoreProtocol
 
     var profileStore: any ThreemaFramework.ProfileStoreProtocol
 
-    var unreadMessages: UnreadMessagesProtocol
+    var unreadMessages: any UnreadMessagesProtocol
 
-    var userSettings: UserSettingsProtocol
+    var userSettings: any UserSettingsProtocol
 
-    var serverConnector: ServerConnectorProtocol
+    var serverConnector: any ServerConnectorProtocol
     
-    var settingsStore: SettingsStoreProtocol
+    var settingsStore: any SettingsStoreProtocol
     
     var pushSettingManager: ThreemaFramework.PushSettingManagerProtocol
 
     var keychainManager: any Keychain.KeychainManagerProtocol
+    
+    var workAvailabilityStatusManager: any ThreemaFramework.WorkAvailabilityStatusManagerProtocol
+
+    var workDataFetcher: any ThreemaFramework.WorkDataFetcherProtocol
 
     // MARK: BusinessInternalInjectorProtocol
 
-    var mediatorMessageProtocol: MediatorMessageProtocolProtocol
+    var mediatorMessageProtocol: any MediatorMessageProtocolProtocol
 
-    var mediatorReflectedProcessor: MediatorReflectedProcessorProtocol
+    var mediatorReflectedProcessor: any MediatorReflectedProcessorProtocol
 
-    var messageProcessor: MessageProcessorProtocol
+    var messageProcessor: any MessageProcessorProtocol
 
     var fsmp: ForwardSecurityMessageProcessor
     
-    var dhSessionStore: DHSessionStoreProtocol
+    var dhSessionStore: any DHSessionStoreProtocol
     
-    var conversationStoreInternal: ThreemaFramework.ConversationStoreInternalProtocol
+    var conversationStoreInternal: any ThreemaFramework.ConversationStoreInternalProtocol
 
-    var settingsStoreInternal: SettingsStoreInternalProtocol
+    var settingsStoreInternal: any SettingsStoreInternalProtocol
 
-    var userNotificationCenterManager: UserNotificationCenterManagerProtocol
+    var userNotificationCenterManager: any UserNotificationCenterManagerProtocol
 
-    var nonceGuard: NonceGuardProtocol
+    var nonceGuard: any NonceGuardProtocol
 
-    var blobUploader: BlobUploaderProtocol
+    var blobUploader: any BlobUploaderProtocol
     
     var messageRetentionManager: any MessageRetentionManagerModelProtocol
 
     init(
         remoteSecretManager: any RemoteSecretManagerProtocol = RemoteSecretManagerMock(),
-        contactStore: ContactStoreProtocol = ContactStoreMock(),
-        conversationStore: ConversationStoreProtocol & ConversationStoreInternalProtocol = ConversationStoreMock(),
+        contactStore: any ContactStoreProtocol = ContactStoreMock(),
+        conversationStore: any ConversationStoreProtocol & ConversationStoreInternalProtocol = ConversationStoreMock(),
         entityManager: EntityManager,
-        groupManager: GroupManagerProtocol = GroupManagerMock(),
-        distributionListManager: DistributionListManagerProtocol = DistributionListManagerMock(),
-        licenseStore: LicenseStore = LicenseStore.shared(),
-        messageSender: MessageSenderProtocol = MessageSenderMock(),
-        multiDeviceManager: MultiDeviceManagerProtocol = MultiDeviceManagerMock(),
-        myIdentityStore: MyIdentityStoreProtocol = MyIdentityStoreMock(),
-        profileStore: ProfileStoreProtocol = ProfileStoreMock(),
-        unreadMessages: UnreadMessagesProtocol = UnreadMessagesMock(),
-        userSettings: UserSettingsProtocol = UserSettingsMock(),
-        settingsStore: SettingsStoreInternalProtocol & SettingsStoreProtocol = SettingsStoreMock(),
-        serverConnector: ServerConnectorProtocol = ServerConnectorMock(),
-        pushSettingManager: PushSettingManagerProtocol = PushSettingManagerMock(),
-        keychainManager: KeychainManagerProtocol = KeychainManagerMock(),
-        mediatorMessageProtocol: MediatorMessageProtocolProtocol = MediatorMessageProtocolMock(),
-        mediatorReflectedProcessor: MediatorReflectedProcessorProtocol = MediatorReflectedProcessorMock(),
-        messageProcessor: MessageProcessorProtocol = MessageProcessorMock(),
-        dhSessionStore: DHSessionStoreProtocol = InMemoryDHSessionStore(),
-        userNotificationCenterManager: UserNotificationCenterManagerProtocol = UserNotificationCenterManagerMock(),
-        nonceGuard: NonceGuardProtocol = NonceGuardMock(),
-        blobUploader: BlobUploaderProtocol = BlobUploaderMock(),
-        messageRetentionManager: MessageRetentionManagerModelProtocol = MessageRetentionManagerModelMock(),
+        groupManager: any GroupManagerProtocol = GroupManagerMock(),
+        distributionListManager: any DistributionListManagerProtocol = DistributionListManagerMock(),
+        licenseStore: any LicenseStoreProtocol = LicenseStoreMock(),
+        messageSender: any MessageSenderProtocol = MessageSenderMock(),
+        multiDeviceManager: any MultiDeviceManagerProtocol = MultiDeviceManagerMock(),
+        myIdentityStore: any MyIdentityStoreProtocol = MyIdentityStoreMock(),
+        profileStore: any ProfileStoreProtocol = ProfileStoreMock(),
+        unreadMessages: any UnreadMessagesProtocol = UnreadMessagesMock(),
+        userSettings: any UserSettingsProtocol = UserSettingsMock(),
+        settingsStore: any SettingsStoreInternalProtocol & SettingsStoreProtocol = SettingsStoreMock(),
+        serverConnector: any ServerConnectorProtocol = ServerConnectorMock(),
+        pushSettingManager: any PushSettingManagerProtocol = PushSettingManagerMock(),
+        keychainManager: any KeychainManagerProtocol = KeychainManagerMock(),
+        mediatorMessageProtocol: any MediatorMessageProtocolProtocol = MediatorMessageProtocolMock(),
+        mediatorReflectedProcessor: any MediatorReflectedProcessorProtocol = MediatorReflectedProcessorMock(),
+        messageProcessor: any MessageProcessorProtocol = MessageProcessorMock(),
+        dhSessionStore: any DHSessionStoreProtocol = InMemoryDHSessionStore(),
+        userNotificationCenterManager: any UserNotificationCenterManagerProtocol = UserNotificationCenterManagerMock(),
+        nonceGuard: any NonceGuardProtocol = NonceGuardMock(),
+        blobUploader: any BlobUploaderProtocol = BlobUploaderMock(),
+        messageRetentionManager: any MessageRetentionManagerModelProtocol = MessageRetentionManagerModelMock(),
+        workAvailabilityStatusManager: any WorkAvailabilityStatusManagerProtocol = WorkAvailabilityStatusManagerNull(),
+        workDataFetcher: any ThreemaFramework.WorkDataFetcherProtocol = WorkDataFetcherMock()
     ) {
         self.runsInBackground = entityManager.hasBackgroundChildContext
         self.remoteSecretManager = remoteSecretManager
@@ -143,5 +149,7 @@ final class BusinessInjectorMock: FrameworkInjectorProtocol {
         self.blobUploader = blobUploader
         self.messageRetentionManager = messageRetentionManager
         self.keychainManager = keychainManager
+        self.workAvailabilityStatusManager = workAvailabilityStatusManager
+        self.workDataFetcher = workDataFetcher
     }
 }

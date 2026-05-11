@@ -5,8 +5,10 @@ use serde_bytes::ByteBuf;
 use tsify::Tsify;
 
 use crate::{
+    csp_e2e::identity::create::CreateIdentityResponse,
     https::{self, HttpsError},
     remote_secret::{monitor::RemoteSecretMonitorResponse, setup::RemoteSecretSetupResponse},
+    work::properties::WorkPropertiesUpdateResponse,
 };
 
 /// Binding version of [`https::HttpsRequest`].
@@ -76,8 +78,10 @@ pub enum HttpsResult {
 
 #[duplicate_item(
     response_type;
+    [ CreateIdentityResponse ];
     [ RemoteSecretSetupResponse ];
     [ RemoteSecretMonitorResponse ];
+    [ WorkPropertiesUpdateResponse ]
 )]
 impl From<HttpsResult> for response_type {
     fn from(response: HttpsResult) -> Self {

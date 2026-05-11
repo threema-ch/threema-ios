@@ -49,7 +49,7 @@ final class VotePollViewModel: ObservableObject {
     let closeAlertMessage = #localize("ballot_close_ack")
     
     var pollVoteStateText: String {
-        poll?.isMultiSelection == true ? #localize("poll_multi_answer_select") :
+        poll?.isMultiselection == true ? #localize("poll_multi_answer_select") :
             #localize("poll_single_answer_select")
     }
     
@@ -107,7 +107,7 @@ final class VotePollViewModel: ObservableObject {
     }
     
     func select(choice: Poll.Choice) {
-        if poll?.isMultiSelection == true {
+        if poll?.isMultiselection == true {
             var set = Set(selectedChoices)
             set.formSymmetricDifference([choice.id])
             

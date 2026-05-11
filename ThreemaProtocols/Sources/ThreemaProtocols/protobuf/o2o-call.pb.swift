@@ -10,7 +10,11 @@
 
 // # 1:1 Calls
 
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 import SwiftProtobuf
 
 // If the compiler emits an error on this type, it is because this file
@@ -24,7 +28,7 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
 }
 
 /// Root signaling message
-public struct Callsignaling_Envelope: Sendable {
+public struct O2oCall_Envelope: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -32,20 +36,20 @@ public struct Callsignaling_Envelope: Sendable {
   /// Random amount of padding (0-255 bytes), ignored by the receiver
   public var padding: Data = Data()
 
-  public var content: Callsignaling_Envelope.OneOf_Content? = nil
+  public var content: O2oCall_Envelope.OneOf_Content? = nil
 
-  public var videoQualityProfile: Callsignaling_VideoQualityProfile {
+  public var videoQualityProfile: O2oCall_VideoQualityProfile {
     get {
       if case .videoQualityProfile(let v)? = content {return v}
-      return Callsignaling_VideoQualityProfile()
+      return O2oCall_VideoQualityProfile()
     }
     set {content = .videoQualityProfile(newValue)}
   }
 
-  public var captureStateChange: Callsignaling_CaptureState {
+  public var captureStateChange: O2oCall_CaptureState {
     get {
       if case .captureStateChange(let v)? = content {return v}
-      return Callsignaling_CaptureState()
+      return O2oCall_CaptureState()
     }
     set {content = .captureStateChange(newValue)}
   }
@@ -53,8 +57,8 @@ public struct Callsignaling_Envelope: Sendable {
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
   public enum OneOf_Content: Equatable, Sendable {
-    case videoQualityProfile(Callsignaling_VideoQualityProfile)
-    case captureStateChange(Callsignaling_CaptureState)
+    case videoQualityProfile(O2oCall_VideoQualityProfile)
+    case captureStateChange(O2oCall_CaptureState)
 
   }
 
@@ -67,23 +71,23 @@ public struct Callsignaling_Envelope: Sendable {
 /// (bitrate, resolution, etc) should also be included in this message. This
 /// way, if an unknown enum value is received, the receiver can simply use the
 /// raw values instead.
-public struct Callsignaling_VideoQualityProfile: Sendable {
+public struct O2oCall_VideoQualityProfile: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var profile: Callsignaling_VideoQualityProfile.QualityProfile = .max
+  public var profile: O2oCall_VideoQualityProfile.QualityProfile = .max
 
   /// The max bitrate in kbps
   public var maxBitrateKbps: UInt32 = 0
 
   /// The max resolution (in landscape orientation)
   public var maxResolution: Common_Resolution {
-    get {return _maxResolution ?? Common_Resolution()}
+    get {_maxResolution ?? Common_Resolution()}
     set {_maxResolution = newValue}
   }
   /// Returns true if `maxResolution` has been explicitly set.
-  public var hasMaxResolution: Bool {return self._maxResolution != nil}
+  public var hasMaxResolution: Bool {self._maxResolution != nil}
   /// Clears the value of `maxResolution`. Subsequent reads from it will return its default value.
   public mutating func clearMaxResolution() {self._maxResolution = nil}
 
@@ -129,7 +133,7 @@ public struct Callsignaling_VideoQualityProfile: Sendable {
     }
 
     // The compiler won't synthesize support with the UNRECOGNIZED case.
-    public static let allCases: [Callsignaling_VideoQualityProfile.QualityProfile] = [
+    public static let allCases: [O2oCall_VideoQualityProfile.QualityProfile] = [
       .max,
       .high,
       .low,
@@ -143,14 +147,14 @@ public struct Callsignaling_VideoQualityProfile: Sendable {
 }
 
 /// Signal changes in the capturing state (e.g. video camera enabled or disabled)
-public struct Callsignaling_CaptureState: Sendable {
+public struct O2oCall_CaptureState: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var state: Callsignaling_CaptureState.Mode = .off
+  public var state: O2oCall_CaptureState.Mode = .off
 
-  public var device: Callsignaling_CaptureState.CaptureDevice = .camera
+  public var device: O2oCall_CaptureState.CaptureDevice = .camera
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
@@ -186,7 +190,7 @@ public struct Callsignaling_CaptureState: Sendable {
     }
 
     // The compiler won't synthesize support with the UNRECOGNIZED case.
-    public static let allCases: [Callsignaling_CaptureState.Mode] = [
+    public static let allCases: [O2oCall_CaptureState.Mode] = [
       .off,
       .on,
     ]
@@ -230,7 +234,7 @@ public struct Callsignaling_CaptureState: Sendable {
     }
 
     // The compiler won't synthesize support with the UNRECOGNIZED case.
-    public static let allCases: [Callsignaling_CaptureState.CaptureDevice] = [
+    public static let allCases: [O2oCall_CaptureState.CaptureDevice] = [
       .camera,
       .reservedForScreenShare,
       .microphone,
@@ -243,9 +247,9 @@ public struct Callsignaling_CaptureState: Sendable {
 
 // MARK: - Code below here is support for the SwiftProtobuf runtime.
 
-fileprivate let _protobuf_package = "callsignaling"
+fileprivate let _protobuf_package = "o2o_call"
 
-extension Callsignaling_Envelope: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+extension O2oCall_Envelope: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".Envelope"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}padding\0\u{3}video_quality_profile\0\u{3}capture_state_change\0")
 
@@ -257,7 +261,7 @@ extension Callsignaling_Envelope: SwiftProtobuf.Message, SwiftProtobuf._MessageI
       switch fieldNumber {
       case 1: try { try decoder.decodeSingularBytesField(value: &self.padding) }()
       case 2: try {
-        var v: Callsignaling_VideoQualityProfile?
+        var v: O2oCall_VideoQualityProfile?
         var hadOneofValue = false
         if let current = self.content {
           hadOneofValue = true
@@ -270,7 +274,7 @@ extension Callsignaling_Envelope: SwiftProtobuf.Message, SwiftProtobuf._MessageI
         }
       }()
       case 3: try {
-        var v: Callsignaling_CaptureState?
+        var v: O2oCall_CaptureState?
         var hadOneofValue = false
         if let current = self.content {
           hadOneofValue = true
@@ -309,7 +313,7 @@ extension Callsignaling_Envelope: SwiftProtobuf.Message, SwiftProtobuf._MessageI
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: Callsignaling_Envelope, rhs: Callsignaling_Envelope) -> Bool {
+  public static func ==(lhs: O2oCall_Envelope, rhs: O2oCall_Envelope) -> Bool {
     if lhs.padding != rhs.padding {return false}
     if lhs.content != rhs.content {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
@@ -317,7 +321,7 @@ extension Callsignaling_Envelope: SwiftProtobuf.Message, SwiftProtobuf._MessageI
   }
 }
 
-extension Callsignaling_VideoQualityProfile: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+extension O2oCall_VideoQualityProfile: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".VideoQualityProfile"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}profile\0\u{3}max_bitrate_kbps\0\u{3}max_resolution\0\u{3}max_fps\0")
 
@@ -356,7 +360,7 @@ extension Callsignaling_VideoQualityProfile: SwiftProtobuf.Message, SwiftProtobu
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: Callsignaling_VideoQualityProfile, rhs: Callsignaling_VideoQualityProfile) -> Bool {
+  public static func ==(lhs: O2oCall_VideoQualityProfile, rhs: O2oCall_VideoQualityProfile) -> Bool {
     if lhs.profile != rhs.profile {return false}
     if lhs.maxBitrateKbps != rhs.maxBitrateKbps {return false}
     if lhs._maxResolution != rhs._maxResolution {return false}
@@ -366,11 +370,11 @@ extension Callsignaling_VideoQualityProfile: SwiftProtobuf.Message, SwiftProtobu
   }
 }
 
-extension Callsignaling_VideoQualityProfile.QualityProfile: SwiftProtobuf._ProtoNameProviding {
+extension O2oCall_VideoQualityProfile.QualityProfile: SwiftProtobuf._ProtoNameProviding {
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0MAX\0\u{1}HIGH\0\u{1}LOW\0")
 }
 
-extension Callsignaling_CaptureState: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+extension O2oCall_CaptureState: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".CaptureState"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}state\0\u{1}device\0")
 
@@ -397,7 +401,7 @@ extension Callsignaling_CaptureState: SwiftProtobuf.Message, SwiftProtobuf._Mess
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: Callsignaling_CaptureState, rhs: Callsignaling_CaptureState) -> Bool {
+  public static func ==(lhs: O2oCall_CaptureState, rhs: O2oCall_CaptureState) -> Bool {
     if lhs.state != rhs.state {return false}
     if lhs.device != rhs.device {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
@@ -405,10 +409,10 @@ extension Callsignaling_CaptureState: SwiftProtobuf.Message, SwiftProtobuf._Mess
   }
 }
 
-extension Callsignaling_CaptureState.Mode: SwiftProtobuf._ProtoNameProviding {
+extension O2oCall_CaptureState.Mode: SwiftProtobuf._ProtoNameProviding {
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0OFF\0\u{1}ON\0")
 }
 
-extension Callsignaling_CaptureState.CaptureDevice: SwiftProtobuf._ProtoNameProviding {
+extension O2oCall_CaptureState.CaptureDevice: SwiftProtobuf._ProtoNameProviding {
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0CAMERA\0\u{1}RESERVED_FOR_SCREEN_SHARE\0\u{1}MICROPHONE\0")
 }

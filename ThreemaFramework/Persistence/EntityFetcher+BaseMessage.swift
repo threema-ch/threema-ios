@@ -21,7 +21,7 @@ extension EntityFetcher {
     ///   - isOwn: If message was sent by us or from a contact. If nil is passed, we look for both.
     /// - Returns: Optional `BaseMessageEntity`
     public func message(with id: Data, in conversation: ConversationEntity, isOwn: Bool? = nil) -> BaseMessageEntity? {
-        var predicates = [messageIDPredicate(id: id), messageConversationPredicate(conversation: conversation)]
+        var predicates = [messageConversationPredicate(conversation: conversation), messageIDPredicate(id: id)]
         
         if let isOwn {
             predicates.append(messageIsOwnPredicate(isOwn: isOwn))
@@ -82,7 +82,7 @@ extension EntityFetcher {
         let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "Message")
         fetchRequest.fetchLimit = 1
         // Get delivered message in 1-1 or group conversation
-        // Filtering delivered messages in memeory is encrypted DB
+        // Filtering delivered messages in memory is encrypted DB
         let messagePredicate = NSPredicate(
             format: "(conversation.contact.identity == %@ OR sender.identity == %@) AND id == %@",
             identity,
@@ -315,12 +315,12 @@ extension EntityFetcher {
     }
     
     public func messageCount(for contactEntity: ContactEntity, in conversationEntity: ConversationEntity) -> Int {
-        let contactPredicate = messageSenderPredicate(contactEntity: contactEntity)
         let conversationsPredicate = messageConversationPredicate(conversation: conversationEntity)
+        let contactPredicate = messageSenderPredicate(contactEntity: contactEntity)
 
         return countEntities(
             entityName: "Message",
-            predicate: NSCompoundPredicate(andPredicateWithSubpredicates: [contactPredicate, conversationsPredicate])
+            predicate: NSCompoundPredicate(andPredicateWithSubpredicates: [conversationsPredicate, contactPredicate])
         )
     }
     
@@ -517,7 +517,7 @@ extension EntityFetcher {
     }
     
     func messageUnreadPredicate(conversation: ConversationEntity) -> NSPredicate {
-        NSPredicate(format: "isOwn == NO AND read == NO AND conversation == %@", conversation)
+        NSPredicate(format: "conversation == %@ AND isOwn == NO AND read == NO ", conversation)
     }
     
     func messageSenderPredicate(contactEntity: ContactEntity) -> NSPredicate {

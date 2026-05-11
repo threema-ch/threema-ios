@@ -100,7 +100,6 @@ struct CreatePollView: View {
                             
                         } label: {
                             Image(systemName: "arrow.up.and.down.text.horizontal")
-                                .foregroundStyle(Color(.labelInverted))
                                 .accessibilityLabel(viewModel.choicesEditTitle)
                         }
                         .disabled(!viewModel.isEditEnabled)

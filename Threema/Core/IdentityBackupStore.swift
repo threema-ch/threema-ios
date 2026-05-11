@@ -3,7 +3,7 @@ import FileUtility
 import Keychain
 import ThreemaFramework
 
-@objc final class IdentityBackupStore: NSObject {
+final class IdentityBackupStore: NSObject {
     
     public enum Error: Swift.Error {
         case saveIdentityBackupFailed

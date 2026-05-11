@@ -3,7 +3,11 @@ import ThreemaMacros
 
 extension RestoreIdentityViewController {
     private var topViewController: UIViewController {
-        AppDelegate.shared().currentTopViewController() ?? .init()
+        var topViewController: UIViewController = self
+        while let presentedViewController = topViewController.presentedViewController {
+            topViewController = presentedViewController
+        }
+        return topViewController
     }
 
     private var systemFeedbackManager: SystemFeedbackManagerProtocol {

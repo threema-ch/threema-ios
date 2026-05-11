@@ -169,7 +169,7 @@ typedef void (^ErrorBlock)(NSError * _Nonnull);
     __block BlobOrigin blobOriginForDone = BlobOriginPublic;
     __block BOOL isNotGroupMessage;
 
-    [entityManager performBlockAndWait:^{
+    [entityManager performAndWait:^{
         objectID = fileMessageEntity.objectID;
         blobID = fileMessageEntity.blobThumbnailId;
         blobOrigin = fileMessageEntity.blobOrigin;
@@ -230,7 +230,7 @@ typedef void (^ErrorBlock)(NSError * _Nonnull);
     [entityManager getOrCreateMessageFor:_boxMessage sender:_sender conversation:_conversation thumbnail:nil myIdentity: [MyIdentityStore.sharedMyIdentityStore identity] onCompletion:^(BaseMessageEntity * _Nonnull message) {
         __block FileMessageEntity *fileMessageEntity;
 
-        [entityManager performSyncBlockAndSafe:^{
+        [entityManager performAndWaitSave:^{
             fileMessageEntity = (FileMessageEntity*)message;
 
             GroupManager *groupManager = [[[BusinessInjector alloc] initWithEntityManager:entityManager] groupManagerObjC];
@@ -287,7 +287,7 @@ typedef void (^ErrorBlock)(NSError * _Nonnull);
 
     __block FileMessageEntity *fileMessage;
 
-    [entityManager performSyncBlockAndSafe:^{
+    [entityManager performAndWaitSave:^{
         fileMessage = (FileMessageEntity*)[[entityManager entityFetcher] existingObjectWith:objectID];
         if (fileMessage == nil) {
             onErrorInternal([ThreemaError threemaError:@"Loading file message to update thumbnail failed"]);

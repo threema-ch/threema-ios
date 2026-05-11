@@ -108,6 +108,14 @@ public enum TargetManager {
             false
         }
     
+    public static let isPrivate =
+        switch current {
+        case .threema, .green:
+            true
+        case .work, .blue, .onPrem, .customOnPrem:
+            false
+        }
+    
     public static let isWork =
         switch current {
         case .work, .blue:
@@ -220,6 +228,14 @@ public final class TargetManagerObjC: NSObject {
         case .work, .blue, .onPrem, .customOnPrem:
             true
         case .threema, .green:
+            false
+        }
+    
+    @objc static let isPrivate =
+        switch current {
+        case .threema, .green:
+            true
+        case .work, .blue, .onPrem, .customOnPrem:
             false
         }
     

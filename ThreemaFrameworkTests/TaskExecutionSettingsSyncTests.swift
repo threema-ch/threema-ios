@@ -22,7 +22,7 @@ final class TaskExecutionSettingsSyncTests: XCTestCase {
             entityManager: EntityManager(databaseContext: databaseMainCnx, isRemoteSecretEnabled: false)
         )
 
-        let task = TaskDefinitionSettingsSync(syncSettings: Sync_Settings())
+        let task = TaskDefinitionSettingsSync(syncSettings: D2dSync_Settings())
 
         let expec = expectation(description: "TaskDefinitionSettingsSync")
         var expecError: Error?
@@ -60,7 +60,7 @@ final class TaskExecutionSettingsSyncTests: XCTestCase {
         )
 
         // Change one value otherwise error will be shouldSkip
-        var syncSettings = Sync_Settings()
+        var syncSettings = D2dSync_Settings()
         syncSettings.contactSyncPolicy = .sync
 
         let task = TaskDefinitionSettingsSync(syncSettings: syncSettings)
@@ -227,7 +227,6 @@ final class TaskExecutionSettingsSyncTests: XCTestCase {
                 ) as? NSError
             }
 
-            let deviceGroupKeys = try XCTUnwrap(serverConnectorMock.deviceGroupKeys, "Device group keys missing")
             let framworkInjectorMock = BusinessInjectorMock(
                 entityManager: EntityManager(databaseContext: databaseMainCnx, isRemoteSecretEnabled: false),
                 myIdentityStore: test.initialConfig.identityStore,
@@ -360,8 +359,8 @@ final class TaskExecutionSettingsSyncTests: XCTestCase {
     private func getSyncSettings(
         initialConfig: UserSettingsProtocol,
         secondConfig: UserSettingsProtocol
-    ) -> Sync_Settings {
-        var syncSettings = Sync_Settings()
+    ) -> D2dSync_Settings {
+        var syncSettings = D2dSync_Settings()
 
         if initialConfig.syncContacts != secondConfig.syncContacts {
             syncSettings.contactSyncPolicy = secondConfig.syncContacts ? .sync : .notSynced

@@ -40,8 +40,8 @@ extension MDMSetup {
         _ = TaskManager().add(taskDefinition: TaskDefinitionMdmParameterSync(mdmParameters: mdmParameters()))
     }
 
-    func mdmParameters() -> Sync_MdmParameters {
-        var mdmParametersSync = Sync_MdmParameters()
+    func mdmParameters() -> D2dSync_MdmParameters {
+        var mdmParametersSync = D2dSync_MdmParameters()
         
         if let externalMdm = getCompanyMDM() {
             if let parameterDisableAddContact = mdmParameterSyncBool(
@@ -79,12 +79,13 @@ extension MDMSetup {
         return mdmParametersSync
     }
 
-    private func mdmParameterSyncBool(key: String, mdmParameters: [AnyHashable: Any]) -> Sync_MdmParameters.Parameter? {
+    private func mdmParameterSyncBool(key: String, mdmParameters: [AnyHashable: Any]) -> D2dSync_MdmParameters
+        .Parameter? {
         guard let value = mdmParameters[key] as? Bool else {
             return nil
         }
 
-        return Sync_MdmParameters.Parameter.with {
+        return D2dSync_MdmParameters.Parameter.with {
             $0.booleanValue = value
         }
     }

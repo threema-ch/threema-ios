@@ -1,7 +1,7 @@
 import Foundation
 import ThreemaMacros
 
-@objc final class NotificationActionProvider: NSObject {
+final class NotificationActionProvider: NSObject {
     
     // MARK: - Identifiers
 

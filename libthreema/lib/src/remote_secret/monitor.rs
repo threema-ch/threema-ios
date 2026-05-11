@@ -20,23 +20,37 @@ use crate::{
         endpoint::HttpsEndpointError,
         work_directory::{self, WorkFetchRemoteSecretResponse},
     },
-    utils::time::{Duration, Instant},
+    utils::{
+        debug::Name as _,
+        time::{Duration, Instant},
+    },
 };
 
-// Grace period for timeouts
+// Grace period for timeouts.
 const TIMEOUT_GRACE_PERIOD: Duration = Duration::from_secs(5);
 
-// Timeout between failed attempts until explicit failure is triggered while storage is locked
+// Timeout between failed attempts until explicit failure is triggered while storage is locked.
 const RETRY_INTERVAL_WHILE_LOCKED: Duration = Duration::from_secs(10);
 
-// Number of failed attempts until explicit failure is triggered while storage is locked
+// Number of failed attempts until explicit failure is triggered while storage is locked.
 const N_FAILED_ATTEMPTS_MAX_WHILE_LOCKED: u16 = 5;
 
-// Valid refresh interval range: 10s up to 24h
+// Valid refresh interval range: 10s up to 24h.
 const VALID_CHECK_INTERVAL_RANGE_S: RangeInclusive<u32> = 10..=86400;
 
 /// Most recent cause for a remote secret monitoring timeout.
 #[derive(Clone, Debug, thiserror::Error)]
+#[cfg_attr(
+    feature = "wasm",
+    derive(tsify::Tsify, serde::Serialize),
+    serde(
+        tag = "type",
+        content = "details",
+        rename_all = "kebab-case",
+        rename_all_fields = "camelCase"
+    ),
+    tsify(into_wasm_abi)
+)]
 #[cfg_attr(test, derive(PartialEq))]
 pub enum TimeoutCause {
     /// An unrecoverable network error occurred while communicating with a server.
@@ -80,6 +94,17 @@ impl From<HttpsEndpointError> for TimeoutCause {
 /// allowed to retry.
 #[derive(Clone, Debug, thiserror::Error)]
 #[cfg_attr(feature = "uniffi", derive(uniffi::Error), uniffi(flat_error))]
+#[cfg_attr(
+    feature = "wasm",
+    derive(tsify::Tsify, serde::Serialize),
+    serde(
+        tag = "type",
+        content = "details",
+        rename_all = "kebab-case",
+        rename_all_fields = "camelCase"
+    ),
+    tsify(into_wasm_abi)
+)]
 #[cfg_attr(test, derive(PartialEq))]
 pub enum RemoteSecretMonitorError {
     /// Invalid parameter provided by foreign code.
@@ -235,13 +260,13 @@ impl State {
         context: &RemoteSecretMonitorContext,
         state: FetchState,
     ) -> (Self, RemoteSecretMonitorInstruction) {
-        // Check if the schedule was violated
+        // Check if the schedule was violated.
         if state.scheduled_at.elapsed() > state.timeout {
             let time_delta = state.scheduled_at.elapsed().saturating_sub(state.timeout);
             warn!(?time_delta, "Remote secret fetch delayed");
         }
 
-        // Request remote secret
+        // Request remote secret.
         info!("Requesting remote secret");
         let request = work_directory::request_remote_secret(
             &context.client_info,
@@ -264,7 +289,7 @@ impl State {
         context: &RemoteSecretMonitorContext,
         state: VerifyState,
     ) -> Result<(Self, RemoteSecretMonitorInstruction), RemoteSecretMonitorError> {
-        // Ensure the caller provided the response
+        // Ensure the caller provided the response.
         let Some(response) = state.response else {
             return Err(RemoteSecretMonitorError::InvalidState(formatcp!(
                 "{} result was not provided for '{}' state",
@@ -273,13 +298,13 @@ impl State {
             )));
         };
 
-        // Check if the result timeout was violated
+        // Check if the result timeout was violated.
         if state.scheduled_at.elapsed() > state.timeout {
             let time_delta = state.scheduled_at.elapsed().saturating_sub(state.timeout);
             warn!(?time_delta, "Remote secret result delayed");
         }
 
-        // Handle the remote secret result
+        // Handle the remote secret result.
         match work_directory::handle_remote_secret_result(response.result) {
             Ok(WorkFetchRemoteSecretResponse {
                 remote_secret,
@@ -288,7 +313,7 @@ impl State {
             }) => {
                 let remote_secret = RemoteSecret(remote_secret);
 
-                // Clamp the check interval to the valid range
+                // Clamp the check interval to the valid range.
                 let check_interval = Duration::from_secs(
                     check_interval_s
                         .clamp(
@@ -298,7 +323,7 @@ impl State {
                         .into(),
                 );
 
-                // Verify the remote secret is the one we expect
+                // Verify the remote secret is the one we expect.
                 let actual_remote_secret_hash = remote_secret.derive_hash();
                 match &context.remote_secret_verifier {
                     RemoteSecretVerifier::RemoteSecretHash(expected_remote_secret_hash) => {
@@ -329,7 +354,7 @@ impl State {
                     },
                 }
 
-                // Schedule another check and hand out the remote secret, if needed
+                // Schedule another check and hand out the remote secret, if needed.
                 info!(refresh_in = ?check_interval, "Fetching remote secret successful");
                 Ok((
                     Self::Fetch(FetchState {
@@ -363,17 +388,17 @@ impl State {
             },
 
             Err(error) => {
-                // Check if we can still make another check based on maximum amount of tries
+                // Check if we can still make another check based on maximum amount of tries.
                 if state.n_failed_attempts >= state.storage_state.n_failed_attempts_max() {
                     info!("Maximum number of failed remote secret fetch attempts exceeded");
                     return Err(RemoteSecretMonitorError::Timeout(TimeoutCause::from(error)));
                 }
 
-                // Schedule another attempt
+                // Schedule another attempt.
                 Ok(match state.storage_state {
                     storage_state @ StorageState::Locked => {
                         // The storage was never unlocked, so we have to work with constant timers and failure
-                        // counters
+                        // counters.
                         info!(
                             cause = ?error,
                             retry_in = ?RETRY_INTERVAL_WHILE_LOCKED,
@@ -395,7 +420,7 @@ impl State {
 
                     storage_state @ StorageState::Unlocked { check_interval, .. } => {
                         // The storage was unlocked before, so we maintain the settings from the previous
-                        // fetch
+                        // fetch.
                         info!(cause = ?error, retry_in = ?check_interval, "Fetching remote secret failed");
                         (
                             Self::Fetch(FetchState {
@@ -437,7 +462,7 @@ impl State {
 /// [`RemoteSecret`] before it has been blocked or removed.
 ///
 /// Note for choosing parameters: The maximum timeout after an initial fetch can be calculated as follows:
-/// `check_interval_s` * `n_missed_checks_max` + `endpoint::TIMEOUT`
+/// `check_interval_s` * `n_missed_checks_max` + `endpoint::TIMEOUT`.
 #[derive(Name, Educe)]
 #[educe(Debug)]
 pub struct RemoteSecretMonitorProtocol {
@@ -452,7 +477,7 @@ impl RemoteSecretMonitorProtocol {
     pub fn new(context: RemoteSecretMonitorContext) -> Self {
         debug!("Creating remote secret monitor protocol");
 
-        // Create initial state
+        // Create initial state.
         Self {
             context,
             state: State::Fetch(FetchState {
@@ -708,7 +733,7 @@ mod tests {
             StorageState::Unlocked {check_interval, n_failed_attempts_max} => {
                 assert_eq!(
                     check_interval,
-                    // Note: `checkIntervalS: 0` will be clamped to this value
+                    // Note: `checkIntervalS: 0` will be clamped to this value.
                     Duration::from_secs((*VALID_CHECK_INTERVAL_RANGE_S.start()).into()),
                 );
                 assert_eq!(n_failed_attempts_max, 0);
@@ -760,7 +785,7 @@ mod tests {
             StorageState::Unlocked {check_interval, n_failed_attempts_max} => {
                 assert_eq!(
                     check_interval,
-                    // Note: `checkIntervalS: 86401` will be clamped to this value
+                    // Note: `checkIntervalS: 86401` will be clamped to this value.
                     Duration::from_secs((*VALID_CHECK_INTERVAL_RANGE_S.end()).into()),
                 );
                 assert_eq!(n_failed_attempts_max, 65535);
@@ -918,16 +943,16 @@ mod tests {
 
     #[apply(monitor_context_template)]
     fn two_cycles_until_failure(context: RemoteSecretMonitorContext) -> anyhow::Result<()> {
-        // Initial state
+        // Initial state.
         let mut protocol = RemoteSecretMonitorProtocol::new(context);
         assert_matches!(&protocol.state, State::Fetch(_));
 
-        // First fetch
+        // First fetch.
         let instruction = protocol.poll()?;
         assert_matches!(&protocol.state, State::Verify(_));
         assert_matches!(instruction, RemoteSecretMonitorInstruction::Request(_));
 
-        // First response with expected content
+        // First response with expected content.
         protocol.response(RemoteSecretMonitorResponse {
             result: Ok(HttpsResponse {
                 status: 200,
@@ -947,12 +972,12 @@ mod tests {
             assert_eq!(remote_secret.unwrap().0, [2_u8; 32]);
         });
 
-        // Second fetch
+        // Second fetch.
         let instruction = protocol.poll()?;
         assert_matches!(&protocol.state, State::Verify(_));
         assert_matches!(instruction, RemoteSecretMonitorInstruction::Request(_));
 
-        // Second response with expected content
+        // Second response with expected content.
         protocol.response(RemoteSecretMonitorResponse {
             result: Ok(HttpsResponse {
                 status: 200,
@@ -972,14 +997,14 @@ mod tests {
             assert!(remote_secret.is_none());
         });
 
-        // Subsequent fetches and responses triggering a retry 3 times
+        // Subsequent fetches and responses triggering a retry 3 times.
         for n_failed_attempts in 0..3_u16 {
-            // Subsequent fetches
+            // Subsequent fetches.
             let instruction = protocol.poll()?;
             assert_matches!(&protocol.state, State::Verify(_));
             assert_matches!(instruction, RemoteSecretMonitorInstruction::Request(_));
 
-            // Subsequent responses triggering a retry
+            // Subsequent responses triggering a retry.
             protocol.response(RemoteSecretMonitorResponse {
                 result: Ok(HttpsResponse {
                     status: 429,
@@ -999,12 +1024,12 @@ mod tests {
             );
         }
 
-        // Final fetch
+        // Final fetch.
         let instruction = protocol.poll()?;
         assert_matches!(&protocol.state, State::Verify(_));
         assert_matches!(instruction, RemoteSecretMonitorInstruction::Request(_));
 
-        // Final response triggering a timeout
+        // Final response triggering a timeout.
         protocol.response(RemoteSecretMonitorResponse {
             result: Ok(HttpsResponse {
                 status: 429,

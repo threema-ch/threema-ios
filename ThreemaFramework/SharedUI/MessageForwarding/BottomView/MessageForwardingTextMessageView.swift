@@ -173,11 +173,10 @@ final class MessageForwardingTextMessageView: UIStackView {
             chatTextView.allowsVerticalGrowing = true
         }
 
+        // We ensure that on the next layout pass the layout is reevaluated. We don't enforce it here. Otherwise some
+        // constraints and the layout breaks
         chatTextView.invalidateIntrinsicContentSize()
-        chatTextView.layoutIfNeeded()
-
         setNeedsLayout()
-        layoutIfNeeded()
     }
 
     private func setupTraitRegistration() {

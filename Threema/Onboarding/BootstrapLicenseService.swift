@@ -5,12 +5,12 @@ import ThreemaFramework
 @MainActor
 final class BootstrapLicenseService {
 
-    private let licenseStore: LicenseStoreProtocol
-    private let appLaunchManager: AppLaunchManagerProtocol
+    private let licenseStore: any LicenseStoreAdapterProtocol
+    private let appLaunchManager: any AppLaunchManagerProtocol
 
     init(
-        licenseStore: LicenseStoreProtocol,
-        appLaunchManager: AppLaunchManagerProtocol
+        licenseStore: any LicenseStoreAdapterProtocol,
+        appLaunchManager: any AppLaunchManagerProtocol
     ) {
         self.licenseStore = licenseStore
         self.appLaunchManager = appLaunchManager

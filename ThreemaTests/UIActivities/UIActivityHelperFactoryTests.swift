@@ -69,6 +69,6 @@ import UniformTypeIdentifiers
     // MARK: Helpers
 
     private func anyURL() -> URL {
-        URL(string: "https://www.abc.com")!
+        URL(string: "https://www.example.com")!
     }
 }

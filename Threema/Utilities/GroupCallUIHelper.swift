@@ -3,7 +3,7 @@ import Foundation
 import GroupCalls
 import ThreemaMacros
 
-@objc final class GroupCallUIHelper: NSObject {
+final class GroupCallUIHelper: NSObject {
     @objc func setGlobalGroupCallsManagerSingletonUIDelegate() {
         GlobalGroupCallManagerSingleton.shared.uiDelegate = self
     }

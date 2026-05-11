@@ -1448,7 +1448,7 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
         backgroundEntityManager: EntityManager = PersistenceManager(
             appGroupID: AppGroup.groupID(),
             userDefaults: AppGroup.userDefaults(),
-            remoteSecretManager: AppLaunchManager.remoteSecretManager
+            remoteSecretManager: RemoteSecretProvider.remoteSecretManager
         ).backgroundEntityManager
     ) -> Guarantee<Bool> {
         firstly {

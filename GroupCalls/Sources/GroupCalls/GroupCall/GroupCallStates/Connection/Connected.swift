@@ -178,7 +178,7 @@ extension Connected {
                 let videoMuteMessage = try participant.videoMuteMessage()
                 let videoUnmuteEnvelope = groupCallContext.outerEnvelope(for: videoMuteMessage, to: participant)
                 
-                var outer = Groupcall_ParticipantToSfu.Envelope()
+                var outer = GroupCall_ParticipantToSfu.Envelope()
                 outer.relay = videoUnmuteEnvelope
                 outer.padding = groupCallActor.dependencies.groupCallCrypto.padding()
                 
@@ -194,7 +194,7 @@ extension Connected {
                 let videoUnmuteMessage = try participant.videoUnmuteMessage()
                 let videoUnmuteEnvelope = groupCallContext.outerEnvelope(for: videoUnmuteMessage, to: participant)
                 
-                var outer = Groupcall_ParticipantToSfu.Envelope()
+                var outer = GroupCall_ParticipantToSfu.Envelope()
                 outer.relay = videoUnmuteEnvelope
                 outer.padding = groupCallActor.dependencies.groupCallCrypto.padding()
                 
@@ -215,7 +215,7 @@ extension Connected {
                 let audioUnmuteMessage = try participant.audioMuteMessage()
                 let audioMuteEnvelope = groupCallContext.outerEnvelope(for: audioUnmuteMessage, to: participant)
                 
-                var outer = Groupcall_ParticipantToSfu.Envelope()
+                var outer = GroupCall_ParticipantToSfu.Envelope()
                 outer.relay = audioMuteEnvelope
                 outer.padding = groupCallActor.dependencies.groupCallCrypto.padding()
                 
@@ -231,7 +231,7 @@ extension Connected {
                 let audioUnmuteMessage = try participant.audioUnmuteMessage()
                 let audioMuteEnvelope = groupCallContext.outerEnvelope(for: audioUnmuteMessage, to: participant)
                 
-                var outer = Groupcall_ParticipantToSfu.Envelope()
+                var outer = GroupCall_ParticipantToSfu.Envelope()
                 outer.relay = audioMuteEnvelope
                 outer.padding = groupCallActor.dependencies.groupCallCrypto.padding()
                 
@@ -268,7 +268,7 @@ extension Connected {
     }
     
     private func process(_ buffer: PeerConnectionMessage) async throws {
-        guard let sfuToParticipant = try? Groupcall_SfuToParticipant.Envelope(serializedData: buffer.data) else {
+        guard let sfuToParticipant = try? GroupCall_SfuToParticipant.Envelope(serializedData: buffer.data) else {
             DDLogWarn(
                 "[GroupCall] Could not create `Groupcall_SfuToParticipant.Envelope` from `PeerConnectionMessage`, thus ignoring it."
             )
@@ -407,7 +407,7 @@ extension Connected {
     private func serializeAndSend(_ data: Data, to participant: RemoteParticipant) throws {
         let participantToParticipantEnvelope = groupCallContext.outerEnvelope(for: data, to: participant)
         
-        var outer = Groupcall_ParticipantToSfu.Envelope()
+        var outer = GroupCall_ParticipantToSfu.Envelope()
         outer.relay = participantToParticipantEnvelope
         outer.padding = groupCallActor.dependencies.groupCallCrypto.padding()
         

@@ -13,7 +13,7 @@ final class ContactListSearchResultViewController<CellProvider: ContactListCellP
     
     // MARK: - Private properties
         
-    private let allowsMultiSelect: Bool
+    private let allowsMultiselect: Bool
     private let provider: ContactListProvider
     private let cellProvider: CellProvider
     private let businessInjector: BusinessInjector
@@ -39,12 +39,12 @@ final class ContactListSearchResultViewController<CellProvider: ContactListCellP
         businessInjector: BusinessInjector,
         cellProvider: CellProvider,
         provider: ContactListProvider,
-        allowsMultiSelect: Bool
+        allowsMultiselect: Bool
     ) {
         self.businessInjector = businessInjector
         self.cellProvider = cellProvider
         self.provider = provider
-        self.allowsMultiSelect = allowsMultiSelect
+        self.allowsMultiselect = allowsMultiselect
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -83,7 +83,7 @@ final class ContactListSearchResultViewController<CellProvider: ContactListCellP
     // MARK: - Public
     
     func updateSelection() {
-        guard allowsMultiSelect else {
+        guard allowsMultiselect else {
             return
         }
         
@@ -107,7 +107,7 @@ final class ContactListSearchResultViewController<CellProvider: ContactListCellP
     // MARK: UITableViewDelegate
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        if !allowsMultiSelect {
+        if !allowsMultiselect {
             tableView.deselectRow(at: indexPath, animated: true)
         }
         
@@ -119,7 +119,7 @@ final class ContactListSearchResultViewController<CellProvider: ContactListCellP
     }
     
     func tableView(_ tableView: UITableView, didDeselectRowAt indexPath: IndexPath) {
-        guard allowsMultiSelect, let id = dataSource.itemIdentifier(for: indexPath) else {
+        guard allowsMultiselect, let id = dataSource.itemIdentifier(for: indexPath) else {
             return
         }
         

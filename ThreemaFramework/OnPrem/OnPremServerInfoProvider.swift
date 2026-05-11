@@ -109,6 +109,11 @@ final class OnPremServerInfoProvider: ServerInfoProvider {
             }
         }
     }
+    
+    func workBaseServer(completionHandler: @escaping (WorkServerInfo?, (any Error)?) -> Void) {
+        // In OnPrem we get the new base url style already in the old property. Thats why we just call that here.
+        workServer(ipv6: true, completionHandler: completionHandler)
+    }
 
     func avatarServer(ipv6: Bool, completionHandler: @escaping (AvatarServerInfo?, Error?) -> Void) {
         prepareConfigFetcher { configFetcher in

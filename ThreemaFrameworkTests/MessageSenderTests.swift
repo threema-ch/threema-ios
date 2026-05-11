@@ -15,7 +15,7 @@ final class MessageSenderTests: XCTestCase {
 
     override func setUpWithError() throws {
         AppGroup.setGroupID("group.ch.threema")
-        AppLaunchManager.remoteSecretManager = RemoteSecretManagerMock()
+        RemoteSecretProvider.setRemoteSecretManager(RemoteSecretManagerMock())
 
         taskManagerMock = TaskManagerMock()
 

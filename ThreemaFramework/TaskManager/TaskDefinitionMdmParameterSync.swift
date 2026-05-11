@@ -33,9 +33,9 @@ final class TaskDefinitionMdmParameterSync: TaskDefinition, TaskDefinitionTransa
         .mdmParameterSync
     }
 
-    var mdmParameters: Sync_MdmParameters
+    var mdmParameters: D2dSync_MdmParameters
 
-    init(mdmParameters: Sync_MdmParameters) {
+    init(mdmParameters: D2dSync_MdmParameters) {
         self.mdmParameters = mdmParameters
 
         super.init(type: .volatile)

@@ -50,6 +50,7 @@ public final class Contact: NSObject {
     @objc public private(set) dynamic var verificationLevel: ContactEntity.VerificationLevel = .unverified
     @objc public private(set) dynamic var featureMask: Int
     @objc public private(set) dynamic lazy var profilePicture: UIImage = resolveProfilePicture()
+    @objc public private(set) dynamic var workAvailabilityStatus: WorkAvailabilityStatus?
 
     @objc public private(set) dynamic var displayName: String {
         get {
@@ -284,11 +285,15 @@ public final class Contact: NSObject {
         self.contactImageData = contactEntity.imageData
         self.readReceipt = contactEntity.readReceipt
         self.typingIndicator = contactEntity.typingIndicator
+        self.workAvailabilityStatusEntity = contactEntity.workAvailabilityStatus
+        
         super.init()
 
         // Update tracking
         subscribeForContactEntityChanges(contactEntity: contactEntity)
         addOtherObservers()
+        
+        updateWorkAvailability()
     }
 
     public func profilePictureForGroupCalls() -> UIImage {
@@ -389,6 +394,9 @@ public final class Contact: NSObject {
                 }
                 if typingIndicator != contactEntity.typingIndicator {
                     typingIndicator = contactEntity.typingIndicator
+                }
+                if workAvailabilityStatusEntity != contactEntity.workAvailabilityStatus {
+                    workAvailabilityStatusEntity = contactEntity.workAvailabilityStatus
                 }
             }
         }
@@ -542,6 +550,26 @@ public final class Contact: NSObject {
         }
     }
     
+    // MARK: - Work availability status
+    
+    private var workAvailabilityStatusEntity: WorkAvailabilityStatusEntity? {
+        didSet {
+            updateWorkAvailability()
+        }
+    }
+    
+    private func updateWorkAvailability() {
+        if let workAvailabilityStatusEntity {
+            workAvailabilityStatus = WorkAvailabilityStatus(
+                value: workAvailabilityStatusEntity.value.intValue,
+                text: workAvailabilityStatusEntity.text
+            )
+        }
+        else {
+            workAvailabilityStatus = nil
+        }
+    }
+    
     // MARK: Comparing function
 
     public func isEqual(to object: Any?) -> Bool {
@@ -559,11 +587,22 @@ public final class Contact: NSObject {
             department == object.department &&
             publicNickname == object.publicNickname &&
             verificationLevel == object.verificationLevel &&
+            state == object.state &&
+            isWorkContact == object.isWorkContact &&
             profilePicture.pngData() == object.profilePicture.pngData() &&
             threemaImageData == object.threemaImageData &&
-            contactImageData == object.contactImageData &&
-            state == object.state &&
-            isWorkContact == object.isWorkContact
+            contactImageData == object.contactImageData
+    }
+    
+    public func isNameEqual(to object: Any?) -> Bool {
+        guard let object = object as? Contact else {
+            return false
+        }
+
+        return willBeDeleted == object.willBeDeleted &&
+            firstName == object.firstName &&
+            lastName == object.lastName &&
+            publicNickname == object.publicNickname
     }
 }
 
@@ -571,15 +610,24 @@ extension Set<Contact> {
     // Comparing contacts independent of the oder
     func contactsEqual(to other: Set<Contact>) -> Bool {
         count == other.count &&
-            contains(where: { le in
-                var equal = false
-                for re in other {
-                    if le.isEqual(to: re) {
-                        equal = true
-                        break
-                    }
-                }
-                return equal
-            })
+            allSatisfy { le in
+                other.contains(where: { le.isEqual(to: $0) })
+            }
+    }
+    
+    // Comparing contacts independent of the oder
+    func contactIdentitiesEqual(to other: Set<Contact>) -> Bool {
+        count == other.count &&
+            allSatisfy { le in
+                other.contains(where: { le.identity == $0.identity })
+            }
+    }
+    
+    // Comparing contacts independent of the oder
+    func contactNameEqual(to other: Set<Contact>) -> Bool {
+        count == other.count &&
+            allSatisfy { le in
+                other.contains(where: { le.isNameEqual(to: $0) })
+            }
     }
 }

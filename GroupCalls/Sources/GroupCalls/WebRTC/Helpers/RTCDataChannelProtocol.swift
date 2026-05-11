@@ -8,6 +8,6 @@ protocol RTCDataChannelProtocol: NSObject, Sendable {
     func close()
 }
 
-// MARK: - RTCDataChannel + Sendable, RTCDataChannelProtocol
+// MARK: - RTCDataChannel + @unchecked Sendable, RTCDataChannelProtocol
 
 extension RTCDataChannel: @unchecked Sendable, RTCDataChannelProtocol { }

@@ -30,7 +30,7 @@ final class StartChatViewController: ThemedViewController {
             businessInjector: BusinessInjector.ui,
             cellProvider: cellProvider,
             provider: provider,
-            allowsMultiSelect: false
+            allowsMultiselect: false
         )
         controller.delegate = self
         

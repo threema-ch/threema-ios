@@ -12,14 +12,14 @@ final class BootstrapContainer {
     let appLaunchManager: any AppLaunchManagerProtocol
     let bootstrapUserSettings: any BootstrapUserSettingsProtocol
     let bootstrapIdentityStore: any BootstrapIdentityStoreProtocol
-    let licenseStore: any LicenseStoreProtocol
+    let licenseStore: any LicenseStoreAdapterProtocol
     let bootstrapServerAPI: any BootstrapServerAPIProtocol
     let bootstrapIdentityCreator: any BootstrapIdentityCreatorProtocol
     let bootstrapKeychainManager: any BootstrapKeychainManagerProtocol
     let bootstrapBackupStore: any BootstrapBackupStoreProtocol
     let bootstrapWorkDataFetcher: any BootstrapWorkDataFetcherProtocol
     let bootstrapContactStore: any BootstrapContactStoreProtocol
-    let bootstrapPhoneNumberNormalizer: any BootstrapPhoneNumberNormalizerProtocol
+    let bootstrapPhoneNumberNormalizer: any PhoneNumberNormalizerProtocol
     let bootstrapMDM: any BootstrapMDMSetupProtocol
     
     // MARK: - Initialization
@@ -28,14 +28,14 @@ final class BootstrapContainer {
         appLaunchManager: any AppLaunchManagerProtocol,
         bootstrapUserSettings: any BootstrapUserSettingsProtocol,
         bootstrapIdentityStore: any BootstrapIdentityStoreProtocol,
-        licenseStore: any LicenseStoreProtocol,
+        licenseStore: any LicenseStoreAdapterProtocol,
         bootstrapServerAPI: any BootstrapServerAPIProtocol,
         bootstrapIdentityCreator: any BootstrapIdentityCreatorProtocol,
         bootstrapKeychainManager: any BootstrapKeychainManagerProtocol,
         bootstrapBackupStore: any BootstrapBackupStoreProtocol,
         bootstrapContactStore: any BootstrapContactStoreProtocol,
         bootstrapWorkDataFetcher: any BootstrapWorkDataFetcherProtocol,
-        bootstrapPhoneNumberNormalizer: any BootstrapPhoneNumberNormalizerProtocol,
+        bootstrapPhoneNumberNormalizer: any PhoneNumberNormalizerProtocol,
         bootstrapMDM: any BootstrapMDMSetupProtocol
     ) {
         self.appLaunchManager = appLaunchManager
@@ -57,16 +57,10 @@ final class BootstrapContainer {
 
 extension BootstrapContainer {
     static func live() -> BootstrapContainer {
-        /// It doesn't belong here, but the these IDs need to be set before we
-        /// init `MDMSetup`.
-        AppGroup.setGroupID(BundleUtil.threemaAppGroupIdentifier())
-        BundleUtil.mainBundle()?.bundleIdentifier.map(AppGroup.setAppID(_:))
-        
-        let appLaunchManager = AppLaunchManagerAdapter()
         let identityStore = BootstrapIdentityStoreAdapter()
         
         return BootstrapContainer(
-            appLaunchManager: appLaunchManager,
+            appLaunchManager: AppLaunchManagerAdapter(),
             bootstrapUserSettings: BootstrapUserSettingsAdapter(),
             bootstrapIdentityStore: identityStore,
             licenseStore: LicenseStoreAdapter(),
@@ -76,11 +70,8 @@ extension BootstrapContainer {
             bootstrapBackupStore: BootstrapBackupStoreAdapter(),
             bootstrapContactStore: BootstrapContactStoreAdapter(),
             bootstrapWorkDataFetcher: BootstrapWorkDataFetcherAdapter(),
-            bootstrapPhoneNumberNormalizer: BootstrapPhoneNumberNormalizerAdapter(),
-            bootstrapMDM: BootstrapMDMAdapter(
-                mdmSetup: MDMSetup(),
-                appLaunchManager: appLaunchManager
-            )
+            bootstrapPhoneNumberNormalizer: PhoneNumberNormalizer(),
+            bootstrapMDM: BootstrapMDMAdapter(mdmSetup: MDMSetup())
         )
     }
 }

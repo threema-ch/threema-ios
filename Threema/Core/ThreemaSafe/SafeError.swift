@@ -65,12 +65,10 @@ indirect enum SafeError: Error, CustomStringConvertible, Equatable {
                 #localize("safe_decoding_failed")
             case .versionMismatch:
                 #localize("safe_version_mismatch")
-            case .invalidMasterKey:
+            case .invalidMasterKey, .invalidClientKey:
                 #localize("safe_invalid_content")
-            case .invalidClientKey:
-                #localize("safe_invalid_key")
             case .invalidData:
-                #localize("safe_invalid_data")
+                #localize("safe_restore_invalid_data")
             case .remoteSecretError:
                 #localize("safe_rs_error")
             }

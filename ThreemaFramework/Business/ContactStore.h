@@ -1,7 +1,7 @@
 #import <Foundation/Foundation.h>
 #import <ThreemaFramework/UserSettings.h>
 
-@class MediatorSyncableContacts;
+@class MediatorSyncableContacts, WorkAvailabilityStatus;
 
 typedef NS_CLOSED_ENUM(NSInteger, ContactAcquaintanceLevel) {
     ContactAcquaintanceLevelDirect = 0,     // Contact is added manually or by sync with address book or by work directory or has a 1:1 conversation
@@ -96,8 +96,18 @@ NS_ASSUME_NONNULL_BEGIN
  @param onCompletion With parameter of type `ContactEntity` as result of added/updated contact
  @param onError With parameter of type `NSError`
  */
-- (void)addWorkContactAndUpdateFeatureMaskWithIdentity:(nonnull NSString *)identity publicKey:(nonnull NSData *)publicKey firstname:(nullable NSString *)firstname lastname:(nullable NSString *)lastname csi:(nullable NSString *)csi jobTitle:(nullable NSString *)jobTitle department:(nullable NSString *)department acquaintanceLevel:(ContactAcquaintanceLevel)acquaintanceLevel onCompletion:(nonnull void(^)(NSObject * nonnull))onCompletion onError:(nonnull void(^)(NSError * nonnull))onError
-    NS_SWIFT_NAME(addWorkContact(with:publicKey:firstname:lastname:csi:jobTitle:department:acquaintanceLevel:onCompletion:onError:));
+- (void)addWorkContactAndUpdateFeatureMaskWithIdentity:(nonnull NSString *)identity
+                                             publicKey:(nonnull NSData *)publicKey
+                                             firstname:(nullable NSString *)firstname
+                                              lastname:(nullable NSString *)lastname
+                                                   csi:(nullable NSString *)csi
+                                              jobTitle:(nullable NSString *)jobTitle
+                                            department:(nullable NSString *)department
+                                     acquaintanceLevel:(ContactAcquaintanceLevel)acquaintanceLevel
+                                workAvailabilityStatus:(nullable WorkAvailabilityStatus *) workAvailabilityStatus
+                                          onCompletion:(nonnull void(^)(NSObject * nonnull))onCompletion
+                                               onError:(nonnull void(^)(NSError * nonnull))onError
+    NS_SWIFT_NAME(addWorkContact(with:publicKey:firstname:lastname:csi:jobTitle:department:acquaintanceLevel:workAvailabilityStatus:onCompletion:onError:));
 
 @end
 
@@ -128,8 +138,19 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)addContactWithIdentity:(nullable NSString *)identity publicKey:(nullable NSData *)publicKey cnContactId:(nullable NSString *)cnContactId verificationLevel:(int32_t)verificationLevel state:(nullable NSNumber *)state type:(nullable NSNumber *)type featureMask:(nullable NSNumber *)featureMask acquaintanceLevel:(ContactAcquaintanceLevel)acquaintanceLevel alerts:(BOOL)alerts onCompletion:(nonnull void(^)(NSObject * nullable))onCompletion
     NS_SWIFT_NAME(addContact(with:publicKey:cnContactID:verificationLevel:state:type:featureMask:acquaintanceLevel:alerts:onCompletion:));
 
-- (nullable NSString *)addWorkContactWithIdentity:(nonnull NSString *)identity publicKey:(nonnull NSData *)publicKey firstname:(nullable NSString *)firstname lastname:(nullable NSString *)lastname csi:(nullable NSString *)csi jobTitle:(nullable NSString *)jobTitle department:(nullable NSString *)department featureMask:(nullable NSNumber *)featureMask acquaintanceLevel:(ContactAcquaintanceLevel)acquaintanceLevel entityManager:(NSObject * _Nonnull)entityManagerObject contactSyncer:(nullable MediatorSyncableContacts *)mediatorSyncableContacts
-    NS_SWIFT_NAME(addWorkContact(with:publicKey:firstname:lastname:csi:jobTitle:department:featureMask:acquaintanceLevel:entityManager:contactSyncer:));
+- (nullable NSString *)addWorkContactWithIdentity:(nonnull NSString *)identity
+                                        publicKey:(nonnull NSData *)publicKey
+                                        firstname:(nullable NSString *)firstname
+                                         lastname:(nullable NSString *)lastname
+                                              csi:(nullable NSString *)csi
+                                         jobTitle:(nullable NSString *)jobTitle
+                                       department:(nullable NSString *)department
+                                      featureMask:(nullable NSNumber *)featureMask
+                                acquaintanceLevel:(ContactAcquaintanceLevel)acquaintanceLevel
+                           workAvailabilityStatus:(nullable WorkAvailabilityStatus *) workAvailabilityStatus
+                                    entityManager:(NSObject * _Nonnull)entityManagerObject
+                                    contactSyncer:(nullable MediatorSyncableContacts *)mediatorSyncableContacts
+    NS_SWIFT_NAME(addWorkContact(with:publicKey:firstname:lastname:csi:jobTitle:department:featureMask:acquaintanceLevel:workAvailabilityStatus:entityManager:contactSyncer:));
 
 - (void)resetImportedStatus;
 

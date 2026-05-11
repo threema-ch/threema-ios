@@ -47,7 +47,7 @@ public actor PushSettingManager: PushSettingManagerProtocol {
         entityManager: EntityManager = PersistenceManager(
             appGroupID: AppGroup.groupID(),
             userDefaults: AppGroup.userDefaults(),
-            remoteSecretManager: AppLaunchManager.remoteSecretManager
+            remoteSecretManager: RemoteSecretProvider.remoteSecretManager
         ).entityManager,
         markupParser: MarkupParser = MarkupParser(),
         taskManager: TaskManagerProtocol = TaskManager()
@@ -162,10 +162,6 @@ public actor PushSettingManager: PushSettingManagerProtocol {
                         taskManager: TaskManager(),
                         entityManager: entityManager
                     )
-                    mediatorSyncableContacts.updateNotificationSound(
-                        identity: identity.rawValue,
-                        isMuted: pushSetting.muted
-                    )
                     mediatorSyncableContacts.updateNotificationTrigger(
                         identity: identity.rawValue,
                         type: pushSetting.type,
@@ -179,10 +175,6 @@ public actor PushSettingManager: PushSettingManagerProtocol {
                         pushSettingManager: self,
                         taskManager: taskManager,
                         groupManager: groupManager
-                    )
-                    await mediatorSyncableGroup.updateNotificationSound(
-                        identity: groupIdentity,
-                        isMuted: pushSetting.muted
                     )
                     var pushSetting = pushSetting
                     await mediatorSyncableGroup.updateNotificationTrigger(

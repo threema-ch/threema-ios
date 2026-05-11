@@ -43,7 +43,7 @@ public actor BlobManager: BlobManagerProtocol {
         return PersistenceManager(
             appGroupID: AppGroup.groupID(),
             userDefaults: AppGroup.userDefaults(),
-            remoteSecretManager: AppLaunchManager.remoteSecretManager
+            remoteSecretManager: RemoteSecretProvider.remoteSecretManager
         ).backgroundEntityManager
     }
     

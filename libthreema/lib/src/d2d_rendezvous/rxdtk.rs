@@ -2,13 +2,13 @@
 use blake2::digest::Mac as _;
 use libthreema_macros::concat_fixed_bytes;
 
-use super::{AuthenticationKey, EphemeralTransportKey, RendezvousPathHash, rxdak, rxdxk};
+use super::{EphemeralTransportKey, RendezvousAuthenticationKey, RendezvousPathHash, rxdak, rxdxk};
 use crate::crypto::{
     blake2b::Blake2bMac256, chacha20, consts::U32, digest::FixedOutput as _, generic_array::GenericArray,
 };
 
 #[inline]
-fn derive_stk(ak: &AuthenticationKey, etk: &EphemeralTransportKey) -> GenericArray<u8, U32> {
+fn derive_stk(ak: &RendezvousAuthenticationKey, etk: &EphemeralTransportKey) -> GenericArray<u8, U32> {
     // Derive STK from AK and ETK
     let key: [u8; 64] = concat_fixed_bytes!(ak.0, etk.0.to_bytes());
     let mut stk = GenericArray::default();
@@ -20,7 +20,7 @@ fn derive_stk(ak: &AuthenticationKey, etk: &EphemeralTransportKey) -> GenericArr
 
 #[inline]
 fn derive_keys(
-    ak: &AuthenticationKey,
+    ak: &RendezvousAuthenticationKey,
     etk: &EphemeralTransportKey,
 ) -> (chacha20::Key, chacha20::Key, GenericArray<u8, U32>) {
     // Derive STK from AK and ETK
@@ -55,7 +55,7 @@ pub(super) struct ForRrd {
 impl ForRid {
     #[expect(clippy::needless_pass_by_value, reason = "Prevent key re-use")]
     pub(super) fn new(
-        ak: &AuthenticationKey,
+        ak: &RendezvousAuthenticationKey,
         rxdak: rxdak::ForRid,
         etk: EphemeralTransportKey,
     ) -> (Self, RendezvousPathHash) {
@@ -71,7 +71,7 @@ impl ForRid {
 impl ForRrd {
     #[expect(clippy::needless_pass_by_value, reason = "Prevent key re-use")]
     pub(super) fn new(
-        ak: &AuthenticationKey,
+        ak: &RendezvousAuthenticationKey,
         rxdak: rxdak::ForRrd,
         etk: EphemeralTransportKey,
     ) -> (Self, RendezvousPathHash) {

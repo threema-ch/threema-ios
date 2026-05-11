@@ -641,7 +641,7 @@ final class TaskQueueTests: XCTestCase {
 
             let expect = expectation(description: "spool")
 
-            let task = TaskDefinitionMdmParameterSync(mdmParameters: Sync_MdmParameters())
+            let task = TaskDefinitionMdmParameterSync(mdmParameters: D2dSync_MdmParameters())
             task.retry = testCase.retry
 
             try? tq.enqueue(task: task) { _, error in
@@ -1496,16 +1496,16 @@ final class TaskQueueTests: XCTestCase {
         try! tq.enqueue(task: taskGroupDeliveryReceipt, completionHandler: nil)
 
         // Add TaskDefinitionProfileSync
-        var syncUserProfile = Sync_UserProfile()
+        var syncUserProfile = D2dSync_UserProfile()
         syncUserProfile.profilePicture.updated = Common_Image()
         syncUserProfile.nickname = "Test Case"
         var contacts = Common_Identities()
         contacts.identities = ["ECHOECHO", "*SUPPORT"]
         syncUserProfile.profilePictureShareWith.policy = .allowList(contacts)
-        var linkPhoneNumber = Sync_UserProfile.IdentityLinks.IdentityLink()
+        var linkPhoneNumber = D2dSync_UserProfile.IdentityLinks.IdentityLink()
         linkPhoneNumber.phoneNumber = "+41 000 00 00"
         syncUserProfile.identityLinks.links.append(linkPhoneNumber)
-        var linkEmail = Sync_UserProfile.IdentityLinks.IdentityLink()
+        var linkEmail = D2dSync_UserProfile.IdentityLinks.IdentityLink()
         linkEmail.email = "test@test.test"
         syncUserProfile.identityLinks.links.append(linkEmail)
 
@@ -1520,11 +1520,11 @@ final class TaskQueueTests: XCTestCase {
         try! tq.enqueue(task: taskProfileSync, completionHandler: nil)
 
         // Add TaskDefinitionUpdateContactSync
-        var syncContact1 = Sync_Contact()
+        var syncContact1 = D2dSync_Contact()
         syncContact1.identity = "ECHOECHO"
         let contact1 = DeltaSyncContact(syncContact: syncContact1, syncAction: .update)
 
-        var syncContact2 = Sync_Contact()
+        var syncContact2 = D2dSync_Contact()
         syncContact2.identity = "ECHOECHO"
         var contact2 = DeltaSyncContact(syncContact: syncContact1, syncAction: .update)
         contact2.image = Data([1])
@@ -1535,7 +1535,7 @@ final class TaskQueueTests: XCTestCase {
         try! tq.enqueue(task: taskUpdateContactSync, completionHandler: nil)
 
         // Add TaskDefinitionSettingsSync
-        var syncSettings = Sync_Settings()
+        var syncSettings = D2dSync_Settings()
         syncSettings.contactSyncPolicy = .sync
         syncSettings.readReceiptPolicy = .sendReadReceipt
         syncSettings.unknownContactPolicy = .blockUnknown
@@ -1572,7 +1572,7 @@ final class TaskQueueTests: XCTestCase {
                 .map { ThreemaIdentity($0) }
         )
         try! tq.enqueue(task: taskRunForwardSecurityRefreshSteps, completionHandler: nil)
-        
+
         // Add TaskDefinitionNewDeviceSync
         let taskNewDeviceSync = TaskDefinitionNewDeviceSync { _ in
             XCTFail("This should never be called...")
@@ -1901,7 +1901,7 @@ final class TaskQueueTests: XCTestCase {
         else {
             XCTFail()
         }
-        
+
         if let task = tq.list[15].taskDefinition as? TaskDefinitionSendReactionMessage {
             XCTAssertEqual(.interrupted, task.state)
             XCTAssertEqual(task.reaction.messageID, expectedReaction.messageID)

@@ -40,7 +40,7 @@ protocol RTCRtpTransceiverProtocol: NSObject, Sendable {
     func setDisabled()
 }
 
-// MARK: - RTCRtpTransceiver + Sendable, RTCRtpTransceiverProtocol
+// MARK: - RTCRtpTransceiver + @unchecked Sendable, RTCRtpTransceiverProtocol
 
 extension RTCRtpTransceiver: @unchecked Sendable, RTCRtpTransceiverProtocol {
     func logActivation() {

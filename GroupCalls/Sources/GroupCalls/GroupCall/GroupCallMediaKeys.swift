@@ -7,8 +7,8 @@ import WebRTC
 final class MediaKeys {
     // MARK: - Internal Properties
     
-    var protocolMediaKey: Groupcall_ParticipantToParticipant.MediaKey {
-        var mediaKey = Groupcall_ParticipantToParticipant.MediaKey()
+    var protocolMediaKey: GroupCall_ParticipantToParticipant.MediaKey {
+        var mediaKey = GroupCall_ParticipantToParticipant.MediaKey()
         mediaKey.epoch = UInt32(epoch)
         mediaKey.ratchetCounter = UInt32(ratchetCounter)
         mediaKey.pcmk = pcmk

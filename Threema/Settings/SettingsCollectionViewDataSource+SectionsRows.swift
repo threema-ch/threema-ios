@@ -45,7 +45,7 @@ extension SettingsCollectionViewDataSource {
                 if TargetManager.isBusinessApp {
                     statusRows.append(.workLicense)
                 }
-                if AppLaunchManager.remoteSecretManager.isRemoteSecretEnabled {
+                if RemoteSecretProvider.remoteSecretManager.isRemoteSecretEnabled {
                     statusRows.append(.remoteSecretState)
                 }
                 return statusRows

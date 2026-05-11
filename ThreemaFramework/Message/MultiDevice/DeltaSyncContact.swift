@@ -3,7 +3,7 @@ import Foundation
 import ThreemaProtocols
 
 struct DeltaSyncContact: Codable {
-    init(syncContact: Sync_Contact = Sync_Contact(), syncAction: SyncAction = .update) {
+    init(syncContact: D2dSync_Contact = D2dSync_Contact(), syncAction: SyncAction = .update) {
         self.syncContact = syncContact
         self.syncAction = syncAction
     }
@@ -12,7 +12,7 @@ struct DeltaSyncContact: Codable {
         case create, update
     }
 
-    var syncContact: Sync_Contact
+    var syncContact: D2dSync_Contact
     var syncAction: SyncAction
     var profilePicture: DeltaUpdateType = .unchanged
     var image: Data?
@@ -40,7 +40,7 @@ struct DeltaSyncContact: Codable {
 
         let dataSyncContact = try container.decode(Data.self, forKey: .syncContact)
 
-        self.syncContact = try Sync_Contact(contiguousBytes: dataSyncContact)
+        self.syncContact = try D2dSync_Contact(contiguousBytes: dataSyncContact)
         self.syncAction = try container.decode(SyncAction.self, forKey: .syncAction)
         self.profilePicture = try container.decode(DeltaUpdateType.self, forKey: .profilePicture)
         self.image = try? container.decode(Data.self, forKey: .image)

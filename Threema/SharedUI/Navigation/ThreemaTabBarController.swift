@@ -52,7 +52,7 @@ public enum ThreemaTab: Int, CaseIterable {
     }
 }
 
-@objc public final class ThreemaTabBarController: UITabBarController {
+public final class ThreemaTabBarController: UITabBarController {
     
     // MARK: - Public properties
     

@@ -3,7 +3,7 @@ import Foundation
 import PromiseKit
 import ThreemaEssentials
 
-@objc final class VideoMessageProcessor: NSObject {
+final class VideoMessageProcessor: NSObject {
     
     private let blobDownloader: BlobDownloader
     private let userSettings: UserSettingsProtocol

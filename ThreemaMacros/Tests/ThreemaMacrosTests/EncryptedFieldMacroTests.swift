@@ -18,11 +18,11 @@ final class EncryptedFieldMacroTests: XCTestCase {
                 """,
                 expandedSource: """
                     @objc public dynamic var text: String
-
+                    
                     private static let textName = "text"
-
+                    
                     private static let encryptedTextName = "textEncrypted"
-
+                    
                     @objc static func keyPathsForValuesAffectingText() -> Set<NSObject> {
                         return [NSString(string: Self.encryptedTextName)]
                     }
@@ -43,11 +43,11 @@ final class EncryptedFieldMacroTests: XCTestCase {
                 """,
                 expandedSource: """
                     @objc public dynamic var t: String
-
+                    
                     private static let tName = "t"
-
+                    
                     private static let encryptedTName = "tEncrypted"
-
+                    
                     @objc static func keyPathsForValuesAffectingT() -> Set<NSObject> {
                         return [NSString(string: Self.encryptedTName)]
                     }
@@ -68,11 +68,11 @@ final class EncryptedFieldMacroTests: XCTestCase {
                 """,
                 expandedSource: """
                     @objc public dynamic var text: String
-
+                    
                     private static let textName = "bla"
-
+                    
                     private static let encryptedTextName = "blaEncrypted"
-
+                    
                     @objc static func keyPathsForValuesAffectingText() -> Set<NSObject> {
                         return [NSString(string: Self.encryptedTextName)]
                     }

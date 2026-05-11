@@ -14,7 +14,11 @@
 // with newer messages that use protobuf instead of structbuf. All defined
 // messages here follow the same logic.
 
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 import SwiftProtobuf
 
 // If the compiler emits an error on this type, it is because this file
@@ -59,11 +63,11 @@ public struct CspE2e_MessageMetadata: Sendable {
   /// Recommended to not exceed 32 grapheme clusters. Should not contain
   /// whitespace characters at the beginning or the end of string.
   public var nickname: String {
-    get {return _nickname ?? String()}
+    get {_nickname ?? String()}
     set {_nickname = newValue}
   }
   /// Returns true if `nickname` has been explicitly set.
-  public var hasNickname: Bool {return self._nickname != nil}
+  public var hasNickname: Bool {self._nickname != nil}
   /// Clears the value of `nickname`. Subsequent reads from it will return its default value.
   public mutating func clearNickname() {self._nickname = nil}
 
@@ -698,211 +702,235 @@ public struct CspE2e_Reaction: Sendable {
   public init() {}
 }
 
-/// Request joining a group.
+/// A control message from the Threema Work Directory, providing a set of Work
+/// Sync Deltas for immediate visibility (or requesting a full Work Sync).
 ///
-/// This message is sent to the administrator of a group. The required
-/// information is provided by a `GroupInvite` URL payload.
-///
-/// **Properties**:
-/// - Kind: 1:1
-/// - Flags:
-///   - `0x01`: Send push notification.
-/// - User profile distribution: Yes
-/// - Exempt from blocking: Yes
-/// - Implicit _direct_ contact creation: Yes
-/// - Protect against replay: Yes
-/// - Reflect:
-///   - Incoming: Yes
-///   - Outgoing: Yes
-///   - _Sent_ update: No
-/// - Delivery receipts: No
-/// - Reactions: No
-/// - When rejected: N/A (ignored)
-/// - Edit applies to: N/A
-/// - Deletable by: User only
-/// - Send to Threema Gateway ID group creator: N/A
-///
-/// When receiving this message:
-///
-/// 1. Look up the corresponding group invitation by the token.
-/// 2. If the group invitation could not be found, discard the message and abort
-///    these steps.
-/// 3. If the sender is already part of the group, send an accept response and
-///    then respond as if the sender had sent a `group-sync-request` (i.e. send a
-///    `group-setup`, `group-name`, etc.). Finally, abort these steps.
-/// 4. If the group name does not match the name in the originally sent group
-///    invitation, discard the message and abort these steps.
-/// 5. If the group invitation has expired, send the respective response and
-///    abort these steps.
-/// 6. If the group invitation requires the admin to accept the request, show
-///    this information in the user interface and pause these steps until the
-///    user manually confirmed of rejected the request. Note that the date of the
-///    decision is allowed to extend beyond the expiration date of the group
-///    invitation. Continue with the following sub-steps once the user made a
-///    decision on the request:
-///     1. If the user manually rejected the request, send the respective
-///        response and abort these steps.
-/// 7. If the group is full, send the respective response and abort these steps.
-/// 8. Send an accept response.
-/// 9. Add the sender of the group invitation request to the group and follow the
-///    group protocol from there.
-public struct CspE2e_GroupJoinRequest: Sendable {
-  // SwiftProtobuf.Message conformance is added in an extension below. See the
-  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
-  // methods supported on all messages.
-
-  /// The group invite token, 16 bytes
-  public var token: Data = Data()
-
-  /// The group name from the group invite URL
-  public var groupName: String = String()
-
-  /// A message for the group administrator, e.g. for identification purposes
-  ///
-  /// The message helps the administrator to decide whether or not to accept a
-  /// join request.
-  ///
-  /// Should be requested by the user interface for invitations that require
-  /// manual confirmation by the administrator. Should not be requested in case
-  /// the invitation will be automatically accepted.
-  public var message: String = String()
-
-  public var unknownFields = SwiftProtobuf.UnknownStorage()
-
-  public init() {}
-}
-
-/// Response sent by the admin of a group towards a sender of a valid group join
-/// request.
-///
-/// **Properties**:
+/// **Properties (1:1)**:
 /// - Kind: 1:1
 /// - Flags: None
-/// - User profile distribution: Yes
+/// - User profile distribution: N/A (not sent by apps)
 /// - Exempt from blocking: Yes
-/// - Implicit _direct_ contact creation: Yes
+/// - Implicit _direct_ contact creation: N/A (blocking is circumvented)
 /// - Protect against replay: Yes
+/// - Unarchive: No
+/// - Bump _last update_: No
 /// - Reflect:
-///   - Incoming: Yes
-///   - Outgoing: Yes
+///   - Incoming: No
+///   - Outgoing: No
 ///   - _Sent_ update: No
-/// - Delivery receipts: No
-/// - Reactions: No
-/// - When rejected: N/A (ignored)
+/// - Delivery receipts: N/A
+/// - Reactions: N/A
+/// - When rejected: N/A (not sent by clients)
 /// - Edit applies to: N/A
 /// - Deletable by: N/A
 /// - Send to Threema Gateway ID group creator: N/A
 ///
 /// When receiving this message:
 ///
-/// 1. Look up the corresponding group join request by the token and the
-///    sender's Threema ID as the administrator's Threema ID.
-/// 2. If the group join request could not be found, discard the message and
-///    abort these steps.
-/// 3. Mark the group join request as accepted or (automatically) rejected by
-///    the given response type.
-/// 4. If the group join request has been accepted, remember the group id in
-///    order to be able to map an incoming `group-setup` to the group.
-public struct CspE2e_GroupJoinResponse: Sendable {
+/// 1. If not Work flavour, log a warning, discard the message and abort these
+///    steps.
+/// 2. If the sender is not `*3MAW0RK`, discard the message and abort these
+///    steps.
+/// 3. If `action` is of variant `require_work_sync`, schedule a persistent task
+///    to make a full Work Sync.
+/// 4. If `action` is of variant `apply`:
+///    1. Run the _Work Sync Delta Change Determination Steps_ with
+///       `apply.deltas` and let `changes` be the result.
+///    2. If `changes` is a marker that a _full Work Sync is required_, schedule
+///       a persistent task to make a full Work Sync and abort these steps.
+///    3. If `changes` is empty, discard the message and abort these steps.
+///    4. (MD) Run the following sub-steps:
+///       1. Begin a transaction with scope `WORK_SYNC_DELTA` and no
+///          precondition.
+///       2. Run the _Work Sync Delta Change Determination Steps_ another time
+///          and update `changes` with the result.¹
+///       3. If `changes` is a marker that a _full Work Sync is required_,
+///          schedule a persistent task to make a full Work Sync. Otherwise, reflect
+///          all `changes`.
+///       4. Commit the transaction and await acknowledgement.
+///    5. Apply all `changes` persistently.
+/// 5. If `action` is an unknown variant, log a warning that an unknown Work Sync
+///    variant has been encountered.
+///
+/// ¹: The two-tiered approach is necessary since we want to prevent unnecessary
+/// transactions from Work Sync Deltas that don't affect any contact in the
+/// user's contact list. But since changes may affect information that has been
+/// altered since the transaction was started, it needs to be run twice when
+/// multi-device is enabled.
+///
+/// The following steps are defined as the _Work Sync Delta Change Determination
+/// Steps_:
+///
+/// 1. Let `deltas` be a list of `WorkSyncDelta.Delta`.
+/// 2. Let `changes` be an empty list of _change instructions_ that would be
+///    required to apply all `deltas`.
+/// 3. For each `delta` of `deltas`:
+///    1. If `delta.action` is of variant `contact_sync`:
+///       1. If `contact_sync.action` is of variant `update`:
+///           1. Lookup the contact associated to `update.identity` and let
+///              `contact` be the result.
+///           2. If `contact` is not defined, discard `update` and continue with
+///              the next delta.¹
+///           3. If `contact` is not currently considered a work contact, return
+///              that a _full Work Sync is required_.
+///           4. If `contact`'s last full Work Sync timestamp is defined and ≥
+///              `delta.applied_at`, discard `update` and continue with the next
+///              delta.
+///           5. If `update` does not diverge from the properties of `contact`,
+///              discard `update` and continue with the next delta.
+///           6. Add a change to `changes` for the necessary changes defined by
+///              `update` to update the `contact` in form of a
+///              `d2d_sync.Contact`.
+///       2. If `contact_sync.action` is an unknown variant, log a warning that
+///          an unknown Work Sync Delta contact action has been encountered.
+///    2. If `delta.action` is an unknown variant, log a warning that an unknown
+///       Work Sync Delta action has been encountered.
+/// 4. Return `changes`.
+///
+/// ¹: We intentionally do not filter contacts marked as _invalid_ since it may
+/// be a relevant use case to revoke a contact and then updating other properties
+/// afterwards, e.g. removing its availability status, etc.
+///
+/// Note: The _Work Sync Delta Change Determination Steps_ may result in
+/// inconsistencies until the next full Work Sync in some rare edge cases. For
+/// example, if a change to a contact is currently in progress by another
+/// device's transaction while this device determines that no change is required.
+/// This is considered acceptable.
+public struct CspE2e_WorkSyncDelta: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  /// The group invite token, 16 bytes
-  public var token: Data = Data()
+  public var action: CspE2e_WorkSyncDelta.OneOf_Action? = nil
 
-  public var response: CspE2e_GroupJoinResponse.Response {
-    get {return _response ?? CspE2e_GroupJoinResponse.Response()}
-    set {_response = newValue}
+  public var requireWorkSync: Common_Unit {
+    get {
+      if case .requireWorkSync(let v)? = action {return v}
+      return Common_Unit()
+    }
+    set {action = .requireWorkSync(newValue)}
   }
-  /// Returns true if `response` has been explicitly set.
-  public var hasResponse: Bool {return self._response != nil}
-  /// Clears the value of `response`. Subsequent reads from it will return its default value.
-  public mutating func clearResponse() {self._response = nil}
+
+  public var apply: CspE2e_WorkSyncDelta.Apply {
+    get {
+      if case .apply(let v)? = action {return v}
+      return CspE2e_WorkSyncDelta.Apply()
+    }
+    set {action = .apply(newValue)}
+  }
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  /// Response of the admin
-  public struct Response: Sendable {
+  public enum OneOf_Action: Equatable, Sendable {
+    case requireWorkSync(Common_Unit)
+    case apply(CspE2e_WorkSyncDelta.Apply)
+
+  }
+
+  /// Work contact synchronisation message.
+  public struct ContactSync: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    public var response: CspE2e_GroupJoinResponse.Response.OneOf_Response? = nil
+    /// Synchronisation type.
+    public var action: CspE2e_WorkSyncDelta.ContactSync.OneOf_Action? = nil
 
-    /// Accept a group invite request
-    public var accept: CspE2e_GroupJoinResponse.Response.Accept {
+    /// Update a Work contact.
+    public var update: CspE2e_WorkSyncDelta.ContactSync.Update {
       get {
-        if case .accept(let v)? = response {return v}
-        return CspE2e_GroupJoinResponse.Response.Accept()
+        if case .update(let v)? = action {return v}
+        return CspE2e_WorkSyncDelta.ContactSync.Update()
       }
-      set {response = .accept(newValue)}
-    }
-
-    /// Token of a group invitation expired
-    public var expired: Common_Unit {
-      get {
-        if case .expired(let v)? = response {return v}
-        return Common_Unit()
-      }
-      set {response = .expired(newValue)}
-    }
-
-    /// Group invitation cannot be accepted due to the group being full
-    public var groupFull: Common_Unit {
-      get {
-        if case .groupFull(let v)? = response {return v}
-        return Common_Unit()
-      }
-      set {response = .groupFull(newValue)}
-    }
-
-    /// The administrator explicitly rejects the invitation request
-    public var reject: Common_Unit {
-      get {
-        if case .reject(let v)? = response {return v}
-        return Common_Unit()
-      }
-      set {response = .reject(newValue)}
+      set {action = .update(newValue)}
     }
 
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public enum OneOf_Response: Equatable, Sendable {
-      /// Accept a group invite request
-      case accept(CspE2e_GroupJoinResponse.Response.Accept)
-      /// Token of a group invitation expired
-      case expired(Common_Unit)
-      /// Group invitation cannot be accepted due to the group being full
-      case groupFull(Common_Unit)
-      /// The administrator explicitly rejects the invitation request
-      case reject(Common_Unit)
+    /// Synchronisation type.
+    public enum OneOf_Action: Equatable, Sendable {
+      /// Update a Work contact.
+      case update(CspE2e_WorkSyncDelta.ContactSync.Update)
 
     }
 
-    /// Accept a group invite request
-    public struct Accept: Sendable {
+    /// Update a Work contact.
+    public struct Update: Sendable {
       // SwiftProtobuf.Message conformance is added in an extension below. See the
       // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
       // methods supported on all messages.
 
-      /// Group ID (little-endian) as chosen by the group creator
+      /// Threema ID of the contact.
       ///
-      /// Note: Combined with the Threema ID of the administrator, this forms the
-      /// `GroupIdentity`.
-      public var groupID: UInt64 = 0
+      /// Always required.
+      public var identity: String = String()
+
+      /// Availability status of the contact.
+      ///
+      /// Always optional.
+      public var availabilityStatus: D2dSync_WorkAvailabilityStatus {
+        get {_availabilityStatus ?? D2dSync_WorkAvailabilityStatus()}
+        set {_availabilityStatus = newValue}
+      }
+      /// Returns true if `availabilityStatus` has been explicitly set.
+      public var hasAvailabilityStatus: Bool {self._availabilityStatus != nil}
+      /// Clears the value of `availabilityStatus`. Subsequent reads from it will return its default value.
+      public mutating func clearAvailabilityStatus() {self._availabilityStatus = nil}
 
       public var unknownFields = SwiftProtobuf.UnknownStorage()
 
       public init() {}
+
+      fileprivate var _availabilityStatus: D2dSync_WorkAvailabilityStatus? = nil
     }
 
     public init() {}
   }
 
-  public init() {}
+  public struct Delta: Sendable {
+    // SwiftProtobuf.Message conformance is added in an extension below. See the
+    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+    // methods supported on all messages.
 
-  fileprivate var _response: CspE2e_GroupJoinResponse.Response? = nil
+    /// Unix-ish timestamp in milliseconds for when the delta has been applied on
+    /// the server side (i.e. since when the change is in effect and would be
+    /// picked up by querying the _Work Sync_, a _Work Contacts_, or the _Work
+    /// Directory_ endpoint).
+    public var appliedAt: UInt64 = 0
+
+    public var action: CspE2e_WorkSyncDelta.Delta.OneOf_Action? = nil
+
+    public var contactSync: CspE2e_WorkSyncDelta.ContactSync {
+      get {
+        if case .contactSync(let v)? = action {return v}
+        return CspE2e_WorkSyncDelta.ContactSync()
+      }
+      set {action = .contactSync(newValue)}
+    }
+
+    public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+    public enum OneOf_Action: Equatable, Sendable {
+      case contactSync(CspE2e_WorkSyncDelta.ContactSync)
+
+    }
+
+    public init() {}
+  }
+
+  public struct Apply: Sendable {
+    // SwiftProtobuf.Message conformance is added in an extension below. See the
+    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+    // methods supported on all messages.
+
+    public var deltas: [CspE2e_WorkSyncDelta.Delta] = []
+
+    public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+    public init() {}
+  }
+
+  public init() {}
 }
 
 // MARK: - Code below here is support for the SwiftProtobuf runtime.
@@ -1125,88 +1153,9 @@ extension CspE2e_Reaction: SwiftProtobuf.Message, SwiftProtobuf._MessageImplemen
   }
 }
 
-extension CspE2e_GroupJoinRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".GroupJoinRequest"
-  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}token\0\u{3}group_name\0\u{1}message\0")
-
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
-    while let fieldNumber = try decoder.nextFieldNumber() {
-      // The use of inline closures is to circumvent an issue where the compiler
-      // allocates stack space for every case branch when no optimizations are
-      // enabled. https://github.com/apple/swift-protobuf/issues/1034
-      switch fieldNumber {
-      case 1: try { try decoder.decodeSingularBytesField(value: &self.token) }()
-      case 2: try { try decoder.decodeSingularStringField(value: &self.groupName) }()
-      case 3: try { try decoder.decodeSingularStringField(value: &self.message) }()
-      default: break
-      }
-    }
-  }
-
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    if !self.token.isEmpty {
-      try visitor.visitSingularBytesField(value: self.token, fieldNumber: 1)
-    }
-    if !self.groupName.isEmpty {
-      try visitor.visitSingularStringField(value: self.groupName, fieldNumber: 2)
-    }
-    if !self.message.isEmpty {
-      try visitor.visitSingularStringField(value: self.message, fieldNumber: 3)
-    }
-    try unknownFields.traverse(visitor: &visitor)
-  }
-
-  public static func ==(lhs: CspE2e_GroupJoinRequest, rhs: CspE2e_GroupJoinRequest) -> Bool {
-    if lhs.token != rhs.token {return false}
-    if lhs.groupName != rhs.groupName {return false}
-    if lhs.message != rhs.message {return false}
-    if lhs.unknownFields != rhs.unknownFields {return false}
-    return true
-  }
-}
-
-extension CspE2e_GroupJoinResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = _protobuf_package + ".GroupJoinResponse"
-  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}token\0\u{1}response\0")
-
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
-    while let fieldNumber = try decoder.nextFieldNumber() {
-      // The use of inline closures is to circumvent an issue where the compiler
-      // allocates stack space for every case branch when no optimizations are
-      // enabled. https://github.com/apple/swift-protobuf/issues/1034
-      switch fieldNumber {
-      case 1: try { try decoder.decodeSingularBytesField(value: &self.token) }()
-      case 2: try { try decoder.decodeSingularMessageField(value: &self._response) }()
-      default: break
-      }
-    }
-  }
-
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    // The use of inline closures is to circumvent an issue where the compiler
-    // allocates stack space for every if/case branch local when no optimizations
-    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
-    // https://github.com/apple/swift-protobuf/issues/1182
-    if !self.token.isEmpty {
-      try visitor.visitSingularBytesField(value: self.token, fieldNumber: 1)
-    }
-    try { if let v = self._response {
-      try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
-    } }()
-    try unknownFields.traverse(visitor: &visitor)
-  }
-
-  public static func ==(lhs: CspE2e_GroupJoinResponse, rhs: CspE2e_GroupJoinResponse) -> Bool {
-    if lhs.token != rhs.token {return false}
-    if lhs._response != rhs._response {return false}
-    if lhs.unknownFields != rhs.unknownFields {return false}
-    return true
-  }
-}
-
-extension CspE2e_GroupJoinResponse.Response: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = CspE2e_GroupJoinResponse.protoMessageName + ".Response"
-  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}accept\0\u{1}expired\0\u{3}group_full\0\u{1}reject\0")
+extension CspE2e_WorkSyncDelta: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = _protobuf_package + ".WorkSyncDelta"
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}require_work_sync\0\u{1}apply\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -1215,55 +1164,29 @@ extension CspE2e_GroupJoinResponse.Response: SwiftProtobuf.Message, SwiftProtobu
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
       case 1: try {
-        var v: CspE2e_GroupJoinResponse.Response.Accept?
+        var v: Common_Unit?
         var hadOneofValue = false
-        if let current = self.response {
+        if let current = self.action {
           hadOneofValue = true
-          if case .accept(let m) = current {v = m}
+          if case .requireWorkSync(let m) = current {v = m}
         }
         try decoder.decodeSingularMessageField(value: &v)
         if let v = v {
           if hadOneofValue {try decoder.handleConflictingOneOf()}
-          self.response = .accept(v)
+          self.action = .requireWorkSync(v)
         }
       }()
       case 2: try {
-        var v: Common_Unit?
+        var v: CspE2e_WorkSyncDelta.Apply?
         var hadOneofValue = false
-        if let current = self.response {
+        if let current = self.action {
           hadOneofValue = true
-          if case .expired(let m) = current {v = m}
+          if case .apply(let m) = current {v = m}
         }
         try decoder.decodeSingularMessageField(value: &v)
         if let v = v {
           if hadOneofValue {try decoder.handleConflictingOneOf()}
-          self.response = .expired(v)
-        }
-      }()
-      case 3: try {
-        var v: Common_Unit?
-        var hadOneofValue = false
-        if let current = self.response {
-          hadOneofValue = true
-          if case .groupFull(let m) = current {v = m}
-        }
-        try decoder.decodeSingularMessageField(value: &v)
-        if let v = v {
-          if hadOneofValue {try decoder.handleConflictingOneOf()}
-          self.response = .groupFull(v)
-        }
-      }()
-      case 4: try {
-        var v: Common_Unit?
-        var hadOneofValue = false
-        if let current = self.response {
-          hadOneofValue = true
-          if case .reject(let m) = current {v = m}
-        }
-        try decoder.decodeSingularMessageField(value: &v)
-        if let v = v {
-          if hadOneofValue {try decoder.handleConflictingOneOf()}
-          self.response = .reject(v)
+          self.action = .apply(v)
         }
       }()
       default: break
@@ -1276,38 +1199,30 @@ extension CspE2e_GroupJoinResponse.Response: SwiftProtobuf.Message, SwiftProtobu
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
     // https://github.com/apple/swift-protobuf/issues/1182
-    switch self.response {
-    case .accept?: try {
-      guard case .accept(let v)? = self.response else { preconditionFailure() }
+    switch self.action {
+    case .requireWorkSync?: try {
+      guard case .requireWorkSync(let v)? = self.action else { preconditionFailure() }
       try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
     }()
-    case .expired?: try {
-      guard case .expired(let v)? = self.response else { preconditionFailure() }
+    case .apply?: try {
+      guard case .apply(let v)? = self.action else { preconditionFailure() }
       try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
-    }()
-    case .groupFull?: try {
-      guard case .groupFull(let v)? = self.response else { preconditionFailure() }
-      try visitor.visitSingularMessageField(value: v, fieldNumber: 3)
-    }()
-    case .reject?: try {
-      guard case .reject(let v)? = self.response else { preconditionFailure() }
-      try visitor.visitSingularMessageField(value: v, fieldNumber: 4)
     }()
     case nil: break
     }
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: CspE2e_GroupJoinResponse.Response, rhs: CspE2e_GroupJoinResponse.Response) -> Bool {
-    if lhs.response != rhs.response {return false}
+  public static func ==(lhs: CspE2e_WorkSyncDelta, rhs: CspE2e_WorkSyncDelta) -> Bool {
+    if lhs.action != rhs.action {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
 }
 
-extension CspE2e_GroupJoinResponse.Response.Accept: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = CspE2e_GroupJoinResponse.Response.protoMessageName + ".Accept"
-  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}group_id\0")
+extension CspE2e_WorkSyncDelta.ContactSync: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = CspE2e_WorkSyncDelta.protoMessageName + ".ContactSync"
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}update\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -1315,21 +1230,157 @@ extension CspE2e_GroupJoinResponse.Response.Accept: SwiftProtobuf.Message, Swift
       // allocates stack space for every case branch when no optimizations are
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
-      case 1: try { try decoder.decodeSingularFixed64Field(value: &self.groupID) }()
+      case 1: try {
+        var v: CspE2e_WorkSyncDelta.ContactSync.Update?
+        var hadOneofValue = false
+        if let current = self.action {
+          hadOneofValue = true
+          if case .update(let m) = current {v = m}
+        }
+        try decoder.decodeSingularMessageField(value: &v)
+        if let v = v {
+          if hadOneofValue {try decoder.handleConflictingOneOf()}
+          self.action = .update(v)
+        }
+      }()
       default: break
       }
     }
   }
 
   public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    if self.groupID != 0 {
-      try visitor.visitSingularFixed64Field(value: self.groupID, fieldNumber: 1)
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
+    try { if case .update(let v)? = self.action {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
+    } }()
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  public static func ==(lhs: CspE2e_WorkSyncDelta.ContactSync, rhs: CspE2e_WorkSyncDelta.ContactSync) -> Bool {
+    if lhs.action != rhs.action {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension CspE2e_WorkSyncDelta.ContactSync.Update: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = CspE2e_WorkSyncDelta.ContactSync.protoMessageName + ".Update"
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}identity\0\u{3}availability_status\0")
+
+  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularStringField(value: &self.identity) }()
+      case 2: try { try decoder.decodeSingularMessageField(value: &self._availabilityStatus) }()
+      default: break
+      }
+    }
+  }
+
+  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
+    if !self.identity.isEmpty {
+      try visitor.visitSingularStringField(value: self.identity, fieldNumber: 1)
+    }
+    try { if let v = self._availabilityStatus {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
+    } }()
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  public static func ==(lhs: CspE2e_WorkSyncDelta.ContactSync.Update, rhs: CspE2e_WorkSyncDelta.ContactSync.Update) -> Bool {
+    if lhs.identity != rhs.identity {return false}
+    if lhs._availabilityStatus != rhs._availabilityStatus {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension CspE2e_WorkSyncDelta.Delta: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = CspE2e_WorkSyncDelta.protoMessageName + ".Delta"
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}applied_at\0\u{3}contact_sync\0")
+
+  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularUInt64Field(value: &self.appliedAt) }()
+      case 2: try {
+        var v: CspE2e_WorkSyncDelta.ContactSync?
+        var hadOneofValue = false
+        if let current = self.action {
+          hadOneofValue = true
+          if case .contactSync(let m) = current {v = m}
+        }
+        try decoder.decodeSingularMessageField(value: &v)
+        if let v = v {
+          if hadOneofValue {try decoder.handleConflictingOneOf()}
+          self.action = .contactSync(v)
+        }
+      }()
+      default: break
+      }
+    }
+  }
+
+  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
+    if self.appliedAt != 0 {
+      try visitor.visitSingularUInt64Field(value: self.appliedAt, fieldNumber: 1)
+    }
+    try { if case .contactSync(let v)? = self.action {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
+    } }()
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  public static func ==(lhs: CspE2e_WorkSyncDelta.Delta, rhs: CspE2e_WorkSyncDelta.Delta) -> Bool {
+    if lhs.appliedAt != rhs.appliedAt {return false}
+    if lhs.action != rhs.action {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension CspE2e_WorkSyncDelta.Apply: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = CspE2e_WorkSyncDelta.protoMessageName + ".Apply"
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}deltas\0")
+
+  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeRepeatedMessageField(value: &self.deltas) }()
+      default: break
+      }
+    }
+  }
+
+  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if !self.deltas.isEmpty {
+      try visitor.visitRepeatedMessageField(value: self.deltas, fieldNumber: 1)
     }
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: CspE2e_GroupJoinResponse.Response.Accept, rhs: CspE2e_GroupJoinResponse.Response.Accept) -> Bool {
-    if lhs.groupID != rhs.groupID {return false}
+  public static func ==(lhs: CspE2e_WorkSyncDelta.Apply, rhs: CspE2e_WorkSyncDelta.Apply) -> Bool {
+    if lhs.deltas != rhs.deltas {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

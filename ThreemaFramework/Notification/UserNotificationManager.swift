@@ -286,7 +286,7 @@ public final class UserNotificationManager: UserNotificationManagerProtocol {
         // Is blockUnknown active?
         if entityManager.entityFetcher.contactEntity(for: senderIdentity) == nil,
            userSettings.blockUnknown,
-           !PredefinedContacts(rawValue: senderIdentity).ignoreBlockUnknown {
+           !PredefinedContacts(rawValue: senderIdentity).isSpecialContact {
             return false
         }
         

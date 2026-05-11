@@ -6,7 +6,7 @@ import SwiftUI
 import ThreemaFramework
 import UIKit
 
-@objc final class StatusNavigationBar: UINavigationBar {
+final class StatusNavigationBar: UINavigationBar {
     
     // MARK: - Subviews
     
@@ -66,12 +66,12 @@ import UIKit
                     }
                     else {
                         statusView.backgroundColor = .systemRed
-                        statusView.isHidden = AppDelegate.shared().isAppInBackground()
+                        statusView.isHidden = AppDelegate.isAppInBackground()
                     }
 
                 case .connected:
                     statusView.backgroundColor = .systemOrange
-                    statusView.isHidden = AppDelegate.shared().isAppInBackground()
+                    statusView.isHidden = AppDelegate.isAppInBackground()
 
                 case .loggedIn:
                     statusView.backgroundColor = .systemGreen

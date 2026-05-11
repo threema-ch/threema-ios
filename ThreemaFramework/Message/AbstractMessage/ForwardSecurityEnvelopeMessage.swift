@@ -2,7 +2,7 @@ import Foundation
 import ThreemaEssentials
 import ThreemaProtocols
 
-@objc final class ForwardSecurityEnvelopeMessage: AbstractMessage {
+final class ForwardSecurityEnvelopeMessage: AbstractMessage {
     let data: ForwardSecurityData
     var encapAllowSendingProfile = false
     

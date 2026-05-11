@@ -77,6 +77,7 @@ enum ConversationListViewControllerHelper {
         at indexPaths: [IndexPath]?,
         fetchedResultsController: NSFetchedResultsController<NSFetchRequestResult>,
         businessInjector: BusinessInjectorProtocol,
+        isAppInBackground: Bool = SceneDelegate.isAppInBackground,
         completion: @escaping () -> Void
     ) {
         
@@ -91,7 +92,7 @@ enum ConversationListViewControllerHelper {
             }
             Task {
                 let utilities = ConversationActions(businessInjector: businessInjector)
-                await utilities.read(conversation, isAppInBackground: AppDelegate.shared().isAppInBackground())
+                await utilities.read(conversation, isAppInBackground: isAppInBackground)
             }
         }
         completion()

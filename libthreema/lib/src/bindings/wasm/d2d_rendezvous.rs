@@ -5,13 +5,13 @@ use serde_bytes::ByteBuf;
 use tsify::Tsify;
 use wasm_bindgen::prelude::*;
 
-use crate::d2d_rendezvous::{self, AuthenticationKey};
+use crate::d2d_rendezvous::{self, RendezvousAuthenticationKey};
 
-/// Binding version of [`d2d_rendezvous::PathStateUpdate`].
+/// Binding version of [`d2d_rendezvous::RendezvousPathStateUpdate`].
 #[derive(Tsify, Serialize)]
 #[serde(tag = "state", rename_all = "kebab-case", rename_all_fields = "camelCase")]
 #[tsify(into_wasm_abi)]
-pub enum PathStateUpdate {
+pub enum RendezvousPathStateUpdate {
     #[expect(missing_docs, reason = "Binding version")]
     AwaitingNominate { measured_rtt_ms: u32 },
 
@@ -19,41 +19,43 @@ pub enum PathStateUpdate {
     Nominated { rph: ByteBuf },
 }
 
-impl From<d2d_rendezvous::PathStateUpdate> for PathStateUpdate {
-    fn from(update: d2d_rendezvous::PathStateUpdate) -> Self {
+impl From<d2d_rendezvous::RendezvousPathStateUpdate> for RendezvousPathStateUpdate {
+    fn from(update: d2d_rendezvous::RendezvousPathStateUpdate) -> Self {
         match update {
-            d2d_rendezvous::PathStateUpdate::AwaitingNominate { measured_rtt } => Self::AwaitingNominate {
-                measured_rtt_ms: measured_rtt
-                    .as_millis()
-                    .try_into()
-                    .expect("measured_rtt should not exceed a u32"),
+            d2d_rendezvous::RendezvousPathStateUpdate::AwaitingNominate { measured_rtt } => {
+                Self::AwaitingNominate {
+                    measured_rtt_ms: measured_rtt
+                        .as_millis()
+                        .try_into()
+                        .expect("measured_rtt should not exceed a u32"),
+                }
             },
-            d2d_rendezvous::PathStateUpdate::Nominated { rph } => Self::Nominated {
+            d2d_rendezvous::RendezvousPathStateUpdate::Nominated { rph } => Self::Nominated {
                 rph: ByteBuf::from(rph.0.to_vec()),
             },
         }
     }
 }
 
-/// Binding version of [`d2d_rendezvous::PathProcessResult`].
+/// Binding version of [`d2d_rendezvous::RendezvousPathProcessResult`].
 #[derive(Tsify, Serialize)]
 #[serde(rename_all = "camelCase")]
 #[tsify(into_wasm_abi)]
-pub struct PathProcessResult {
-    /// Binding version of [`d2d_rendezvous::PathProcessResult::state_update`].
-    pub state_update: Option<PathStateUpdate>,
+pub struct RendezvousPathProcessResult {
+    /// Binding version of [`d2d_rendezvous::RendezvousPathProcessResult::state_update`].
+    pub state_update: Option<RendezvousPathStateUpdate>,
 
-    /// Binding version of [`d2d_rendezvous::PathProcessResult::outgoing_frame`].
+    /// Binding version of [`d2d_rendezvous::RendezvousPathProcessResult::outgoing_frame`].
     pub outgoing_frame: Option<ByteBuf>,
 
-    /// Binding version of [`d2d_rendezvous::PathProcessResult::incoming_ulp_data`].
+    /// Binding version of [`d2d_rendezvous::RendezvousPathProcessResult::incoming_ulp_data`].
     pub incoming_ulp_data: Option<ByteBuf>,
 }
 
-impl From<d2d_rendezvous::PathProcessResult> for PathProcessResult {
-    fn from(result: d2d_rendezvous::PathProcessResult) -> Self {
+impl From<d2d_rendezvous::RendezvousPathProcessResult> for RendezvousPathProcessResult {
+    fn from(result: d2d_rendezvous::RendezvousPathProcessResult) -> Self {
         Self {
-            state_update: result.state_update.map(PathStateUpdate::from),
+            state_update: result.state_update.map(RendezvousPathStateUpdate::from),
             outgoing_frame: result
                 .outgoing_frame
                 .map(|outgoing_frame| Vec::<u8>::from(outgoing_frame).into()),
@@ -65,11 +67,11 @@ impl From<d2d_rendezvous::PathProcessResult> for PathProcessResult {
 /// A list of outgoing frames to be enqueued on the respective paths.
 #[derive(Clone, Tsify, Serialize)]
 #[tsify(into_wasm_abi)]
-pub struct OutgoingFrames(Vec<OutgoingFrame>);
+pub struct RendezvousOutgoingFrames(Vec<RendezvousOutgoingFrame>);
 
-impl From<Vec<(u32, d2d_rendezvous::OutgoingFrame)>> for OutgoingFrames {
-    fn from(frames: Vec<(u32, d2d_rendezvous::OutgoingFrame)>) -> Self {
-        Self(frames.into_iter().map(OutgoingFrame::from).collect())
+impl From<Vec<(u32, d2d_rendezvous::RendezvousOutgoingFrame)>> for RendezvousOutgoingFrames {
+    fn from(frames: Vec<(u32, d2d_rendezvous::RendezvousOutgoingFrame)>) -> Self {
+        Self(frames.into_iter().map(RendezvousOutgoingFrame::from).collect())
     }
 }
 
@@ -77,7 +79,7 @@ impl From<Vec<(u32, d2d_rendezvous::OutgoingFrame)>> for OutgoingFrames {
 #[derive(Clone, Tsify, Serialize)]
 #[serde(rename_all = "camelCase")]
 #[tsify(into_wasm_abi)]
-pub struct OutgoingFrame {
+pub struct RendezvousOutgoingFrame {
     /// The path's PID the outgoing frame should be sent on.
     pub pid: u32,
 
@@ -85,8 +87,8 @@ pub struct OutgoingFrame {
     pub frame: ByteBuf,
 }
 
-impl From<(u32, d2d_rendezvous::OutgoingFrame)> for OutgoingFrame {
-    fn from((pid, frame): (u32, d2d_rendezvous::OutgoingFrame)) -> Self {
+impl From<(u32, d2d_rendezvous::RendezvousOutgoingFrame)> for RendezvousOutgoingFrame {
+    fn from((pid, frame): (u32, d2d_rendezvous::RendezvousOutgoingFrame)) -> Self {
         Self {
             pid,
             frame: Vec::<u8>::from(frame).into(),
@@ -98,7 +100,7 @@ impl From<(u32, d2d_rendezvous::OutgoingFrame)> for OutgoingFrame {
 #[wasm_bindgen]
 pub struct RendezvousProtocol {
     inner: d2d_rendezvous::RendezvousProtocol,
-    initial_outgoing_frames: Option<OutgoingFrames>,
+    initial_outgoing_frames: Option<RendezvousOutgoingFrames>,
 }
 
 #[wasm_bindgen]
@@ -112,7 +114,11 @@ impl RendezvousProtocol {
     pub fn new_as_rid(is_nominator: bool, ak: &[u8], pids: &[u32]) -> Result<RendezvousProtocol, Error> {
         let ak: [u8; 32] = ak.try_into().map_err(|_| Error::new("AK must be 32 bytes"))?;
         Ok(Self {
-            inner: d2d_rendezvous::RendezvousProtocol::new_as_rid(is_nominator, AuthenticationKey(ak), pids),
+            inner: d2d_rendezvous::RendezvousProtocol::new_as_rid(
+                is_nominator,
+                RendezvousAuthenticationKey(ak),
+                pids,
+            ),
             initial_outgoing_frames: None,
         })
     }
@@ -131,11 +137,14 @@ impl RendezvousProtocol {
     #[wasm_bindgen(js_name = newAsRrd)]
     pub fn new_as_rrd(is_nominator: bool, ak: &[u8], pids: &[u32]) -> Result<RendezvousProtocol, Error> {
         let ak: [u8; 32] = ak.try_into().map_err(|_| Error::new("AK must be 32 bytes"))?;
-        let (inner, initial_outgoing_frames) =
-            d2d_rendezvous::RendezvousProtocol::new_as_rrd(is_nominator, AuthenticationKey(ak), pids);
+        let (inner, initial_outgoing_frames) = d2d_rendezvous::RendezvousProtocol::new_as_rrd(
+            is_nominator,
+            RendezvousAuthenticationKey(ak),
+            pids,
+        );
         Ok(Self {
             inner,
-            initial_outgoing_frames: Some(OutgoingFrames::from(initial_outgoing_frames)),
+            initial_outgoing_frames: Some(RendezvousOutgoingFrames::from(initial_outgoing_frames)),
         })
     }
 
@@ -143,7 +152,7 @@ impl RendezvousProtocol {
     ///
     /// Only relevant when constructing the protocol with the RRD role.
     #[wasm_bindgen(js_name = initialOutgoingFrames)]
-    pub fn initial_outgoing_frames(&mut self) -> Option<OutgoingFrames> {
+    pub fn initial_outgoing_frames(&mut self) -> Option<RendezvousOutgoingFrames> {
         self.initial_outgoing_frames.take()
     }
 
@@ -162,7 +171,7 @@ impl RendezvousProtocol {
     }
 
     /// Binding version of [`d2d_rendezvous::RendezvousProtocol::add_chunks`].
-    #[allow(clippy::missing_errors_doc, reason = "Binding version")]
+    #[expect(clippy::missing_errors_doc, reason = "Binding version")]
     #[wasm_bindgen(js_name = addChunk)]
     pub fn add_chunk(&mut self, pid: u32, chunk: &[u8]) -> Result<(), Error> {
         self.inner
@@ -171,32 +180,32 @@ impl RendezvousProtocol {
     }
 
     /// Binding version of [`d2d_rendezvous::RendezvousProtocol::process_frame`].
-    #[allow(clippy::missing_errors_doc, reason = "Binding version")]
+    #[expect(clippy::missing_errors_doc, reason = "Binding version")]
     #[wasm_bindgen(js_name = processFrame)]
-    pub fn process_frame(&mut self, pid: u32) -> Result<Option<PathProcessResult>, Error> {
+    pub fn process_frame(&mut self, pid: u32) -> Result<Option<RendezvousPathProcessResult>, Error> {
         self.inner
             .process_frame(pid)
-            .map(|result| result.map(PathProcessResult::from))
+            .map(|result| result.map(RendezvousPathProcessResult::from))
             .map_err(|error| Error::new(format!("Could not process frame: {error}").as_ref()))
     }
 
     /// Binding version of [`d2d_rendezvous::RendezvousProtocol::nominate_path`].
-    #[allow(clippy::missing_errors_doc, reason = "Binding version")]
+    #[expect(clippy::missing_errors_doc, reason = "Binding version")]
     #[wasm_bindgen(js_name = nominatePath)]
-    pub fn nominate_path(&mut self, pid: u32) -> Result<PathProcessResult, Error> {
+    pub fn nominate_path(&mut self, pid: u32) -> Result<RendezvousPathProcessResult, Error> {
         self.inner
             .nominate_path(pid)
-            .map(PathProcessResult::from)
+            .map(RendezvousPathProcessResult::from)
             .map_err(|error| Error::new(format!("Could not nominate path: {error}").as_ref()))
     }
 
     /// Binding version of [`d2d_rendezvous::RendezvousProtocol::create_ulp_frame`].
-    #[allow(clippy::missing_errors_doc, reason = "Binding version")]
+    #[expect(clippy::missing_errors_doc, reason = "Binding version")]
     #[wasm_bindgen(js_name = createUlpFrame)]
-    pub fn create_ulp_frame(&mut self, outgoing_data: Vec<u8>) -> Result<PathProcessResult, Error> {
+    pub fn create_ulp_frame(&mut self, outgoing_data: Vec<u8>) -> Result<RendezvousPathProcessResult, Error> {
         self.inner
             .create_ulp_frame(outgoing_data)
-            .map(PathProcessResult::from)
+            .map(RendezvousPathProcessResult::from)
             .map_err(|error| Error::new(format!("Could not create ULP frame: {error}").as_ref()))
     }
 }

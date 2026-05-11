@@ -369,6 +369,10 @@ public struct NotificationPresenterType {
         notificationText: #localize("add_contact_failed"),
         notificationStyle: .error
     )
+    public static let setWorkAvailabilityStatusFailed = NotificationPresenterType(
+        notificationText: #localize("set_work_availability_status_failed"),
+        notificationStyle: .error
+    )
 }
 
 // MARK: - AccessibilityAnnouncementType

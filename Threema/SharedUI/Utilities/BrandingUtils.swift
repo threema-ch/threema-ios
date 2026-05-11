@@ -33,7 +33,7 @@ public enum BrandingUtils {
         var height: CGFloat {
             switch self {
             case .default:
-                BrandingUtils.defaultLogoHeight
+                TargetManager.isCustomOnPrem ? BrandingUtils.customLogoHeight : BrandingUtils.defaultLogoHeight
             case .custom:
                 BrandingUtils.customLogoHeight
             }
@@ -88,8 +88,13 @@ public enum BrandingUtils {
         var frame = CGRect.zero
         
         // Subtract NavbarItems
-        navigationItem.leftBarButtonItems.map { totalFreeWidth -= $0.reduce(0) { $0 + $1.width } }
-        navigationItem.rightBarButtonItems.map { totalFreeWidth -= $0.reduce(0) { $0 + $1.width } }
+        let leftItemsWidth = navigationItem.leftBarButtonItems?.reduce(CGFloat(0)) {
+            $0 + ($1.customView?.frame.width ?? ($1.width > 0 ? $1.width : 44))
+        } ?? 0
+        let rightItemsWidth = navigationItem.rightBarButtonItems?.reduce(CGFloat(0)) {
+            $0 + ($1.customView?.frame.width ?? ($1.width > 0 ? $1.width : 44))
+        } ?? 0
+        totalFreeWidth -= leftItemsWidth + rightItemsWidth
     
         // Scale
         while !hasCorrectSize, height > 0 {

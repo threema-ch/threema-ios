@@ -241,4 +241,20 @@ final class ServerConnectorMock: NSObject, ServerConnectorProtocol {
     ) {
         // no-op
     }
+    
+    func setPushToken(_ pushToken: Data) {
+        // no-op
+    }
+    
+    func removePushToken() {
+        // no-op
+    }
+    
+    func removeVoIPPushToken() {
+        // no-op
+    }
+    
+    func clearDeviceCookieChangedIndicator() {
+        // no-op
+    }
 }

@@ -4,6 +4,7 @@ import KeychainTestHelper
 import RemoteSecretProtocol
 import RemoteSecretProtocolTestHelper
 @testable import Threema
+@testable import ThreemaFramework
 
 final class BusinessInjectorMock: BusinessInjectorProtocol {
 
@@ -34,7 +35,7 @@ final class BusinessInjectorMock: BusinessInjectorProtocol {
     
     var distributionListManager: DistributionListManagerProtocol
 
-    var licenseStore: LicenseStore
+    var licenseStore: LicenseStoreProtocol
 
     var messageSender: MessageSenderProtocol
 
@@ -58,6 +59,10 @@ final class BusinessInjectorMock: BusinessInjectorProtocol {
 
     var keychainManager: KeychainManagerProtocol
 
+    var workAvailabilityStatusManager: any ThreemaFramework.WorkAvailabilityStatusManagerProtocol
+
+    var workDataFetcher: any ThreemaFramework.WorkDataFetcherProtocol
+
     init(
         runsInBackground: Bool = false,
         remoteSecretManager: RemoteSecretManagerProtocol = RemoteSecretManagerMock(),
@@ -66,7 +71,7 @@ final class BusinessInjectorMock: BusinessInjectorProtocol {
         entityManager: EntityManager,
         groupManager: GroupManagerProtocol = GroupManagerMock(),
         distributionListManager: DistributionListManagerProtocol = DistributionListManagerMock(),
-        licenseStore: LicenseStore = LicenseStore.shared(),
+        licenseStore: LicenseStoreProtocol = LicenseStoreMock(),
         messageSender: MessageSenderProtocol = MessageSenderMock(),
         multiDeviceManager: MultiDeviceManagerProtocol = MultiDeviceManagerMock(),
         myIdentityStore: MyIdentityStoreProtocol = MyIdentityStoreMock(),
@@ -77,7 +82,9 @@ final class BusinessInjectorMock: BusinessInjectorProtocol {
         serverConnector: ServerConnectorProtocol = ServerConnectorMock(),
         messageRetentionManager: any MessageRetentionManagerModelProtocol = MessageRetentionManagerModelMock(),
         pushSettingManager: PushSettingManagerProtocol = PushSettingManagerMock(),
-        keychainManager: KeychainManagerProtocol = KeychainManagerMock()
+        keychainManager: KeychainManagerProtocol = KeychainManagerMock(),
+        workAvailabilityStatusManager: any WorkAvailabilityStatusManagerProtocol = WorkAvailabilityStatusManagerNull(),
+        workDataFetcher: any WorkDataFetcherProtocol = WorkDataFetcherMock()
     ) {
         self.runsInBackground = runsInBackground
         self.remoteSecretManager = remoteSecretManager
@@ -98,5 +105,7 @@ final class BusinessInjectorMock: BusinessInjectorProtocol {
         self.messageRetentionManager = messageRetentionManager
         self.pushSettingManager = pushSettingManager
         self.keychainManager = keychainManager
+        self.workAvailabilityStatusManager = workAvailabilityStatusManager
+        self.workDataFetcher = workDataFetcher
     }
 }

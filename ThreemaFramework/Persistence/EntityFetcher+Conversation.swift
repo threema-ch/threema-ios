@@ -11,6 +11,21 @@ extension EntityFetcher {
     @objc public func conversationEntities() -> [ConversationEntity]? {
         fetchEntities(entityName: "Conversation")
     }
+    
+    public func conversationEntitiesWithBrokenLastMessage() -> [ConversationEntity]? {
+        let request = NSFetchRequest<ConversationEntity>(entityName: "Conversation")
+        request.predicate = NSPredicate(format: "lastMessage != nil AND lastMessage.conversation != SELF")
+       
+        return managedObjectContext.performAndWait {
+            do {
+                return try request.execute()
+            }
+            catch {
+                DDLogError("[EntityFetcher] Failed to fetch conversations with broken last messages. Error: \(error)")
+                return nil
+            }
+        }
+    }
 
     /// Fetches the IDs of conversation entities that are associated with groups or distribution lists or
     /// conversation contact IDs if the conversations are associated with contacts, that match the specified filtering

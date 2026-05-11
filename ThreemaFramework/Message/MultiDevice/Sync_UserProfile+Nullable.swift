@@ -1,7 +1,7 @@
 import Foundation
 import ThreemaProtocols
 
-extension Sync_UserProfile {
+extension D2dSync_UserProfile {
     var nicknameNullable: String? {
         hasNickname ? valueNullable(value: nickname) : nil
     }
@@ -17,7 +17,7 @@ extension Sync_UserProfile {
     }
 }
 
-extension Sync_UserProfile.IdentityLinks.IdentityLink {
+extension D2dSync_UserProfile.IdentityLinks.IdentityLink {
     var phoneNumberNullable: String? {
         valueNullable(value: phoneNumber)
     }

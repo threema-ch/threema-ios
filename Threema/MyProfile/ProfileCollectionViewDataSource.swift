@@ -69,6 +69,12 @@ final class ProfileCollectionViewDataSource: UICollectionViewDiffableDataSource<
         snapshot.appendSections([.header])
         snapshot.appendItems(Section.header.rows)
 
+        // WorkAvailabilityStatus
+        if TargetManager.isWork, ThreemaEnvironment.workAvailabilityStatusEnabled {
+            snapshot.appendSections([.workAvailabilityStatus])
+            snapshot.appendItems(Section.workAvailabilityStatus.rows)
+        }
+        
         // Backups
         snapshot.appendSections([.backups])
         snapshot.appendItems(Section.backups.rows)
@@ -99,8 +105,8 @@ final class ProfileCollectionViewDataSource: UICollectionViewDiffableDataSource<
     }
     
     func checkEmailVerification() {
-        guard let identityStore = businessInjector.myIdentityStore as? MyIdentityStore,
-              identityStore.linkEmailPending else {
+        let identityStore = businessInjector.myIdentityStore
+        guard identityStore.linkEmailPending else {
             return
         }
         
@@ -128,11 +134,20 @@ final class ProfileCollectionViewDataSource: UICollectionViewDiffableDataSource<
         onSelection(identifier)
     }
     
+    // MARK: - Observation
+    
     private func addObservers() {
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(checkRevocationPassword),
             name: Notification.Name(kRevocationPasswordUIRefresh),
+            object: nil
+        )
+        
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(reconfigureWorkAvailabilityStatus),
+            name: Notification.Name.ownWorkAvailabilityStatusChangedName,
             object: nil
         )
         
@@ -156,6 +171,21 @@ final class ProfileCollectionViewDataSource: UICollectionViewDiffableDataSource<
             name: .profileUIRefresh,
             object: nil
         )
+    }
+    
+    @objc private func reconfigureWorkAvailabilityStatus() {
+        guard TargetManager.isWork, ThreemaEnvironment.workAvailabilityStatusEnabled else {
+            return
+        }
+        
+        var snapshot = snapshot()
+        
+        guard snapshot.sectionIdentifiers.contains(.workAvailabilityStatus) else {
+            return
+        }
+        
+        snapshot.reconfigureItems([.workAvailabilityStatus])
+        apply(snapshot)
     }
     
     private func reconfigureRevocationPassword() {

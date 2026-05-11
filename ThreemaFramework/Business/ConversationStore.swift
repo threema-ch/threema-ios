@@ -13,8 +13,8 @@ public protocol ConversationStoreProtocol {
 }
 
 protocol ConversationStoreInternalProtocol {
-    func updateConversation(withContact syncContact: Sync_Contact)
-    func updateConversation(withGroup syncGroup: Sync_Group)
+    func updateConversation(withContact syncContact: D2dSync_Contact)
+    func updateConversation(withGroup syncGroup: D2dSync_Group)
 }
 
 public final class ConversationStore: NSObject, ConversationStoreInternalProtocol, ConversationStoreProtocol {
@@ -99,7 +99,7 @@ public final class ConversationStore: NSObject, ConversationStoreInternalProtoco
     /// Update conversation (`Conversation.conversationCategory` and `Conversation.conversationVisibility`) of Contact.
     /// - Parameters:
     ///   - syncContact: Sync contact information
-    func updateConversation(withContact syncContact: Sync_Contact) {
+    func updateConversation(withContact syncContact: D2dSync_Contact) {
         guard let conversation = entityManager.entityFetcher.conversationEntity(for: syncContact.identity)
         else {
             DDLogError("Conversation for contact (identity: \(syncContact.identity)) not found")
@@ -121,7 +121,7 @@ public final class ConversationStore: NSObject, ConversationStoreInternalProtoco
     /// Update conversation (`Conversation.conversationCategory` and `Conversation.conversationVisibility`) of Group.
     /// - Parameters:
     ///   - syncGroup: Sync group information
-    func updateConversation(withGroup syncGroup: Sync_Group) {
+    func updateConversation(withGroup syncGroup: D2dSync_Group) {
         guard let groupIdentity = try? GroupIdentity(commonGroupIdentity: syncGroup.groupIdentity),
               let conversation = entityManager.entityFetcher.conversationEntity(
                   for: groupIdentity,

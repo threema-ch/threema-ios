@@ -1,7 +1,7 @@
 import Foundation
 import ThreemaProtocols
 
-extension Sync_Contact {
+extension D2dSync_Contact {
     var createdAtNullable: UInt64? {
         hasCreatedAt ? valueNullable(value: createdAt) : nil
     }
@@ -16,6 +16,10 @@ extension Sync_Contact {
 
     var nicknameNullable: String? {
         hasNickname ? valueNullable(value: nickname) : nil
+    }
+
+    var workLastFullSyncAtNullable: UInt64? {
+        hasWorkLastFullSyncAt ? valueNullable(value: workLastFullSyncAt) : nil
     }
 
     private func valueNullable<T>(value: T) -> T? {

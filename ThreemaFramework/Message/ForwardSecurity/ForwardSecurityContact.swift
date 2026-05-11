@@ -1,6 +1,6 @@
 import Foundation
 
-@objc final class ForwardSecurityContact: NSObject {
+final class ForwardSecurityContact: NSObject {
     let identity: String
     let publicKey: Data
     

@@ -24,6 +24,7 @@ final class ContactStoreTests: XCTestCase {
         let expectedCsi = "Csi"
         let expectedJobTitle = "JobTitle"
         let expectedDepartment = "Department"
+        let expectedWorkAvailabilityStatus = WorkAvailabilityStatus(category: .busy, text: "Busy")
 
         let userSettingsMock = UserSettingsMock()
         let em = testDatabase.entityManager
@@ -39,6 +40,7 @@ final class ContactStoreTests: XCTestCase {
             department: expectedDepartment,
             featureMask: 0,
             acquaintanceLevel: .direct,
+            workAvailabilityStatus: expectedWorkAvailabilityStatus,
             entityManager: em,
             contactSyncer: nil
         )
@@ -51,6 +53,11 @@ final class ContactStoreTests: XCTestCase {
         XCTAssertEqual(expectedCsi, contactEntity.csi)
         XCTAssertEqual(expectedJobTitle, contactEntity.jobTitle)
         XCTAssertEqual(expectedDepartment, contactEntity.department)
+        XCTAssertEqual(
+            expectedWorkAvailabilityStatus.category.rawValue,
+            contactEntity.workAvailabilityStatus?.value.intValue
+        )
+        XCTAssertEqual(expectedWorkAvailabilityStatus.text, contactEntity.workAvailabilityStatus?.text)
         XCTAssertTrue((userSettingsMock.workIdentities ?? []).contains(expectedIdentity))
         XCTAssertTrue(
             (userSettingsMock.profilePictureRequestList ?? [])
@@ -83,16 +90,26 @@ final class ContactStoreTests: XCTestCase {
         wait(for: [expect], timeout: 2)
         XCTAssertEqual(error?.localizedDescription, "Message received from unknown contact and block contacts is on")
     }
-    
-    func testAddSpecialContactWithIdentityBlockUnknown() throws {
-        let specialContact: PredefinedContacts = .threemaPush
-        
-        guard specialContact.isSpecialContact else {
+
+    func testAddSpecialContacts() throws {
+        let testCases: [(specialContact: PredefinedContacts, blockUnknown: Bool)] = [
+            (.threemaPush, false),
+            (.threemaPush, true),
+            (.threemaW0rk, false),
+            (.threemaW0rk, true),
+        ]
+        for testCase in testCases {
+            try testAddSpecialContacts(testCase: testCase)
+        }
+    }
+
+    func testAddSpecialContacts(testCase: (specialContact: PredefinedContacts, blockUnknown: Bool)) throws {
+        guard testCase.specialContact.isSpecialContact else {
             XCTFail("This test requires a special contact")
             return
         }
 
-        let userSettingsMock = UserSettingsMock(blockUnknown: true)
+        let userSettingsMock = UserSettingsMock(blockUnknown: testCase.blockUnknown)
         let em = testDatabase.entityManager
         let contactStore = ContactStore(userSettings: userSettingsMock, entityManager: em)
         
@@ -100,7 +117,7 @@ final class ContactStoreTests: XCTestCase {
                 
         var receivedPublicKey: Data?
         contactStore.fetchPublicKey(
-            for: specialContact.identity?.rawValue,
+            for: testCase.specialContact.identity?.rawValue,
             acquaintanceLevel: .direct,
             entityManager: em,
             ignoreBlockUnknown: false
@@ -112,10 +129,24 @@ final class ContactStoreTests: XCTestCase {
         }
         
         wait(for: [expect], timeout: 5)
-        XCTAssertTrue(try specialContact.isSamePublicKey(XCTUnwrap(receivedPublicKey)))
+        XCTAssertTrue(try testCase.specialContact.isSamePublicKey(XCTUnwrap(receivedPublicKey)))
+        XCTAssertNil(try em.entityFetcher.contactEntity(
+            for: XCTUnwrap(testCase.specialContact.identity?.rawValue)
+        ))
     }
-    
-    func testAddPredefinedContactWithIdentityBlockUnknown() throws {
+
+    func testAddPredefinedContact() throws {
+        let testCases: [(testDatabase: TestDatabase, blockUnknown: Bool)] = [
+            (TestDatabase(), true),
+            // (TestDatabase(), false), -> Don't enbale that before `IdentityInfoFetcher` in `ContactStore` is mocked,
+            // othewise it will do a HTTP request
+        ]
+        for testCase in testCases {
+            try testAddPredefinedContact(testCase: testCase)
+        }
+    }
+
+    func testAddPredefinedContact(testCase: (testDatabase: TestDatabase, blockUnknown: Bool)) throws {
         let predefinedContact: PredefinedContacts = .support
         
         guard !predefinedContact.isSpecialContact else {
@@ -128,8 +159,8 @@ final class ContactStoreTests: XCTestCase {
             return
         }
 
-        let userSettingsMock = UserSettingsMock(blockUnknown: true)
-        let em = testDatabase.entityManager
+        let userSettingsMock = UserSettingsMock(blockUnknown: testCase.blockUnknown)
+        let em = testCase.testDatabase.entityManager
         let contactStore = ContactStore(userSettings: userSettingsMock, entityManager: em)
         
         let expect = expectation(description: "Give time to fetch public key")
@@ -148,7 +179,19 @@ final class ContactStoreTests: XCTestCase {
         }
         
         wait(for: [expect], timeout: 5)
-        XCTAssertNil(receivedPublicKey)
+
+        if testCase.blockUnknown {
+            XCTAssertNil(receivedPublicKey)
+            XCTAssertNil(try em.entityFetcher.contactEntity(
+                for: XCTUnwrap(predefinedContact.identity?.rawValue)
+            ))
+        }
+        else {
+            XCTAssertTrue(try predefinedContact.isSamePublicKey(XCTUnwrap(receivedPublicKey)))
+            XCTAssertNotNil(try em.entityFetcher.contactEntity(
+                for: XCTUnwrap(predefinedContact.identity?.rawValue)
+            ))
+        }
     }
 
     func testUpdateContactWithIdentity() throws {

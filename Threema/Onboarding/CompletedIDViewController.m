@@ -3,15 +3,12 @@
 #import "ContactStore.h"
 #import "MyIdentityStore.h"
 #import "ServerAPIConnector.h"
-#import "PhoneNumberNormalizer.h"
 #import "ProgressLabel.h"
 #import "IntroQuestionView.h"
-#import "WorkDataFetcher.h"
 #import "MDMSetup.h"
 #import <MBProgressHUD/MBProgressHUD.h>
 #import "Threema-Swift.h"
 #import "NibUtil.h"
-#import "AppDelegate.h"
 
 #define SYNC_TIMEOUT_S 10
 
@@ -78,11 +75,9 @@
     if (_identityStore.linkedMobileNo) {
         self.phoneValue.text = _identityStore.linkedMobileNo;
     } else if (self.setupConfiguration.linkPhoneNumber.length > 0) {
-        PhoneNumberNormalizer *normalizer = [PhoneNumberNormalizer sharedInstance];
-        NSString *prettyMobileNo;
-        _phoneNumber = [normalizer phoneNumberToE164:self.setupConfiguration.linkPhoneNumber withDefaultRegion:[PhoneNumberNormalizer userRegion] prettyFormat:&prettyMobileNo];
-        
-        self.phoneValue.text = prettyMobileNo;
+        PhoneNumberNormalizer *normalizer = [PhoneNumberNormalizer new];
+        self.phoneNumber = [normalizer e164FormatFrom:self.setupConfiguration.linkPhoneNumber defaultRegion:normalizer.userRegion];
+        self.phoneValue.text = [normalizer prettyFormatFrom:self.setupConfiguration.linkPhoneNumber defaultRegion:normalizer.userRegion];
     } else {
         self.phoneValue.text = @"-";
     }
@@ -133,8 +128,10 @@
     _finishButton.backgroundColor = UIColor.tintColor;
     [_finishButton setTitleColor:Colors.textProminentButtonWizard forState:UIControlStateNormal];
     
-    if ([AppDelegate hasBottomSafeAreaInsets]) {
-        BOOL isRegularSizeClass = [AppDelegate sharedAppDelegate].isCompactSizeClass == NO;
+    CGFloat bottomInset = self.view.safeAreaInsets.bottom;
+    if (bottomInset > 0) {
+        BOOL isRegularSizeClass =
+            self.view.traitCollection.horizontalSizeClass == UIUserInterfaceSizeClassRegular;
         CGFloat regularSizeSpace = isRegularSizeClass ? 50 : 0;
         _finishButton.frame = CGRectMake(_finishButton.frame.origin.x, _finishButton.frame.origin.y - 20.0 - regularSizeSpace, _finishButton.frame.size.width, _finishButton.frame.size.height);
     }
@@ -279,7 +276,12 @@
 - (void)enableSafeWithCompletion:(nullable void(^)(BOOL enabled))onCompletion {
     SafeConfigManager *safeConfigManager = [[SafeConfigManager alloc] init];
     BusinessInjector * bi = [BusinessInjector new];
-    SafeStore *safeStore = [[SafeStore alloc] initWithSafeConfigManagerAsObject:safeConfigManager serverApiConnector:[[ServerAPIConnector alloc] init] groupManager: [bi groupManagerObjC] myIdentityStore: bi.myIdentityStore];
+    SafeStore *safeStore = [[SafeStore alloc] initWithSafeConfigManagerAsObject:safeConfigManager
+                                                             serverApiConnector:[[ServerAPIConnector alloc] init]
+                                                                   groupManager: [bi groupManagerObjC]
+                                                                myIdentityStore: bi.myIdentityStore
+                                                          phoneNumberNormalizer:[PhoneNumberNormalizer new]
+    ];
     SafeManager *safeManager = [[SafeManager alloc] initWithSafeConfigManagerAsObject:safeConfigManager safeStore:safeStore safeAPIService:[[SafeApiService alloc] init]];
     
     // apply Threema Safe password and server config from MDM
@@ -499,7 +501,7 @@
             return;
         }
 
-        [SetupApp runAppMigrationIsNeededWithCompletionHandler:^(NSError * _Nullable error) {
+        [SetupApp runAppMigrationIfNeededWithCompletionHandler:^(NSError * _Nullable error) {
             if (error != nil) {
                 [ErrorHandler abortWithError:error];
                 return;

@@ -38,9 +38,7 @@ final class EditProfilePictureRecipientsViewController: UICollectionViewControll
         Section,
         Row
     >(collectionView: self.collectionView) {
-        [weak self] collectionView,
-            indexPath,
-            row -> UICollectionViewCell? in
+        [weak self] collectionView, indexPath, row -> UICollectionViewCell? in
         
         switch row {
         case let .action(kind, selected):

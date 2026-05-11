@@ -45,6 +45,7 @@ public final class SettingsStore: SettingsStoreInternalProtocol, SettingsStorePr
 
         // Appearance
         self.displayOrderFirstName = userSettings.displayOrderFirstName
+        self.sortOrderFirstName = userSettings.sortOrderFirstName
         self.hideStaleContacts = userSettings.hideStaleContacts
         self.previewLimit = userSettings.previewLimit
         self.showGalleryPreview = userSettings.showGalleryPreview
@@ -130,6 +131,15 @@ public final class SettingsStore: SettingsStoreInternalProtocol, SettingsStorePr
     @Published public var displayOrderFirstName: Bool {
         didSet {
             guard userSettings.displayOrderFirstName != displayOrderFirstName else {
+                return
+            }
+            updateUserSettingsAsync()
+        }
+    }
+
+    @Published public var sortOrderFirstName: Bool {
+        didSet {
+            guard userSettings.sortOrderFirstName != sortOrderFirstName else {
                 return
             }
             updateUserSettingsAsync()
@@ -224,7 +234,7 @@ public final class SettingsStore: SettingsStoreInternalProtocol, SettingsStorePr
             userSettings.allowOutgoingDonations = allowOutgoingDonations
             
             // Remove donated INInteractions when being disabled
-            if !allowOutgoingDonations || AppLaunchManager.isRemoteSecretEnabled {
+            if !allowOutgoingDonations || RemoteSecretProvider.isRemoteSecretEnabled {
                 removeINInteractions()
             }
         }
@@ -310,7 +320,7 @@ public final class SettingsStore: SettingsStoreInternalProtocol, SettingsStorePr
                 // We only remove the donated Interactions, if the outgoing are disabled.
                 switch self.notificationType {
                 case .restrictive, .balanced:
-                    if !self.allowOutgoingDonations || AppLaunchManager.isRemoteSecretEnabled {
+                    if !self.allowOutgoingDonations || RemoteSecretProvider.isRemoteSecretEnabled {
                         self.removeINInteractions()
                     }
                 case .complete:
@@ -586,7 +596,7 @@ public final class SettingsStore: SettingsStoreInternalProtocol, SettingsStorePr
     /// Saves changed `Sync_Settings` to UserSettings and updates the SettingsStore
     /// - Parameter syncSettings: Delta updates of user settings
     @MainActor
-    func updateSettingsStore(with syncSettings: Sync_Settings) {
+    func updateSettingsStore(with syncSettings: D2dSync_Settings) {
         
         /// **IMPORTANT:**
         /// Always update `UserSettings` before the local published variable
@@ -677,7 +687,7 @@ public final class SettingsStore: SettingsStoreInternalProtocol, SettingsStorePr
         
         var hasChanges = false
             
-        var syncSettings = Sync_Settings()
+        var syncSettings = D2dSync_Settings()
             
         let actualBlacklist = userSettings.blacklist ?? NSOrderedSet(array: [String]())
         if !actualBlacklist.isEqual(to: NSOrderedSet(array: Array(blacklist))) {
@@ -799,7 +809,7 @@ public final class SettingsStore: SettingsStoreInternalProtocol, SettingsStorePr
             return
         }
 
-        var syncSettings = Sync_Settings()
+        var syncSettings = D2dSync_Settings()
         syncSettings.o2OCallPolicy = userSettings.enableThreemaCall ? .allowO2OCall : .denyO2OCall
         syncSettings.groupCallPolicy = userSettings.enableThreemaGroupCalls ? .allowGroupCall : .denyGroupCall
 
@@ -837,6 +847,7 @@ public final class SettingsStore: SettingsStoreInternalProtocol, SettingsStorePr
     private func updateUserSettings() {
         // Appearance
         compareAndAssign(&userSettings.displayOrderFirstName, displayOrderFirstName)
+        compareAndAssign(&userSettings.sortOrderFirstName, sortOrderFirstName)
         compareAndAssign(&userSettings.hideStaleContacts, hideStaleContacts)
         compareAndAssign(&userSettings.previewLimit, previewLimit)
         compareAndAssign(&userSettings.showGalleryPreview, showGalleryPreview)
@@ -922,6 +933,7 @@ public final class SettingsStore: SettingsStoreInternalProtocol, SettingsStorePr
     private func updateLocalValues() {
         // Appearance Settings
         compareAndAssign(&displayOrderFirstName, userSettings.displayOrderFirstName)
+        compareAndAssign(&sortOrderFirstName, userSettings.sortOrderFirstName)
         compareAndAssign(&hideStaleContacts, userSettings.hideStaleContacts)
         compareAndAssign(&previewLimit, userSettings.previewLimit)
         compareAndAssign(&showGalleryPreview, userSettings.showGalleryPreview)

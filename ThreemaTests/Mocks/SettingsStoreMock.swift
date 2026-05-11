@@ -87,7 +87,7 @@ final class SettingsStoreMock: SettingsStoreProtocol, SettingsStoreInternalProto
     
     var ipcCommunicationEnabled = false
 
-    func updateSettingsStore(with syncSettings: Sync_Settings) {
+    func updateSettingsStore(with syncSettings: D2dSync_Settings) {
         // Noop
     }
 

@@ -229,7 +229,7 @@ final class ChatSearchController: NSObject {
         let persistenceManager = PersistenceManager(
             appGroupID: AppGroup.groupID(),
             userDefaults: AppGroup.userDefaults(),
-            remoteSecretManager: AppLaunchManager.remoteSecretManager
+            remoteSecretManager: RemoteSecretProvider.remoteSecretManager
         )
         var newContext: ThreemaManagedObjectContext
         do {

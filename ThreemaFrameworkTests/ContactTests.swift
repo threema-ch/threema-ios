@@ -178,6 +178,10 @@ final class ContactTests: XCTestCase {
         let s3: Set<Contact> = Set([c1, c3, c4])
 
         XCTAssertFalse(s1.contactsEqual(to: s3))
+        
+        let s4: Set<Contact> = Set([c1, c4])
+
+        XCTAssertFalse(s1.contactsEqual(to: s4))
     }
 
     func testDeleteContactEntity() throws {

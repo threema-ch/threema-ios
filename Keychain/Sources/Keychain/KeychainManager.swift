@@ -163,7 +163,7 @@ public final class KeychainManager: NSObject, KeychainManagerProtocol {
         )
     }
 
-    public func storeIdentity(_ myIdentity: MyIdentity) throws {
+    public func storeIdentity(_ myIdentity: MyIdentity, thisDeviceOnly: Bool) throws {
         let storingPassword =
             remoteSecretManager.encryptDataIfNeeded(myIdentity.$clientKey)
         let storingGeneric =
@@ -172,7 +172,7 @@ public final class KeychainManager: NSObject, KeychainManagerProtocol {
             remoteSecretManager.encryptToBase64StringIfNeeded(myIdentity.$serverGroup)
         
         try keychainProvider.store(
-            .identity(),
+            .identity(thisDeviceOnly: thisDeviceOnly),
             account: myIdentity.$identity,
             password: storingPassword,
             generic: storingGeneric,
@@ -182,6 +182,26 @@ public final class KeychainManager: NSObject, KeychainManagerProtocol {
 
     @objc public func deleteIdentity() throws {
         try keychainProvider.delete(.identity())
+    }
+    
+    public func isIdentityThisDeviceOnly() throws -> Bool {
+        guard let result = try keychainProvider.load(.identity()) else {
+            throw KeychainManagerError.myIdentityMissing
+        }
+        
+        return result.accessibility == kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
+    }
+    
+    public func changeIdentityAccessibility(thisDeviceOnly: Bool) throws {
+        guard let identity = try? loadIdentity() else {
+            throw KeychainManagerError.myIdentityMissing
+        }
+
+        guard try isIdentityThisDeviceOnly() != thisDeviceOnly else {
+            return
+        }
+
+        try storeIdentity(identity, thisDeviceOnly: thisDeviceOnly)
     }
 
     // MARK: - Identity Backup

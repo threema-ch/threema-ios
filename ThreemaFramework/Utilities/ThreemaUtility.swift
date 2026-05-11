@@ -30,13 +30,12 @@ public final class ThreemaUtility: NSObject {
     /// Format Work: 4.7kb2687
     /// Format TestFlight: 4.7b2687-T
     public static let appAndBuildVersion: String = {
-        guard let mainBundle = BundleUtil.mainBundle() else {
+        guard let mainBundle = BundleUtil.mainBundle(),
+              let version = mainBundle.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String,
+              let suffix = mainBundle.object(forInfoDictionaryKey: "ThreemaVersionSuffix") as? String,
+              let build = mainBundle.object(forInfoDictionaryKey: kCFBundleVersionKey as String) as? String else {
             return "Unknown"
         }
-        
-        let version = mainBundle.object(forInfoDictionaryKey: "CFBundleShortVersionString") as! String
-        let suffix = mainBundle.object(forInfoDictionaryKey: "ThreemaVersionSuffix") as! String
-        let build = mainBundle.object(forInfoDictionaryKey: kCFBundleVersionKey as String) as! String
         
         return "\(version)\(suffix)b\(build)\(ThreemaEnvironment.env().shortDescription)"
     }()

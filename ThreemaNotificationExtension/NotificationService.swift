@@ -47,7 +47,7 @@ class NotificationService: UNNotificationServiceExtension {
         withContentHandler contentHandler: @escaping (UNNotificationContent) -> Void
     ) {
         PromiseKitConfiguration.configurePromiseKit()
-        FileUtilityObjCSetter.setInitialFileUtility()
+        FileUtilitySetter.setInitialFileUtility()
 
         AppGroup.setGroupID(BundleUtil.threemaAppGroupIdentifier())
         AppGroup.setAppID(BundleUtil.mainBundle()?.bundleIdentifier)
@@ -387,7 +387,7 @@ class NotificationService: UNNotificationServiceExtension {
                 self.persistenceManager = PersistenceManager(
                     appGroupID: AppGroup.groupID(),
                     userDefaults: AppGroup.userDefaults(),
-                    remoteSecretManager: AppLaunchManager.remoteSecretManager
+                    remoteSecretManager: RemoteSecretProvider.remoteSecretManager
                 )
 
                 // TODO: (IOS-5305) Move keychain manager creation out of here

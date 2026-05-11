@@ -14,6 +14,8 @@ final class TaskManagerMock: NSObject, TaskManagerProtocol {
     /// Called on each task added
     var taskAdded: TaskAddedCallback?
     
+    var executeSubTaskCalls = [TaskDefinitionProtocol]()
+
     init(taskAdded: TaskAddedCallback? = nil) {
         self.taskAdded = taskAdded
     }
@@ -54,7 +56,7 @@ final class TaskManagerMock: NSObject, TaskManagerProtocol {
     }
     
     func executeSubTask(taskDefinition: any ThreemaFramework.TaskDefinitionProtocol) async throws {
-        // no-op
+        executeSubTaskCalls.append(taskDefinition)
     }
 
     static func removeAllTasks() {

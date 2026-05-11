@@ -185,7 +185,7 @@
 //
 // So, for example, when an outgoing 4DH message is being sent, it will be
 // encrypted by deriving `XDHMK` from `local-4DHK` and then `local-4DHK` will be
-// replaced by applying `XDKH'` to `local-4DHK`.
+// replaced by applying `XDHK'` to `local-4DHK`.
 //
 // ### Key Counters
 //
@@ -323,7 +323,7 @@
 //
 // It is possible for both parties to create an FS session independently, before
 // having received the other party's `Init`. In that case, both parties
-// determinstically run a conflict resolve mechanism based on the session ID.
+// deterministically run a conflict resolve mechanism based on the session ID.
 //
 // Each party will proceed normally to ensure any messages sent while the race
 // is ongoing will be received. When choosing a session for sending a new
@@ -442,7 +442,11 @@
 // 2. Apply XDHK' to `xdhk` and replace the current `XDHK` iteration of the
 //    state with the result of that derivation.
 
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 import SwiftProtobuf
 
 // If the compiler emits an error on this type, it is because this file
@@ -661,11 +665,11 @@ public struct CspE2eFs_Init: Sendable {
   ///
   /// If not provided, assume V1.0 (`0x0100`) for both `min` and `max`.
   public var supportedVersion: CspE2eFs_VersionRange {
-    get {return _supportedVersion ?? CspE2eFs_VersionRange()}
+    get {_supportedVersion ?? CspE2eFs_VersionRange()}
     set {_supportedVersion = newValue}
   }
   /// Returns true if `supportedVersion` has been explicitly set.
-  public var hasSupportedVersion: Bool {return self._supportedVersion != nil}
+  public var hasSupportedVersion: Bool {self._supportedVersion != nil}
   /// Clears the value of `supportedVersion`. Subsequent reads from it will return its default value.
   public mutating func clearSupportedVersion() {self._supportedVersion = nil}
 
@@ -700,11 +704,11 @@ public struct CspE2eFs_Accept: Sendable {
   ///
   /// If not provided, assume V1.0 (`0x0100`) for both `min` and `max`.
   public var supportedVersion: CspE2eFs_VersionRange {
-    get {return _supportedVersion ?? CspE2eFs_VersionRange()}
+    get {_supportedVersion ?? CspE2eFs_VersionRange()}
     set {_supportedVersion = newValue}
   }
   /// Returns true if `supportedVersion` has been explicitly set.
-  public var hasSupportedVersion: Bool {return self._supportedVersion != nil}
+  public var hasSupportedVersion: Bool {self._supportedVersion != nil}
   /// Clears the value of `supportedVersion`. Subsequent reads from it will return its default value.
   public mutating func clearSupportedVersion() {self._supportedVersion = nil}
 
@@ -831,11 +835,11 @@ public struct CspE2eFs_Reject: Sendable {
 
   /// The group in which the message has been sent (if any).
   public var groupIdentity: Common_GroupIdentity {
-    get {return _groupIdentity ?? Common_GroupIdentity()}
+    get {_groupIdentity ?? Common_GroupIdentity()}
     set {_groupIdentity = newValue}
   }
   /// Returns true if `groupIdentity` has been explicitly set.
-  public var hasGroupIdentity: Bool {return self._groupIdentity != nil}
+  public var hasGroupIdentity: Bool {self._groupIdentity != nil}
   /// Clears the value of `groupIdentity`. Subsequent reads from it will return its default value.
   public mutating func clearGroupIdentity() {self._groupIdentity = nil}
 
@@ -1110,11 +1114,11 @@ public struct CspE2eFs_Encapsulated: Sendable {
   /// Required if the inner message type's _kind_ property is _Group_. Must not
   /// be set for _1:1_.
   public var groupIdentity: Common_GroupIdentity {
-    get {return _groupIdentity ?? Common_GroupIdentity()}
+    get {_groupIdentity ?? Common_GroupIdentity()}
     set {_groupIdentity = newValue}
   }
   /// Returns true if `groupIdentity` has been explicitly set.
-  public var hasGroupIdentity: Bool {return self._groupIdentity != nil}
+  public var hasGroupIdentity: Bool {self._groupIdentity != nil}
   /// Clears the value of `groupIdentity`. Subsequent reads from it will return its default value.
   public mutating func clearGroupIdentity() {self._groupIdentity = nil}
 

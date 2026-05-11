@@ -1,7 +1,7 @@
 import SwiftUI
 import UIKit
 
-@objc final class ThreemaSplitViewController: UISplitViewController {
+final class ThreemaSplitViewController: UISplitViewController {
     
     private(set) lazy var threemaTabBarController = ThreemaTabBarController()
     private lazy var navigationManager = ThreemaSplitViewNavigationManager()

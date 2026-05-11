@@ -252,14 +252,11 @@ final class TaskQueue {
                         DDLogError("\(item.taskDefinition) failed: \(error)")
                         self.done(item: item)
                         
-                    case TaskExecutionError.createAbstractMessageFailed:
+                    case TaskExecutionError.createAbstractMessageFailed,
+                         TaskExecutionError.messageReceiverBlockedOrUnknown:
                         DDLogError("\(item.taskDefinition) outgoing message failed: \(error)")
                         self.done(item: item)
-                        
-                    case TaskExecutionError.messageReceiverBlockedOrUnknown:
-                        DDLogError("\(item.taskDefinition) outgoing message failed: \(error)")
-                        self.done(item: item)
-                        
+
                     case TaskExecutionError.invalidContact(message: _),
                          TaskExecutionError.multiDeviceNotSupported,
                          TaskExecutionError.multiDeviceNotRegistered: // You need to relink anyway

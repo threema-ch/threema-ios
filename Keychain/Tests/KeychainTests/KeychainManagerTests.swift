@@ -181,6 +181,108 @@ struct KeychainManagerTests {
         #expect(cryptoMock.calls.isEmpty)
     }
     
+    @Test("Store identity with this device only true")
+    func testStoreIdentityThisDeviceOnlyTrue() throws {
+        let (
+            keychainManager,
+            keychainMock,
+            _,
+            _
+        ) = makeSUT(isRemoteSecretEnabled: false)
+
+        _ = try keychainManager.storeTestIdentity(thisDeviceOnly: true)
+        
+        let storeKeychainCall = try #require(keychainMock.calls.first)
+        guard case let .store(storeOperation) = storeKeychainCall else {
+            Issue.record("Expected call to be .store, but got \(storeKeychainCall)")
+            throw NSError(domain: "", code: -1)
+        }
+        
+        #expect(storeOperation.item.accessibility == kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly)
+        #expect(try keychainManager.isIdentityThisDeviceOnly() == true)
+    }
+    
+    @Test("Store identity with this device only false")
+    func testStoreIdentityThisDeviceOnlyFalse() throws {
+        let (
+            keychainManager,
+            keychainMock,
+            _,
+            _
+        ) = makeSUT(isRemoteSecretEnabled: false)
+
+        _ = try keychainManager.storeTestIdentity(thisDeviceOnly: false)
+        
+        let storeKeychainCall = try #require(keychainMock.calls.first)
+        guard case let .store(storeOperation) = storeKeychainCall else {
+            Issue.record("Expected call to be .store, but got \(storeKeychainCall)")
+            throw NSError(domain: "", code: -1)
+        }
+        
+        #expect(storeOperation.item.accessibility == kSecAttrAccessibleAfterFirstUnlock)
+        #expect(try keychainManager.isIdentityThisDeviceOnly() == false)
+    }
+    
+    @Test("Store identity with this device only true and false")
+    func testStoreIdentityChangeThisDeviceOnly() throws {
+        let (
+            keychainManager,
+            keychainMock,
+            _,
+            _
+        ) = makeSUT(isRemoteSecretEnabled: false)
+        
+        // Store this device only
+        _ = try keychainManager.storeTestIdentity(thisDeviceOnly: true)
+        
+        let storeKeychainCall = try #require(keychainMock.calls.first)
+        guard case let .store(storeOperation) = storeKeychainCall else {
+            Issue.record("Expected call to be .store, but got \(storeKeychainCall)")
+            throw NSError(domain: "", code: -1)
+        }
+        
+        #expect(storeOperation.item.accessibility == kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly)
+        #expect(try keychainManager.isIdentityThisDeviceOnly() == true)
+        
+        // Reset mock
+        keychainMock.reset()
+        
+        // Store without this device only
+        _ = try keychainManager.storeTestIdentity(thisDeviceOnly: false)
+        
+        let storeKeychainCall2 = try #require(keychainMock.calls.first)
+        guard case let .store(storeOperation2) = storeKeychainCall2 else {
+            Issue.record("Expected call to be .store, but got \(storeKeychainCall2)")
+            throw NSError(domain: "", code: -1)
+        }
+        
+        #expect(storeOperation2.item.accessibility == kSecAttrAccessibleAfterFirstUnlock)
+        #expect(try keychainManager.isIdentityThisDeviceOnly() == false)
+    }
+    
+    @Test("Change identity accessibility")
+    func testChangeIdentityAccessibility() throws {
+        let (
+            keychainManager,
+            _,
+            _,
+            _
+        ) = makeSUT(isRemoteSecretEnabled: false)
+        
+        // Store this device only
+        _ = try keychainManager.storeTestIdentity()
+        
+        #expect(try keychainManager.isIdentityThisDeviceOnly() == true)
+        
+        try keychainManager.changeIdentityAccessibility(thisDeviceOnly: false)
+        
+        #expect(try keychainManager.isIdentityThisDeviceOnly() == false)
+        
+        try keychainManager.changeIdentityAccessibility(thisDeviceOnly: true)
+
+        #expect(try keychainManager.isIdentityThisDeviceOnly() == true)
+    }
+    
     // MARK: - Device Cookie Tests
 
     @Test("Store Device Cookie (Remote Secret Disabled)")
@@ -1431,7 +1533,8 @@ extension KeychainManager {
         identity: String = "ECHOECHO",
         clientKey: Data = Data("clientKey".utf8),
         publicKey: Data = Data("publicKey".utf8),
-        serverGroup: String = "serverGroup"
+        serverGroup: String = "serverGroup",
+        thisDeviceOnly: Bool = true
     ) throws -> Keychain.MyIdentity {
         let identity = Keychain.MyIdentity(
             identity: ThreemaIdentity(identity),
@@ -1439,7 +1542,7 @@ extension KeychainManager {
             publicKey: ThreemaPublicKey(publicKey),
             serverGroup: ServerGroup(serverGroup)
         )
-        try storeIdentity(identity)
+        try storeIdentity(identity, thisDeviceOnly: thisDeviceOnly)
         return identity
     }
 }

@@ -39,10 +39,7 @@ final class EditProfilePictureView: UIStackView {
     
     /// View controller used to present the pickers on
     private weak var presentingViewController: UIViewController?
-    
-    /// Temp anchor for popovers with picker & cropper views
-    private var presentingRect: CGRect = .zero
-    
+
     private let conversationType: ConversationType
     
     private var profilePicture: UIImage? {
@@ -288,28 +285,24 @@ final class EditProfilePictureView: UIStackView {
     // MARK: - Show picker helper
     
     private func showImagePicker(for sourceType: UIImagePickerController.SourceType, in view: UIView?) {
-        let imagePickerController = UIImagePickerController()
-        imagePickerController.delegate = self
-        imagePickerController.sourceType = sourceType
-        imagePickerController.mediaTypes = [UTType.image.identifier]
-        
-        // Quite a hack. Maybe generalize that in modal presenter?
-        
-        presentingRect = .zero
-        if let presentingViewController,
-           let view {
-            presentingRect = presentingViewController.view.convert(
-                view.frame,
-                from: view.superview
-            )
+        guard let presentingViewController else {
+            return
         }
-        
-        ModalPresenter.present(
-            imagePickerController,
-            on: presentingViewController,
-            from: presentingRect,
-            in: presentingViewController?.view
-        )
+
+        let vc = UIImagePickerController()
+        vc.delegate = self
+        vc.sourceType = sourceType
+        vc.mediaTypes = [UTType.image.identifier]
+
+        if sourceType == .photoLibrary, let view,
+           presentingViewController.traitCollection.horizontalSizeClass == .regular {
+            vc.modalPresentationStyle = .automatic
+            let sourceRect = presentingViewController.view.convert(view.frame, from: view.superview)
+            vc.popoverPresentationController?.sourceRect = sourceRect
+            vc.popoverPresentationController?.sourceView = presentingViewController.view
+        }
+
+        presentingViewController.present(vc, animated: true)
     }
     
     // MARK: - Accessibility
@@ -358,38 +351,31 @@ extension EditProfilePictureView: UINavigationControllerDelegate, UIImagePickerC
         _ picker: UIImagePickerController,
         didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]
     ) {
-        
+        guard let presentingViewController else {
+            return
+        }
+
         guard let selectedImage = info[.originalImage] as? UIImage else {
-            picker.dismiss(animated: true)
-            
-            if let presentingViewController {
+            picker.dismiss(animated: true) { [presentingViewController] in
                 UIAlertTemplate.showAlert(
                     owner: presentingViewController,
                     title: #localize("edit_avatar_no_image_found_title"),
                     message: #localize("edit_avatar_no_image_found_message")
                 )
             }
-            
             return
         }
         
-        let imageCropViewController = RSKImageCropViewController(image: selectedImage, cropMode: .circle)
-        imageCropViewController.delegate = self
-        imageCropViewController.avoidEmptySpaceAroundImage = true
+        let vc = RSKImageCropViewController(image: selectedImage, cropMode: .circle)
+        vc.delegate = self
+        vc.avoidEmptySpaceAroundImage = true
         // Make crop picker the appropriate size on an iPad
-        imageCropViewController.preferredContentSize = CGSize(
-            width: Int(kContactImageSize),
-            height: Int(kContactImageSize)
-        )
+        let size = Int(kContactImageSize)
+        vc.preferredContentSize = CGSize(width: size, height: size)
         
-        picker.dismiss(animated: true)
-        
-        ModalPresenter.present(
-            imageCropViewController,
-            on: presentingViewController,
-            from: presentingRect,
-            in: presentingViewController?.view
-        )
+        picker.dismiss(animated: false) { [presentingViewController] in
+            presentingViewController.present(vc, animated: true)
+        }
     }
 }
 
@@ -408,7 +394,7 @@ extension EditProfilePictureView: RSKImageCropViewControllerDelegate {
             .jpegData(compressionQuality: EditProfilePictureView.configuration.profilePictureJPEGCompressionQuality)
         
         (profilePicture, isDefaultImage) = imageUpdated(jpegImageData)
-        
+
         controller.dismiss(animated: true)
     }
 

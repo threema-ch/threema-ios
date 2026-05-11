@@ -86,8 +86,10 @@ final class MessageDecoderTests: XCTestCase {
                 "d": "Testtitle",
                 "t": 0,
                 "s": 0,
-                "c": [["i": 2_222_222, "n": "Choice 1", "o": 0] as [String: Any],
-                      ["i": 2_222_223, "n": "Choice 2", "o": 1]],
+                "c": [
+                    ["i": 2_222_222, "n": "Choice 1", "o": 0] as [String: Any],
+                    ["i": 2_222_223, "n": "Choice 2", "o": 1]
+                ],
                 "o": 0,
                 "a": 0,
             ] as [String: Any]] as [Any],
@@ -98,8 +100,10 @@ final class MessageDecoderTests: XCTestCase {
                     "d": "Testtitle 2",
                     "t": 0,
                     "s": 0,
-                    "c": [["i": 2_222_224, "n": "Choice 3", "o": 0] as [String: Any],
-                          ["i": 2_222_225, "n": "Choice 4", "o": 1]],
+                    "c": [
+                        ["i": 2_222_224, "n": "Choice 3", "o": 0] as [String: Any],
+                        ["i": 2_222_225, "n": "Choice 4", "o": 1]
+                    ],
                     "o": 0,
                     "a": 0,
                 ] as [String: Any],
@@ -158,8 +162,10 @@ final class MessageDecoderTests: XCTestCase {
                 "d": "Testtitle",
                 "t": 0,
                 "s": 0,
-                "c": [["i": 2_222_222, "n": "Choice 1", "o": 0] as [String: Any],
-                      ["i": 2_222_223, "n": "Choice 2", "o": 1]],
+                "c": [
+                    ["i": 2_222_222, "n": "Choice 1", "o": 0] as [String: Any],
+                    ["i": 2_222_223, "n": "Choice 2", "o": 1]
+                ],
                 "o": 0,
                 "a": 0,
             ] as [String: Any]] as [Any],
@@ -171,8 +177,10 @@ final class MessageDecoderTests: XCTestCase {
                     "d": "Testtitle",
                     "t": 0,
                     "s": 1,
-                    "c": [["i": 2_222_222, "n": "Choice 1", "o": 0] as [String: Any],
-                          ["i": 2_222_223, "n": "Choice 2", "o": 1]],
+                    "c": [
+                        ["i": 2_222_222, "n": "Choice 1", "o": 0] as [String: Any],
+                        ["i": 2_222_223, "n": "Choice 2", "o": 1]
+                    ],
                     "o": 0,
                     "a": 1,
                 ] as [String: Any],

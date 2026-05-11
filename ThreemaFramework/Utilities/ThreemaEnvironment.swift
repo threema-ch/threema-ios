@@ -105,6 +105,19 @@ public final class ThreemaEnvironment: NSObject {
         #endif
     }
     
+    // MARK: Work availability status
+
+    @objc public static var workAvailabilityStatusEnabled: Bool {
+        if ProcessInfoHelper.isRunningForScreenshots {
+            return false
+        }
+        #if DEBUG
+            return TargetManager.isWork
+        #else
+            return TargetManager.current == .blue
+        #endif
+    }
+    
     // MARK: Delete & edit messages
     
     @objc public static var deleteEditMessage: Bool {
@@ -113,6 +126,35 @@ public final class ThreemaEnvironment: NSObject {
         }
  
         return true
+    }
+    
+    // MARK: Multi-device
+    
+    public static var allowEasyDeviceSwitch: Bool {
+        guard !ProcessInfoHelper.isRunningForScreenshots else {
+            return false
+        }
+        
+        #if DEBUG
+            return true
+        #endif
+        
+        if TargetManager.isSandbox {
+            return true
+        }
+        
+        switch env() {
+        case .appStore:
+            return false
+            
+        case .testFlight:
+            return !TargetManager.isBusinessApp
+            
+        case .xcode:
+            return true
+        }
+        
+        return false
     }
     
     // MARK: Multi-device

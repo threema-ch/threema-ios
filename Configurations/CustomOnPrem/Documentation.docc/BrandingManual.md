@@ -5,8 +5,12 @@
 ##
 - Important: Make sure you edit the config files in the directory this manual is in `CustomOnPrem` and not in `ThreemaOnPrem`!
 
-## Xcode
-- Warning: Please construct the CustomOnPrem Application exclusively utilizing Xcode 16.4 (Command Line Tool 16.4 and MacOS Sequoia 15.7.x). Threema has not yet supported the building process with Xcode 26.
+## Tooling
+The following tools were used to build the current release:
+| Tool   | Version               |
+| ------ | --------------------- |
+| `macOS`| Tahoe 26.4.1 (25E253) |
+| `Xcode`| 26.4.1 (17E202)       |
 
 ## Certificates
 The following suffixes are required for the certificates:

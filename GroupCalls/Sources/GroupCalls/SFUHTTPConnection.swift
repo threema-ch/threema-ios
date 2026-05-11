@@ -14,11 +14,11 @@ extension SFUHTTPConnection {
         case notDetermined
         case needsTokenRefresh
         case invalidRequest
-        case running(Groupcall_SfuHttpResponse.Peek)
+        case running(GroupCall_SfuHttpResponse.Peek)
     }
     
     enum JoinResponse {
-        case running(Groupcall_SfuHttpResponse.Join)
+        case running(GroupCall_SfuHttpResponse.Join)
         case notDetermined
         case full
         case notRunning
@@ -57,7 +57,7 @@ extension SFUHTTPConnection {
             return .invalidRequest
         }
         
-        guard let peekResponse = try? Groupcall_SfuHttpResponse.Peek(serializedData: data) else {
+        guard let peekResponse = try? GroupCall_SfuHttpResponse.Peek(serializedData: data) else {
             return .notDetermined
         }
         
@@ -122,7 +122,7 @@ extension SFUHTTPConnection {
                 return .notRunning
             }
             
-            guard let joinResponse = try? Groupcall_SfuHttpResponse.Join(serializedData: data) else {
+            guard let joinResponse = try? GroupCall_SfuHttpResponse.Join(serializedData: data) else {
                 DDLogError("[GroupCall] [Join Steps] Could not create join from received data")
                 return .notDetermined
             }
@@ -206,14 +206,14 @@ extension SFUHTTPConnection {
     }
     
     private func createPeekRequest() throws -> Data? {
-        var body = Groupcall_SfuHttpRequest.Peek()
+        var body = GroupCall_SfuHttpRequest.Peek()
         body.callID = groupCallDescription.callID.bytes
         
         return try? body.ownSerializedData()
     }
     
     private func createJoinRequest(fingerprint: Data) throws -> Data? {
-        var body = Groupcall_SfuHttpRequest.Join()
+        var body = GroupCall_SfuHttpRequest.Join()
         body.callID = groupCallDescription.callID.bytes
         body.protocolVersion = groupCallDescription.protocolVersion
         body.dtlsFingerprint = fingerprint

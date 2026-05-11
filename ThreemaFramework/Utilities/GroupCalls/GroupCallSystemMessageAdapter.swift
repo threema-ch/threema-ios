@@ -20,49 +20,44 @@ final class GroupCallSystemMessageAdapter<BusinessInjectorImpl: BusinessInjector
 
 extension GroupCallSystemMessageAdapter: GroupCallSystemMessageAdapterProtocol {
     func post(_ systemMessage: GroupCallSystemMessage, in groupModel: GroupCallThreemaGroupModel) async throws {
-        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-            self.businessInjector.entityManager.performAsyncBlockAndSafe {
-                guard let conversation = self.businessInjector.entityManager.entityFetcher
-                    .conversationEntity(
-                        for: groupModel.groupIdentity,
-                        myIdentity: self.businessInjector.myIdentityStore.identity
-                    ) else {
-                    continuation.resume(throwing: GroupCallSystemMessageAdapterError.MissingDataInDB)
-                    return
+        let entityManager = businessInjector.entityManager
+        let entityFetcher = entityManager.entityFetcher
+        let identity = businessInjector.myIdentityStore.identity
+        try await entityManager.performSave {
+            guard let conversation = entityFetcher.conversationEntity(
+                for: groupModel.groupIdentity,
+                myIdentity: identity
+            ) else {
+                throw GroupCallSystemMessageAdapterError.MissingDataInDB
+            }
+            
+            switch systemMessage {
+            case let .groupCallStartedBy(threemaID, date):
+                guard let contact = entityFetcher.contactEntity(for: threemaID.rawValue) else {
+                    throw GroupCallSystemMessageAdapterError.MissingDataInDB
                 }
                 
-                switch systemMessage {
-                case let .groupCallStartedBy(threemaID, date):
-                    guard let contact = self.businessInjector.entityManager.entityFetcher
-                        .contactEntity(for: threemaID.rawValue) else {
-                        continuation.resume(throwing: GroupCallSystemMessageAdapterError.MissingDataInDB)
-                        return
-                    }
-                    
-                    let dbSystemMessage = self.businessInjector.entityManager.entityCreator.systemMessageEntity(
-                        for: .groupCallStartedBy,
-                        in: conversation,
-                        setLastUpdate: true
-                    )
-                    
-                    dbSystemMessage.date = date
-                    dbSystemMessage.arg = Data(contact.displayName.utf8)
-                    
-                case .groupCallEnded:
-                    _ = self.businessInjector.entityManager.entityCreator.systemMessageEntity(
-                        for: .groupCallEnded,
-                        in: conversation
-                    )
-                    
-                case .groupCallStarted:
-                    _ = self.businessInjector.entityManager.entityCreator.systemMessageEntity(
-                        for: .groupCallStarted,
-                        in: conversation,
-                        setLastUpdate: true
-                    )
-                }
+                let dbSystemMessage = entityManager.entityCreator.systemMessageEntity(
+                    for: .groupCallStartedBy,
+                    in: conversation,
+                    setLastUpdate: true
+                )
                 
-                continuation.resume()
+                dbSystemMessage.date = date
+                dbSystemMessage.arg = Data(contact.displayName.utf8)
+                
+            case .groupCallEnded:
+                _ = entityManager.entityCreator.systemMessageEntity(
+                    for: .groupCallEnded,
+                    in: conversation
+                )
+                
+            case .groupCallStarted:
+                _ = entityManager.entityCreator.systemMessageEntity(
+                    for: .groupCallStarted,
+                    in: conversation,
+                    setLastUpdate: true
+                )
             }
         }
     }

@@ -7,6 +7,20 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		082966472F63122300A57ABE /* libPhoneNumber in Frameworks */ = {isa = PBXBuildFile; productRef = 082966462F63122300A57ABE /* libPhoneNumber */; };
+		08F9BADA2F62AE8100E4164B /* libPhoneNumber in Frameworks */ = {isa = PBXBuildFile; productRef = 08F9BAD92F62AE8100E4164B /* libPhoneNumber */; };
+		08F9DE142F62C3F100E4164B /* libPhoneNumber in Frameworks */ = {isa = PBXBuildFile; productRef = 08F9DE132F62C3F100E4164B /* libPhoneNumber */; };
+		08F9DE162F62C40E00E4164B /* libPhoneNumber in Frameworks */ = {isa = PBXBuildFile; productRef = 08F9DE152F62C40E00E4164B /* libPhoneNumber */; };
+		08F9DE182F62C42000E4164B /* libPhoneNumber in Frameworks */ = {isa = PBXBuildFile; productRef = 08F9DE172F62C42000E4164B /* libPhoneNumber */; };
+		08F9DE1A2F62C42600E4164B /* libPhoneNumber in Frameworks */ = {isa = PBXBuildFile; productRef = 08F9DE192F62C42600E4164B /* libPhoneNumber */; };
+		08F9DE1C2F62C42F00E4164B /* libPhoneNumber in Frameworks */ = {isa = PBXBuildFile; productRef = 08F9DE1B2F62C42F00E4164B /* libPhoneNumber */; };
+		08F9DE1E2F62C43700E4164B /* libPhoneNumber in Frameworks */ = {isa = PBXBuildFile; productRef = 08F9DE1D2F62C43700E4164B /* libPhoneNumber */; };
+		08F9DE202F62C44800E4164B /* libPhoneNumber in Frameworks */ = {isa = PBXBuildFile; productRef = 08F9DE1F2F62C44800E4164B /* libPhoneNumber */; };
+		08F9DE222F62C44F00E4164B /* libPhoneNumber in Frameworks */ = {isa = PBXBuildFile; productRef = 08F9DE212F62C44F00E4164B /* libPhoneNumber */; };
+		08F9DE242F62C45500E4164B /* libPhoneNumber in Frameworks */ = {isa = PBXBuildFile; productRef = 08F9DE232F62C45500E4164B /* libPhoneNumber */; };
+		08F9DE262F62C45B00E4164B /* libPhoneNumber in Frameworks */ = {isa = PBXBuildFile; productRef = 08F9DE252F62C45B00E4164B /* libPhoneNumber */; };
+		08F9DE282F62C46000E4164B /* libPhoneNumber in Frameworks */ = {isa = PBXBuildFile; productRef = 08F9DE272F62C46000E4164B /* libPhoneNumber */; };
+		08F9DE2A2F62C46700E4164B /* libPhoneNumber in Frameworks */ = {isa = PBXBuildFile; productRef = 08F9DE292F62C46700E4164B /* libPhoneNumber */; };
 		0A677B971C6250CA0019B361 /* ThreemaFramework.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A677B821C6250C90019B361 /* ThreemaFramework.framework */; };
 		0A677B981C6250CA0019B361 /* ThreemaFramework.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 0A677B821C6250C90019B361 /* ThreemaFramework.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		0A688AB919A3A4670013FCE8 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DD01F6E14C1CCA900EF7690 /* Foundation.framework */; settings = {ATTRIBUTES = (Required, ); }; };
@@ -1505,7 +1519,6 @@
 		2DEDB3E124C9903400FC9099 /* Threema Green.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Threema Green.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		2DEF20012511EDE9001CC54F /* Threema Work NotificationExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "Threema Work NotificationExtension.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
 		2DF99C5524C970CC003AAB74 /* Threema Green ShareExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "Threema Green ShareExtension.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
-		42134E1F2D6FAF7400FA5CA1 /* Makefile */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
 		4230B7072D38198500BFF929 /* libthreemaSwift */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = libthreemaSwift; sourceTree = "<group>"; };
 		423AA9782C46FE3F0067C80A /* UniformTypeIdentifiers.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UniformTypeIdentifiers.framework; path = System/Library/Frameworks/UniformTypeIdentifiers.framework; sourceTree = SDKROOT; };
 		42B167EE2A150EC500ECD685 /* ThreemaBlake2b */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = ThreemaBlake2b; sourceTree = "<group>"; };
@@ -2317,7 +2330,6 @@
 		F25FD72F2E7043FB00EA8AF3 /* Exceptions for "ThreemaFramework" folder in "ThreemaFramework" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				Business/ServerAPIRequest.h,
 				Core/HTTPSURLLoader.h,
 				Message/EncoderDecoder/BallotKeys.h,
 				Message/EncoderDecoder/FileMessageKeys.h,
@@ -2334,8 +2346,6 @@
 				Utilities/CryptoUtils.h,
 				Utilities/NibUtil.h,
 				"Utilities/NSString+Hex.h",
-				Utilities/PhoneNumberNormalizer.h,
-				"Vendor/libPhoneNumber-iOS/GeneratePhoneNumberHeader.sh",
 			);
 			publicHeaders = (
 				Business/AppGroup.h,
@@ -2344,9 +2354,9 @@
 				Business/MDMSetup/MDMSetup.h,
 				Business/MyIdentityStore/MyIdentityStore.h,
 				Business/ServerAPIConnector.h,
+				Business/ServerAPIRequest.h,
 				Business/ServerConnector.h,
 				Business/TouchIDAuthentication.h,
-				Business/TypingIndicatorManager.h,
 				Business/UserSettings/UserSettings.h,
 				Constants.h,
 				Core/ConnectionStateDelegate.h,
@@ -2416,7 +2426,6 @@
 				Network/SocketProtocolDelegate.h,
 				ProtocolDefines.h,
 				SharedUI/ContactPicker/ContactGroupPickerViewController.h,
-				SharedUI/CustomViews/ContactNameLabel.h,
 				SharedUI/ErrorHandler.h,
 				SharedUI/ModalNavigationController.h,
 				SharedUI/Old_ThemedViewController.h,
@@ -2879,6 +2888,7 @@
 				24D834412B32BB2800D25FEF /* CocoaLumberjackSwift in Frameworks */,
 				242083C32CBCDCC70079D9B8 /* ThreemaMacros in Frameworks */,
 				0AC9EF2D1C99AE1700555E62 /* AVFoundation.framework in Frameworks */,
+				08F9BADA2F62AE8100E4164B /* libPhoneNumber in Frameworks */,
 				8DDCF7CC27107FB8000CB4F6 /* SwiftProtobuf in Frameworks */,
 				24AD2ED12B4D916000BB0BDF /* Reachability in Frameworks */,
 				4250536E2F8E25E400441645 /* OrderedCollections in Frameworks */,
@@ -3011,6 +3021,7 @@
 				242083BB2CBCDCAA0079D9B8 /* ThreemaMacros in Frameworks */,
 				24EFCD8B2B31E94100DD7C66 /* MBProgressHUD in Frameworks */,
 				24B81FED2B32CE3000E8D13E /* CocoaLumberjackSwift in Frameworks */,
+				08F9DE182F62C42000E4164B /* libPhoneNumber in Frameworks */,
 				F2A87DF82E4B68B800646386 /* FLAnimatedImage in Frameworks */,
 				D73A95C427AD0743003E847C /* SDWebImage in Frameworks */,
 				CE7E001E25FA563D0054373A /* Ed25519 in Frameworks */,
@@ -3029,6 +3040,7 @@
 				242083B92CBCDCA40079D9B8 /* ThreemaMacros in Frameworks */,
 				24EFCD7E2B31E86B00DD7C66 /* MBProgressHUD in Frameworks */,
 				24D834452B32BE4800D25FEF /* CocoaLumberjackSwift in Frameworks */,
+				08F9DE162F62C40E00E4164B /* libPhoneNumber in Frameworks */,
 				F2A87DF62E4B68B200646386 /* FLAnimatedImage in Frameworks */,
 				D73A95C827AD0838003E847C /* SDWebImage in Frameworks */,
 				CE12747D25FA488B000840BD /* Ed25519 in Frameworks */,
@@ -3074,6 +3086,7 @@
 				F2A87E002E4B69EC00646386 /* FLAnimatedImage in Frameworks */,
 				24B8200B2B32CEE100E8D13E /* CocoaLumberjack in Frameworks */,
 				24B820132B32CF1D00E8D13E /* MBProgressHUD in Frameworks */,
+				082966472F63122300A57ABE /* libPhoneNumber in Frameworks */,
 				2448996C289A49DD0067CE28 /* Ed25519 in Frameworks */,
 				242083CD2CBCDCED0079D9B8 /* ThreemaMacros in Frameworks */,
 				24DB325528AE5D3700B37182 /* JDStatusBarNotification in Frameworks */,
@@ -3095,6 +3108,7 @@
 				242083C12CBCDCBE0079D9B8 /* ThreemaMacros in Frameworks */,
 				24EFCD912B31E95C00DD7C66 /* MBProgressHUD in Frameworks */,
 				24B81FF92B32CE4500E8D13E /* CocoaLumberjackSwift in Frameworks */,
+				08F9DE1E2F62C43700E4164B /* libPhoneNumber in Frameworks */,
 				F2A87DFE2E4B68CE00646386 /* FLAnimatedImage in Frameworks */,
 				D73A95CE27AD183A003E847C /* SDWebImage in Frameworks */,
 				CE7E002425FA564B0054373A /* Ed25519 in Frameworks */,
@@ -3184,6 +3198,7 @@
 				24EFCD9A2B31EAAB00DD7C66 /* MBProgressHUD in Frameworks */,
 				7EC0229A2B8906F9005024AE /* TrustKit in Frameworks */,
 				24B820052B32CE6E00E8D13E /* CocoaLumberjackSwift in Frameworks */,
+				08F9DE2A2F62C46700E4164B /* libPhoneNumber in Frameworks */,
 				242083B72CBCDC9D0079D9B8 /* ThreemaMacros in Frameworks */,
 				24DB324728AE489800B37182 /* JDStatusBarNotification in Frameworks */,
 				24B820032B32CE6E00E8D13E /* CocoaLumberjack in Frameworks */,
@@ -3203,6 +3218,7 @@
 				7E0A4BD12AD68EDC00C38A25 /* PromiseKit in Frameworks */,
 				24D834472B32BE5400D25FEF /* CocoaLumberjack in Frameworks */,
 				24EFCD812B31E89600DD7C66 /* MBProgressHUD in Frameworks */,
+				08F9DE202F62C44800E4164B /* libPhoneNumber in Frameworks */,
 				242083AF2CBCDC820079D9B8 /* ThreemaMacros in Frameworks */,
 				D73A95CA27AD0843003E847C /* SDWebImage in Frameworks */,
 				7EC022942B8906D9005024AE /* TrustKit in Frameworks */,
@@ -3222,6 +3238,7 @@
 				7EC022982B8906EF005024AE /* TrustKit in Frameworks */,
 				24B820012B32CE6500E8D13E /* CocoaLumberjackSwift in Frameworks */,
 				7EACDD792B0CE33800D9BC27 /* ThreemaEssentials in Frameworks */,
+				08F9DE282F62C46000E4164B /* libPhoneNumber in Frameworks */,
 				242083B52CBCDC970079D9B8 /* ThreemaMacros in Frameworks */,
 				24EFCD952B31E98A00DD7C66 /* MBProgressHUD in Frameworks */,
 				24B81FFF2B32CE6500E8D13E /* CocoaLumberjack in Frameworks */,
@@ -3314,6 +3331,7 @@
 				7EC022962B8906E6005024AE /* TrustKit in Frameworks */,
 				24B81FFD2B32CE5F00E8D13E /* CocoaLumberjackSwift in Frameworks */,
 				24EFCD932B31E98300DD7C66 /* MBProgressHUD in Frameworks */,
+				08F9DE222F62C44F00E4164B /* libPhoneNumber in Frameworks */,
 				242083B12CBCDC890079D9B8 /* ThreemaMacros in Frameworks */,
 				D73A95C627AD0778003E847C /* SDWebImage in Frameworks */,
 				24B81FFB2B32CE5F00E8D13E /* CocoaLumberjack in Frameworks */,
@@ -3335,6 +3353,7 @@
 				242083BF2CBCDCB80079D9B8 /* ThreemaMacros in Frameworks */,
 				24EFCD8F2B31E95300DD7C66 /* MBProgressHUD in Frameworks */,
 				24B81FF52B32CE3E00E8D13E /* CocoaLumberjackSwift in Frameworks */,
+				08F9DE142F62C3F100E4164B /* libPhoneNumber in Frameworks */,
 				F2850D572E4B59DD00DC9C18 /* FLAnimatedImage in Frameworks */,
 				D73A95BE27AD0628003E847C /* SDWebImage in Frameworks */,
 				CE7E002225FA56470054373A /* Ed25519 in Frameworks */,
@@ -3426,6 +3445,7 @@
 				242083BD2CBCDCB10079D9B8 /* ThreemaMacros in Frameworks */,
 				24EFCD8D2B31E94B00DD7C66 /* MBProgressHUD in Frameworks */,
 				24B81FF12B32CE3600E8D13E /* CocoaLumberjackSwift in Frameworks */,
+				08F9DE1A2F62C42600E4164B /* libPhoneNumber in Frameworks */,
 				F2A87DFA2E4B68BF00646386 /* FLAnimatedImage in Frameworks */,
 				D73A95CC27AD1830003E847C /* SDWebImage in Frameworks */,
 				CE7E002025FA56420054373A /* Ed25519 in Frameworks */,
@@ -3442,6 +3462,7 @@
 				7EC0229C2B890707005024AE /* TrustKit in Frameworks */,
 				24B820092B32CE7600E8D13E /* CocoaLumberjackSwift in Frameworks */,
 				24EFCD982B31E99C00DD7C66 /* MBProgressHUD in Frameworks */,
+				08F9DE242F62C45500E4164B /* libPhoneNumber in Frameworks */,
 				242083B32CBCDC900079D9B8 /* ThreemaMacros in Frameworks */,
 				D73A95D027AD1855003E847C /* SDWebImage in Frameworks */,
 				24B820072B32CE7600E8D13E /* CocoaLumberjack in Frameworks */,
@@ -3681,6 +3702,7 @@
 				F2EAFF5D2D6CCA2400DFFD48 /* TrustKit in Frameworks */,
 				F2EAFF5E2D6CCA2400DFFD48 /* CocoaLumberjackSwift in Frameworks */,
 				F2EAFF5F2D6CCA2400DFFD48 /* MBProgressHUD in Frameworks */,
+				08F9DE262F62C45B00E4164B /* libPhoneNumber in Frameworks */,
 				F2EAFF602D6CCA2400DFFD48 /* ThreemaMacros in Frameworks */,
 				F2EAFF612D6CCA2400DFFD48 /* SDWebImage in Frameworks */,
 				F2EAFF622D6CCA2400DFFD48 /* CocoaLumberjack in Frameworks */,
@@ -3702,6 +3724,7 @@
 				F2EAFF902D6CCA3700DFFD48 /* ThreemaMacros in Frameworks */,
 				F2EAFF912D6CCA3700DFFD48 /* MBProgressHUD in Frameworks */,
 				F2EAFF922D6CCA3700DFFD48 /* CocoaLumberjackSwift in Frameworks */,
+				08F9DE1C2F62C42F00E4164B /* libPhoneNumber in Frameworks */,
 				F2A87DFC2E4B68C600646386 /* FLAnimatedImage in Frameworks */,
 				F2EAFF932D6CCA3700DFFD48 /* SDWebImage in Frameworks */,
 				F2EAFF942D6CCA3700DFFD48 /* Ed25519 in Frameworks */,
@@ -3788,7 +3811,6 @@
 			isa = PBXGroup;
 			children = (
 				E1DB0ACC2578D2BF00791028 /* README.md */,
-				42134E1F2D6FAF7400FA5CA1 /* Makefile */,
 				F2B743662DFC677B008C5C52 /* InternalDocumentation.docc */,
 				F2FC39052E7054AF00A289D0 /* Configurations */,
 				246FFC112E717CAF0040A5C2 /* Threema */,
@@ -4129,6 +4151,7 @@
 				2D9E4F892E276DA40010A5D1 /* Keychain */,
 				F2A4C91C2E4B58060062B883 /* FLAnimatedImage */,
 				4250536D2F8E25E400441645 /* OrderedCollections */,
+				08F9BAD92F62AE8100E4164B /* libPhoneNumber */,
 			);
 			productName = ThreemaFramework;
 			productReference = 0A677B821C6250C90019B361 /* ThreemaFramework.framework */;
@@ -4277,6 +4300,7 @@
 				242083BA2CBCDCAA0079D9B8 /* ThreemaMacros */,
 				F2A87DF72E4B68B800646386 /* FLAnimatedImage */,
 				2DA017A12EAA30E8008EAB3C /* FileUtility */,
+				08F9DE172F62C42000E4164B /* libPhoneNumber */,
 			);
 			productName = ThreemaShareExtension;
 			productReference = 0A7DF95F1C9FDD9B002D4DC3 /* Threema Work ShareExtension.appex */;
@@ -4308,6 +4332,7 @@
 				242083B82CBCDCA40079D9B8 /* ThreemaMacros */,
 				F2A87DF52E4B68B200646386 /* FLAnimatedImage */,
 				2DA0179F2EAA30DF008EAB3C /* FileUtility */,
+				08F9DE152F62C40E00E4164B /* libPhoneNumber */,
 			);
 			productName = ThreemaShareExtension;
 			productReference = 0AE435501C636AB500E1ECC8 /* Threema ShareExtension.appex */;
@@ -4414,6 +4439,7 @@
 				7EC0229D2B890A3D005024AE /* TrustKit */,
 				242083CC2CBCDCED0079D9B8 /* ThreemaMacros */,
 				F2A87DFF2E4B69EC00646386 /* FLAnimatedImage */,
+				082966462F63122300A57ABE /* libPhoneNumber */,
 			);
 			productName = ThreemaUITests;
 			productReference = 24489951289A46680067CE28 /* ThreemaUITests.xctest */;
@@ -4445,6 +4471,7 @@
 				242083C02CBCDCBE0079D9B8 /* ThreemaMacros */,
 				F2A87DFD2E4B68CE00646386 /* FLAnimatedImage */,
 				2DA017A72EAA3105008EAB3C /* FileUtility */,
+				08F9DE1D2F62C43700E4164B /* libPhoneNumber */,
 			);
 			productName = ThreemaShareExtension;
 			productReference = 2D08983524C98984006A70E1 /* Threema Blue ShareExtension.appex */;
@@ -4531,6 +4558,7 @@
 				242083B62CBCDC9D0079D9B8 /* ThreemaMacros */,
 				F2A87DF32E4B68AA00646386 /* FLAnimatedImage */,
 				681766F72E687EA50083D372 /* FileUtility */,
+				08F9DE292F62C46700E4164B /* libPhoneNumber */,
 			);
 			productName = ThreemaNotificationExtension;
 			productReference = 2DD445A52511F78F008EC521 /* Threema Blue NotificationExtension.appex */;
@@ -4563,6 +4591,7 @@
 				242083AE2CBCDC820079D9B8 /* ThreemaMacros */,
 				F2A87DEB2E4B685D00646386 /* FLAnimatedImage */,
 				681766ED2E687E880083D372 /* FileUtility */,
+				08F9DE1F2F62C44800E4164B /* libPhoneNumber */,
 			);
 			productName = ThreemaNotificationExtension;
 			productReference = 2DEC550E250A56E100B9826D /* Threema NotificationExtension.appex */;
@@ -4595,6 +4624,7 @@
 				242083B42CBCDC970079D9B8 /* ThreemaMacros */,
 				F2850D542E4B59D100DC9C18 /* FLAnimatedImage */,
 				681766F52E687EA00083D372 /* FileUtility */,
+				08F9DE272F62C46000E4164B /* libPhoneNumber */,
 			);
 			productName = ThreemaNotificationExtension;
 			productReference = 2DEC5529250A5F6F00B9826D /* Threema Green NotificationExtension.appex */;
@@ -4682,6 +4712,7 @@
 				242083B02CBCDC890079D9B8 /* ThreemaMacros */,
 				F2A87DED2E4B687600646386 /* FLAnimatedImage */,
 				681766EF2E687E8E0083D372 /* FileUtility */,
+				08F9DE212F62C44F00E4164B /* libPhoneNumber */,
 			);
 			productName = ThreemaNotificationExtension;
 			productReference = 2DEF20012511EDE9001CC54F /* Threema Work NotificationExtension.appex */;
@@ -4713,6 +4744,7 @@
 				242083BE2CBCDCB80079D9B8 /* ThreemaMacros */,
 				F2850D562E4B59DD00DC9C18 /* FLAnimatedImage */,
 				2DA017A52EAA30FC008EAB3C /* FileUtility */,
+				08F9DE132F62C3F100E4164B /* libPhoneNumber */,
 			);
 			productName = ThreemaShareExtension;
 			productReference = 2DF99C5524C970CC003AAB74 /* Threema Green ShareExtension.appex */;
@@ -4798,6 +4830,7 @@
 				242083BC2CBCDCB10079D9B8 /* ThreemaMacros */,
 				F2A87DF92E4B68BF00646386 /* FLAnimatedImage */,
 				2D0B4A722EA907C500ACBBF4 /* FileUtility */,
+				08F9DE192F62C42600E4164B /* libPhoneNumber */,
 			);
 			productName = ThreemaShareExtension;
 			productReference = 4D088BAE255C1501002F3129 /* Threema OnPrem ShareExtension.appex */;
@@ -4830,6 +4863,7 @@
 				242083B22CBCDC900079D9B8 /* ThreemaMacros */,
 				F2A87DEF2E4B687D00646386 /* FLAnimatedImage */,
 				681766F12E687E950083D372 /* FileUtility */,
+				08F9DE232F62C45500E4164B /* libPhoneNumber */,
 			);
 			productName = ThreemaNotificationExtension;
 			productReference = 4D088C71255C1680002F3129 /* Threema OnPrem NotificationExtension.appex */;
@@ -5098,6 +5132,7 @@
 				F2EAFF582D6CCA2400DFFD48 /* ThreemaMacros */,
 				F2A87DF12E4B688400646386 /* FLAnimatedImage */,
 				681766F32E687E9A0083D372 /* FileUtility */,
+				08F9DE252F62C45B00E4164B /* libPhoneNumber */,
 			);
 			productName = ThreemaNotificationExtension;
 			productReference = F2EAFF702D6CCA2400DFFD48 /* Custom OnPrem NotificationExtension.appex */;
@@ -5129,6 +5164,7 @@
 				F2EAFF842D6CCA3700DFFD48 /* ThreemaMacros */,
 				F2A87DFB2E4B68C600646386 /* FLAnimatedImage */,
 				2DA017A32EAA30F4008EAB3C /* FileUtility */,
+				08F9DE1B2F62C42F00E4164B /* libPhoneNumber */,
 			);
 			productName = ThreemaShareExtension;
 			productReference = F2EAFFA32D6CCA3700DFFD48 /* Custom OnPrem ShareExtension.appex */;
@@ -5354,6 +5390,7 @@
 				F2A4C91B2E4B57D50062B883 /* XCRemoteSwiftPackageReference "FLAnimatedImage" */,
 				F25031B32E4CADEF00C93B17 /* XCRemoteSwiftPackageReference "chunked-dc-swift" */,
 				245565C82E94DB1600B1E0BC /* XCRemoteSwiftPackageReference "swift-collections" */,
+				08F9BAD82F62AE8100E4164B /* XCRemoteSwiftPackageReference "libPhoneNumber-iOS" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 4DD01F6914C1CCA900EF7690 /* Products */;
@@ -5648,7 +5685,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "if [ -z ${CI+x} ]; then\n    \"${SRCROOT}/scripts/format.sh\" \"$SRCROOT\"\nfi\n\n";
+			shellScript = "if ! [ -z ${CI+x} ]; then\n    return 0 2>/dev/null || exit 0\nfi\n\nexport PATH=\"$HOME/.local/bin:$PATH\"\n\nif ! command -v mise &> /dev/null; then\n    echo \"warning: mise not found — skipping SwiftFormat\"\n    exit 0\nfi\n\nmise exec -- swiftformat $SRCROOT \\\n    --config \"$SRCROOT/.swiftformat\" \\\n    --swift-version $(cat $SRCROOT/.swift-version)\n";
 		};
 		2412D2BA2DA639EE008823F5 /* SwiftFormat */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -5666,7 +5703,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "if [ -z ${CI+x} ]; then\n    \"${SRCROOT}/scripts/format.sh\" \"$SRCROOT\"\nfi\n\n";
+			shellScript = "if ! [ -z ${CI+x} ]; then\n    return 0 2>/dev/null || exit 0\nfi\n\nexport PATH=\"$HOME/.local/bin:$PATH\"\n\nif ! command -v mise &> /dev/null; then\n    echo \"warning: mise not found — skipping SwiftFormat\"\n    exit 0\nfi\n\nmise exec -- swiftformat $SRCROOT \\\n    --config \"$SRCROOT/.swiftformat\" \\\n    --swift-version $(cat $SRCROOT/.swift-version)\n";
 		};
 		2412D2DC2DA63A6A008823F5 /* SwiftFormat */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -5684,7 +5721,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "if [ -z ${CI+x} ]; then\n    \"${SRCROOT}/scripts/format.sh\" \"$SRCROOT\"\nfi\n\n";
+			shellScript = "if ! [ -z ${CI+x} ]; then\n    return 0 2>/dev/null || exit 0\nfi\n\nexport PATH=\"$HOME/.local/bin:$PATH\"\n\nif ! command -v mise &> /dev/null; then\n    echo \"warning: mise not found — skipping SwiftFormat\"\n    exit 0\nfi\n\nmise exec -- swiftformat $SRCROOT \\\n    --config \"$SRCROOT/.swiftformat\" \\\n    --swift-version $(cat $SRCROOT/.swift-version)\n";
 		};
 		24B8F3462DA68F5D000FDB71 /* SwiftFormat */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -5702,7 +5739,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "if [ -z ${CI+x} ]; then\n    \"${SRCROOT}/scripts/format.sh\" \"$SRCROOT\"\nfi\n\n";
+			shellScript = "if ! [ -z ${CI+x} ]; then\n    return 0 2>/dev/null || exit 0\nfi\n\nexport PATH=\"$HOME/.local/bin:$PATH\"\n\nif ! command -v mise &> /dev/null; then\n    echo \"warning: mise not found — skipping SwiftFormat\"\n    exit 0\nfi\n\nmise exec -- swiftformat $SRCROOT \\\n    --config \"$SRCROOT/.swiftformat\" \\\n    --swift-version $(cat $SRCROOT/.swift-version)\n";
 		};
 		68C60BCF2F30EE9C008EBA75 /* Configure Scene Delegate Script */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -5740,7 +5777,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "if [ -z ${CI+x} ]; then\n    \"${SRCROOT}/scripts/format.sh\" \"$SRCROOT\"\nfi\n\n";
+			shellScript = "if ! [ -z ${CI+x} ]; then\n    return 0 2>/dev/null || exit 0\nfi\n\nexport PATH=\"$HOME/.local/bin:$PATH\"\n\nif ! command -v mise &> /dev/null; then\n    echo \"warning: mise not found — skipping SwiftFormat\"\n    exit 0\nfi\n\nmise exec -- swiftformat $SRCROOT \\\n    --config \"$SRCROOT/.swiftformat\" \\\n    --swift-version $(cat $SRCROOT/.swift-version)\n";
 		};
 		E1465DBB27285E91004F3103 /* SwiftFormat */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -5758,7 +5795,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "if [ -z ${CI+x} ]; then\n    \"${SRCROOT}/scripts/format.sh\" \"$SRCROOT\"\nfi\n\n";
+			shellScript = "if ! [ -z ${CI+x} ]; then\n    return 0 2>/dev/null || exit 0\nfi\n\nexport PATH=\"$HOME/.local/bin:$PATH\"\n\nif ! command -v mise &> /dev/null; then\n    echo \"warning: mise not found — skipping SwiftFormat\"\n    exit 0\nfi\n\nmise exec -- swiftformat $SRCROOT \\\n    --config \"$SRCROOT/.swiftformat\" \\\n    --swift-version $(cat $SRCROOT/.swift-version)\n";
 		};
 		E1C25EFA2731421E00DE59EA /* SwiftFormat */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -5776,7 +5813,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "if [ -z ${CI+x} ]; then\n    \"${SRCROOT}/scripts/format.sh\" \"$SRCROOT\"\nfi\n\n";
+			shellScript = "if ! [ -z ${CI+x} ]; then\n    return 0 2>/dev/null || exit 0\nfi\n\nexport PATH=\"$HOME/.local/bin:$PATH\"\n\nif ! command -v mise &> /dev/null; then\n    echo \"warning: mise not found — skipping SwiftFormat\"\n    exit 0\nfi\n\nmise exec -- swiftformat $SRCROOT \\\n    --config \"$SRCROOT/.swiftformat\" \\\n    --swift-version $(cat $SRCROOT/.swift-version)\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -6555,6 +6592,7 @@
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GENERATE_INFOPLIST_FILE = NO;
+				HEADER_SEARCH_PATHS = "";
 				INFOPLIST_FILE = ThreemaFramework/SupportingFiles/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -6634,6 +6672,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				GENERATE_INFOPLIST_FILE = NO;
+				HEADER_SEARCH_PATHS = "";
 				INFOPLIST_FILE = ThreemaFramework/SupportingFiles/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -6714,6 +6753,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				GENERATE_INFOPLIST_FILE = NO;
+				HEADER_SEARCH_PATHS = "";
 				INFOPLIST_FILE = ThreemaFramework/SupportingFiles/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -7093,11 +7133,7 @@
 					"CONFIGURATION_$(CONFIGURATION)",
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				HEADER_SEARCH_PATHS = (
-					Vendor,
-					Vendor/QRCodeEncoder/QRCodeEncoderObjectiveCAtGithub,
-					Vendor/libphonenumber/Classes,
-				);
+				HEADER_SEARCH_PATHS = Vendor;
 				INFOPLIST_FILE = "Threema/SupportingFiles/ThreemaWork/ThreemaWork-Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -7151,11 +7187,7 @@
 					"CONFIGURATION_$(CONFIGURATION)",
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				HEADER_SEARCH_PATHS = (
-					Vendor,
-					Vendor/QRCodeEncoder/QRCodeEncoderObjectiveCAtGithub,
-					Vendor/libphonenumber/Classes,
-				);
+				HEADER_SEARCH_PATHS = Vendor;
 				INFOPLIST_FILE = "Threema/SupportingFiles/ThreemaWork/ThreemaWork-Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -7210,11 +7242,7 @@
 					"CONFIGURATION_$(CONFIGURATION)",
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				HEADER_SEARCH_PATHS = (
-					Vendor,
-					Vendor/QRCodeEncoder/QRCodeEncoderObjectiveCAtGithub,
-					Vendor/libphonenumber/Classes,
-				);
+				HEADER_SEARCH_PATHS = Vendor;
 				INFOPLIST_FILE = "Threema/SupportingFiles/ThreemaWork/ThreemaWork-Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -8459,11 +8487,7 @@
 					"CONFIGURATION_$(CONFIGURATION)",
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				HEADER_SEARCH_PATHS = (
-					Vendor,
-					Vendor/QRCodeEncoder/QRCodeEncoderObjectiveCAtGithub,
-					Vendor/libphonenumber/Classes,
-				);
+				HEADER_SEARCH_PATHS = Vendor;
 				INFOPLIST_FILE = "Threema/SupportingFiles/ThreemaBlue/ThreemaBlue-Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -8512,11 +8536,7 @@
 					"CONFIGURATION_$(CONFIGURATION)",
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				HEADER_SEARCH_PATHS = (
-					Vendor,
-					Vendor/QRCodeEncoder/QRCodeEncoderObjectiveCAtGithub,
-					Vendor/libphonenumber/Classes,
-				);
+				HEADER_SEARCH_PATHS = Vendor;
 				INFOPLIST_FILE = "Threema/SupportingFiles/ThreemaBlue/ThreemaBlue-Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -8566,11 +8586,7 @@
 					"CONFIGURATION_$(CONFIGURATION)",
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				HEADER_SEARCH_PATHS = (
-					Vendor,
-					Vendor/QRCodeEncoder/QRCodeEncoderObjectiveCAtGithub,
-					Vendor/libphonenumber/Classes,
-				);
+				HEADER_SEARCH_PATHS = Vendor;
 				INFOPLIST_FILE = "Threema/SupportingFiles/ThreemaBlue/ThreemaBlue-Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -9247,11 +9263,7 @@
 					"CONFIGURATION_$(CONFIGURATION)",
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				HEADER_SEARCH_PATHS = (
-					Vendor,
-					Vendor/QRCodeEncoder/QRCodeEncoderObjectiveCAtGithub,
-					Vendor/libphonenumber/Classes,
-				);
+				HEADER_SEARCH_PATHS = Vendor;
 				INFOPLIST_FILE = "Threema/SupportingFiles/ThreemaGreen/ThreemaGreen-Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -9309,11 +9321,7 @@
 					"CONFIGURATION_$(CONFIGURATION)",
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				HEADER_SEARCH_PATHS = (
-					Vendor,
-					Vendor/QRCodeEncoder/QRCodeEncoderObjectiveCAtGithub,
-					Vendor/libphonenumber/Classes,
-				);
+				HEADER_SEARCH_PATHS = Vendor;
 				INFOPLIST_FILE = "Threema/SupportingFiles/ThreemaGreen/ThreemaGreen-Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -9373,11 +9381,7 @@
 					"CONFIGURATION_$(CONFIGURATION)",
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				HEADER_SEARCH_PATHS = (
-					Vendor,
-					Vendor/QRCodeEncoder/QRCodeEncoderObjectiveCAtGithub,
-					Vendor/libphonenumber/Classes,
-				);
+				HEADER_SEARCH_PATHS = Vendor;
 				INFOPLIST_FILE = "Threema/SupportingFiles/ThreemaGreen/ThreemaGreen-Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -9804,11 +9808,7 @@
 					"CONFIGURATION_$(CONFIGURATION)",
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				HEADER_SEARCH_PATHS = (
-					Vendor,
-					Vendor/QRCodeEncoder/QRCodeEncoderObjectiveCAtGithub,
-					Vendor/libphonenumber/Classes,
-				);
+				HEADER_SEARCH_PATHS = Vendor;
 				INFOPLIST_FILE = "Threema/SupportingFiles/ThreemaOnPrem/ThreemaOnPrem-Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -9862,11 +9862,7 @@
 					"CONFIGURATION_$(CONFIGURATION)",
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				HEADER_SEARCH_PATHS = (
-					Vendor,
-					Vendor/QRCodeEncoder/QRCodeEncoderObjectiveCAtGithub,
-					Vendor/libphonenumber/Classes,
-				);
+				HEADER_SEARCH_PATHS = Vendor;
 				INFOPLIST_FILE = "Threema/SupportingFiles/ThreemaOnPrem/ThreemaOnPrem-Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -9920,11 +9916,7 @@
 					"CONFIGURATION_$(CONFIGURATION)",
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				HEADER_SEARCH_PATHS = (
-					Vendor,
-					Vendor/QRCodeEncoder/QRCodeEncoderObjectiveCAtGithub,
-					Vendor/libphonenumber/Classes,
-				);
+				HEADER_SEARCH_PATHS = Vendor;
 				INFOPLIST_FILE = "Threema/SupportingFiles/ThreemaOnPrem/ThreemaOnPrem-Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -10502,7 +10494,7 @@
 				CODE_SIGN_IDENTITY = "Apple Distribution";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "Apple Distribution";
 				COPY_PHASE_STRIP = YES;
-				COREDATA_VERSION = 54;
+				COREDATA_VERSION = 55;
 				DEFINES_MODULE = NO;
 				DEPLOYMENT_POSTPROCESSING = YES;
 				ENABLE_BITCODE = NO;
@@ -10574,11 +10566,7 @@
 					"CONFIGURATION_$(CONFIGURATION)",
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				HEADER_SEARCH_PATHS = (
-					Vendor,
-					Vendor/QRCodeEncoder/QRCodeEncoderObjectiveCAtGithub,
-					Vendor/libphonenumber/Classes,
-				);
+				HEADER_SEARCH_PATHS = Vendor;
 				INFOPLIST_FILE = "Threema/SupportingFiles/Threema/Threema-Info.plist";
 				LD_QUOTE_LINKER_ARGUMENTS_FOR_COMPILER_DRIVER = YES;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -10640,7 +10628,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "Apple Development";
 				COPY_PHASE_STRIP = NO;
-				COREDATA_VERSION = 54;
+				COREDATA_VERSION = 55;
 				DEFINES_MODULE = NO;
 				ENABLE_BITCODE = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -10717,7 +10705,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = YES;
-				COREDATA_VERSION = 54;
+				COREDATA_VERSION = 55;
 				DEFINES_MODULE = NO;
 				DEPLOYMENT_POSTPROCESSING = YES;
 				ENABLE_BITCODE = NO;
@@ -10790,11 +10778,7 @@
 					"CONFIGURATION_$(CONFIGURATION)",
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				HEADER_SEARCH_PATHS = (
-					Vendor,
-					Vendor/QRCodeEncoder/QRCodeEncoderObjectiveCAtGithub,
-					Vendor/libphonenumber/Classes,
-				);
+				HEADER_SEARCH_PATHS = Vendor;
 				INFOPLIST_FILE = "Threema/SupportingFiles/Threema/Threema-Info.plist";
 				LD_QUOTE_LINKER_ARGUMENTS_FOR_COMPILER_DRIVER = YES;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -10854,11 +10838,7 @@
 					"CONFIGURATION_$(CONFIGURATION)",
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				HEADER_SEARCH_PATHS = (
-					Vendor,
-					Vendor/QRCodeEncoder/QRCodeEncoderObjectiveCAtGithub,
-					Vendor/libphonenumber/Classes,
-				);
+				HEADER_SEARCH_PATHS = Vendor;
 				INFOPLIST_FILE = "Threema/SupportingFiles/Threema/Threema-Info.plist";
 				LD_QUOTE_LINKER_ARGUMENTS_FOR_COMPILER_DRIVER = YES;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -11625,11 +11605,7 @@
 					"CONFIGURATION_$(CONFIGURATION)",
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				HEADER_SEARCH_PATHS = (
-					Vendor,
-					Vendor/QRCodeEncoder/QRCodeEncoderObjectiveCAtGithub,
-					Vendor/libphonenumber/Classes,
-				);
+				HEADER_SEARCH_PATHS = Vendor;
 				INFOPLIST_FILE = "Threema/SupportingFiles/CustomOnPrem/CustomOnPrem-Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -11684,11 +11660,7 @@
 					"CONFIGURATION_$(CONFIGURATION)",
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				HEADER_SEARCH_PATHS = (
-					Vendor,
-					Vendor/QRCodeEncoder/QRCodeEncoderObjectiveCAtGithub,
-					Vendor/libphonenumber/Classes,
-				);
+				HEADER_SEARCH_PATHS = Vendor;
 				INFOPLIST_FILE = "Threema/SupportingFiles/CustomOnPrem/CustomOnPrem-Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -11743,11 +11715,7 @@
 					"CONFIGURATION_$(CONFIGURATION)",
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				HEADER_SEARCH_PATHS = (
-					Vendor,
-					Vendor/QRCodeEncoder/QRCodeEncoderObjectiveCAtGithub,
-					Vendor/libphonenumber/Classes,
-				);
+				HEADER_SEARCH_PATHS = Vendor;
 				INFOPLIST_FILE = "Threema/SupportingFiles/CustomOnPrem/CustomOnPrem-Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -12451,6 +12419,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		08F9BAD82F62AE8100E4164B /* XCRemoteSwiftPackageReference "libPhoneNumber-iOS" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/iziz/libPhoneNumber-iOS";
+			requirement = {
+				kind = exactVersion;
+				version = 1.4.0;
+			};
+		};
 		245565C82E94DB1600B1E0BC /* XCRemoteSwiftPackageReference "swift-collections" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/apple/swift-collections";
@@ -12862,6 +12838,76 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		082966462F63122300A57ABE /* libPhoneNumber */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 08F9BAD82F62AE8100E4164B /* XCRemoteSwiftPackageReference "libPhoneNumber-iOS" */;
+			productName = libPhoneNumber;
+		};
+		08F9BAD92F62AE8100E4164B /* libPhoneNumber */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 08F9BAD82F62AE8100E4164B /* XCRemoteSwiftPackageReference "libPhoneNumber-iOS" */;
+			productName = libPhoneNumber;
+		};
+		08F9DE132F62C3F100E4164B /* libPhoneNumber */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 08F9BAD82F62AE8100E4164B /* XCRemoteSwiftPackageReference "libPhoneNumber-iOS" */;
+			productName = libPhoneNumber;
+		};
+		08F9DE152F62C40E00E4164B /* libPhoneNumber */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 08F9BAD82F62AE8100E4164B /* XCRemoteSwiftPackageReference "libPhoneNumber-iOS" */;
+			productName = libPhoneNumber;
+		};
+		08F9DE172F62C42000E4164B /* libPhoneNumber */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 08F9BAD82F62AE8100E4164B /* XCRemoteSwiftPackageReference "libPhoneNumber-iOS" */;
+			productName = libPhoneNumber;
+		};
+		08F9DE192F62C42600E4164B /* libPhoneNumber */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 08F9BAD82F62AE8100E4164B /* XCRemoteSwiftPackageReference "libPhoneNumber-iOS" */;
+			productName = libPhoneNumber;
+		};
+		08F9DE1B2F62C42F00E4164B /* libPhoneNumber */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 08F9BAD82F62AE8100E4164B /* XCRemoteSwiftPackageReference "libPhoneNumber-iOS" */;
+			productName = libPhoneNumber;
+		};
+		08F9DE1D2F62C43700E4164B /* libPhoneNumber */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 08F9BAD82F62AE8100E4164B /* XCRemoteSwiftPackageReference "libPhoneNumber-iOS" */;
+			productName = libPhoneNumber;
+		};
+		08F9DE1F2F62C44800E4164B /* libPhoneNumber */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 08F9BAD82F62AE8100E4164B /* XCRemoteSwiftPackageReference "libPhoneNumber-iOS" */;
+			productName = libPhoneNumber;
+		};
+		08F9DE212F62C44F00E4164B /* libPhoneNumber */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 08F9BAD82F62AE8100E4164B /* XCRemoteSwiftPackageReference "libPhoneNumber-iOS" */;
+			productName = libPhoneNumber;
+		};
+		08F9DE232F62C45500E4164B /* libPhoneNumber */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 08F9BAD82F62AE8100E4164B /* XCRemoteSwiftPackageReference "libPhoneNumber-iOS" */;
+			productName = libPhoneNumber;
+		};
+		08F9DE252F62C45B00E4164B /* libPhoneNumber */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 08F9BAD82F62AE8100E4164B /* XCRemoteSwiftPackageReference "libPhoneNumber-iOS" */;
+			productName = libPhoneNumber;
+		};
+		08F9DE272F62C46000E4164B /* libPhoneNumber */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 08F9BAD82F62AE8100E4164B /* XCRemoteSwiftPackageReference "libPhoneNumber-iOS" */;
+			productName = libPhoneNumber;
+		};
+		08F9DE292F62C46700E4164B /* libPhoneNumber */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 08F9BAD82F62AE8100E4164B /* XCRemoteSwiftPackageReference "libPhoneNumber-iOS" */;
+			productName = libPhoneNumber;
+		};
 		241C263C2DC25BF900363A8D /* FileUtility */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = FileUtility;

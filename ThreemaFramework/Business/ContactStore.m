@@ -1,6 +1,5 @@
 #import <AddressBook/AddressBook.h>
 #import <Contacts/Contacts.h>
-#import "PhoneNumberNormalizer.h"
 #import "ContactStore.h"
 #import "NSString+Hex.h"
 #import "ServerAPIConnector.h"
@@ -10,11 +9,10 @@
 #import "ThreemaFramework/ThreemaFramework-Swift.h"
 #import "ThreemaError.h"
 #import "AppGroup.h"
-#import "WorkDataFetcher.h"
+
 #import "IdentityInfoFetcher.h"
 #import "CryptoUtils.h"
 #import "LicenseStore.h"
-#import "ThreemaFramework/ThreemaFramework-Swift.h"
 
 #define MIN_CHECK_INTERVAL 5*60
 
@@ -33,6 +31,7 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
     NSDate *lastMaxModificationDate;
     NSDate *lastFullSyncDate;
     NSTimer *checkStatusTimer;
+
     id<UserSettingsProtocol> userSettings;
     EntityManager *entityManager;
     // Workaround to prevent too many active synchronizations at the same time (IOS-4791)
@@ -118,7 +117,7 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
     /* check in local DB first */
     ContactEntity *contact = [entityManager.entityFetcher contactEntityFor:identity];
     if (contact) {
-        [entityManager performSyncBlockAndSafe:^{
+        [entityManager performAndWaitSave:^{
             if (contact.isHidden) {
                 MediatorSyncableContacts *mediatorSyncableContacts = [[MediatorSyncableContacts alloc] init];
                 
@@ -157,11 +156,17 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
                     if (error == nil) {
                         /* force synchronisation */
                         [weakSelf synchronizeAddressBookForceFullSync:YES onCompletion:nil onError:nil];
-                        [WorkDataFetcher checkUpdateWorkDataForce:YES onCompletion:nil onError:nil];
-
-                        [[NSNotificationCenter defaultCenter] postNotificationName:kSafeBackupTrigger object:nil];
-
-                        onCompletion(contactObject, NO);
+                        WorkDataFetcherObjCBridge* fetcher = [[WorkDataFetcherObjCBridge alloc] initWithEntityManager:entityManager contactStore:self];
+                        [fetcher updateWorkDataWithForce:YES completionHandler:^(NSError * _Nullable error) {
+                            if (error == nil) {
+                                [[NSNotificationCenter defaultCenter] postNotificationName:kSafeBackupTrigger object:nil];
+                                onCompletion(contactObject, NO);
+                            }
+                            else {
+                                DDLogError(@"WorkDataFetch failed: %@", [error localizedDescription]);
+                                onCompletion(nil, NO);
+                            }
+                        }];
                     }
                     else {
                         DDLogError(@"Contact multi device sync failed: %@", [error localizedDescription]);
@@ -220,7 +225,7 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
     }
 
     /* Check if we already have a contact with this identity */
-    [entityManager performSyncBlockAndSafe:^{
+    [entityManager performAndWaitSave:^{
         __block BOOL added = NO;
 
         void (^linkingFinished)(ContactEntity *) = ^(ContactEntity *contact){
@@ -432,7 +437,7 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
 }
 
 - (void)resetImportedStatus {
-    [entityManager performSyncBlockAndSafe:^{
+    [entityManager performAndWaitSave:^{
         NSArray *contacts = [entityManager.entityFetcher contactEntities];
         for (ContactEntity *contact in contacts) {
             contact.contactImportStatus = ContactImportStatusInitial;
@@ -440,7 +445,17 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
     }];
 }
 
-- (void)addWorkContactAndUpdateFeatureMaskWithIdentity:(nonnull NSString *)identity publicKey:(nonnull NSData *)publicKey firstname:(nullable NSString *)firstname lastname:(nullable NSString *)lastname csi:(nullable NSString *)csi jobTitle:(nullable NSString *)jobTitle department:(nullable NSString *)department acquaintanceLevel:(ContactAcquaintanceLevel)acquaintanceLevel onCompletion:(nonnull void(^)(NSObject * _Nonnull))onCompletion onError:(nonnull void(^)(NSError * _Nonnull))onError {
+- (void)addWorkContactAndUpdateFeatureMaskWithIdentity:(nonnull NSString *)identity
+                                             publicKey:(nonnull NSData *)publicKey
+                                             firstname:(nullable NSString *)firstname
+                                              lastname:(nullable NSString *)lastname
+                                                   csi:(nullable NSString *)csi
+                                              jobTitle:(nullable NSString *)jobTitle
+                                            department:(nullable NSString *)department
+                                     acquaintanceLevel:(ContactAcquaintanceLevel)acquaintanceLevel
+                                workAvailabilityStatus:(nullable WorkAvailabilityStatus *) workAvailabilityStatus
+                                          onCompletion:(nonnull void(^)(NSObject * _Nonnull))onCompletion
+                                               onError:(nonnull void(^)(NSError * _Nonnull))onError {
 
     [FeatureMask getFeatureMaskFor:@[identity] completionHandler:^(NSDictionary<NSString *,NSNumber *> * _Nullable featureMasks, NSError * _Nullable error) {
         if (error) {
@@ -461,14 +476,25 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
 
             MediatorSyncableContacts *updateContactSync = [MediatorSyncableContacts new];
 
-            __block NSString *contactIdentity = [self addWorkContactWithIdentity:identity publicKey:publicKey firstname:firstname lastname:lastname csi:csi jobTitle:jobTitle department:department featureMask:featureMasks[identity] acquaintanceLevel:acquaintanceLevel entityManager:entityManager contactSyncer:updateContactSync];
+            __block NSString *contactIdentity = [self addWorkContactWithIdentity:identity
+                                                                       publicKey:publicKey
+                                                                       firstname:firstname
+                                                                        lastname:lastname
+                                                                             csi:csi
+                                                                        jobTitle:jobTitle
+                                                                      department:department
+                                                                     featureMask:featureMasks[identity]
+                                                               acquaintanceLevel:acquaintanceLevel
+                                                          workAvailabilityStatus: workAvailabilityStatus
+                                                                   entityManager:entityManager
+                                                                   contactSyncer:updateContactSync];
             if (contactIdentity) {
                 // Set sync action to update, because sync action create was used above before contact is stored in DB
                 [updateContactSync setSyncActionToUpdateWithIdentity:identity];
                 [updateContactSync syncAsSubTaskWithCompletionHandler:^(NSError * _Nullable error) {
                     if (error == nil) {
                         __block ContactEntity *contactEntity;
-                        [entityManager performBlockAndWait:^{
+                        [entityManager performAndWait:^{
                             contactEntity = [[entityManager entityFetcher] contactEntityFor:contactIdentity];
                         }];
                         onCompletion(contactEntity);
@@ -500,7 +526,18 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
  @param entityManagerObject: Used `EntityManager`
  @returns: Added/updated identity of contact or nil if public key of already existing contact differs to given public key
  */
-- (nullable NSString *)addWorkContactWithIdentity:(nonnull NSString *)identity publicKey:(nonnull NSData *)publicKey firstname:(NSString *)firstname lastname:(NSString *)lastname csi:(NSString *)csi jobTitle:(NSString *)jobTitle department:(NSString *)department featureMask:(nullable NSNumber *)featureMask acquaintanceLevel:(ContactAcquaintanceLevel)acquaintanceLevel entityManager:(NSObject * _Nonnull)entityManagerObject contactSyncer:(MediatorSyncableContacts*)mediatorSyncableContacts {
+- (nullable NSString *)addWorkContactWithIdentity:(nonnull NSString *)identity
+                                        publicKey:(nonnull NSData *)publicKey
+                                        firstname:(NSString *)firstname
+                                         lastname:(NSString *)lastname
+                                              csi:(NSString *)csi
+                                         jobTitle:(NSString *)jobTitle
+                                       department:(NSString *)department
+                                      featureMask:(nullable NSNumber *)featureMask
+                                acquaintanceLevel:(ContactAcquaintanceLevel)acquaintanceLevel
+                           workAvailabilityStatus:(nullable WorkAvailabilityStatus *)workAvailabilityStatus
+                                    entityManager:(NSObject * _Nonnull)entityManagerObject
+                                    contactSyncer:(MediatorSyncableContacts*)mediatorSyncableContacts {
     NSAssert([entityManagerObject isKindOfClass:[EntityManager class]], @"Parameter entityManagerObject should be type of EntityManager");
     EntityManager *em = (EntityManager *)entityManagerObject;
 
@@ -513,7 +550,7 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
     __block NSString *contactIdentity;
     __block BOOL added = NO;
 
-    [em performSyncBlockAndSafe:^{
+    [em performAndWaitSave:^{
         /* Check if we already have a contact with this identity */
         ContactEntity *contact;
 
@@ -592,7 +629,38 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
         if ((featureMask || contact.featureMask) && ![featureMask isEqual:contact.featureMask]) {
             [contact setFeatureMaskTo: featureMask.intValue];
         }
-
+        
+        BOOL needsUpdateWorkAvailabilityStatus = NO;
+        
+        if(workAvailabilityStatus) {
+            // Check if contact currently has status
+            if (contact.workAvailabilityStatus) {
+                // Only update if it differs from current
+                if ([self workAvailabilityStatusChangedWithCurrent:contact.workAvailabilityStatus new:workAvailabilityStatus]) {
+                    [em.entityDestroyer deleteWithWorkAvailabilityStatus:contact.workAvailabilityStatus];
+                    [em.entityCreator workAvailabilityStatusEntityWithValue:workAvailabilityStatus.categoryRawValue text:workAvailabilityStatus.text contact:contact];
+                    
+                    needsUpdateWorkAvailabilityStatus = YES;
+                }
+            }
+            // Contact has no status, we create a new one
+            else {
+                [em.entityCreator workAvailabilityStatusEntityWithValue:workAvailabilityStatus.categoryRawValue text:workAvailabilityStatus.text contact:contact];
+                
+                needsUpdateWorkAvailabilityStatus = YES;
+            }
+        }
+        // We did not receive a status, if contact has one, we remove it
+        else if (contact.workAvailabilityStatus) {
+            [em.entityDestroyer deleteWithWorkAvailabilityStatus:contact.workAvailabilityStatus];
+            
+            needsUpdateWorkAvailabilityStatus = YES;
+        }
+        
+        if (needsUpdateWorkAvailabilityStatus) {
+            [mediatorSyncableContacts updateWorkAvailabilityStatusWithIdentity:contact.identity status:workAvailabilityStatus];
+        }
+        
         contactIdentity = contact.identity;
     }];
 
@@ -703,7 +771,7 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
     }
     
     // Migration of deprecated and removed verification level kVerificationLevelWorkVerified (3) and kVerificationLevelWorkFullyVerified (4) to flag workContact
-    [entityManager performSyncBlockAndSafe:^{
+    [entityManager performAndWaitSave:^{
         for (ContactEntity *contact in allContacts) {
             if (contact.workContact == nil) {
                 if ([contact getVerificationLevelForMigration].intValue == 3) {
@@ -723,7 +791,7 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
     }];
     
     __block NSArray *linkedContacts;
-    [entityManager performBlockAndWait:^{
+    [entityManager performAndWait:^{
         linkedContacts = [allContacts filteredArrayUsingPredicate:[NSPredicate predicateWithBlock:^BOOL(id  _Nullable evaluatedObject, NSDictionary<NSString *,id> * _Nullable bindings) {
             ContactEntity *contact = (ContactEntity *)evaluatedObject;
             return contact.cnContactId != nil;
@@ -742,7 +810,7 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
             __block int updated = 0;
                 
             for (ContactEntity *contact in linkedContacts) {
-                [entityManager performSyncBlockAndSafe:^{
+                [entityManager performAndWaitSave:^{
                     NSString *cnContactID = [contact.cnContactId copy];
                     if (cnContactID == nil) {
                         DDLogNotice(@"CNContactID of linked contact was nil.");
@@ -786,7 +854,7 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
  */
 - (void)updateContactWithIdentity:(NSString * _Nonnull)identity avatar:(NSData * _Nullable)avatar firstName:(NSString * _Nullable)firstName lastName:(NSString * _Nullable)lastName {
 
-    [entityManager performSyncBlockAndSafe:^{
+    [entityManager performAndWaitSave:^{
         ContactEntity *contact = [[entityManager entityFetcher] contactEntityFor:identity];
         if (contact) {
             MediatorSyncableContacts *mediatorSyncableContacts = [MediatorSyncableContacts new];
@@ -826,7 +894,7 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
     NSAssert([entityManagerObject isKindOfClass:[EntityManager class]], @"Parameter entityManagerObject should be type of EntityManager");
     EntityManager *em = (EntityManager *)entityManagerObject;
 
-    [em performBlockAndWait:^{
+    [em performAndWait:^{
         ContactEntity *contact = [[em entityFetcher] contactEntityFor:identity];
         if (contact) {
             if (!contact.isHidden) {
@@ -838,7 +906,7 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
                 }
 
                 // Mark contact as deleted
-                [em performSyncBlockAndSafe:^{
+                [em performAndWaitSave:^{
                     contact.isHidden = YES;
 
                 }];
@@ -875,7 +943,7 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
 
 - (void)linkContact:(ContactEntity*)contact toCnContactId:(NSString *)cnContactId contactSyncer:(MediatorSyncableContacts *)mediatorSyncableContacts forceImport:(BOOL)forceImport onCompletion:(void(^)(void))onCompletion {
     /* obtain first/last name from address book */
-    [entityManager performSyncBlockAndSafe:^{
+    [entityManager performAndWaitSave:^{
         contact.cnContactId = cnContactId;
         [self updateFromAddressBookWithContact:contact contactSyncer:mediatorSyncableContacts forceImport:forceImport onCompletion:onCompletion];
     }];
@@ -884,7 +952,7 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
 - (void)unlinkContact:(nonnull NSObject*)contactObject {
     __block MediatorSyncableContacts *mediatorSyncableContacts = [[MediatorSyncableContacts alloc] init];
 
-    [entityManager performSyncBlockAndSafe:^{
+    [entityManager performAndWaitSave:^{
         NSAssert([contactObject isKindOfClass:[ContactEntity class]], @"Parameter contactObject must be type of ContactEntity");
         ContactEntity *contact = (ContactEntity*)contactObject;
 
@@ -921,16 +989,22 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
  */
 - (void)fetchPublicKeyForIdentity:(NSString*)identity acquaintanceLevel:(ContactAcquaintanceLevel)acquaintanceLevel entityManager:(NSObject*)entityManagerObject ignoreBlockUnknown:(BOOL)ignoreBlockUnknown onCompletion:(void(^)(NSData *publicKey))onCompletion onError:(void(^)(NSError *error))onError {
 
+    // Don't store special contacts, return builtin public key
+    if ([PredefinedContactsObjC isSpecialContactWithIdentity:identity]) {
+        onCompletion([PredefinedContactsObjC publicKeyFor:identity]);
+        return;
+    }
+
     NSAssert([entityManagerObject isKindOfClass:[EntityManager class]], @"Parameter entityManagerObject should be type of EntityManager");
     EntityManager *em = (EntityManager *)entityManagerObject;
     BusinessInjector *businessInjector = [[BusinessInjector alloc] initWithEntityManager:em];
     GroupManager *groupManager = [businessInjector groupManagerObjC];
 
-    [em performBlock:^{
+    [em perform:^{
         // check in local DB first
         ContactEntity *contact = [em.entityFetcher contactEntityFor:identity];
         if (contact.publicKey) {
-            if (userSettings.blockUnknown && ![PredefinedContactsObjC ignoreBlockUnknownWithIdentity:identity] && ignoreBlockUnknown == false) {
+            if (userSettings.blockUnknown && ignoreBlockUnknown == false) {
                 if (contact.isHidden == false) {
                     onCompletion(contact.publicKey);
                     return;
@@ -957,7 +1031,7 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
                 [self fetchWorkPublicKeyForIdentity:identity acquaintanceLevel:acquaintanceLevel entityManager:em ignoreBlockUnknown:ignoreBlockUnknown onCompletion:onCompletion onError:onError];
             } else {
                 // Block message if user is not in our subscription
-                if (userSettings.blockUnknown && ![PredefinedContactsObjC ignoreBlockUnknownWithIdentity:identity] && ignoreBlockUnknown == false) {
+                if (userSettings.blockUnknown && ignoreBlockUnknown == false) {
                     DDLogVerbose(@"Block unknown contacts is on - discarding message");
                     onError([ThreemaError threemaError:@"Message received from unknown contact and block contacts is on" withCode:ThreemaProtocolErrorBlockUnknownContact]);
                 } else {
@@ -983,7 +1057,7 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
         // First, check in local DB again, as it may have already been saved in the meantime (in case of parallel requests)
         if ([em existingContactWith:identity]) {
             __block NSData *publicKey;
-            [em performBlockAndWait:^{
+            [em performAndWait:^{
                 publicKey = [em.entityFetcher contactEntityFor:identity].publicKey;
             }];
             
@@ -1009,6 +1083,8 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
                         NSString *csi = nil;
                         NSString *jobTitle = nil;
                         NSString *department = nil;
+                        WorkAvailabilityStatus *workAvailabilityStatus = nil;
+
                         if (![foundIdentity[@"first"] isEqual:[NSNull null]]) {
                             firstName = foundIdentity[@"first"];
                         }
@@ -1024,8 +1100,19 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
                         if (![foundIdentity[@"department"] isEqual:[NSNull null]]) {
                             department = foundIdentity[@"department"];
                         }
+                        if (![foundIdentity[@"availability"] isEqual:[NSNull null]]) {
+                            workAvailabilityStatus = [WorkAvailabilityStatus fromEncodedString:foundIdentity[@"availability"]];
+                        }
                                                 
-                        [self addWorkContactAndUpdateFeatureMaskWithIdentity:identity publicKey:publicKey firstname:firstName lastname:lastName csi:csi jobTitle:jobTitle department:department acquaintanceLevel:acquaintanceLevel onCompletion:^(NSObject * _Nonnull __unused contactObject) {
+                        [self addWorkContactAndUpdateFeatureMaskWithIdentity:identity
+                                                                   publicKey:publicKey
+                                                                   firstname:firstName
+                                                                    lastname:lastName csi:csi
+                                                                    jobTitle:jobTitle
+                                                                  department:department
+                                                           acquaintanceLevel:acquaintanceLevel
+                                                      workAvailabilityStatus:workAvailabilityStatus
+                                                                onCompletion:^(NSObject * _Nonnull __unused contactObject) {
                             dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
                                 onCompletion(publicKey);
                             });
@@ -1041,7 +1128,7 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
             }
             
             // Block message if user is not in our subscription
-            if (userSettings.blockUnknown && ![PredefinedContactsObjC ignoreBlockUnknownWithIdentity:identity] && ignoreBlockUnknown == false) {
+            if (userSettings.blockUnknown && ignoreBlockUnknown == false) {
                 DDLogVerbose(@"Block unknown contacts is on and contact not found in work list - discarding message");
                 dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
                     onError([ThreemaError threemaError:@"Message received from unknown contact and block contacts is on" withCode:ThreemaProtocolErrorBlockUnknownContact]);
@@ -1138,7 +1225,7 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
 - (void)upgradeContact:(nonnull NSObject*)contactObject toVerificationLevel:(int32_t)verificationLevel {
     MediatorSyncableContacts *mediatorSyncableContacts = [[MediatorSyncableContacts alloc] init];
 
-    [entityManager performSyncBlockAndSafe:^{
+    [entityManager performAndWaitSave:^{
         NSAssert([contactObject isKindOfClass:[ContactEntity class]], @"Parameter contactObject must be type of ContactEntity");
         ContactEntity *contact = (ContactEntity*)contactObject;
         
@@ -1180,7 +1267,7 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
 - (void)updateNickname:(nonnull NSString *)identity nickname:(NSString *)nickname {
     MediatorSyncableContacts *mediatorSyncableContacts = [[MediatorSyncableContacts alloc] init];
 
-    [entityManager performSyncBlockAndSafe:^{
+    [entityManager performAndWaitSave:^{
         ContactEntity *contact = [entityManager.entityFetcher contactEntityFor:identity];
 
         if (contact) {
@@ -1224,7 +1311,7 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
 
     __block ContactEntity *contact;
 
-    [entityManager performSyncBlockAndSafe:^{
+    [entityManager performAndWaitSave:^{
         contact = [entityManager.entityFetcher contactEntityFor:identity];
         if (contact) {
             ImageDataEntity *dbImage = [entityManager.entityCreator imageDataEntityWithData:imageData size:image.size message:nil];
@@ -1249,7 +1336,7 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
 - (void)deleteProfilePicture:(nullable NSString *)identity shouldReflect:(BOOL)shouldReflect {
     __block ContactEntity *contact;
 
-    [entityManager performSyncBlockAndSafe:^{
+    [entityManager performAndWaitSave:^{
         contact = [entityManager.entityFetcher contactEntityFor:identity];
         if (contact) {
             contact.contactImage = nil;
@@ -1270,7 +1357,7 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
 }
 
 - (void)removeProfilePictureFlagForAllContacts {
-    [entityManager performAsyncBlockAndSafe:^{
+    [entityManager performSave:^{
         NSArray *allContacts = [entityManager.entityFetcher contactEntities];
         
         if (allContacts != nil) {
@@ -1283,7 +1370,7 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
 }
 
 - (void)removeProfilePictureFlagForIdentity:(NSString *)identity {
-    [entityManager performSyncBlockAndSafe:^{
+    [entityManager performAndWaitSave:^{
         ContactEntity *contact = [entityManager.entityFetcher contactEntityFor:identity];
         if (contact) {
             contact.profilePictureSent = NO;
@@ -1435,33 +1522,25 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
 
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, (unsigned long)NULL), ^{
         MediatorSyncableContacts *mediatorSyncableContacts = [[MediatorSyncableContacts alloc] init];
+        
         [self updateStatusForAllContactsIgnoreInterval:ignoreMinimumInterval contactSyncer:mediatorSyncableContacts onCompletion:^{
-            if (fullServerSync && mediatorSyncableContacts) {
-                // Sync all contacts when server full sync was called
-                EntityManager *backgroundEntityManager = [self backgroundEntityManager];
-                [backgroundEntityManager performBlockAndWait:^{
-                    NSArray *allContacts = [backgroundEntityManager.entityFetcher contactEntities];
-                    for (ContactEntity *contact in allContacts) {
-                        [mediatorSyncableContacts updateAllWithIdentity:contact.identity added:NO];
+            dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, (unsigned long)NULL), ^{
+                [mediatorSyncableContacts syncObjcWithCompletionHandler:^(NSError * _Nullable error) {
+                    if (error == nil) {
+                        if (onCompletion != nil) {
+                            dispatch_async(dispatch_get_main_queue(), ^{
+                                onCompletion(NO);
+                            });
+                        }
+                    }
+                    else {
+                        DDLogError(@"[ContactSync] Contact multi device sync failed: %@", [error localizedDescription]);
+                        if (onError != nil) {
+                            onError(error);
+                        }
                     }
                 }];
-            }
-
-            [mediatorSyncableContacts syncObjcWithCompletionHandler:^(NSError * _Nullable error) {
-                if (error == nil) {
-                    if (onCompletion != nil) {
-                        dispatch_async(dispatch_get_main_queue(), ^{
-                            onCompletion(NO);
-                        });
-                    }
-                }
-                else {
-                    DDLogError(@"[ContactSync] Contact multi device sync failed: %@", [error localizedDescription]);
-                    if (onError != nil) {
-                        onError(error);
-                    }
-                }
-            }];
+            });
         } onError:nil]; // To keep the existing behavior we silently discard errors. // TODO: (IOS-4425) This should probably be changed
     });
 }
@@ -1478,12 +1557,12 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
 - (void)processAddressBookContacts:(NSArray*)contacts fullServerSync:(BOOL)fullServerSync ignoreMinimumInterval:(BOOL)ignoreMinimumInterval onCompletion:(void(^)(BOOL addressBookAccessGranted))onCompletion onError:(void(^)(NSError *error))onError {
     
     NSUserDefaults *defaults = [AppGroup userDefaults];
-    
+    PhoneNumberNormalizer *normalizer = [PhoneNumberNormalizer new];
+
     NSSet *emailLastCheck = [NSSet setWithArray:[defaults objectForKey:@"ContactsSyncLastEmailHashes"]];
     NSSet *mobileNoLastCheck = [NSSet setWithArray:[defaults objectForKey:@"ContactsSyncLastMobileNoHashes"]];
     
-    PhoneNumberNormalizer *normalizer = [PhoneNumberNormalizer sharedInstance];
-    NSString *countryCode = [PhoneNumberNormalizer userRegion];
+    NSString *countryCode = [normalizer userRegion];
     DDLogInfo(@"Current country code: %@", countryCode);
     
     NSMutableSet *emailHashesBase64 = [NSMutableSet set];
@@ -1525,7 +1604,7 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
             NSString *phone = [label.value stringValue];
             if (phone.length > 0) {
                 /* normalize phone number first */
-                NSString *mobileNoNormalized = [normalizer phoneNumberToE164:phone withDefaultRegion:countryCode prettyFormat:nil];
+                NSString *mobileNoNormalized = [normalizer e164FormatFrom:phone defaultRegion:countryCode];
                 if (mobileNoNormalized == nil)
                     continue;
                 NSString *mobileNoHashBase64 = [ContactStore hashMobileNoBase64:mobileNoNormalized];
@@ -1583,17 +1662,6 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
                 DDLogNotice(@"[ContactSync] Update status and featuremask for all contacts");
                 [self updateStatusForAllContactsIgnoreInterval:ignoreMinimumInterval contactSyncer:mediatorSyncableContacts onCompletion:^{
                     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, (unsigned long)NULL), ^{
-                        if (fullServerSync && ignoreMinimumInterval && mediatorSyncableContacts) {
-                            // Sync all contacts when server full sync was called
-                            EntityManager *backgroundEntityManager = [self backgroundEntityManager];
-                            [backgroundEntityManager performBlockAndWait:^{
-                                NSArray *allContacts = [backgroundEntityManager.entityFetcher contactEntities];
-                                for (ContactEntity *contact in allContacts) {
-                                    [mediatorSyncableContacts updateAllWithIdentity:contact.identity added:NO];
-                                }
-                            }];
-                        }
-                        
                         [mediatorSyncableContacts syncObjcWithCompletionHandler:^(NSError * _Nullable error) {
                             if (error == nil) {
                                 if (fullServerSync) {
@@ -1640,9 +1708,9 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
     
     if (mobileNo.length > 0) {
         /* normalize phone number first */
-        PhoneNumberNormalizer *normalizer = [PhoneNumberNormalizer sharedInstance];
-        NSString *countryCode = [PhoneNumberNormalizer userRegion];
-        NSString *mobileNoNormalized = [normalizer phoneNumberToE164:mobileNo withDefaultRegion:countryCode prettyFormat:nil];
+        PhoneNumberNormalizer *normalizer = [PhoneNumberNormalizer new];
+        NSString *countryCode = [normalizer userRegion];
+        NSString *mobileNoNormalized = [normalizer e164FormatFrom:mobileNo defaultRegion:countryCode];
         if (mobileNoNormalized != nil) {
             NSString *mobileNoHashBase64 = [ContactStore hashMobileNoBase64:mobileNoNormalized];
             
@@ -1677,7 +1745,7 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
 
 - (NSArray<NSString *> *)contactsWithFeatureMaskNil {
     __block NSArray<NSString *> *identities;
-    [entityManager performBlockAndWait:^{
+    [entityManager performAndWait:^{
         identities = [self identitiesForContacts:[entityManager.entityFetcher contactEntitiesWithFeatureMaskNil]];
     }];
     return identities;
@@ -1688,7 +1756,7 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
 }
 
 - (void)orderChanged:(NSNotification*)notification {
-    [entityManager performAsyncBlockAndSafe:^{
+    [entityManager performSave:^{
         /* update display name and sort index of all contacts */
         NSArray *allContacts = [entityManager.entityFetcher contactEntities];
         
@@ -1713,7 +1781,7 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
     NSMutableArray *identities = [[NSMutableArray alloc] init];
     
     EntityManager *backgroundEntityManager = [self backgroundEntityManager];
-    [backgroundEntityManager performBlockAndWait:^{
+    [backgroundEntityManager performAndWait:^{
         NSArray *contacts = [backgroundEntityManager.entityFetcher contactEntities];
         
         for (ContactEntity *contact in contacts) {
@@ -1828,7 +1896,7 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
     NSArray *identities = [self validIdentities];
     ServerAPIConnector *conn = [[ServerAPIConnector alloc] init];
     [conn checkStatusOfIdentities:identities onCompletion:^(NSArray *states, NSArray *types, NSArray *featureMasks, int checkInterval) {
-        [entityManager performSyncBlockAndSafe:^{
+        [entityManager performAndWaitSave:^{
             NSMutableOrderedSet *workIdentities = [NSMutableOrderedSet new];
             for (NSInteger i=0; i<[identities count]; i++) {
                 NSNumber *state = [states objectAtIndex: i];
@@ -1965,7 +2033,7 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
 - (void)resetCustomReadReceipts {
     MediatorSyncableContacts *mediatorSyncableContacts = [[MediatorSyncableContacts alloc] init];
 
-    [entityManager performAsyncBlockAndSafe:^{
+    [entityManager performSave:^{
         NSArray *contactsWithCustomReadReceipts = [entityManager.entityFetcher contactEntitiesWithCustomReadReceipt];
         
         if (contactsWithCustomReadReceipts != nil) {

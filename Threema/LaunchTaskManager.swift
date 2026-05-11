@@ -3,7 +3,7 @@ import Foundation
 
 /// Due to having asynchronicity setting up the business during setup, we have to postpone some work from various
 /// delegate methods called in `AppDelegate` to the point when the business is initialized.
-@objc final class LaunchTaskManager: NSObject {
+final class LaunchTaskManager: NSObject {
     
     // Note: Using a `Deque` is most likely overkill for this situation. According to benchmarks, it only is more
     // efficient than an Array the item count reaches approximately 32 elements.

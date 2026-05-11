@@ -64,8 +64,10 @@ struct NotificationSettingsView: View {
                 }
                 .disabled(disablePreviewToggle)
                 
-                let notificationTypes: [NotificationType] = AppLaunchManager.isRemoteSecretEnabled ? NotificationType
-                    .remoteSecretCases : NotificationType.allCases
+                let notificationTypes: [NotificationType] =
+                    RemoteSecretProvider.isRemoteSecretEnabled
+                        ? NotificationType.remoteSecretCases
+                        : NotificationType.allCases
                 
                 ForEach(notificationTypes, id: \.self) { notificationType in
                     NotificationTypeTitleView(

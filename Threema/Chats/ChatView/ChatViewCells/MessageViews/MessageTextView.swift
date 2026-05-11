@@ -444,7 +444,7 @@ extension MessageTextView: UITextViewDelegate {
                 }
             }
 
-            return nil
+            return defaultAction
 
         default:
             return nil

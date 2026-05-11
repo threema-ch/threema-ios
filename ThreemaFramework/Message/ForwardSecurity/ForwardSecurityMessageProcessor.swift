@@ -3,7 +3,7 @@ import Foundation
 import ThreemaEssentials
 import ThreemaProtocols
 
-@objc final class ForwardSecurityMessageProcessor: NSObject {
+final class ForwardSecurityMessageProcessor: NSObject {
     private let dhSessionStore: DHSessionStoreProtocol
     private let identityStore: MyIdentityStoreProtocol
     private let messageSender: MessageSenderProtocol

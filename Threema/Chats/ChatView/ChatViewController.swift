@@ -252,6 +252,13 @@ final class ChatViewController: UIViewController {
         action: #selector(showBallots)
     )
     
+    // Banner container that holds all chat banners
+    private lazy var bannerContainerView: ChatViewBannerContainerView = {
+        let container = ChatViewBannerContainerView()
+        container.translatesAutoresizingMaskIntoConstraints = false
+        return container
+    }()
+    
     private lazy var groupCallBannerView: GroupCallBannerView = {
         let bannerView = GroupCallBannerView(delegate: self)
         
@@ -259,6 +266,18 @@ final class ChatViewController: UIViewController {
         bannerView.translatesAutoresizingMaskIntoConstraints = false
         
         return bannerView
+    }()
+    
+    private lazy var workStatusBannerView: ChatViewWorkStatusBannerView? = {
+        guard ThreemaEnvironment.workAvailabilityStatusEnabled,
+              !conversation.isGroup,
+              let contactEntity = conversation.contact else {
+            return nil
+        }
+        
+        let banner = ChatViewWorkStatusBannerView(contact: Contact(contactEntity: contactEntity), bounds: view.bounds)
+        banner.translatesAutoresizingMaskIntoConstraints = false
+        return banner
     }()
     
     // MARK: Table view
@@ -458,13 +477,6 @@ final class ChatViewController: UIViewController {
     }
     
     private lazy var bottomComposeConstraint = view.keyboardLayoutGuide.topAnchor
-        .constraint(equalTo: chatBarCoordinator.chatBarContainerView.bottomAnchor)
-    
-    private lazy var topComposeConstraint = chatBarCoordinator.chatBarContainerView.topAnchor.constraint(
-        greaterThanOrEqualTo: tableView.topAnchor,
-        constant: ChatBarConfiguration.tableViewChatBarMinSpacing
-    )
-    
     private lazy var defaultScrollToBottomButtonConstraints: [NSLayoutConstraint] =
         if #available(iOS 26.0, *) {
             [
@@ -728,6 +740,10 @@ final class ChatViewController: UIViewController {
         
         let endTime = CACurrentMediaTime()
         DDLogVerbose("ChatViewController duration init to viewDidAppear \(endTime - initTime) s")
+        
+        if let workStatusBannerView {
+            workStatusBannerView.showTipIfNeeded(in: view)
+        }
     }
     
     override func viewWillDisappear(_ animated: Bool) {
@@ -936,7 +952,13 @@ final class ChatViewController: UIViewController {
         view.addSubview(tableView)
         view.addSubview(chatBarCoordinator.chatBarContainerView)
         view.addSubview(scrollToBottomButton)
-        view.addSubview(groupCallBannerView)
+        view.addSubview(bannerContainerView)
+        
+        // Add banners to container
+        bannerContainerView.addBanner(groupCallBannerView)
+        if let workStatusBannerView {
+            bannerContainerView.addBanner(workStatusBannerView)
+        }
 
         backgroundView.translatesAutoresizingMaskIntoConstraints = false
         tableView.translatesAutoresizingMaskIntoConstraints = false
@@ -957,24 +979,27 @@ final class ChatViewController: UIViewController {
             
             chatBarCoordinator.chatBarContainerView.leadingAnchor.constraint(equalTo: tableView.leadingAnchor),
             chatBarCoordinator.chatBarContainerView.trailingAnchor.constraint(equalTo: tableView.trailingAnchor),
-            bottomComposeConstraint,
+            chatBarCoordinator.chatBarContainerView.bottomAnchor.constraint(
+                equalTo: view.keyboardLayoutGuide.topAnchor
+            ),
             
-            view.safeAreaLayoutGuide.topAnchor.constraint(equalTo: groupCallBannerView.topAnchor, constant: -10),
+            view.safeAreaLayoutGuide.topAnchor.constraint(equalTo: bannerContainerView.topAnchor, constant: -10),
             view.safeAreaLayoutGuide.leadingAnchor.constraint(
-                equalTo: groupCallBannerView.leadingAnchor,
+                equalTo: bannerContainerView.leadingAnchor,
                 constant: -10
             ),
             view.safeAreaLayoutGuide.trailingAnchor.constraint(
-                equalTo: groupCallBannerView.trailingAnchor,
+                equalTo: bannerContainerView.trailingAnchor,
                 constant: 10
             ),
         ])
 
-        // We only add the top constraint in versions before iOS 26, due to the glass version falling apart when growing
-        // too high.
         if #unavailable(iOS 26.0) {
             NSLayoutConstraint.activate([
-                topComposeConstraint,
+                chatBarCoordinator.chatBarContainerView.topAnchor.constraint(
+                    greaterThanOrEqualTo: tableView.topAnchor,
+                    constant: ChatBarConfiguration.tableViewChatBarMinSpacing
+                ),
             ])
         }
         
@@ -1879,7 +1904,7 @@ extension ChatViewController {
             // `synchronousReconfiguration` may not run on the main thread
             unreadMessagesSnapshot.synchronousReconfiguration()
             
-            entityManager.performBlock {
+            entityManager.perform {
                 if let newestUnreadMessage = self.unreadMessagesSnapshot.unreadMessagesState?
                     .oldestConsecutiveUnreadMessage,
                     let message = self.entityManager.entityFetcher
@@ -2976,8 +3001,9 @@ extension ChatViewController: UIScrollViewDelegate {
             newScrollbarIndicatorInset.bottom = 0.0
         }
         
-        // Also (and always) tweak the top inset. (This also influences the sticky section header inset.)
-        newContentInset.top = ChatViewConfiguration.topInset
+        // Also (and always) tweak the top inset. This also influences the sticky section header inset, so we make sure
+        // the header is never below the banner view.
+        newContentInset.top = ChatViewConfiguration.topInset + bannerContainerView.frame.height
         
         guard !dataSource.initialSetupCompleted || tableView.contentInset != newContentInset else {
             DDLogVerbose("\(#function) Do not update content insets because they haven't changed")

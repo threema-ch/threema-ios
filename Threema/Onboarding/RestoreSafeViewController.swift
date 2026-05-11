@@ -8,11 +8,22 @@ import ThreemaFramework
 import ThreemaMacros
 import UIKit
 
+// MARK: - RestoreSafeViewControllerDelegate
+
 @objc protocol RestoreSafeViewControllerDelegate {
     func restoreSafeDone()
     func restoreSafeCancelled(showLocalDataInfo: Bool)
+
+    @objc optional func restoreSafeViewController(
+        _ viewController: RestoreSafeViewController,
+        didRequestRestoreWith identity: String,
+        password: String
+    )
 }
 
+// MARK: - RestoreSafeViewController
+
+/// OC: This is from storyboard and used in objc as well.
 final class RestoreSafeViewController: IDCreationPageViewController, UITextFieldDelegate {
     
     @IBOutlet var titleLabel: UILabel!
@@ -25,7 +36,11 @@ final class RestoreSafeViewController: IDCreationPageViewController, UITextField
 
     @objc weak var delegate: RestoreSafeViewControllerDelegate?
     
-    // Restore just ID from Threema Safe, in case there is any data on this device
+    private(set) lazy var restoreSafeManager = OnboardingRestoreSafeManager(
+        delegate: self
+    )
+    
+    /// Restore just ID from Threema Safe, in case there is any data on this device
     @objc var restoreIdentityOnly = false
     var restoreIdentity: String?
     var restoreSafePassword: String?
@@ -34,10 +49,15 @@ final class RestoreSafeViewController: IDCreationPageViewController, UITextField
     var restoreServerUsername: String?
     var restoreServerPassword: String?
     
-    private var activateSafeAnyway = false
-    
+    var activateSafeAnyway = false
+
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        /// With a transparent background, the button is only accessible when
+        /// the finger is positioned over the text
+        expertOptionsButton.backgroundColor = .black.withAlphaComponent(0.02)
+        cancelButton.backgroundColor = .black.withAlphaComponent(0.02)
 
         overrideUserInterfaceStyle = .dark
 
@@ -65,11 +85,11 @@ final class RestoreSafeViewController: IDCreationPageViewController, UITextField
         cancelButton.setTitle(#localize("cancel"), for: .normal)
         okButton.setTitle(#localize("restore"), for: .normal)
         okButton.accessibilityIdentifier = "RestoreSafeViewControllerRestoreButton"
-                
-        // check MDM for Threema Safe restore
-        let mdmSetup = MDMSetup()!
-        if TargetManager.isBusinessApp {
-            if !mdmSetup.isSafeBackupDisable() {
+        
+        /// check MDM for Threema Safe restore
+        let mdmSetup = restoreSafeManager.mdm.mdmSetup
+        if restoreSafeManager.flavorService.isBusinessApp {
+            if mdmSetup.existsMdmKey(MDM_KEY_SAFE_ENABLE), !mdmSetup.isSafeBackupDisable() {
                 activateSafeAnyway = true
             }
             
@@ -114,14 +134,14 @@ final class RestoreSafeViewController: IDCreationPageViewController, UITextField
                 }
             }
             else {
-                // add swipe right for cancel action
+                /// add swipe right for cancel action
                 let gestureRecognizer = UISwipeGestureRecognizer(target: self, action: #selector(swipeAction))
                 gestureRecognizer.numberOfTouchesRequired = 1
                 view.addGestureRecognizer(gestureRecognizer)
             }
         }
         else {
-            // add swipe right for cancel action
+            /// add swipe right for cancel action
             let gestureRecognizer = UISwipeGestureRecognizer(target: self, action: #selector(swipeAction))
             gestureRecognizer.numberOfTouchesRequired = 1
             view.addGestureRecognizer(gestureRecognizer)
@@ -245,7 +265,7 @@ extension RestoreSafeViewController {
     }
     
     func startRestore() {
-        // start restore in timer to give activity indicator time to start
+        /// start restore in timer to give activity indicator time to start
         view.isUserInteractionEnabled = false
         MBProgressHUD.showAdded(to: view, animated: true)
         
@@ -254,155 +274,43 @@ extension RestoreSafeViewController {
             return
         }
         
-        Task(priority: .userInitiated) {
-            // We keep a separate log file for safe restores
-            let logFile = LogManager.safeRestoreLogFile
-            LogManager.deleteLogFile(logFile)
-            LogManager.addFileLogger(logFile)
-            DDLogNotice("[ThreemaSafe Restore] Restore started")
-            
-            do {
-                // First, we download the safe backup and parse it
-                let safeBackupDataDownloader = SafeBackupDataDownloader()
-                let safeBackupData = try await safeBackupDataDownloader.getSafeBackupData(
-                    identity: enteredIdentity,
-                    safePassword: enteredPassword,
-                    serverUser: restoreServerUsername,
-                    serverPassword: restoreServerPassword,
-                    server: restoreServer
-                )
-                
-                DDLogNotice("[ThreemaSafe Restore] Preparing to initialize remote secret")
-                
-                // To be able to restore the backup, we first need to initialize remote secret. For this we need to
-                // extract some info from the backup already
-                
-                guard let clientKeyString = safeBackupData.user?.privatekey,
-                      let clientKey = Data(base64Encoded: clientKeyString) else {
-                    DDLogError("[ThreemaSafe Restore] Failed to extract and encode client key from backup")
-                    throw SafeError.RestoreError.invalidClientKey
-                }
-                
-                // Prepare identity store
-                DDLogNotice("[ThreemaSafe Restore] Restoring identity store with backup data")
-                let myIdentityStore = MyIdentityStore.shared()
-                do {
-                    // Fill in info from backup to identity store
-                    try await myIdentityStore.restoreFromBackup(
-                        identity: enteredIdentity,
-                        clientKey: clientKey
-                    )
-                    
-                    // Fetch server group and other stuff
-                    let serverAPIConnector = ServerAPIConnector()
-                    try await serverAPIConnector.update(myIdentityStore: myIdentityStore)
-                }
-                catch {
-                    DDLogError(
-                        "[ThreemaSafe Restore] Failed to restore identity store from backup with error: \(error)"
-                    )
-                    throw error
-                }
-
-                let setupApp = SetupApp(
-                    delegate: self,
-                    licenseStore: LicenseStore.shared(),
-                    myIdentityStore: MyIdentityStore.shared(),
-                    mdmSetup: MDMSetup(),
-                    hasPreexistingData: restoreIdentityOnly
-                )
-
-                var remoteSecretAndKeychain: RemoteSecretAndKeychainObjC
-
-                do {
-                    guard let rs = try await setupApp.setupRemoteSecretAndKeychain() else {
-                        throw SafeError.restoreError(.remoteSecretError)
-                    }
-                    
-                    remoteSecretAndKeychain = rs
-                }
-                catch {
-                    DDLogError(
-                        "[ThreemaSafe Restore] Failed to setup remote secret with error: \(error)"
-                    )
-                    throw SafeError.restoreError(.remoteSecretError)
-                }
-
-                try await SetupApp
-                    .runDatabaseMigrationIfNeeded(remoteSecretAndKeychain: remoteSecretAndKeychain)
-                try await SetupApp.runAppMigrationIsNeeded()
-
-                // Use business to restore other Threema Safe data
-                let business = try AppLaunchManager.shared.business(forBackgroundProcess: false)
-
-                DDLogNotice("[ThreemaSafe Restore] Beginning ThreemaSafe restore")
-
-                let safeConfigManager = SafeConfigManager()
-                let safeStore = SafeStore(
-                    safeConfigManager: safeConfigManager,
-                    serverApiConnector: ServerAPIConnector(),
-                    groupManager: business.groupManager,
-                    myIdentityStore: myIdentityStore
-                )
-                
-                let safeManager = SafeManager(
-                    safeConfigManager: safeConfigManager,
-                    safeStore: safeStore,
-                    safeAPIService: SafeApiService()
-                )
-                
-                try await safeManager.startRestore(
-                    safeBackupData: safeBackupData,
-                    onlyIdentity: restoreIdentityOnly
-                )
-                
-                // Immediately activate Safe
-                // In general we don't active Safe if we restore with existing data, because this would immediately
-                // override the existing Safe backup. (Otherwise this might lead to unexpected behavior, if for some
-                // reasons, the data backup actually missed some/all of the user data as experienced by the developer
-                // before)
-                if !restoreIdentityOnly || activateSafeAnyway {
-                    DDLogNotice("[ThreemaSafe Restore] Activating ThreemaSafe")
-                    try await safeManager.activate(
-                        identity: enteredIdentity,
-                        safePassword: enteredPassword,
-                        customServer: restoreCustomServer,
-                        serverUser: restoreServerUsername,
-                        serverPassword: restoreServerPassword,
-                        server: restoreServer,
-                        maxBackupBytes: nil,
-                        retentionDays: nil
-                    )
-                }
-                else {
-                    // Show Threema Safe-Intro
-                    business.userSettings.safeIntroShown = false
-                    // Trigger backup
-                    NotificationCenter.default.post(
-                        name: NSNotification.Name(kSafeBackupTrigger),
-                        object: nil
-                    )
-                }
-                
-                MBProgressHUD.hide(for: self.view, animated: true)
-                self.view.isUserInteractionEnabled = true
-                
-                DDLogNotice("[ThreemaSafe Restore] Restoring ThreemaSafe done")
-                
-                LogManager.removeFileLogger(logFile)
-                delegate?.restoreSafeDone()
-            }
-            catch {
-                DDLogError("[ThreemaSafe Restore] Error: \(error)")
-                showAlert(for: error)
-            }
-        }
+        #if SCENE_DELEGATE_ROOT_COORDINATOR_DEVELOPMENT
+            delegate?.restoreSafeViewController?(
+                self,
+                didRequestRestoreWith: enteredIdentity,
+                password: enteredPassword
+            )
+            return
+        #endif
+        
+        let logFile = LogManager.safeRestoreLogFile
+        LogManager.deleteLogFile(logFile)
+        LogManager.addFileLogger(logFile)
+        
+        restoreSafeManager.startRestore(
+            with: OnboardingRestoreSafeInformation(
+                identity: enteredIdentity,
+                password: enteredPassword,
+                server: OnboardingRestoreSafeInformation.Server(
+                    user: restoreServerUsername,
+                    password: restoreSafePassword,
+                    url: restoreServer
+                ),
+                customServer: OnboardingRestoreSafeInformation.Server(
+                    user: restoreServerUsername,
+                    password: restoreServerPassword,
+                    url: restoreCustomServer
+                ),
+                restoreIdentityOnly: restoreIdentityOnly,
+                activateSafeAnyway: activateSafeAnyway
+            )
+        )
     }
     
     // MARK: - Private helper
     
     @MainActor
-    private func showAlert(for error: Error) {
+    func showAlert(for error: Error) {
         let title = #localize("safe_restore_failed")
         let message: String =
             if let safeError = error as? SafeError {
@@ -411,7 +319,7 @@ extension RestoreSafeViewController {
             else {
                 error.localizedDescription
             }
-        DDLogError("[ThremaSafe Restore] Error restoring safe: [\(message)]")
+        DDLogError("[ThreemaSafe Restore] Error restoring safe: [\(message)]")
         let alert = IntroQuestionViewHelper(parent: self) { [weak self] _, _ in
             if let safeError = error as? SafeError.RestoreError {
                 self?.delegate?.restoreSafeCancelled(showLocalDataInfo: false)
@@ -441,5 +349,22 @@ extension RestoreSafeViewController: SetupAppDelegate {
     
     func mismatchCancelled() {
         delegate?.restoreSafeCancelled(showLocalDataInfo: false)
+    }
+}
+
+// MARK: - OnboardingRestoreSafeManagerDelegate
+
+extension RestoreSafeViewController: OnboardingRestoreSafeManagerDelegate {
+    func didCompleteRestoreSafe() {
+        MBProgressHUD.hide(for: view, animated: true)
+        view.isUserInteractionEnabled = true
+        
+        delegate?.restoreSafeDone()
+        
+        LogManager.removeFileLogger(LogManager.safeRestoreLogFile)
+    }
+    
+    func didFail(with error: any Error) {
+        showAlert(for: error)
     }
 }

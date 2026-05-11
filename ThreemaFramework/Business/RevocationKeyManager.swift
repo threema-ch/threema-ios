@@ -17,10 +17,8 @@ public final class RevocationKeyManager {
     // MARK: - Public func
 
     public func setPassword(_ password: String) {
-        guard let myIdentityStore = businessInjector.myIdentityStore as? MyIdentityStore else {
-            NotificationPresenterWrapper.shared.present(type: .revocationPasswordError)
-            return
-        }
+        let myIdentityStore = businessInjector.myIdentityStore
+        
         connector.setRevocationPassword(password, for: myIdentityStore) {
             myIdentityStore.revocationPasswordLastCheck = nil
             NotificationPresenterWrapper.shared.present(type: .revocationPasswordSuccess)
@@ -32,8 +30,9 @@ public final class RevocationKeyManager {
     }
     
     public func checkPasswordSetDate(completion: @escaping () -> Void) {
-        guard let myIdentityStore = businessInjector.myIdentityStore as? MyIdentityStore,
-              myIdentityStore.revocationPasswordLastCheck == nil else {
+        let myIdentityStore = businessInjector.myIdentityStore
+        
+        guard myIdentityStore.revocationPasswordLastCheck == nil else {
             return
         }
         

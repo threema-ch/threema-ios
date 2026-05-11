@@ -4,7 +4,7 @@ import Keychain
 import Security
 import ThreemaEssentials
 
-@objc final class DeviceCookieManager: NSObject {
+final class DeviceCookieManager: NSObject {
 
     private static let deviceCookieSize = 16
     private static let legacyUserDefaultsKey = "LastEphemeralKeyHashes"
@@ -17,7 +17,7 @@ import ThreemaEssentials
         // Remove legacy user defaults entry
         AppGroup.userDefaults().removeObject(forKey: DeviceCookieManager.legacyUserDefaultsKey)
 
-        let keychainManager = KeychainManager(remoteSecretManager: AppLaunchManager.remoteSecretManager)
+        let keychainManager = KeychainManager(remoteSecretManager: RemoteSecretProvider.remoteSecretManager)
 
         do {
             // Check if we already have a device cookie in the keychain

@@ -120,7 +120,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     if (profilePicture[@"ProfilePicture"] == nil) {
         if (toMember != nil) {
             // save to database
-            [entityManager performAsyncBlockAndSafe:^{
+            [entityManager performSave:^{
                 toMember.profilePictureSent = YES;
                 toMember.profilePictureUpload = [NSDate date];
             }];
@@ -140,7 +140,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         if (lastUpload && [lastUpload earlierDate:blobValidDate] == blobValidDate) {
             if (toMember != nil) {
                 // save to database
-                [entityManager performAsyncBlockAndSafe:^{
+                [entityManager performSave:^{
                     toMember.profilePictureSent = YES;
                     toMember.profilePictureUpload = [NSDate date];
                     NSData *blobID = profilePicture[@"BlobId"];
@@ -177,7 +177,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     
     if (toMember != nil) {
         // Reload CoreData object because of concurrency problem
-        [entityManager performBlock:^{
+        [entityManager perform:^{
             ContactEntity *member = (ContactEntity*)[[entityManager entityFetcher] managedObjectWith:toMember.objectID];
 
             /* send to the specified member only */
@@ -255,7 +255,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     [ActivityIndicatorProxy stopActivity];
     
     // save to database
-    [entityManager performAsyncBlockAndSafe:^{
+    [entityManager performSave:^{
         toMember.profilePictureSent = YES;
         toMember.profilePictureUpload = [NSDate date];
         toMember.profilePictureBlobID = [blobId[0] base64EncodedStringWithOptions:NSDataBase64EncodingEndLineWithLineFeed];

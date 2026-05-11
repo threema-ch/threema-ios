@@ -1443,12 +1443,9 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
         guard group.isOwnGroup else {
             throw GroupError.notCreator
         }
-
-        // Core Data concurrency problem, store group infos for reloading group
-        let groupID = group.groupID
-        let groupCreatorIdentity = group.groupCreatorIdentity
         
-        let task: TaskDefinitionSendGroupSetPhotoMessage = try await withCheckedThrowingContinuation { continuation in
+        // Only capture blob data inside the callback — no CoreData access.
+        let (blobID, encryptionKey): (Data, Data) = try await withCheckedThrowingContinuation { continuation in
             groupPhotoSender().start(
                 withImageData: imageData,
                 isNoteGroup: group.isNoteGroup
@@ -1457,26 +1454,20 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
                     continuation.resume(throwing: GroupError.blobIDOrKeyMissing)
                     return
                 }
-
-                guard let group = self.getGroup(groupID, creator: groupCreatorIdentity) else {
-                    continuation.resume(throwing: GroupError.groupNotFound)
-                    return
-                }
-
-                let task = TaskDefinitionSendGroupSetPhotoMessage(
-                    group: group,
-                    from: self.myIdentityStore.identity,
-                    to: toMembers,
-                    size: UInt32(imageData.count),
-                    blobID: blobID,
-                    encryptionKey: encryptionKey
-                )
-
-                continuation.resume(returning: task)
+                continuation.resume(returning: (blobID, encryptionKey))
             } onError: { _ in
                 continuation.resume(throwing: GroupError.photoUploadFailed)
             }
         }
+
+        let task = TaskDefinitionSendGroupSetPhotoMessage(
+            group: group,
+            from: myIdentityStore.identity,
+            to: toMembers,
+            size: UInt32(imageData.count),
+            blobID: blobID,
+            encryptionKey: encryptionKey
+        )
 
         try await add(task: task)
     }

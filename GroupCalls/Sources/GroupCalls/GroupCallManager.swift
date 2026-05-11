@@ -161,7 +161,14 @@ public final actor GroupCallManager {
         }
         
         isCurrentlyJoiningOrJoinedCall = true
-        
+
+        // We need to reset `currentlyJoiningOrJoinedCall` if no call was created, e.g. we throw or exit early.
+        defer {
+            if currentlyJoiningOrJoinedCall == nil {
+                isCurrentlyJoiningOrJoinedCall = false
+            }
+        }
+
         /// **Protocol Step: Create or Join (1.)**
         /// 1. Let intent be the user's intent, i.e. to either only join or create or join a group call.
         
@@ -288,8 +295,17 @@ extension GroupCallManager {
 }
 
 extension GroupCallManager {
-    
-    private func startPeriodicCheckIfNeeded() {
+
+    /// Cancel the periodic refresh task.
+    /// Call this when the app enters background to prevent stale in-flight peek requests
+    /// from causing incorrect call removal after iOS suspends and resumes the app.
+    public func cancelPeriodicRefresh() {
+        periodicCallCheckTask?.cancel()
+        periodicCallCheckTask = nil
+        DDLogNotice("[GroupCall] [PeriodicCleanup] Cancelled periodic refresh (app entering background)")
+    }
+
+    public func startPeriodicCheckIfNeeded() {
         guard periodicCallCheckTask == nil else {
             return
         }
@@ -298,6 +314,10 @@ extension GroupCallManager {
                 do {
                     try await runPeriodicRefresh()
                     try await Task.sleep(seconds: 10)
+                }
+                catch is CancellationError {
+                    DDLogNotice("[GroupCall] [PeriodicCleanup] Periodic refresh task cancelled")
+                    return
                 }
                 catch {
                     DDLogError("[GroupCall] [PeriodicCleanup] Cleanup failed. Removing periodicCallCheckTask. \(error)")

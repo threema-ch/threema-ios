@@ -2,7 +2,7 @@ import CocoaLumberjackSwift
 import ThreemaMacros
 import UIKit
 
-@objc final class SafeViewController: IDCreationPageViewController, IntroQuestionDelegate {
+final class SafeViewController: IDCreationPageViewController, IntroQuestionDelegate {
     
     @IBOutlet var titleLabel: UILabel!
     @IBOutlet var descriptionLabel: UILabel!

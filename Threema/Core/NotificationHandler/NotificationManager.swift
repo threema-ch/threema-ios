@@ -10,7 +10,7 @@ public protocol NotificationManagerProtocol {
     func updateUnreadMessagesCount(baseMessage: BaseMessageEntity?)
 }
 
-@objc final class NotificationManager: NSObject, NotificationManagerProtocol {
+final class NotificationManager: NSObject, NotificationManagerProtocol {
     
     @objc var firstPushHandled = false
     
@@ -367,7 +367,7 @@ extension NotificationManager {
         let dirtyObjectManager = PersistenceManager(
             appGroupID: AppGroup.groupID(),
             userDefaults: AppGroup.userDefaults(),
-            remoteSecretManager: AppLaunchManager.remoteSecretManager
+            remoteSecretManager: RemoteSecretProvider.remoteSecretManager
         ).dirtyObjectManager
         dirtyObjectManager.refreshDirtyObjects(reset: false)
 

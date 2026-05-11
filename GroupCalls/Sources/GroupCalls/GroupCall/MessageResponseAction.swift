@@ -9,7 +9,7 @@ enum MessageResponseAction {
     case sendAuth(PendingRemoteParticipant, Data)
     case handshakeCompleted(JoinedRemoteParticipant)
     
-    case participantToSFU(Groupcall_ParticipantToSfu.Envelope, JoinedRemoteParticipant, ParticipantStateChange)
+    case participantToSFU(GroupCall_ParticipantToSfu.Envelope, JoinedRemoteParticipant, ParticipantStateChange)
     case participantToParticipant(RemoteParticipant, Data)
     
     case muteStateChanged(JoinedRemoteParticipant, ParticipantStateChange)

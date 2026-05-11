@@ -3,7 +3,7 @@
 #![expect(clippy::print_stdout, reason = "Examples are allowed to print")]
 
 use clap::Parser;
-use data_encoding::HEXLOWER;
+use data_encoding::HEXLOWER_PERMISSIVE;
 use libthreema::{
     cli::{CommonConfig, CommonConfigOptions},
     common::ClientInfo,
@@ -27,9 +27,9 @@ async fn run_create_identity(
     http_client: reqwest::Client,
     context: CreateIdentityContext,
 ) -> anyhow::Result<CreateIdentityResult> {
-    let mut task = CreateIdentityTask::new();
+    let mut task = CreateIdentityTask::new(context);
     loop {
-        match task.poll(&context)? {
+        match task.poll()? {
             CreateIdentityLoop::Instruction(instruction) => {
                 let result = instruction.request.send(&http_client).await;
                 task.response(CreateIdentityResponse { result })?;
@@ -67,7 +67,10 @@ async fn main() -> anyhow::Result<()> {
     )
     .await?;
     println!("--threema-id {identity}");
-    println!("--client-key {}", HEXLOWER.encode(client_key.as_bytes()));
+    println!(
+        "--client-key {}",
+        HEXLOWER_PERMISSIVE.encode(client_key.as_bytes())
+    );
     println!("--csp-server-group {server_group}");
     Ok(())
 }

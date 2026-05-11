@@ -2,8 +2,15 @@ import CocoaLumberjackSwift
 import Foundation
 import PromiseKit
 import ThreemaEssentials
+import ThreemaProtocols
 
-extension ContactStore {
+public protocol WorkFetcherContactAdderProtocol {
+    func batchAddWorkContacts(batchAddContacts: [BatchAddWorkContact], lastFullSyncAt: UInt64?) async throws
+}
+
+// MARK: - ContactStore + WorkFetcherContactAdderProtocol
+
+extension ContactStore: WorkFetcherContactAdderProtocol {
 
     @objc func entityManager() -> EntityManager {
         persistenceManager().entityManager
@@ -17,14 +24,16 @@ extension ContactStore {
         PersistenceManager(
             appGroupID: AppGroup.groupID(),
             userDefaults: AppGroup.userDefaults(),
-            remoteSecretManager: AppLaunchManager.remoteSecretManager
+            remoteSecretManager: RemoteSecretProvider.remoteSecretManager
         )
     }
 
     /// Add or update given contacts as work contact and do MD sync.
     ///
-    /// - Parameter batchAddContacts: Array of contacts for adding as work contact
-    @objc func batchAddWorkContacts(batchAddContacts: [BatchAddWorkContact]) async throws {
+    /// - Parameters:
+    ///   - batchAddContacts: Array of contacts for adding as work contact
+    ///   - lastFullSyncAt: UTC date from the work server
+    public func batchAddWorkContacts(batchAddContacts: [BatchAddWorkContact], lastFullSyncAt: UInt64?) async throws {
         let entityManager = backgroundEntityManager()
         let mediatorSyncableContacts = MediatorSyncableContacts(
             userSettings: UserSettings.shared(),
@@ -42,63 +51,82 @@ extension ContactStore {
 
         let featureMasks = try await FeatureMask.getFeatureMask(for: batchAddContacts.map(\.identity))
 
-        let identities = syncContactsQueue.sync {
-            entityManager.performAndWait {
-                var identities = [String]()
-                for batchAddContact in batchAddContacts {
-                    guard let publicKey = batchAddContact.publicKey,
-                          let featureMask = featureMasks[batchAddContact.identity] else {
-                        continue
-                    }
+        let identities = await withCheckedContinuation { continuation in
+            syncContactsQueue.async {
+                entityManager.performAndWait {
+                    var identities = [String]()
+                    for batchAddContact in batchAddContacts {
+                        guard let publicKey = batchAddContact.publicKey,
+                              let featureMask = featureMasks[batchAddContact.identity] else {
+                            continue
+                        }
 
-                    if let contactIdentity = self.addWorkContact(
-                        with: batchAddContact.identity,
-                        publicKey: publicKey,
-                        firstname: batchAddContact.firstName,
-                        lastname: batchAddContact.lastName,
-                        csi: batchAddContact.csi,
-                        jobTitle: batchAddContact.jobTitle,
-                        department: batchAddContact.department,
-                        featureMask: NSNumber(integerLiteral: featureMask),
-                        acquaintanceLevel: .direct,
-                        entityManager: entityManager,
-                        contactSyncer: mediatorSyncableContacts
-                    ) {
-                        identities.append(contactIdentity)
+                        if let contactIdentity = self.addWorkContact(
+                            with: batchAddContact.identity,
+                            publicKey: publicKey,
+                            firstname: batchAddContact.firstName,
+                            lastname: batchAddContact.lastName,
+                            csi: batchAddContact.csi,
+                            jobTitle: batchAddContact.jobTitle,
+                            department: batchAddContact.department,
+                            featureMask: NSNumber(integerLiteral: featureMask),
+                            acquaintanceLevel: .direct,
+                            workAvailabilityStatus: batchAddContact.availabilityStatus,
+                            entityManager: entityManager,
+                            contactSyncer: mediatorSyncableContacts
+                        ) {
+                            identities.append(contactIdentity)
+                        }
                     }
+                    continuation.resume(returning: identities)
                 }
-                return identities
             }
         }
 
-        // Get all work verified contacts from DB and set those that have not been supplied in this sync
-        // back to
-        // non-work
         await entityManager.performSave {
-            if let allContacts = entityManager.entityFetcher.contactEntities() {
-                for contactEntity in allContacts {
-                    let isWorkContact = identities.contains(contactEntity.identity)
-                    if contactEntity.isWorkContact != isWorkContact {
-                        contactEntity.workContact = NSNumber(booleanLiteral: isWorkContact)
-                        mediatorSyncableContacts.updateWorkVerificationLevel(
-                            identity: contactEntity.identity,
-                            value: contactEntity.workContact
-                        )
-
-                        if !isWorkContact,
-                           contactEntity.contactVerificationLevel != .fullyVerified {
+            guard let allContacts = entityManager.entityFetcher.contactEntities() else {
+                return
+            }
+            
+            for contactEntity in allContacts {
+                // Get all work verified contacts from DB and set those that have not been supplied in this sync
+                // back to non-work
+                let isWorkContact = identities.contains(contactEntity.identity)
+                if contactEntity.isWorkContact != isWorkContact {
+                    contactEntity.workContact = NSNumber(booleanLiteral: isWorkContact)
+                    mediatorSyncableContacts.updateWorkVerificationLevel(
+                        identity: contactEntity.identity,
+                        value: contactEntity.workContact
+                    )
+                    
+                    if !isWorkContact {
+                        if contactEntity.contactVerificationLevel != .fullyVerified {
                             contactEntity.contactVerificationLevel = .unverified
                             mediatorSyncableContacts.updateVerificationLevel(
                                 identity: contactEntity.identity,
                                 value: contactEntity.contactVerificationLevel.rawValue as NSNumber
                             )
                         }
+                        
+                        if let status = contactEntity.workAvailabilityStatus {
+                            entityManager.entityDestroyer.delete(workAvailabilityStatus: status)
+                        }
                     }
+                }
+                
+                // Set last work sync at is a work contact otherwise is nil
+                let workLastFullSyncAt: Date? = isWorkContact ? lastFullSyncAt?.date : nil
+                if contactEntity.workLastFullSyncAt != workLastFullSyncAt {
+                    contactEntity.workLastFullSyncAt = workLastFullSyncAt
+                    mediatorSyncableContacts.updateWorkLastFullSyncAt(
+                        identity: contactEntity.identity,
+                        workLastFullSyncAt: workLastFullSyncAt
+                    )
                 }
             }
         }
 
-        try await mediatorSyncableContacts.sync().async()
+        try await mediatorSyncableContacts.syncAsSubTask()
     }
     
     /// Update the state of the contact to active and sync it with multi device if activated
@@ -114,6 +142,23 @@ extension ContactStore {
             )
         }
         mediatorSyncableContacts.syncAsync()
+    }
+    
+    @objc func workAvailabilityStatusChanged(
+        current: WorkAvailabilityStatusEntity,
+        new: WorkAvailabilityStatus
+    ) -> Bool {
+        if current.value.intValue != new.category.rawValue {
+            return true
+        }
+       
+        // Current might be nil, and new an empty string, which is the same
+        let newText: String? = new.text?.trimmingCharacters(in: .whitespacesAndNewlines) == "" ? nil : new.text
+        if current.text != newText {
+            return true
+        }
+       
+        return false
     }
 }
 

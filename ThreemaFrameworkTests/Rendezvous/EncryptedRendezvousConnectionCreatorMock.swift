@@ -16,7 +16,7 @@ final class EncryptedRendezvousConnectionCreatorMock: EncryptedRendezvousConnect
     }
     
     func create(
-        from rendezvousInit: Rendezvous_RendezvousInit
+        from rendezvousInit: D2dRendezvous_RendezvousInit
     ) throws -> (EncryptedRendezvousConnection, RendezvousCrypto) {
         (encryptedRendezvousConnectionMock, rendezvousCryptoMock)
     }

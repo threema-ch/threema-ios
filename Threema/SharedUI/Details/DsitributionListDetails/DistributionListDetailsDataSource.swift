@@ -297,7 +297,7 @@ extension DistributionListDetailsDataSource {
                         
                         strongDistributionListDetailsViewController.willDeleteAllMessages()
                         
-                        strongSelf.businessInjector.entityManager.performBlock {
+                        strongSelf.businessInjector.entityManager.perform {
                             _ = strongSelf.businessInjector.entityManager.entityDestroyer
                                 .deleteMessages(of: strongSelf.conversation)
                             strongSelf.reload(sections: [.contentActions])

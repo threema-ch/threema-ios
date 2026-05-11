@@ -119,6 +119,10 @@ class MediatorReflectedIncomingMessageProcessor {
             try process(incomingMessage: imsg, reactionMessage: amsg as! ReactionMessage)
         case is GroupReactionMessage:
             try process(incomingMessage: imsg, groupReactionMessage: amsg as! GroupReactionMessage)
+        case is WebSessionResumeMessage:
+            Promise()
+        case is WorkSyncDeltaMessage:
+            Promise()
         default:
             Promise { $0.reject(MediatorReflectedProcessorError.messageWontProcessed(
                 message: "Reflected incoming message type \(imsg.loggingDescription) will be not processed"
@@ -277,7 +281,7 @@ class MediatorReflectedIncomingMessageProcessor {
         incomingMessage imsg: D2d_IncomingMessage,
         typingIndicatorMessage amsg: TypingIndicatorMessage
     ) throws -> Promise<Void> {
-        TypingIndicatorManager.sharedInstance().setTypingIndicatorForIdentity(imsg.senderIdentity, typing: amsg.typing)
+        TypingIndicatorManager.sharedInstance.setTypingIndicator(for: imsg.senderIdentity, typing: amsg.typing)
         return Promise()
     }
 

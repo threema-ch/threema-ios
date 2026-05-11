@@ -2,7 +2,7 @@ import Foundation
 import ThreemaEssentials
 
 /// Verify whether this contact is predefined by default.
-enum PredefinedContacts: String {
+public enum PredefinedContacts: String {
     case threema
     case threemaWork
     case support
@@ -10,11 +10,12 @@ enum PredefinedContacts: String {
     case betaFeedback
     case threemaPush
     case threemaToken
+    case threemaW0rk // From identity of the WorkSyncDelta message
     case unknown
     
     /// Initialize for predefined contacts
     /// - Parameter rawValue: Identity string
-    init(rawValue: String) {
+    public init(rawValue: String) {
         switch rawValue.uppercased() {
         case PredefinedContacts.threema.identity?.rawValue: self = .threema
         case PredefinedContacts.threemaWork.identity?.rawValue: self = .threemaWork
@@ -23,6 +24,7 @@ enum PredefinedContacts: String {
         case PredefinedContacts.betaFeedback.identity?.rawValue: self = .betaFeedback
         case PredefinedContacts.threemaPush.identity?.rawValue: self = .threemaPush
         case PredefinedContacts.threemaToken.identity?.rawValue: self = .threemaToken
+        case PredefinedContacts.threemaW0rk.identity?.rawValue: self = .threemaW0rk
         default: self = .unknown
         }
     }
@@ -44,26 +46,19 @@ enum PredefinedContacts: String {
             ThreemaIdentity("*3MAPUSH")
         case .threemaToken:
             ThreemaIdentity("*3MATOKN")
+        case .threemaW0rk:
+            ThreemaIdentity("*3MAW0RK")
         case .unknown:
             nil
         }
     }
     
-    /// Verify whether the current case disregards the block unknown status.
-    var ignoreBlockUnknown: Bool {
-        switch self {
-        case .threemaPush:
-            true
-        case .threema, .threemaWork, .support, .myThreemaData, .betaFeedback, .threemaToken, .unknown:
-            false
-        }
-    }
-    
-    /// Special contacts, akin to Threema Push, require unique handling. Incoming messages from these contacts should
-    /// not be stored in the database and necessitate special processing.
+    /// Special contacts, akin to Threema Push and Threema W0rk, require unique handling.
+    /// Incoming messages from these contacts should not be stored in the database and
+    /// necessitate special processing.
     var isSpecialContact: Bool {
         switch self {
-        case .threemaPush:
+        case .threemaPush, .threemaW0rk:
             true
         case .threema, .threemaWork, .support, .myThreemaData, .betaFeedback, .threemaToken, .unknown:
             false
@@ -71,7 +66,7 @@ enum PredefinedContacts: String {
     }
     
     /// The public key for the current case
-    private var publicKey: Data? {
+    var publicKey: Data? {
         switch self {
         case .threema:
             "3a38650c681435bd1fb8498e213a2919b09388f5803aa44640e0f706326a865c".hexadecimal
@@ -102,6 +97,13 @@ enum PredefinedContacts: String {
             else {
                 "04884d12d668f855d00d71fb1d9d413c95f271312f7e077846af671875c4101b".hexadecimal
             }
+        case .threemaW0rk:
+            if TargetManager.isSandbox {
+                "c79d9e0f70342e653b0c6df027af8c8681db40e11bf556dd33ec78ee6f810c6d".hexadecimal
+            }
+            else {
+                "c0e8ad0f50c5c7315c402d3dc26db169408c117613e9b852d3d6c0e87fca536b".hexadecimal
+            }
         case .unknown:
             nil
         }
@@ -122,6 +124,14 @@ enum PredefinedContacts: String {
 /// Verify whether this contact is predefined by default
 @available(swift, obsoleted: 1.0, renamed: "PredefinedContacts", message: "Only use from Objective-C")
 final class PredefinedContactsObjC: NSObject {
+    @objc static func publicKey(for identity: String) -> Data? {
+        PredefinedContacts(rawValue: identity).publicKey
+    }
+
+    @objc static func isSpecialContact(identity: String) -> Bool {
+        PredefinedContacts(rawValue: identity).isSpecialContact
+    }
+
     /// Verify whether this contact is predefined by default.
     /// - Parameters:
     ///   - identity: Identity string
@@ -131,17 +141,17 @@ final class PredefinedContactsObjC: NSObject {
         PredefinedContacts(rawValue: identity).isSamePublicKey(publicKey)
     }
     
-    /// Verify whether the current case disregards the block unknown status.
-    /// - Parameter identity: Identity String
-    /// - Returns: Boolean indicating whether the identity disregards the block’s unknown status..
-    @objc static func ignoreBlockUnknown(identity: String) -> Bool {
-        PredefinedContacts(rawValue: identity).ignoreBlockUnknown
-    }
-    
     /// Verify whether the provided identity is indeed '*3MAPUSH*'.
     /// - Parameter identity: Identity string
     /// - Returns: A boolean flag indicating whether the identity is *3MAPUSH*.
     @objc static func is3MAPush(identity: String) -> Bool {
         PredefinedContacts(rawValue: identity) == .threemaPush
+    }
+
+    /// Verify whether the provided identity is indeed '*3MAW0RK*'.
+    /// - Parameter identity: Identity string
+    /// - Returns: A boolean flag indicating whether the identity is *3MAW0RK*.
+    @objc static func is3MAW0rk(identity: String) -> Bool {
+        PredefinedContacts(rawValue: identity) == .threemaW0rk
     }
 }

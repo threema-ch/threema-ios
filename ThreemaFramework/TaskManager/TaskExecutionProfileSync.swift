@@ -52,15 +52,7 @@ final class TaskExecutionProfileSync: TaskExecutionBlobTransaction {
         guard let task = taskDefinition as? TaskDefinitionProfileSync else {
             return Promise<Void> { $0.reject(TaskExecutionError.wrongTaskDefinitionType) }
         }
-
-        let profileStore = ProfileStore(
-            serverConnector: frameworkInjector.serverConnector,
-            myIdentity: ThreemaIdentity(frameworkInjector.myIdentityStore.identity),
-            myIdentityStore: frameworkInjector.myIdentityStore,
-            contactStore: frameworkInjector.contactStore,
-            userSettings: frameworkInjector.userSettings,
-            taskManager: nil
-        )
+        let profileStore = frameworkInjector.profileStore
         profileStore.save(
             syncUserProfile: task.syncUserProfile,
             profileImage: task.profileImage,

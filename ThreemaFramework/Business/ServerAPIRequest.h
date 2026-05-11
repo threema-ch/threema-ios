@@ -12,8 +12,6 @@ typedef void(^ErrorCallback)(NSError *error);
 
 + (void)postJSONToAPIPath:(NSString*)apiPath data:(id)jsonObject onCompletion:(CompletionCallback)onCompletion onError:(ErrorCallback)onError;
 
-+ (void)loadJSONFromWorkAPIPath:(NSString*)apiPath getParams:(NSString*)getParams withCachePolicy:(NSURLRequestCachePolicy)cachePolicy onCompletion:(CompletionCallback)onCompletion onError:(ErrorCallback)onError;
-
 + (void)postJSONToWorkAPIPath:(NSString*)apiPath data:(id)jsonObject onCompletion:(CompletionCallback)onCompletion onError:(ErrorCallback)onError;
 
 @end

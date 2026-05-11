@@ -15,7 +15,7 @@ final class SendMediaAction: NSObject {
     // MARK: - Private properties
 
     private let imageSender = ImageURLSenderItemCreator()
-    private var picker: UIImagePickerController?
+    private var storedPicker: UIImagePickerController?
     private var pickedVideoSent = false
     private var pickedVideoSaved = false
     private var cancelled = false
@@ -79,7 +79,7 @@ final class SendMediaAction: NSObject {
         }
         else if mediaPickerType == .takePhoto {
             let imagePicker = UIImagePickerController()
-            picker = imagePicker
+            storedPicker = imagePicker
             imagePicker.delegate = self
             
             if mediaPickerType == .chooseExisting {
@@ -686,7 +686,7 @@ final class SendMediaAction: NSObject {
     }
 }
 
-// MARK: - UIImagePickerControllerDelegate, UINavigationControllerDelegate
+// MARK: - UIImagePickerControllerDelegate & UINavigationControllerDelegate
 
 extension SendMediaAction: UIImagePickerControllerDelegate & UINavigationControllerDelegate {
     
@@ -732,44 +732,54 @@ extension SendMediaAction: UIImagePickerControllerDelegate & UINavigationControl
             else {
                 pickedVideoSaved = true
             }
-            
+
+            guard let pickedVideoURL else {
+                return
+            }
+
             // Check video duration - if this has come from the photo library, the video may be longer than
             // videoMaximumDuration (it is not enforced if allowEditing = NO, but we don't want to enable that
             // as we don't need the image cropping UI)
-            if let pickedVideoURL {
-                if MediaConverter.isVideoDurationValid(at: pickedVideoURL) {
-                    let array = [pickedVideoURL]
-                    picker.dismiss(animated: true) {
-                        self.showPreviewForAssets(assets: array)
-                    }
-                }
-                else {
-                    // Video too long - must present editor
-                    let videoEditor = UIVideoEditorController()
-                    videoEditor.videoQuality = .typeHigh
-                    videoEditor.videoMaximumDuration = TimeInterval(MediaConverter.videoMaxDurationInMinutes()) * 60
-                    videoEditor.videoPath = pickedVideoURL.path
-                    videoEditor.delegate = self
-                    ModalPresenter.dismissPresentedController(on: chatViewController, animated: true) {
-                        self.picker = nil
-                        self.chatViewController?.present(videoEditor, animated: true, completion: nil)
-                    }
+            if MediaConverter.isVideoDurationValid(at: pickedVideoURL) {
+                picker.dismiss(animated: true) { [weak self] in
+                    self?.showPreviewForAssets(assets: [pickedVideoURL])
                 }
             }
+            else {
+                // Video too long - must present editor
+                picker.dismiss(animated: true) { [weak self] in
+                    self?.showVideoEditorController(url: pickedVideoURL)
+                }
+            }
+            storedPicker = nil
         }
     }
-    
+
+    private func showVideoEditorController(url: URL) {
+        guard let chatViewController else {
+            return
+        }
+
+        let vc = UIVideoEditorController()
+        vc.videoQuality = .typeHigh
+        vc.videoMaximumDuration = TimeInterval(MediaConverter.videoMaxDurationInMinutes()) * 60
+        vc.videoPath = url.path
+        vc.delegate = self
+
+        chatViewController.present(vc, animated: true, completion: nil)
+    }
+
     func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
         storeFlashConfiguration(for: picker)
-        ModalPresenter.dismissPresentedController(on: chatViewController, animated: true) {
-            self.picker = nil
+        chatViewController?.dismiss(animated: true) { [weak self] in
+            self?.storedPicker = nil
         }
     }
     
     func storeFlashConfiguration(for picker: UIImagePickerController) {
         if picker.sourceType == .camera {
-            let flashmode = picker.cameraFlashMode
-            AppGroup.userDefaults().set(flashmode.rawValue, forKey: "cameraFlashMode")
+            let flashMode = picker.cameraFlashMode
+            AppGroup.userDefaults().set(flashMode.rawValue, forKey: "cameraFlashMode")
             AppGroup.userDefaults().synchronize()
         }
     }

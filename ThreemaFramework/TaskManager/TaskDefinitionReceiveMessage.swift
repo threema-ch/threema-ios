@@ -1,6 +1,6 @@
 import Foundation
 
-@objc final class TaskDefinitionReceiveMessage: TaskDefinition {
+final class TaskDefinitionReceiveMessage: TaskDefinition {
     override func create(
         frameworkInjector: FrameworkInjectorProtocol,
         taskContext: TaskContextProtocol

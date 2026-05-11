@@ -7,7 +7,7 @@ enum MediatorMessageProtocolError: Error {
     case noAbstractMessageType(for: Common_CspE2eMessageType)
 }
 
-@objc final class MediatorMessageProtocol: NSObject, MediatorMessageProtocolProtocol {
+final class MediatorMessageProtocol: NSObject, MediatorMessageProtocolProtocol {
 
     struct D2mProtocolVersion {
         let max: UInt32 = 0
@@ -82,44 +82,18 @@ enum MediatorMessageProtocolError: Error {
 
     @objc static func doReflectMessage(_ type: Int32) -> Bool {
         let mt = getMultiDeviceMessageType(for: type)
-        return mt == .deprecatedAudio ||
-            mt == .deliveryReceipt ||
-            mt == .file ||
-            mt == .deprecatedImage ||
-            mt == .groupAudio ||
-            mt == .groupSetup ||
-            mt == .groupDeleteProfilePicture ||
-            mt == .groupDeliveryReceipt ||
-            mt == .groupFile ||
-            mt == .groupImage ||
-            mt == .groupLeave ||
-            mt == .groupLocation ||
-            mt == .groupPollSetup ||
-            mt == .groupPollVote ||
-            mt == .groupName ||
-            mt == .groupSetProfilePicture ||
-            mt == .groupText ||
-            mt == .groupVideo ||
-            mt == .location ||
-            mt == .pollSetup ||
-            mt == .pollVote ||
-            mt == .text ||
-            mt == .deprecatedVideo ||
-            mt == .callOffer ||
-            mt == .callAnswer ||
-            mt == .callIceCandidate ||
-            mt == .callHangup ||
-            mt == .callRinging ||
-            mt == .contactSetProfilePicture ||
-            mt == .contactDeleteProfilePicture ||
-            mt == .contactRequestProfilePicture ||
-            mt == .deleteMessage ||
-            mt == .groupDeleteMessage ||
-            mt == .editMessage ||
-            mt == .groupEditMessage ||
-            mt == .groupCallStart ||
-            mt == .reaction ||
-            mt == .groupReaction
+
+        return switch mt {
+        case .callAnswer, .callHangup, .callIceCandidate, .callOffer, .callRinging, .contactDeleteProfilePicture,
+             .contactRequestProfilePicture, .contactSetProfilePicture, .deleteMessage, .deprecatedAudio,
+             .deprecatedImage, .deprecatedVideo, .deliveryReceipt, .editMessage, .file, .groupAudio,
+             .groupCallStart, .groupDeleteMessage, .groupDeleteProfilePicture, .groupDeliveryReceipt,
+             .groupEditMessage, .groupFile, .groupImage, .groupLeave, .groupLocation, .groupName,
+             .groupPollSetup, .groupPollVote, .groupSetup, .groupSetProfilePicture, .groupText, .groupVideo,
+             .location, .pollSetup, .pollVote, .reaction, .groupReaction, .text: true
+        case .empty, .forwardSecurityEnvelope, .groupSyncRequest, .invalidType, .typingIndicator,
+             .webSessionResume, .workSyncDelta, .UNRECOGNIZED: false
+        }
     }
     
     // MARK: Chat server protocol extension for WebSocket
@@ -416,7 +390,7 @@ enum MediatorMessageProtocolError: Error {
     /// Create Envelope for contact sync.
     /// - Parameter contact: Contact for sync
     /// - Returns: Envelope with contact sync
-    func getEnvelopeForContactSync(contact: Sync_Contact, syncAction: DeltaSyncContact.SyncAction) -> D2d_Envelope {
+    func getEnvelopeForContactSync(contact: D2dSync_Contact, syncAction: DeltaSyncContact.SyncAction) -> D2d_Envelope {
         var contactSync = D2d_ContactSync()
         switch syncAction {
         case .create:
@@ -436,7 +410,7 @@ enum MediatorMessageProtocolError: Error {
     ///    - group: Group to sync
     ///    - syncAction: Action to sync
     /// - Returns: Envelope with group sync
-    func getEnvelopeForGroupSync(group: Sync_Group, syncAction: D2d_GroupSync.OneOf_Action) -> D2d_Envelope {
+    func getEnvelopeForGroupSync(group: D2dSync_Group, syncAction: D2d_GroupSync.OneOf_Action) -> D2d_Envelope {
         var groupSync = D2d_GroupSync()
         switch syncAction {
         case let .create(sync):
@@ -623,7 +597,7 @@ enum MediatorMessageProtocolError: Error {
         return envelope
     }
 
-    func getEnvelopeForProfileUpdate(userProfile: Sync_UserProfile) -> D2d_Envelope {
+    func getEnvelopeForProfileUpdate(userProfile: D2dSync_UserProfile) -> D2d_Envelope {
         var userProfileSync = D2d_UserProfileSync()
         userProfileSync.update.userProfile = userProfile
 
@@ -633,7 +607,7 @@ enum MediatorMessageProtocolError: Error {
         return envelope
     }
 
-    func getEnvelopeForSettingsUpdate(settings: Sync_Settings) -> D2d_Envelope {
+    func getEnvelopeForSettingsUpdate(settings: D2dSync_Settings) -> D2d_Envelope {
         var settingsSync = D2d_SettingsSync()
         settingsSync.update.settings = settings
 
@@ -643,7 +617,7 @@ enum MediatorMessageProtocolError: Error {
         return envelope
     }
 
-    func getEnvelopeForMdmParametersUpdate(mdmParameters: Sync_MdmParameters) -> D2d_Envelope {
+    func getEnvelopeForMdmParametersUpdate(mdmParameters: D2dSync_MdmParameters) -> D2d_Envelope {
         var mdmParameterSync = D2d_MdmParameterSync()
         mdmParameterSync.update.parameters = mdmParameters
 
@@ -813,6 +787,8 @@ enum MediatorMessageProtocolError: Error {
             return MSGTYPE_REACTION
         case .groupReaction:
             return MSGTYPE_GROUP_REACTION
+        case .workSyncDelta:
+            return MSGTYPE_WORK_SYNC_DELTA
         // Not supported types
         case .forwardSecurityEnvelope:
             throw MediatorMessageProtocolError.noAbstractMessageType(for: type)
@@ -821,10 +797,6 @@ enum MediatorMessageProtocolError: Error {
         case .UNRECOGNIZED:
             throw MediatorMessageProtocolError.noAbstractMessageType(for: type)
         case .webSessionResume:
-            throw MediatorMessageProtocolError.noAbstractMessageType(for: type)
-        case .groupJoinRequest:
-            throw MediatorMessageProtocolError.noAbstractMessageType(for: type)
-        case .groupJoinResponse:
             throw MediatorMessageProtocolError.noAbstractMessageType(for: type)
         }
     }
@@ -913,6 +885,10 @@ enum MediatorMessageProtocolError: Error {
             .reaction
         case MSGTYPE_GROUP_REACTION:
             .groupReaction
+        case MSGTYPE_WEB_SESSION_RESUME:
+            .webSessionResume
+        case MSGTYPE_WORK_SYNC_DELTA:
+            .workSyncDelta
         default:
             .invalidType
         }

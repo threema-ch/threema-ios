@@ -17,7 +17,7 @@ class ItemSender: NSObject {
     private lazy var persistenceManager = PersistenceManager(
         appGroupID: AppGroup.groupID(),
         userDefaults: AppGroup.userDefaults(),
-        remoteSecretManager: AppLaunchManager.remoteSecretManager
+        remoteSecretManager: RemoteSecretProvider.remoteSecretManager
     )
 
     private var recipientConversations: Set<ConversationEntity>?

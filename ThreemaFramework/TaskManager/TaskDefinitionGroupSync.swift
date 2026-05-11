@@ -38,7 +38,7 @@ final class TaskDefinitionGroupSync: TaskDefinition, TaskDefinitionTransactionPr
         .groupSync
     }
 
-    var syncGroup: Sync_Group
+    var syncGroup: D2dSync_Group
     var syncAction: SyncAction
     var profilePicture: DeltaUpdateType = .unchanged
     var image: Data?
@@ -47,7 +47,7 @@ final class TaskDefinitionGroupSync: TaskDefinition, TaskDefinitionTransactionPr
         case syncGroup, syncAction, profilePicture, image
     }
 
-    init(syncGroup: Sync_Group, syncAction: SyncAction) {
+    init(syncGroup: D2dSync_Group, syncAction: SyncAction) {
         self.syncGroup = syncGroup
         self.syncAction = syncAction
         super.init(type: .persistent)
@@ -56,7 +56,7 @@ final class TaskDefinitionGroupSync: TaskDefinition, TaskDefinitionTransactionPr
     required init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         let dataSyncGroup = try container.decode(Data.self, forKey: .syncGroup)
-        self.syncGroup = try Sync_Group(contiguousBytes: dataSyncGroup)
+        self.syncGroup = try D2dSync_Group(contiguousBytes: dataSyncGroup)
         self.syncAction = try container.decode(SyncAction.self, forKey: .syncAction)
         self.profilePicture = try container.decode(DeltaUpdateType.self, forKey: .profilePicture)
         self.image = try? container.decode(Data.self, forKey: .image)

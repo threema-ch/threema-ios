@@ -216,7 +216,6 @@ final class MediatorSyncableContactsTests: XCTestCase {
                             XCTAssertTrue(delta.syncContact.hasIdentityType, "\(test.name)")
                             XCTAssertTrue(delta.syncContact.hasLastName, "\(test.name)")
                             XCTAssertTrue(delta.syncContact.hasNickname, "\(test.name)")
-                            XCTAssertTrue(delta.syncContact.hasNotificationSoundPolicyOverride, "\(test.name)")
                             XCTAssertTrue(delta.syncContact.hasNotificationTriggerPolicyOverride, "\(test.name)")
                             XCTAssertTrue(delta.syncContact.hasPublicKey, "\(test.name)")
                             XCTAssertFalse(delta.syncContact.hasUserDefinedProfilePicture, "\(test.name)")
@@ -281,10 +280,6 @@ final class MediatorSyncableContactsTests: XCTestCase {
                                 delta.syncContact.nickname,
                                 test.output.delta.syncContact.nickname,
                                 "\(test.name)"
-                            )
-                            XCTAssertEqual(
-                                delta.syncContact.notificationSoundPolicyOverride,
-                                test.output.delta.syncContact.notificationSoundPolicyOverride
                             )
                             XCTAssertEqual(
                                 delta.syncContact.notificationTriggerPolicyOverride,
@@ -402,7 +397,7 @@ final class MediatorSyncableContactsTests: XCTestCase {
         from contact: ContactEntity,
         userSettings: UserSettingsProtocol
     ) -> DeltaSyncContact {
-        var delta = DeltaSyncContact(syncContact: Sync_Contact(), syncAction: .update)
+        var delta = DeltaSyncContact(syncContact: D2dSync_Contact(), syncAction: .update)
 
         delta.syncContact.update(contact: contact, pushSetting: PushSetting(identity: contact.threemaIdentity))
 
@@ -414,7 +409,7 @@ final class MediatorSyncableContactsTests: XCTestCase {
         delta.image = contact.imageData
         delta.contactImage = contact.contactImage?.data
 
-        if let conversation = contact.conversations!.first as? ConversationEntity {
+        if let conversation = contact.conversations?.first {
             delta.syncContact.update(conversation: conversation)
         }
 

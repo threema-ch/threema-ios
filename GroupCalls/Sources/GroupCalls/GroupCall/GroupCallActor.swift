@@ -280,7 +280,7 @@ actor GroupCallActor: Sendable {
                 let peekResponseData = peekResponse.encryptedCallState[24..<peekResponse.encryptedCallState.count]
                 
                 guard let decryptedData = groupCallBaseState.symmetricDecryptByGSCK(peekResponseData, nonce: nonce),
-                      let decryptedCallState = try? Groupcall_CallState(serializedData: decryptedData) else {
+                      let decryptedCallState = try? GroupCall_CallState(serializedData: decryptedData) else {
                     DDLogError("[GroupCall] Peek Could not decrypt encrypted call state")
                     throw GroupCallError.decryptionFailure
                 }

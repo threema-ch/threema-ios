@@ -1,4 +1,4 @@
-enum RemoteSecretFileEncryptionWhitelist: String, CaseIterable {
+public enum RemoteSecretFileEncryptionWhitelist: String, CaseIterable {
     case configOPPF = "config.oppf"
     case workServerCache = "work_server_url.cache"
     case idBackup = "idbackup.txt"
@@ -15,7 +15,7 @@ enum RemoteSecretFileEncryptionWhitelist: String, CaseIterable {
     case appSetupStepsLogFileName = "app-setup-steps.log"
     case appLaunchLogFileName = "app-launch.log"
 
-    static var whiteList: [String] {
+    public static var whiteList: [String] {
         allCases.map(\.rawValue)
     }
 }

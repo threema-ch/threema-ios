@@ -104,6 +104,9 @@ extern NSString * const kPreferenceInterfaceStyleKey;
 
 @property (nonatomic, readwrite) BOOL companyDirectory;
 
+@property (nonatomic, readwrite) BOOL jbDetectionDismissed;
+@property (nonatomic, readwrite) BOOL didShowIdentityThisDeviceOnly;
+
 @end
 
 @interface UserSettings : NSObject <UserSettingsProtocol>
@@ -140,7 +143,6 @@ typedef NS_ENUM(NSInteger, AcceptPrivacyPolicyVariant) {
 @property (nonatomic, readwrite) BOOL workInfoShown;
 @property (nonatomic, readwrite) BOOL desktopInfoBannerShown;
 @property (nonatomic, readwrite) BOOL resetTipKitOnNextLaunch;
-@property (nonatomic, readwrite) BOOL jbDetectionDismissed;
 @property (nonatomic, readwrite) BOOL partialReactionSupportAlertShown;
 
 @property (nonatomic, readwrite) BOOL distributionListsEnabled;

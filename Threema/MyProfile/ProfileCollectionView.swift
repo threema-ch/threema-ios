@@ -53,6 +53,15 @@ final class ProfileCollectionView: UICollectionView, UICollectionViewDelegate {
         }
     }
     
+    func workAvailabilityStatusCell() -> UICollectionViewCell? {
+        guard let dataSource = dataSource as? ProfileCollectionViewDataSource,
+              let index = dataSource.indexPathForItem(.workAvailabilityStatus), let cell = cellForItem(at: index) else {
+            return nil
+        }
+        
+        return cell
+    }
+    
     // MARK: - UICollectionViewDelegate
     
     func collectionView(_ collectionView: UICollectionView, shouldSelectItemAt indexPath: IndexPath) -> Bool {

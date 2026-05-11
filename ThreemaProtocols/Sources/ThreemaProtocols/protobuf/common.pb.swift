@@ -10,7 +10,11 @@
 
 // # Common Types
 
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 import SwiftProtobuf
 
 // If the compiler emits an error on this type, it is because this file
@@ -199,12 +203,6 @@ public enum Common_CspE2eMessageType: SwiftProtobuf.Enum, Swift.CaseIterable {
   /// [`contact-request-profile-picture`](ref:e2e.contact-request-profile-picture)
   case contactRequestProfilePicture // = 26
 
-  /// `csp-e2e.GroupJoinRequest`
-  case groupJoinRequest // = 77
-
-  /// `csp-e2e.GroupJoinResponse`
-  case groupJoinResponse // = 78
-
   /// [`group-setup`](ref:e2e.group-setup) wrapped by
   /// [`group-creator-container`](ref:e2e.group-creator-container)
   case groupSetup // = 74
@@ -284,7 +282,10 @@ public enum Common_CspE2eMessageType: SwiftProtobuf.Enum, Swift.CaseIterable {
   /// `csp-e2e-fs.Envelope`
   case forwardSecurityEnvelope // = 160
 
-  /// [`web-session-resume`](ref:e2e.web-session-resume)
+  /// `csp-e2e.WorkSyncDelta` from `*3MAW0RK`
+  case workSyncDelta // = 253
+
+  /// [`web-session-resume`](ref:e2e.web-session-resume) from `*3MAPUSH`
   case webSessionResume // = 254
   case UNRECOGNIZED(Int)
 
@@ -315,8 +316,6 @@ public enum Common_CspE2eMessageType: SwiftProtobuf.Enum, Swift.CaseIterable {
     case 74: self = .groupSetup
     case 75: self = .groupName
     case 76: self = .groupLeave
-    case 77: self = .groupJoinRequest
-    case 78: self = .groupJoinResponse
     case 79: self = .groupCallStart
     case 80: self = .groupSetProfilePicture
     case 81: self = .groupSyncRequest
@@ -339,6 +338,7 @@ public enum Common_CspE2eMessageType: SwiftProtobuf.Enum, Swift.CaseIterable {
     case 148: self = .groupDeleteMessage
     case 160: self = .forwardSecurityEnvelope
     case 252: self = .empty
+    case 253: self = .workSyncDelta
     case 254: self = .webSessionResume
     default: self = .UNRECOGNIZED(rawValue)
     }
@@ -367,8 +367,6 @@ public enum Common_CspE2eMessageType: SwiftProtobuf.Enum, Swift.CaseIterable {
     case .groupSetup: return 74
     case .groupName: return 75
     case .groupLeave: return 76
-    case .groupJoinRequest: return 77
-    case .groupJoinResponse: return 78
     case .groupCallStart: return 79
     case .groupSetProfilePicture: return 80
     case .groupSyncRequest: return 81
@@ -391,6 +389,7 @@ public enum Common_CspE2eMessageType: SwiftProtobuf.Enum, Swift.CaseIterable {
     case .groupDeleteMessage: return 148
     case .forwardSecurityEnvelope: return 160
     case .empty: return 252
+    case .workSyncDelta: return 253
     case .webSessionResume: return 254
     case .UNRECOGNIZED(let i): return i
     }
@@ -421,8 +420,6 @@ public enum Common_CspE2eMessageType: SwiftProtobuf.Enum, Swift.CaseIterable {
     .contactSetProfilePicture,
     .contactDeleteProfilePicture,
     .contactRequestProfilePicture,
-    .groupJoinRequest,
-    .groupJoinResponse,
     .groupSetup,
     .groupName,
     .groupLeave,
@@ -443,6 +440,7 @@ public enum Common_CspE2eMessageType: SwiftProtobuf.Enum, Swift.CaseIterable {
     .groupDeleteMessage,
     .groupReaction,
     .forwardSecurityEnvelope,
+    .workSyncDelta,
     .webSessionResume,
   ]
 
@@ -470,11 +468,11 @@ public struct Common_Blob: Sendable {
   public var id: Data = Data()
 
   /// Nonce used for encrypting/decrypting the Blob.
-  /// Note: May be omitted if unambigously defined by the context.
+  /// Note: May be omitted if unambiguously defined by the context.
   public var nonce: Data = Data()
 
   /// Secret (or public) key used for encrypting/decrypting the Blob.
-  /// Note: May be omitted if unambigously defined by the context.
+  /// Note: May be omitted if unambiguously defined by the context.
   public var key: Data = Data()
 
   /// Unix-ish timestamp in milliseconds when the blob has been uploaded
@@ -512,11 +510,11 @@ public struct Common_Image: Sendable {
 
   /// The image's associated blob.
   public var blob: Common_Blob {
-    get {return _blob ?? Common_Blob()}
+    get {_blob ?? Common_Blob()}
     set {_blob = newValue}
   }
   /// Returns true if `blob` has been explicitly set.
-  public var hasBlob: Bool {return self._blob != nil}
+  public var hasBlob: Bool {self._blob != nil}
   /// Clears the value of `blob`. Subsequent reads from it will return its default value.
   public mutating func clearBlob() {self._blob = nil}
 
@@ -628,7 +626,7 @@ public struct Common_Timespan: Sendable {
   /// Start of the timespan (Unix-ish timestamp in milliseconds, inclusive)
   public var from: UInt64 = 0
 
-  /// End of the timespan (Unix-ish timestamp in miliseconds, inclusive)
+  /// End of the timespan (Unix-ish timestamp in milliseconds, inclusive)
   public var to: UInt64 = 0
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
@@ -674,7 +672,7 @@ extension Common_CspFeatureMaskFlag: SwiftProtobuf._ProtoNameProviding {
 }
 
 extension Common_CspE2eMessageType: SwiftProtobuf._ProtoNameProviding {
-  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0_INVALID_TYPE\0\u{1}TEXT\0\u{1}DEPRECATED_IMAGE\0\u{2}\u{e}LOCATION\0\u{2}\u{3}DEPRECATED_VIDEO\0\u{1}DEPRECATED_AUDIO\0\u{1}POLL_SETUP\0\u{1}POLL_VOTE\0\u{1}FILE\0\u{1}CONTACT_SET_PROFILE_PICTURE\0\u{1}CONTACT_DELETE_PROFILE_PICTURE\0\u{1}CONTACT_REQUEST_PROFILE_PICTURE\0\u{2}'GROUP_TEXT\0\u{1}GROUP_LOCATION\0\u{1}GROUP_IMAGE\0\u{1}GROUP_VIDEO\0\u{1}GROUP_AUDIO\0\u{1}GROUP_FILE\0\u{2}\u{4}GROUP_SETUP\0\u{1}GROUP_NAME\0\u{1}GROUP_LEAVE\0\u{1}GROUP_JOIN_REQUEST\0\u{1}GROUP_JOIN_RESPONSE\0\u{1}GROUP_CALL_START\0\u{1}GROUP_SET_PROFILE_PICTURE\0\u{1}GROUP_SYNC_REQUEST\0\u{1}GROUP_POLL_SETUP\0\u{1}GROUP_POLL_VOTE\0\u{1}GROUP_DELETE_PROFILE_PICTURE\0\u{2}\u{c}CALL_OFFER\0\u{1}CALL_ANSWER\0\u{1}CALL_ICE_CANDIDATE\0\u{1}CALL_HANGUP\0\u{1}CALL_RINGING\0\u{2}\u{1c}DELIVERY_RECEIPT\0\u{1}GROUP_DELIVERY_RECEIPT\0\u{1}REACTION\0\u{1}GROUP_REACTION\0\u{2}\u{d}TYPING_INDICATOR\0\u{1}EDIT_MESSAGE\0\u{1}DELETE_MESSAGE\0\u{1}GROUP_EDIT_MESSAGE\0\u{1}GROUP_DELETE_MESSAGE\0\u{2}\u{c}FORWARD_SECURITY_ENVELOPE\0\u{2}\\\u{1}EMPTY\0\u{2}\u{2}WEB_SESSION_RESUME\0")
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0_INVALID_TYPE\0\u{1}TEXT\0\u{1}DEPRECATED_IMAGE\0\u{2}\u{e}LOCATION\0\u{2}\u{3}DEPRECATED_VIDEO\0\u{1}DEPRECATED_AUDIO\0\u{1}POLL_SETUP\0\u{1}POLL_VOTE\0\u{1}FILE\0\u{1}CONTACT_SET_PROFILE_PICTURE\0\u{1}CONTACT_DELETE_PROFILE_PICTURE\0\u{1}CONTACT_REQUEST_PROFILE_PICTURE\0\u{2}'GROUP_TEXT\0\u{1}GROUP_LOCATION\0\u{1}GROUP_IMAGE\0\u{1}GROUP_VIDEO\0\u{1}GROUP_AUDIO\0\u{1}GROUP_FILE\0\u{2}\u{4}GROUP_SETUP\0\u{1}GROUP_NAME\0\u{1}GROUP_LEAVE\0\u{2}\u{3}GROUP_CALL_START\0\u{1}GROUP_SET_PROFILE_PICTURE\0\u{1}GROUP_SYNC_REQUEST\0\u{1}GROUP_POLL_SETUP\0\u{1}GROUP_POLL_VOTE\0\u{1}GROUP_DELETE_PROFILE_PICTURE\0\u{2}\u{c}CALL_OFFER\0\u{1}CALL_ANSWER\0\u{1}CALL_ICE_CANDIDATE\0\u{1}CALL_HANGUP\0\u{1}CALL_RINGING\0\u{2}\u{1c}DELIVERY_RECEIPT\0\u{1}GROUP_DELIVERY_RECEIPT\0\u{1}REACTION\0\u{1}GROUP_REACTION\0\u{2}\u{d}TYPING_INDICATOR\0\u{1}EDIT_MESSAGE\0\u{1}DELETE_MESSAGE\0\u{1}GROUP_EDIT_MESSAGE\0\u{1}GROUP_DELETE_MESSAGE\0\u{2}\u{c}FORWARD_SECURITY_ENVELOPE\0\u{2}\\\u{1}EMPTY\0\u{1}WORK_SYNC_DELTA\0\u{1}WEB_SESSION_RESUME\0")
 }
 
 extension Common_Unit: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {

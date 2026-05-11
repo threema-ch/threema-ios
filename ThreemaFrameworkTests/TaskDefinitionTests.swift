@@ -685,7 +685,7 @@ final class TaskDefinitionTests: XCTestCase {
     
     func testTaskDefinitionUpdateContactSyncEncodeDecode() throws {
         func generateContact() -> DeltaSyncContact {
-            var sContact = Sync_Contact()
+            var sContact = D2dSync_Contact()
             sContact.identity = SwiftUtils.pseudoRandomString(length: 7)
             sContact.identityType = .regular
             sContact.publicKey = BytesUtility.generatePublicKey()

@@ -398,14 +398,15 @@ enum ChatViewMessageActionsProvider {
                     }
                 }
             }
-
             // Show
-            ModalPresenter.present(
-                activityVC,
-                on: view.parentViewController,
-                from: view.frame,
-                in: view
-            )
+
+            if view.parentViewController?.traitCollection.horizontalSizeClass == .regular {
+                activityVC.modalPresentationStyle = .automatic
+                activityVC.popoverPresentationController?.sourceRect = view.bounds
+                activityVC.popoverPresentationController?.sourceView = view
+            }
+
+            view.parentViewController?.present(activityVC, animated: true)
         }
     }
     

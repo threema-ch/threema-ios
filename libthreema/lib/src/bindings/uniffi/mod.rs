@@ -3,12 +3,15 @@ use std::sync::Arc;
 
 use logging::{LogDispatcher, LogLevel, init_logging};
 
+pub mod config;
+pub mod create_identity;
 pub mod crypto;
 pub mod d2d_rendezvous;
 pub mod https;
 pub mod id_backup;
 pub mod logging;
 pub mod remote_secret;
+pub mod work_properties;
 
 /// Used for (foreign) functions that are considered infallible. In case the foreign function fails,
 /// this error will be propagated back.

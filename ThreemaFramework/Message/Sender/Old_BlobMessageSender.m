@@ -103,7 +103,7 @@ static dispatch_queue_t backgroundQueue;
                     return;
                 }
             } else {
-                [entityManager performSyncBlockAndSafe:^{
+                [entityManager performAndWaitSave:^{
                     message.sendFailed = [NSNumber numberWithBool:NO];
                 }];
             }
@@ -186,7 +186,7 @@ static dispatch_queue_t backgroundQueue;
     FileMessageEntity *message = (FileMessageEntity*)_messageObject;
 
     EntityManager *entityManager = [[BusinessInjector ui] entityManager];
-    [entityManager performAsyncBlockAndSafe:^{
+    [entityManager performSave:^{
         ConversationEntity *conversation = message.conversation;
         conversation.lastMessage = nil;
         
@@ -204,7 +204,7 @@ static dispatch_queue_t backgroundQueue;
     FileMessageEntity *message = (FileMessageEntity*)_messageObject;
 
     EntityManager *entityManager = [[BusinessInjector ui] entityManager];
-    [entityManager performAsyncBlockAndSafe:^{
+    [entityManager performSave:^{
         if ([message wasDeleted]) {
             DDLogWarn(@"Blob message has been deleted!");
             wasDeleted = YES;
@@ -229,7 +229,7 @@ static dispatch_queue_t backgroundQueue;
     FileMessageEntity *message = (FileMessageEntity*)_messageObject;
     if ([message wasDeleted] == NO) {
         EntityManager *entityManager = [[BusinessInjector ui] entityManager];
-        [entityManager performAsyncBlockAndSafe:^{
+        [entityManager performSave:^{
             message.sendFailed = [NSNumber numberWithBool:YES];
             message.blobProgress = nil;
         }];
@@ -244,7 +244,7 @@ static dispatch_queue_t backgroundQueue;
     FileMessageEntity *message = (FileMessageEntity*)_messageObject;
     if ([message wasDeleted] == NO) {
         EntityManager *entityManager = [[BusinessInjector ui] entityManager];
-        [entityManager performSyncBlockAndSafe:^{
+        [entityManager performAndWaitSave:^{
             message.sent = [NSNumber numberWithBool:YES];
             message.blobProgress = nil;
         }];
@@ -260,7 +260,7 @@ static dispatch_queue_t backgroundQueue;
     }
     
     EntityManager *entityManager = [[BusinessInjector ui] entityManager];
-    [entityManager performSyncBlockAndSafe:^{
+    [entityManager performAndWaitSave:^{
         message.blobProgress = progress;
     }];
     [_uploadProgressDelegate blobMessageSender:self uploadProgress:progress forMessage:message];

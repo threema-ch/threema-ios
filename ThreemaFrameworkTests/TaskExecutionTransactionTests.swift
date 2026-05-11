@@ -197,7 +197,7 @@ final class TaskExecutionTransactionTests: XCTestCase {
             let task = test.0 == .contactSync
                 ? TaskDefinitionUpdateContactSync(deltaSyncContacts: [])
                 : TaskDefinitionProfileSync(
-                    syncUserProfile: Sync_UserProfile(),
+                    syncUserProfile: D2dSync_UserProfile(),
                     profileImage: nil,
                     linkMobileNoPending: false,
                     linkEmailPending: false
@@ -261,7 +261,7 @@ final class TaskExecutionTransactionTests: XCTestCase {
             messageProcessor: MessageProcessorMock()
         )
 
-        let task = TaskDefinitionSettingsSync(syncSettings: Sync_Settings())
+        let task = TaskDefinitionSettingsSync(syncSettings: D2dSync_Settings())
 
         let taskExecutionTransaction = TaskExecutionTransactionToTest(
             taskContext: TaskContext(),

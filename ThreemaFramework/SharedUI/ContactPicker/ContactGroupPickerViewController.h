@@ -36,7 +36,7 @@
 // This is required to be strong when called from the ShareController class
 @property (strong, nonatomic) id<ContactGroupPickerDelegate> delegate;
 
-@property (nonatomic) BOOL enableMultiSelection;
+@property (nonatomic) BOOL enableMultiselection;
 @property (nonatomic) BOOL enableTextInput;
 @property (nonatomic) BOOL enableControlView;
 @property (nonatomic) BOOL delegateDisablesSearchController;

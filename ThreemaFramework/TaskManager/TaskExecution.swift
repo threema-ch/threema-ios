@@ -241,7 +241,7 @@ class TaskExecution: NSObject {
         // TODO: (IOS-4348) See if we can optimize that more
         firstly { () -> Promise<Void> in
             Promise { seal in
-                self.frameworkInjector.entityManager.performBlock {
+                self.frameworkInjector.entityManager.perform {
                     guard let toContact = self.frameworkInjector.entityManager.entityFetcher.contactEntity(
                         for: message.toIdentity
                     ) else {
@@ -304,7 +304,7 @@ class TaskExecution: NSObject {
                 return
             }
 
-            frameworkInjector.entityManager.performBlock {
+            frameworkInjector.entityManager.perform {
                 guard let toContact = self.frameworkInjector.entityManager.entityFetcher
                     .contactEntity(for: message.toIdentity) else {
                     seal.reject(TaskExecutionError.sendMessageFailed(
@@ -439,7 +439,7 @@ class TaskExecution: NSObject {
                         }
                     }
                     
-                    self.frameworkInjector.entityManager.performBlock {
+                    self.frameworkInjector.entityManager.perform {
                         var nonce: Data
                         do {
                             nonce = try self.messageNonce(for: toContact.identity)
@@ -539,7 +539,7 @@ class TaskExecution: NSObject {
             
             // Send message in own thread, because of possible network latency
             DispatchQueue.global().async {
-                self.frameworkInjector.entityManager.performBlock {
+                self.frameworkInjector.entityManager.perform {
                     guard let toContact = self.frameworkInjector.entityManager.entityFetcher
                         .contactEntity(for: message.toIdentity) else {
                         seal.reject(TaskExecutionError.sendMessageFailed(

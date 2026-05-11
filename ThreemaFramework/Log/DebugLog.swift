@@ -46,7 +46,7 @@ public final class DebugLog: NSObject {
         line: UInt = #line
     ) {
         DDLogNotice(
-            "[Config] Remote Secret: \(AppLaunchManager.isRemoteSecretEnabled)",
+            "[Config] Remote Secret: \(RemoteSecretProvider.isRemoteSecretEnabled)",
             file: file,
             function: function,
             line: line
@@ -257,6 +257,10 @@ public final class DebugLog: NSObject {
             type = "GROUP_CALL_START"
         case MSGTYPE_EMPTY:
             type = "EMPTY"
+        case MSGTYPE_WEB_SESSION_RESUME:
+            type = "WEB_SESSION_RESUME"
+        case MSGTYPE_WORK_SYNC_DELTA:
+            type = "WORK_SYNC_DELTA"
         default:
             fatalError("\(#function): Unsupported message type \(abstractMessage.type())")
         }

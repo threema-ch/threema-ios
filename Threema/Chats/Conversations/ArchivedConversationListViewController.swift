@@ -73,7 +73,7 @@ final class ArchivedConversationListViewController: ThemedTableViewController {
     private var didStartMultiselect = false
     
     private var lastAppearance = Date()
-    private var viewLoadedInBackground = AppDelegate.shared().isAppInBackground()
+    private var viewLoadedInBackground = SceneDelegate.isAppInBackground
     
     private weak var previousNavigationControllerDelegate: UINavigationControllerDelegate?
     
@@ -118,7 +118,7 @@ final class ArchivedConversationListViewController: ThemedTableViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        viewLoadedInBackground = AppDelegate.shared().isAppInBackground()
+        viewLoadedInBackground = SceneDelegate.isAppInBackground
         
         navigationItem.title = #localize("archived_title")
         navigationItem.largeTitleDisplayMode = .never
@@ -158,7 +158,7 @@ final class ArchivedConversationListViewController: ThemedTableViewController {
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        viewLoadedInBackground = AppDelegate.shared().isAppInBackground()
+        viewLoadedInBackground = SceneDelegate.isAppInBackground
         
         updateDraftForCell()
         checkDateAndUpdateTimestamps()

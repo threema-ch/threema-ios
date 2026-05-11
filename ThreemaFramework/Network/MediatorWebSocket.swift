@@ -2,7 +2,7 @@ import CocoaLumberjackSwift
 import Foundation
 import Starscream
 
-@objc final class MediatorWebSocket: NSObject, SocketProtocol {
+final class MediatorWebSocket: NSObject, SocketProtocol {
     
     enum MediatorWebSocketError: Error {
         case invalidServerURL

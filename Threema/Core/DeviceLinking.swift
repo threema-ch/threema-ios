@@ -17,8 +17,6 @@ final class DeviceLinking: NSObject {
     private var stateDisconnectedContinuation: CheckedContinuation<Void, Never>?
     private var stateLoggedInContinuation: CheckedContinuation<Void, Error>?
 
-    private var disableMultiDeviceForVersionLessThan5IsLoggedIn: (() -> Void)?
-
     enum DeviceLinkingError: Error {
         case noDeviceGroupKey, couldNotConnect, timeout
     }
@@ -31,7 +29,8 @@ final class DeviceLinking: NSObject {
             safeConfigManager: safeConfigManager,
             serverApiConnector: ServerAPIConnector(),
             groupManager: businessInjector.groupManager,
-            myIdentityStore: businessInjector.myIdentityStore
+            myIdentityStore: businessInjector.myIdentityStore,
+            phoneNumberNormalizer: PhoneNumberNormalizer()
         )
         self.safeManager = SafeManager(
             safeConfigManager: safeConfigManager,
@@ -168,57 +167,6 @@ final class DeviceLinking: NSObject {
         return polling()
     }
 
-    /// Disable multi-device if app doesn't support it
-    ///
-    /// This should always be in sync with the multi-device setting showing up in Desktop/Web setting
-    /// (`ThreemaWebViewController`)
-    @objc func disableMultiDeviceForVersionLessThan5() {
-        // Only disable it if it was previously enabled
-        guard businessInjector.userSettings.enableMultiDevice else {
-            return
-        }
-        
-        switch ThreemaEnvironment.env() {
-        case .testFlight:
-            if !TargetManager.isSandbox {
-                // Disable it if we downgrade consumer, work or onprem from 5.0
-                if AppVersionInfo.version.major < 5 {
-                    autoDisableMultiDevice()
-                }
-            }
-        // Never disable it for green & blue
-        case .appStore, .xcode:
-            // Never disable it of Xcode and App store builds
-            break
-        }
-    }
-    
-    private func autoDisableMultiDevice() {
-        businessInjector.serverConnector.registerConnectionStateDelegate(delegate: self)
-
-        if disableMultiDeviceForVersionLessThan5IsLoggedIn == nil {
-            disableMultiDeviceForVersionLessThan5IsLoggedIn = {
-                guard self.businessInjector.userSettings.enableMultiDevice else {
-                    self.disableMultiDeviceForVersionLessThan5IsLoggedIn = nil
-                    return
-                }
-
-                self.disableMultiDevice()
-                    .catch { error in
-                        DDLogError("Disable multi device for version less than 5 failed: \(error)")
-
-                        // Disable multi device failed, disconnect and show alert
-                        self.businessInjector.serverConnector.disconnect(initiator: .app)
-
-                        let alertText = BundleUtil
-                            .localizedString(forKey: "multi_device_linked_devices_failed_remove_message_2")
-                        let info = [kKeyMessage: alertText]
-                        NotificationCenter.default.post(name: .errorConnectionFailed, object: nil, userInfo: info)
-                    }
-            }
-        }
-    }
-
     /// Drop all devices including this device and disable Multi Device
     func disableMultiDevice() -> Promise<Void> {
         businessInjector.multiDeviceManager.otherDevices()
@@ -313,8 +261,6 @@ final class DeviceLinking: NSObject {
 extension DeviceLinking: ConnectionStateDelegate {
     func changed(connectionState state: ConnectionState) {
         if state == .loggedIn {
-            disableMultiDeviceForVersionLessThan5IsLoggedIn?()
-
             stateLoggedInContinuation?.resume()
             stateLoggedInContinuation = nil
         }

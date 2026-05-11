@@ -142,8 +142,8 @@ final class SingleDetailsViewController: ThemedCodeModernGroupedTableViewControl
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        // Shows Threema type tip if it was never shown before
-        headerView.showThreemaTypeTip()
+        // Shows tips if it was never shown before
+        headerView.showThreemaTypeTips()
     }
 
     override func viewWillDisappear(_ animated: Bool) {
@@ -649,7 +649,8 @@ extension ContactEntity {
             profilePictureInfo: .contact(contact),
             name: displayName,
             verificationLevelImage: contact.verificationLevelImage,
-            verificationLevelAccessibilityLabel: contact.verificationLevelAccessibilityLabel
+            verificationLevelAccessibilityLabel: contact.verificationLevelAccessibilityLabel,
+            availabilityStatus: contact.workAvailabilityStatus
         )
     }
 }

@@ -29,7 +29,7 @@ struct RTPHeaderExtensionIDs {
     let microphone: [UInt: String]
     let cameraAndScreen: [UInt: String]
     
-    init(_ joinResponse: Groupcall_SfuHttpResponse.Join) throws {
+    init(_ joinResponse: GroupCall_SfuHttpResponse.Join) throws {
         // swiftformat:disable:next acronyms
         guard joinResponse.hasRtpHeaderExtensionIds else {
             self.microphone = RTPHeaderExtensionIDs.fallbackMicrophone

@@ -2,7 +2,7 @@ import Foundation
 import ThreemaFramework
 import ThreemaMacros
 
-@objc final class GroupListViewController: ContactListBaseViewController {
+final class GroupListViewController: ContactListBaseViewController {
     // MARK: - Properties
 
     private lazy var provider = GroupListProvider()

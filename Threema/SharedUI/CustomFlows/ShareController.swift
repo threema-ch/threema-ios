@@ -37,7 +37,7 @@ final class ShareController: NSObject {
                 return
             }
 
-            picker.enableMultiSelection = false
+            picker.enableMultiselection = false
             picker.enableTextInput = false
             picker.submitOnSelect = true
 

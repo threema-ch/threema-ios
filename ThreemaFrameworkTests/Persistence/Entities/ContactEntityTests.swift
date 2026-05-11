@@ -48,7 +48,8 @@ final class ContactEntityTests: XCTestCase {
         let verifiedEmail = "testy@testing.test"
         let verifiedMobileNo = "0123456789"
         let workContact = 0
-        
+        let workLastFullSyncAt = Date()
+
         // Act
         
         let contactImage = entityManager.performAndWait {
@@ -124,7 +125,8 @@ final class ContactEntityTests: XCTestCase {
                 groupConversations: groupConversations,
                 reactions: reactions,
                 rejectedMessages: rejectedMessages,
-                sortOrderFirstName: true
+                sortOrderFirstName: true,
+                workLastFullSyncAt: workLastFullSyncAt
             )
         }
 
@@ -170,10 +172,11 @@ final class ContactEntityTests: XCTestCase {
         XCTAssertEqual(groupConversations, fetchedContactEntity.groupConversations)
         XCTAssertEqual(reactions, fetchedContactEntity.reactions)
         XCTAssertEqual(rejectedMessages, fetchedContactEntity.rejectedMessages)
+        XCTAssertEqual(workLastFullSyncAt, fetchedContactEntity.workLastFullSyncAt)
 
         if encrypted {
             XCTAssertEqual(testDatabase.remoteSecretCryptoMock.decryptCalls, 0)
-            XCTAssertEqual(testDatabase.remoteSecretCryptoMock.encryptCalls, 13)
+            XCTAssertEqual(testDatabase.remoteSecretCryptoMock.encryptCalls, 14)
 
             // Test faulting
             testDatabase.context.main.refresh(fetchedContactEntity, mergeChanges: false)
@@ -197,9 +200,13 @@ final class ContactEntityTests: XCTestCase {
             )
             XCTAssertEqual(verifiedEmail, fetchedContactEntity.verifiedEmail)
             XCTAssertEqual(verifiedMobileNo, fetchedContactEntity.verifiedMobileNo)
+            XCTAssertEqual(
+                workLastFullSyncAt.timeIntervalSince1970,
+                fetchedContactEntity.workLastFullSyncAt?.timeIntervalSince1970
+            )
 
-            XCTAssertEqual(testDatabase.remoteSecretCryptoMock.decryptCalls, 13)
-            XCTAssertEqual(testDatabase.remoteSecretCryptoMock.encryptCalls, 13)
+            XCTAssertEqual(testDatabase.remoteSecretCryptoMock.decryptCalls, 14)
+            XCTAssertEqual(testDatabase.remoteSecretCryptoMock.encryptCalls, 14)
         }
         else {
             XCTAssertEqual(testDatabase.remoteSecretCryptoMock.decryptCalls, 0)

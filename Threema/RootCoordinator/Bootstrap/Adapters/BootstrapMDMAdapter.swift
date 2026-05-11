@@ -38,7 +38,6 @@ final class BootstrapMDMAdapter: NSObject, BootstrapMDMSetupProtocol {
     // MARK: - Properties
     
     let mdmSetup: MDMSetup
-    private let appLaunchManager: AppLaunchManagerProtocol
     
     // MARK: - Computed Properties
     
@@ -104,12 +103,8 @@ final class BootstrapMDMAdapter: NSObject, BootstrapMDMSetupProtocol {
     
     // MARK: - Initialization
     
-    init(
-        mdmSetup: MDMSetup,
-        appLaunchManager: AppLaunchManagerProtocol
-    ) {
+    init(mdmSetup: MDMSetup = MDMSetup()) {
         self.mdmSetup = mdmSetup
-        self.appLaunchManager = appLaunchManager
     }
     
     // MARK: - Methods
@@ -124,16 +119,13 @@ final class BootstrapMDMAdapter: NSObject, BootstrapMDMSetupProtocol {
     
     func restoreIDBackup() async throws {
         try await withCheckedThrowingContinuation { continuation in
-            mdmSetup.restoreIDBackup(
-                onCompletion: {
-                    continuation.resume()
-                },
-                onError: { error in
-                    continuation.resume(
-                        throwing: error ?? Error.restoreIDBackupFailed
-                    )
-                }
-            )
+            mdmSetup.restoreIDBackup(onCompletion: {
+                continuation.resume()
+            }, onError: { error in
+                continuation.resume(
+                    throwing: error ?? Error.restoreIDBackupFailed
+                )
+            })
         }
     }
 }

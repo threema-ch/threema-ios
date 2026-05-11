@@ -9,6 +9,7 @@ final class ChatViewMessageRightToLeftTransitionProxy: NSObject {
     
     private weak var navigationController: UINavigationController?
     private weak var delegate: ChatViewTableViewCellDelegateProtocol?
+    private weak var previousNavigationControllerDelegate: UINavigationControllerDelegate?
     private var interactionController: UIPercentDrivenInteractiveTransition?
     
     // MARK: - Lifecycle
@@ -18,9 +19,17 @@ final class ChatViewMessageRightToLeftTransitionProxy: NSObject {
         
         self.delegate = delegate
         
+        self.previousNavigationControllerDelegate = navigationController?.delegate
+
         super.init()
         
         navigationController?.delegate = self
+    }
+
+    deinit {
+        if navigationController?.delegate === self {
+            navigationController?.delegate = previousNavigationControllerDelegate
+        }
     }
     
     // MARK: - Action Functions
@@ -34,7 +43,7 @@ final class ChatViewMessageRightToLeftTransitionProxy: NSObject {
         /// When swiping to details we want our handling, and when swiping back we want the default handling from
         /// navigationcontroller
         navigationController?.delegate = self
-        defer { navigationController?.delegate = nil }
+        defer { navigationController?.delegate = previousNavigationControllerDelegate }
         
         var percent: CGFloat = 0
         if let view = gestureRecognizer.view {

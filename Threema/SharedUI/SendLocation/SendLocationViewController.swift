@@ -132,7 +132,7 @@ final class SendLocationViewController: ThemedViewController {
     
     // MARK: - Lifecycle
     
-    @objc init(conversation: ConversationEntity, mapsServerInfo: MapsServerInfo?) {
+    init(conversation: ConversationEntity, mapsServerInfo: MapsServerInfo?) {
         self.conversation = conversation
         self.mapsServerInfo = mapsServerInfo
         

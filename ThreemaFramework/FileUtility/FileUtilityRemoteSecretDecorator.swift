@@ -1,20 +1,20 @@
 import FileUtility
 import RemoteSecretProtocol
 
-final class FileUtilityRemoteSecretDecorator: FileUtilityProtocol {
-    var appDocumentsDirectory: URL? {
+public final class FileUtilityRemoteSecretDecorator: FileUtilityProtocol {
+    public var appDocumentsDirectory: URL? {
         wrapped.appDocumentsDirectory
     }
     
-    var appCachesDirectory: URL? {
+    public var appCachesDirectory: URL? {
         wrapped.appCachesDirectory
     }
     
-    var appTemporaryDirectory: URL {
+    public var appTemporaryDirectory: URL {
         wrapped.appTemporaryDirectory
     }
     
-    var appTemporaryUnencryptedDirectory: URL {
+    public var appTemporaryUnencryptedDirectory: URL {
         wrapped.appTemporaryUnencryptedDirectory
     }
     
@@ -22,7 +22,7 @@ final class FileUtilityRemoteSecretDecorator: FileUtilityProtocol {
     private let remoteSecretManager: RemoteSecretManagerProtocol
     private let whitelist: Set<String>
     
-    init(
+    public init(
         wrapped: FileUtilityProtocol,
         remoteSecretManager: RemoteSecretManagerProtocol,
         whitelist: Set<String>
@@ -32,39 +32,39 @@ final class FileUtilityRemoteSecretDecorator: FileUtilityProtocol {
         self.whitelist = whitelist
     }
     
-    func appDataDirectory(appGroupID: String) -> URL? {
+    public func appDataDirectory(appGroupID: String) -> URL? {
         wrapped.appDataDirectory(appGroupID: appGroupID)
     }
     
-    func freeDiskSpaceInBytes() -> Int64 {
+    public func freeDiskSpaceInBytes() -> Int64 {
         wrapped.freeDiskSpaceInBytes()
     }
     
-    func pathSizeInBytes(pathURL: URL, size: inout Int64) {
+    public func pathSizeInBytes(pathURL: URL, size: inout Int64) {
         wrapped.pathSizeInBytes(pathURL: pathURL, size: &size)
     }
     
-    func fileSizeInBytes(fileURL: URL) -> Int64? {
+    public func fileSizeInBytes(fileURL: URL) -> Int64? {
         wrapped.fileSizeInBytes(fileURL: fileURL)
     }
     
-    func getFileSizeDescription(for fileURL: URL) -> String? {
+    public func getFileSizeDescription(for fileURL: URL) -> String? {
         wrapped.getFileSizeDescription(for: fileURL)
     }
     
-    func getFileSizeDescription(from fileSize: Int64) -> String {
+    public func getFileSizeDescription(from fileSize: Int64) -> String {
         wrapped.getFileSizeDescription(from: fileSize)
     }
     
-    func getTemporaryFileName() -> String {
+    public func getTemporaryFileName() -> String {
         wrapped.getTemporaryFileName()
     }
     
-    func getTemporarySendableFileName(base: String) -> String {
+    public func getTemporarySendableFileName(base: String) -> String {
         wrapped.getTemporarySendableFileName(base: base)
     }
     
-    func getTemporarySendableFileName(
+    public func getTemporarySendableFileName(
         base: String,
         directoryURL: URL,
         pathExtension: String?
@@ -76,7 +76,7 @@ final class FileUtilityRemoteSecretDecorator: FileUtilityProtocol {
         )
     }
     
-    func getUniqueFilename(
+    public func getUniqueFilename(
         from filename: String,
         directoryURL: URL,
         pathExtension: String?
@@ -88,15 +88,15 @@ final class FileUtilityRemoteSecretDecorator: FileUtilityProtocol {
         )
     }
     
-    func fileExists(at fileURL: URL?) -> Bool {
+    public func fileExists(at fileURL: URL?) -> Bool {
         wrapped.fileExists(at: fileURL)
     }
     
-    func fileExists(atPath path: String) -> Bool {
+    public func fileExists(atPath path: String) -> Bool {
         wrapped.fileExists(atPath: path)
     }
     
-    func createFile(
+    public func createFile(
         atPath path: String,
         contents data: Data?,
         attributes attr: [FileAttributeKey: Any]?
@@ -108,7 +108,7 @@ final class FileUtilityRemoteSecretDecorator: FileUtilityProtocol {
         )
     }
     
-    func mkDir(
+    public func mkDir(
         at url: URL,
         withIntermediateDirectories createIntermediates: Bool,
         attributes: [FileAttributeKey: Any]?
@@ -120,7 +120,7 @@ final class FileUtilityRemoteSecretDecorator: FileUtilityProtocol {
         )
     }
     
-    func mkDir(
+    public func mkDir(
         atPath path: String,
         withIntermediateDirectories createIntermediates: Bool,
         attributes: [FileAttributeKey: Any]?
@@ -132,71 +132,71 @@ final class FileUtilityRemoteSecretDecorator: FileUtilityProtocol {
         )
     }
     
-    func dir(at sourceURL: URL?) -> [URL]? {
+    public func dir(at sourceURL: URL?) -> [URL]? {
         wrapped.dir(at: sourceURL)
     }
     
-    func enumerator(atPath path: String) -> FileManager.DirectoryEnumerator? {
+    public func enumerator(atPath path: String) -> FileManager.DirectoryEnumerator? {
         wrapped.enumerator(atPath: path)
     }
     
-    func copy(from sourceURL: URL, to destinationURL: URL) throws {
+    public func copy(from sourceURL: URL, to destinationURL: URL) throws {
         try wrapped.copy(from: sourceURL, to: destinationURL)
     }
     
-    func move(from sourceURL: URL, to destinationURL: URL) throws {
+    public func move(from sourceURL: URL, to destinationURL: URL) throws {
         try wrapped.move(from: sourceURL, to: destinationURL)
     }
     
-    func move(fromPath srcPath: String, toPath dstPath: String) throws {
+    public func move(fromPath srcPath: String, toPath dstPath: String) throws {
         try wrapped.move(fromPath: srcPath, toPath: dstPath)
     }
     
-    func mergeContentsOfPath(from sourceURL: URL, to destinationURL: URL) throws {
+    public func mergeContentsOfPath(from sourceURL: URL, to destinationURL: URL) throws {
         try wrapped.mergeContentsOfPath(from: sourceURL, to: destinationURL)
     }
     
-    func replaceFile(from sourceURL: URL, to destinationURL: URL) throws {
+    public func replaceFile(from sourceURL: URL, to destinationURL: URL) throws {
         try wrapped.replaceFile(from: sourceURL, to: destinationURL)
     }
     
-    func delete(at sourceURL: URL) throws {
+    public func delete(at sourceURL: URL) throws {
         try wrapped.delete(at: sourceURL)
     }
     
-    func deleteIfExists(at sourceURL: URL?) {
+    public func deleteIfExists(at sourceURL: URL?) {
         wrapped.deleteIfExists(at: sourceURL)
     }
     
-    func isDeletableFile(atPath path: String) -> Bool {
+    public func isDeletableFile(atPath path: String) -> Bool {
         wrapped.isDeletableFile(atPath: path)
     }
     
-    func delete(atPath path: String) throws {
+    public func delete(atPath path: String) throws {
         try wrapped.delete(atPath: path)
     }
     
-    func removeItemsInAllDirectories(appGroupID: String) {
+    public func removeItemsInAllDirectories(appGroupID: String) {
         wrapped.removeItemsInAllDirectories(appGroupID: appGroupID)
     }
     
-    func removeItemsInDirectory(directoryURL: URL) {
+    public func removeItemsInDirectory(directoryURL: URL) {
         wrapped.removeItemsInDirectory(directoryURL: directoryURL)
     }
     
-    func cleanTemporaryDirectory(olderThan: Date?) {
+    public func cleanTemporaryDirectory(olderThan: Date?) {
         wrapped.cleanTemporaryDirectory(olderThan: olderThan)
     }
     
-    func attributesOfFileSystem(forPath path: String) throws -> [FileAttributeKey: Any] {
+    public func attributesOfFileSystem(forPath path: String) throws -> [FileAttributeKey: Any] {
         try wrapped.attributesOfFileSystem(forPath: path)
     }
     
-    func contentsOfDirectory(atPath path: String) throws -> [String] {
+    public func contentsOfDirectory(atPath path: String) throws -> [String] {
         try wrapped.contentsOfDirectory(atPath: path)
     }
     
-    func read(fileURL: URL?) -> Data? {
+    public func read(fileURL: URL?) -> Data? {
         guard let fileData = wrapped.read(fileURL: fileURL) else {
             return nil
         }
@@ -209,7 +209,7 @@ final class FileUtilityRemoteSecretDecorator: FileUtilityProtocol {
         return decryptedData
     }
     
-    func write(contents: Data?, to fileURL: URL?) -> Bool {
+    public func write(contents: Data?, to fileURL: URL?) -> Bool {
         guard shouldAllowEncryption(fileURL) else {
             return wrapped.write(contents: contents, to: fileURL)
         }
@@ -218,11 +218,11 @@ final class FileUtilityRemoteSecretDecorator: FileUtilityProtocol {
         return wrapped.write(contents: fileData, to: fileURL)
     }
     
-    func logDirectoriesAndFiles(pathURL: URL) {
+    public func logDirectoriesAndFiles(pathURL: URL) {
         wrapped.logDirectoriesAndFiles(pathURL: pathURL)
     }
     
-    func updateProtectionFormCompleteToCompleteUntilFirstUserAuthentication(
+    public func updateProtectionFormCompleteToCompleteUntilFirstUserAuthentication(
         at directoryURL: URL
     ) {
         wrapped.updateProtectionFormCompleteToCompleteUntilFirstUserAuthentication(
@@ -230,7 +230,7 @@ final class FileUtilityRemoteSecretDecorator: FileUtilityProtocol {
         )
     }
     
-    func backup(
+    public func backup(
         of namePrefixes: [String],
         exclude: Bool,
         appGroupID: String

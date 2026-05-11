@@ -247,7 +247,7 @@ struct DeveloperSettingsView: View {
                             try? PersistenceManager(
                                 appGroupID: AppGroup.groupID(),
                                 userDefaults: AppGroup.userDefaults(),
-                                remoteSecretManager: AppLaunchManager.remoteSecretManager
+                                remoteSecretManager: RemoteSecretProvider.remoteSecretManager
                             ).databaseManager.eraseDB()
                             exit(0)
                         } label: {

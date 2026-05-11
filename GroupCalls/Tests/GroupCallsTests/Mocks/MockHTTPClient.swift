@@ -4,7 +4,7 @@ import ThreemaProtocols
 
 final class MockHTTPClient: GroupCallHTTPClientAdapterProtocol {
     typealias CallID = Data
-    typealias PeekResponse = ThreemaProtocols.Groupcall_SfuHttpResponse.Peek
+    typealias PeekResponse = ThreemaProtocols.GroupCall_SfuHttpResponse.Peek
     
     fileprivate let returnData: Data!
     fileprivate let response: URLResponse!

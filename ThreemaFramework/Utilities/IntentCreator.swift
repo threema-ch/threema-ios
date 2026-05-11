@@ -26,7 +26,7 @@ public final class IntentCreator {
         direction: INInteractionDirection
     ) -> INInteraction? {
         
-        guard !AppLaunchManager.isRemoteSecretEnabled else {
+        guard !RemoteSecretProvider.isRemoteSecretEnabled else {
             DDLogVerbose("Donations for interactions are disabled by the remote secret feature")
             return nil
         }
@@ -116,7 +116,7 @@ public final class IntentCreator {
         direction: INInteractionDirection
     ) -> INInteraction? {
         
-        guard !AppLaunchManager.isRemoteSecretEnabled else {
+        guard !RemoteSecretProvider.isRemoteSecretEnabled else {
             DDLogVerbose("Donations for interactions are disabled by the remote secret feature")
             return nil
         }

@@ -1,3 +1,4 @@
+import CocoaLumberjackSwift
 import Foundation
 import GroupCalls
 import ThreemaMacros
@@ -18,6 +19,7 @@ import ThreemaMacros
             guard isCallActiveInBackground != oldValue else {
                 return
             }
+            DDLogInfo("[NavigationBarPromptHandler] isCallActiveInBackground changed to: \(isCallActiveInBackground)")
             postChangeNotifications()
         }
     }
@@ -27,6 +29,7 @@ import ThreemaMacros
             guard isGroupCallActive != oldValue else {
                 return
             }
+            DDLogInfo("[NavigationBarPromptHandler] isGroupCallActive changed to: \(isGroupCallActive)")
             postChangeNotifications()
         }
     }

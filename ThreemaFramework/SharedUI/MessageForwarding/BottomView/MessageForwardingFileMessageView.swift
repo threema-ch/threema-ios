@@ -387,12 +387,10 @@ final class MessageForwardingFileMessageView: UIStackView {
             }
         }
 
+        // We ensure that on the next layout pass the layout is reevaluated. We don't enforce it here. Otherwise some
+        // constraints and the layout breaks
         chatTextView.invalidateIntrinsicContentSize()
-        chatTextView.setNeedsLayout()
-        chatTextView.layoutIfNeeded()
-
         setNeedsLayout()
-        layoutIfNeeded()
     }
 
     private func updateToggleStackView() {

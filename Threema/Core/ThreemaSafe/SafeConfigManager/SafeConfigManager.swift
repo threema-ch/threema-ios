@@ -3,7 +3,7 @@ import Foundation
 import Keychain
 import ThreemaEssentials
 
-@objc final class SafeConfigManager: NSObject, SafeConfigManagerProtocol {
+final class SafeConfigManager: NSObject, SafeConfigManagerProtocol {
 
     private static let safeConfigMutationLock = DispatchQueue(label: "safeConfigMutationLock")
     private static var safeConfig: SafeData?
@@ -18,7 +18,7 @@ import ThreemaEssentials
     // Convenience init for legacy code that uses AppLaunchManager
     @objc override convenience init() {
         self.init(keychainManager: KeychainManager(
-            remoteSecretManager: AppLaunchManager.remoteSecretManager
+            remoteSecretManager: RemoteSecretProvider.remoteSecretManager
         ))
     }
 

@@ -4,6 +4,7 @@ import ThreemaMacros
 extension ProfileCollectionViewDataSource {
     enum Section {
         case header
+        case workAvailabilityStatus
         case backups
         case id
         case linking
@@ -14,6 +15,8 @@ extension ProfileCollectionViewDataSource {
             switch self {
             case .header:
                 [.header]
+            case .workAvailabilityStatus:
+                TargetManager.isWork ? [.workAvailabilityStatus] : []
             case .backups:
                 [.backups]
             case .id:
@@ -35,6 +38,9 @@ extension ProfileCollectionViewDataSource {
 
             switch self {
             case .header:
+                return nil
+            
+            case .workAvailabilityStatus:
                 return nil
                 
             case .backups:
@@ -75,6 +81,8 @@ extension ProfileCollectionViewDataSource {
                 
         case backups
 
+        case workAvailabilityStatus
+
         case revocationPassword
         
         case phone
@@ -89,6 +97,8 @@ extension ProfileCollectionViewDataSource {
             switch self {
             case .header:
                 nil
+            case .workAvailabilityStatus:
+                #localize("work_availability_status_title")
             case .backups:
                 #localize("backups")
             case .revocationPassword:
@@ -110,7 +120,10 @@ extension ProfileCollectionViewDataSource {
             switch self {
             case .header:
                 return nil
-
+            
+            case .workAvailabilityStatus:
+                return nil
+                
             case .backups:
                 return nil
 
@@ -163,7 +176,7 @@ extension ProfileCollectionViewDataSource {
             }
 
             switch self {
-            case .header, .publicKey:
+            case .header, .workAvailabilityStatus, .publicKey:
                 return false
 
             case .backups:
@@ -187,7 +200,10 @@ extension ProfileCollectionViewDataSource {
             switch destination {
             case .editProfile, .scanQRCode, .qrCode, .shareID:
                 nil
-
+            
+            case .workAvailabilityStatus:
+                .workAvailabilityStatus
+                
             case .backups:
                 .backups
 

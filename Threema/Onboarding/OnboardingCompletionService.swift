@@ -13,11 +13,11 @@ final class OnboardingCompletionService {
     // MARK: - Properties
     
     private let bootstrapIdentityStore: any BootstrapIdentityStoreProtocol
-    private let licenseStore: any LicenseStoreProtocol
+    private let licenseStore: any LicenseStoreAdapterProtocol
     private let bootstrapUserSettings: any BootstrapUserSettingsProtocol
     private let bootstrapContactStore: any BootstrapContactStoreProtocol
     private let bootstrapServerAPI: any BootstrapServerAPIProtocol
-    private let bootstrapPhoneNumberNormalizer: any BootstrapPhoneNumberNormalizerProtocol
+    private let bootstrapPhoneNumberNormalizer: any PhoneNumberNormalizerProtocol
     private let bootstrapMDM: any BootstrapMDMSetupProtocol
     private let safeComponentsFactory: SafeComponentsFactory
     
@@ -25,11 +25,11 @@ final class OnboardingCompletionService {
     
     init(
         bootstrapIdentityStore: any BootstrapIdentityStoreProtocol,
-        licenseStore: any LicenseStoreProtocol,
+        licenseStore: any LicenseStoreAdapterProtocol,
         bootstrapUserSettings: any BootstrapUserSettingsProtocol,
         bootstrapContactStore: any BootstrapContactStoreProtocol,
         bootstrapServerAPI: any BootstrapServerAPIProtocol,
-        bootstrapPhoneNumberNormalizer: any BootstrapPhoneNumberNormalizerProtocol,
+        bootstrapPhoneNumberNormalizer: any PhoneNumberNormalizerProtocol,
         bootstrapMDM: any BootstrapMDMSetupProtocol,
         safeComponentsFactory: SafeComponentsFactory
     ) {
@@ -52,10 +52,10 @@ final class OnboardingCompletionService {
     /// - Throws: Error if migration fails
     func runMigrationsAndSetup(
         remoteSecretManager: any RemoteSecretManagerProtocol,
-        keychainManager: any KeychainManagerProtocol
+        businessInjector: BusinessInjectorProtocol
     ) async throws {
         try await SetupApp.runDatabaseMigrationIfNeeded(remoteSecretManager: remoteSecretManager)
-        try await SetupApp.runAppMigrationIsNeeded()
+        try await SetupApp.runAppMigrationIfNeeded(businessInjector: businessInjector)
         try await FeatureMask.updateLocal()
         
         AppSetup.state = .identitySetupComplete
@@ -120,8 +120,11 @@ final class OnboardingCompletionService {
         guard bootstrapIdentityStore.linkedMobileNo?.isEmpty ?? true else {
             return false
         }
-        
-        guard let normalizedNumber = bootstrapPhoneNumberNormalizer.normalize(phoneNumber) else {
+
+        let region = bootstrapPhoneNumberNormalizer.userRegion()
+
+        guard let normalizedNumber = bootstrapPhoneNumberNormalizer.e164Format(from: phoneNumber, defaultRegion: region)
+        else {
             DDLogWarn("Failed to normalize phone number, skipping link")
             return false
         }
@@ -166,7 +169,8 @@ final class OnboardingCompletionService {
             safeConfigManager: safeConfigManager,
             serverAPIConnector: bootstrapServerAPI.serverAPIConnector,
             groupManager: businessInjector.groupManager,
-            myIdentityStore: businessInjector.myIdentityStore
+            myIdentityStore: businessInjector.myIdentityStore,
+            phoneNumberNormalizer: PhoneNumberNormalizer()
         )
         let safeManager = SafeManager(
             safeConfigManager: safeConfigManager,

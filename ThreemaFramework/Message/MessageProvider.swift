@@ -127,12 +127,12 @@ public final class MessageProvider: NSObject {
         entityManager: EntityManager = PersistenceManager(
             appGroupID: AppGroup.groupID(),
             userDefaults: AppGroup.userDefaults(),
-            remoteSecretManager: AppLaunchManager.remoteSecretManager
+            remoteSecretManager: RemoteSecretProvider.remoteSecretManager
         ).entityManager,
         backgroundEntityManager: EntityManager = PersistenceManager(
             appGroupID: AppGroup.groupID(),
             userDefaults: AppGroup.userDefaults(),
-            remoteSecretManager: AppLaunchManager.remoteSecretManager
+            remoteSecretManager: RemoteSecretProvider.remoteSecretManager
         ).backgroundEntityManager
     ) {
         var context: ThreemaManagedObjectContext
@@ -140,7 +140,7 @@ public final class MessageProvider: NSObject {
             let persistenceManager = PersistenceManager(
                 appGroupID: AppGroup.groupID(),
                 userDefaults: AppGroup.userDefaults(),
-                remoteSecretManager: AppLaunchManager.remoteSecretManager
+                remoteSecretManager: RemoteSecretProvider.remoteSecretManager
             )
 
             context =
@@ -273,7 +273,7 @@ public final class MessageProvider: NSObject {
             return
         }
         
-        backgroundEntityManager.performBlock { [weak self] in
+        backgroundEntityManager.perform { [weak self] in
             guard let conversationObjectID = self?.conversationObjectID,
                   let conversation = self?.backgroundEntityManager.entityFetcher
                   .existingObject(with: conversationObjectID) as? ConversationEntity,

@@ -12,6 +12,8 @@
 @property (nullable, strong, nonatomic, readwrite) NSString *createIDPhone;
 @property (nonatomic, readwrite) BOOL linkMobileNoPending;
 @property (nullable, strong, nonatomic, readwrite) NSString *linkedMobileNo;
+@property (nullable, strong, nonatomic, readwrite) NSString *linkMobileNoVerificationId NS_SWIFT_NAME(linkMobileNoVerificationID);
+@property (nullable, strong, nonatomic, readwrite) NSDate *linkMobileNoStartDate;
 
 @property (nullable, strong, nonatomic, readwrite) NSMutableDictionary *profilePicture;
 
@@ -25,6 +27,9 @@
 @property (nullable, strong, nonatomic, readwrite) NSString *department;
 @property (nullable, strong, nonatomic, readwrite) NSString *category;
 
+@property (nullable, strong, nonatomic, readwrite) NSString *licenseLogoLightUrl NS_SWIFT_NAME(licenseLogoLightURL);
+@property (nullable, strong, nonatomic, readwrite) NSString *licenseLogoDarkUrl NS_SWIFT_NAME(licenseLogoDarkURL);
+
 @property (nonnull, strong, nonatomic, readonly) UIImage *resolvedProfilePicture;
 @property (nonnull, strong, nonatomic, readonly) UIColor *idColor;
 @property (nonnull, strong, nonatomic, readonly) UIImage *resolvedGroupCallProfilePicture;
@@ -37,6 +42,7 @@
 - (nullable NSData *)decryptData:(nonnull NSData *)data withNonce:(nonnull NSData *)nonce publicKey:(nonnull NSData *)_publicKey;
 - (nullable NSData *)sharedSecretWithPublicKey:(nonnull NSData *)publicKey;
 - (nullable NSData *)mySharedSecret;
+- (BOOL)sendUpdateWorkInfoStatus;
 
 /// Exists there a valid identity?
 ///
@@ -53,6 +59,11 @@
 
 @property (nullable, strong, nonatomic, readwrite) NSString *serverGroup;
 
+@property (nullable, strong, nonatomic, readwrite) NSDate *privateIdentityInfoLastUpdate;
+
+@property (nullable, strong, nonatomic, readwrite) NSData *lastWorkUpdateRequestHash;
+@property (nullable, strong, nonatomic, readwrite) NSDate *lastWorkUpdateDate;
+
 @end
 
 @interface MyIdentityStore : NSObject <MyIdentityStoreProtocol>
@@ -62,21 +73,9 @@
 @property (nonatomic, readwrite) BOOL linkEmailPending;
 @property (nullable, strong, nonatomic, readwrite) NSString *linkedEmail;
 
-@property (nonatomic, readwrite) BOOL linkMobileNoPending;
-@property (nullable, strong, nonatomic, readwrite) NSString *linkMobileNoVerificationId NS_SWIFT_NAME(linkMobileNoVerificationID);
-@property (nullable, strong, nonatomic, readwrite) NSDate *linkMobileNoStartDate;
-@property (nullable, strong, nonatomic, readwrite) NSString *linkedMobileNo;
-
-@property (nullable, strong, nonatomic, readwrite) NSDate *privateIdentityInfoLastUpdate;
-
 @property (nonatomic, readwrite) NSInteger lastSentFeatureMask;
 
 @property (nullable, strong, nonatomic, readwrite) NSDate *licenseLastCheck;
-@property (nullable, strong, nonatomic, readwrite) NSString *licenseLogoLightUrl NS_SWIFT_NAME(licenseLogoLightURL);
-@property (nullable, strong, nonatomic, readwrite) NSString *licenseLogoDarkUrl NS_SWIFT_NAME(licenseLogoDarkURL);
-
-@property (nullable, strong, nonatomic, readwrite) NSData *lastWorkUpdateRequestHash;
-@property (nullable, strong, nonatomic, readwrite) NSDate *lastWorkUpdateDate;
 
 @property (nullable, strong, nonatomic, readwrite) NSString *lastWorkInfoLanguage;
 @property (nullable, strong, nonatomic, readwrite) NSString *lastWorkInfoMdmDescription;
@@ -92,7 +91,6 @@
 - (nonnull NSString *)addBackupGroupDashes:(nonnull NSString *)backup;
 - (void)restoreFromBackup:(nonnull NSString *)backup withPassword:(nonnull NSString *)password onCompletion:(void(^_Nonnull)(void))onCompletion onError:(void(^_Nonnull)(NSError * _Nonnull error))onError;
 - (void)restoreFromBackup:(nonnull NSString *)myIdentity withSecretKey:(nonnull NSData *)mySecretKey onCompletion:(void(^_Nonnull)(void))onCompletion onError:(void(^_Nonnull)(NSError * _Nonnull error))onError;
-- (BOOL)sendUpdateWorkInfoStatus;
 
 - (NSString *)profilePicturePath;
 

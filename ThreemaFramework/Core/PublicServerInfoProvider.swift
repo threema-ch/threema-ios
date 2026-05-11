@@ -108,10 +108,19 @@ final class PublicServerInfoProvider: ServerInfoProvider {
     }
 
     func workServer(ipv6: Bool, completionHandler: @escaping (WorkServerInfo?, Error?) -> Void) {
-        var keyName = "ThreemaWorkAPIURL"
-        if ipv6 {
-            keyName += "v6"
+        let keyName = "ThreemaWorkAPIURL"
+
+        guard let workServer = BundleUtil.object(forThreemaFrameworkConfigurationKey: keyName) as? String else {
+            fatalError("[PublicServerInfoProvider] Missing configuration key: \(keyName)")
         }
+        completionHandler(
+            WorkServerInfo(url: workServer),
+            nil
+        )
+    }
+    
+    func workBaseServer(completionHandler: @escaping (WorkServerInfo?, Error?) -> Void) {
+        let keyName = "ThreemaWorkBaseServerURL"
 
         guard let workServer = BundleUtil.object(forThreemaFrameworkConfigurationKey: keyName) as? String else {
             fatalError("[PublicServerInfoProvider] Missing configuration key: \(keyName)")

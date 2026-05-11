@@ -1,7 +1,7 @@
 import Foundation
 import ThreemaProtocols
 
-extension Sync_Contact {
+extension D2dSync_Contact {
     mutating func update(contact: ContactEntity, pushSetting: PushSetting) {
         let activitySate = ActivityState(rawValue: contact.contactState.rawValue)
         update(activityState: activitySate)
@@ -16,22 +16,26 @@ extension Sync_Contact {
         update(nickname: contact.publicNickname)
 
         var pushSetting = pushSetting
-        update(notificationSoundIsMuted: pushSetting.muted)
+        updateNotificationSound()
         update(notificationTriggerType: pushSetting.type, notificationTriggerExpiresAt: pushSetting.periodOffTillDate)
 
         update(readReceipt: contact.readReceipt)
         update(syncState: SyncState(rawValue: contact.contactImportStatus.rawValue))
         update(typingIndicator: contact.typingIndicator)
-        update(verificationLevel: Sync_Contact.VerificationLevel(rawValue: contact.contactVerificationLevel.rawValue))
         update(
-            workVerificationLevel: contact.isWorkContact ? .workSubscriptionVerified : Sync_Contact
+            verificationLevel: D2dSync_Contact
+                .VerificationLevel(rawValue: contact.contactVerificationLevel.rawValue)
+        )
+        update(
+            workVerificationLevel: contact.isWorkContact ? .workSubscriptionVerified : D2dSync_Contact
                 .WorkVerificationLevel.none
         )
+        update(workAvailabilityStatusEntity: contact.workAvailabilityStatus)
     }
 
     mutating func update(conversation: ConversationEntity) {
-        update(conversationCategory: Sync_ConversationCategory(rawValue: conversation.conversationCategory.rawValue))
-        update(conversationVisibility: Sync_ConversationVisibility(
+        update(conversationCategory: D2dSync_ConversationCategory(rawValue: conversation.conversationCategory.rawValue))
+        update(conversationVisibility: D2dSync_ConversationVisibility(
             rawValue: conversation.conversationVisibility
                 .rawValue
         ))
@@ -55,7 +59,7 @@ extension Sync_Contact {
         }
     }
 
-    mutating func update(conversationCategory: Sync_ConversationCategory?) {
+    mutating func update(conversationCategory: D2dSync_ConversationCategory?) {
         if let conversationCategory {
             self.conversationCategory = conversationCategory
         }
@@ -64,7 +68,7 @@ extension Sync_Contact {
         }
     }
 
-    mutating func update(conversationVisibility: Sync_ConversationVisibility?) {
+    mutating func update(conversationVisibility: D2dSync_ConversationVisibility?) {
         if let conversationVisibility {
             self.conversationVisibility = conversationVisibility
         }
@@ -131,16 +135,10 @@ extension Sync_Contact {
         }
     }
 
-    mutating func update(notificationSoundIsMuted: Bool?) {
-        if let notificationSoundIsMuted {
-            notificationSoundPolicyOverride
-                .override = notificationSoundIsMuted ? .policy(.muted) : .default(Common_Unit())
-        }
-        else if hasNotificationSoundPolicyOverride {
-            clearNotificationSoundPolicyOverride()
-        }
+    mutating func updateNotificationSound() {
+        deprecatedNotificationSoundPolicyOverride.override = .default(Common_Unit())
     }
-
+    
     mutating func update(notificationTriggerType: PushSetting.PushSettingType?, notificationTriggerExpiresAt: Date?) {
         if let notificationTriggerType {
             switch notificationTriggerType {
@@ -148,13 +146,13 @@ extension Sync_Contact {
                 notificationTriggerPolicyOverride.override = .default(Common_Unit())
             case .offPeriod:
                 if let notificationTriggerExpiresAt {
-                    var triggerPolicy = Sync_Contact.NotificationTriggerPolicyOverride.Policy()
+                    var triggerPolicy = D2dSync_Contact.NotificationTriggerPolicyOverride.Policy()
                     triggerPolicy.expiresAt = notificationTriggerExpiresAt.millisecondsSince1970.littleEndian
                     triggerPolicy.policy = .never
                     notificationTriggerPolicyOverride.override = .policy(triggerPolicy)
                 }
             case .off:
-                var triggerPolicy = Sync_Contact.NotificationTriggerPolicyOverride.Policy()
+                var triggerPolicy = D2dSync_Contact.NotificationTriggerPolicyOverride.Policy()
                 triggerPolicy.clearExpiresAt()
                 triggerPolicy.policy = .never
                 notificationTriggerPolicyOverride.override = .policy(triggerPolicy)
@@ -230,6 +228,47 @@ extension Sync_Contact {
         }
         else if hasWorkVerificationLevel {
             clearWorkVerificationLevel()
+        }
+    }
+    
+    mutating func update(workAvailabilityStatus: WorkAvailabilityStatus?) {
+        if let workAvailabilityStatus {
+            var status = D2dSync_WorkAvailabilityStatus()
+            status
+                .category = D2dSync_WorkAvailabilityStatusCategory(
+                    rawValue: workAvailabilityStatus.category.rawValue
+                ) ??
+                .none
+            status.description_p = workAvailabilityStatus.text ?? ""
+            self.workAvailabilityStatus = status
+        }
+        else if hasWorkAvailabilityStatus {
+            clearWorkAvailabilityStatus()
+        }
+    }
+
+    mutating func update(workAvailabilityStatusEntity: WorkAvailabilityStatusEntity?) {
+        if let workAvailabilityStatusEntity {
+            var status = D2dSync_WorkAvailabilityStatus()
+            status
+                .category = D2dSync_WorkAvailabilityStatusCategory(
+                    rawValue: workAvailabilityStatusEntity.value.intValue
+                ) ??
+                .none
+            status.description_p = workAvailabilityStatusEntity.text ?? ""
+            workAvailabilityStatus = status
+        }
+        else if hasWorkAvailabilityStatus {
+            clearWorkAvailabilityStatus()
+        }
+    }
+
+    mutating func update(workLastFullSyncAt: Date?) {
+        if let workLastFullSyncAt {
+            self.workLastFullSyncAt = workLastFullSyncAt.millisecondsSince1970
+        }
+        else {
+            self.workLastFullSyncAt = 0
         }
     }
 }

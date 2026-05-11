@@ -25,7 +25,7 @@ class MediatorReflectedUserProfileSyncProcessor {
     /// Update user profile sync (download user profile image).
     /// - Parameter with: User profile sync data
     /// - Throws: `MediatorReflectedProcessorError.messageNotProcessed`
-    private func update(with userProfile: Sync_UserProfile) -> Promise<Void> {
+    private func update(with userProfile: D2dSync_UserProfile) -> Promise<Void> {
         firstly {
             Guarantee { $0(userProfile.hasProfilePicture && userProfile.profilePicture.updated.hasBlob) }
         }
@@ -39,14 +39,7 @@ class MediatorReflectedUserProfileSyncProcessor {
             }
         }
         .then { (downloadedBlobData: Data?) -> Promise<Void> in
-            let profileStore = ProfileStore(
-                serverConnector: self.frameworkInjector.serverConnector,
-                myIdentity: ThreemaIdentity(self.frameworkInjector.myIdentityStore.identity),
-                myIdentityStore: self.frameworkInjector.myIdentityStore,
-                contactStore: self.frameworkInjector.contactStore,
-                userSettings: self.frameworkInjector.userSettings,
-                taskManager: nil
-            )
+            let profileStore = self.frameworkInjector.profileStore
             profileStore.save(
                 syncUserProfile: userProfile,
                 profileImage: downloadedBlobData,

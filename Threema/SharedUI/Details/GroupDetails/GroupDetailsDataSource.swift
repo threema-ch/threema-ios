@@ -367,7 +367,7 @@ extension GroupDetailsDataSource {
         var conversationDetailsQuickActions = [QuickAction]()
         
         conversationDetailsQuickActions.append(dndQuickAction(in: viewController))
-        if !AppLaunchManager.isRemoteSecretEnabled,
+        if !RemoteSecretProvider.isRemoteSecretEnabled,
            let searchChatQuickAction = searchChatQuickAction(in: viewController, for: conversation) {
             conversationDetailsQuickActions.append(searchChatQuickAction)
         }
@@ -696,7 +696,7 @@ extension GroupDetailsDataSource {
                         
                         strongGroupDetailsViewController.willDeleteAllMessages()
                         
-                        strongSelf.businessInjector.entityManager.performBlock {
+                        strongSelf.businessInjector.entityManager.perform {
                             _ = strongSelf.businessInjector.entityManager.entityDestroyer
                                 .deleteMessages(of: strongSelf.conversation)
                             strongSelf.reload(sections: [.contentActions])

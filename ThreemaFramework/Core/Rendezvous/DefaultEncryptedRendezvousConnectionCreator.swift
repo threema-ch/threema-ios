@@ -4,7 +4,7 @@ import ThreemaProtocols
 /// The default implementation of `EncryptedRendezvousConnectionCreator`
 struct DefaultEncryptedRendezvousConnectionCreator: EncryptedRendezvousConnectionCreator {
     public func create(
-        from rendezvousInit: Rendezvous_RendezvousInit
+        from rendezvousInit: D2dRendezvous_RendezvousInit
     ) throws -> (EncryptedRendezvousConnection, RendezvousCrypto) {
         guard let webSocketURL = URL(string: rendezvousInit.relayedWebSocket.url) else {
             throw EncryptedRendezvousConnectionCreatorError.invalidURL

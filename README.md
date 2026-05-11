@@ -79,18 +79,37 @@ To get started you need a [Mac](https://www.apple.com/mac/), [Xcode](https://dev
 
 ### 1. Install & Build Dependencies
 
+#### Automated
+
+In order to setup the project, please run:
+
+```sh
+./scripts/setup.sh
+```
+
+#### Manual
+
+Alternatively, you can also follow the manual steps below.
+
+Before starting, if you don't have [homebrew](https://brew.sh), check out their [official install instructions](https://brew.sh).
+
 1. If your Xcode installation is fresh make sure that command line tools are selected
 
    ```sh
    sudo xcode-select --switch /Applications/Xcode.app
    ```
 
-2. Install the third-party tools needed to build our Rust dependencies
+2. Install [mise](https://mise.jdx.dev/)
+   ```sh
+   brew install mise
+   ```
+
+3. Install the third-party tools needed to build our Rust dependencies
 
    1. If you don't have Rust, install & set it up using [Rustup](https://rustup.rs)
 
       ```sh
-      make setup-rust
+      mise run setup-rust
       ```
 
       (You might want to add `$HOME/.cargo/bin` to your `PATH`.)
@@ -98,20 +117,18 @@ To get started you need a [Mac](https://www.apple.com/mac/), [Xcode](https://dev
    2. Install the other tools needed
 
       ```sh
-      make setup
+      mise run setup
       ```
 
-   (If you don't have [homebrew](https://brew.sh) see their [official install instructions](https://brew.sh).)
-
-3. Download, install and build all dependencies (you want to rerun this if you update the repository)
+4. Download, install and build all dependencies (you want to rerun this if you update the repository)
 
    ```sh
-   make dependencies
+   mise run dependencies
    ```
 
    Besides building our Rust dependencies, this downloads the `WebRTC.xcframework` if it is missing. (If you want to build WebRTC yourself see [BUILD_WEBRTC.md](BUILD_WEBRTC.md).)
 
-To uninstall the dependencies you can run `make dependencies-clean`.
+To uninstall the dependencies you can run `mise run dependencies-clean`.
 
 ### 2. Setup Project
 

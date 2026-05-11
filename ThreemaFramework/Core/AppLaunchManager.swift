@@ -59,28 +59,31 @@ public final class AppLaunchManager: NSObject {
         }
     }
 
-    // TODO: (IOS-5387) Replace this by exposing `PersistenceManager` in `BusinessInjector` and remove this
-    // For now this is the source of truth for RS
-    /// - Warning: This will crash if `initializeRemoteSecret()` is not called
-    @available(
-        *,
-        deprecated,
-        message: "This should only be used if you can't directly use the correct business class through business injector"
-    )
-    public static var remoteSecretManager: RemoteSecretManagerProtocol! {
-        didSet {
-            isRemoteSecretEnabled = remoteSecretManager.isRemoteSecretEnabled
-            
-            FileUtility.updateSharedInstance(with: FileUtilityRemoteSecretDecorator(
-                wrapped: FileUtility(),
-                remoteSecretManager: AppLaunchManager.remoteSecretManager,
-                whitelist: Set(RemoteSecretFileEncryptionWhitelist.whiteList)
-            ))
-        }
+    @objc public static var isRemoteSecretEnabled: Bool {
+        RemoteSecretProvider.isRemoteSecretEnabled
     }
-
-    @available(*, deprecated, message: "Normally you should get remote secret injected into your class")
-    @objc public private(set) static var isRemoteSecretEnabled = false
+    
+    public static func preLaunchSetup() {
+        AppGroup.setGroupID(BundleUtil.threemaAppGroupIdentifier())
+        BundleUtil.mainBundle()?.bundleIdentifier.map(AppGroup.setAppID(_:))
+        FileUtilitySetter.setInitialFileUtility()
+        
+        let isDebug: Bool
+        
+        #if DEBUG
+            isDebug = true
+        #else
+            isDebug = false
+        #endif
+        
+        LogManager.initializeGlobalLogger(debug: isDebug)
+                
+        /// Log app version for debugging
+        DebugLog.logAppVersion()
+        
+        /// Checking database file exists as early as possible
+        AppSetup.registerIfADatabaseFileExists()
+    }
 
     @objc override private init() {
         // no-op
@@ -160,7 +163,7 @@ public final class AppLaunchManager: NSObject {
             onCancel: onCancel
         )
         
-        AppLaunchManager.remoteSecretManager = newRemoteSecretManager
+        RemoteSecretProvider.setRemoteSecretManager(newRemoteSecretManager)
 
         return newRemoteSecretManager
     }
@@ -169,13 +172,16 @@ public final class AppLaunchManager: NSObject {
     /// - Parameter forBackgroundProcess: Get BusinessInjector for running in background
     /// - Returns: BusinessInjector
     @objc public func business(forBackgroundProcess: Bool) throws -> BusinessInjector {
-        guard let remoteSecretManager = AppLaunchManager.remoteSecretManager else {
+        guard RemoteSecretProvider.isRemoteSecretManagerSet else {
             throw AppLaunchError.remoteSecretMissing
         }
         
+        let remoteSecretManager = RemoteSecretProvider.remoteSecretManager
         return try business(
             remoteSecretManager: remoteSecretManager,
-            databaseManager: initializeDatabaseManager(remoteSecretManager: remoteSecretManager),
+            databaseManager: initializeDatabaseManager(
+                remoteSecretManager: remoteSecretManager
+            ),
             myIdentityStore: MyIdentityStore.shared(),
             forBackgroundProcess: forBackgroundProcess
         )
@@ -184,7 +190,7 @@ public final class AppLaunchManager: NSObject {
     #if DEBUG
         // Use only for testing
         func setRemoteSecretManager(_ remoteSecretManager: RemoteSecretManagerProtocol) {
-            AppLaunchManager.remoteSecretManager = remoteSecretManager
+            RemoteSecretProvider.setRemoteSecretManager(remoteSecretManager)
         }
     #endif
 

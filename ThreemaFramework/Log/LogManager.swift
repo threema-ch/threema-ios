@@ -3,7 +3,7 @@ import FileUtility
 import Foundation
 import libthreemaSwift
 
-@objc public final class LogManager: NSObject {
+public final class LogManager: NSObject {
 
     static let debugLogFileName = "debug_log.txt"
     static let validationLogFileName = "validation_log.txt"

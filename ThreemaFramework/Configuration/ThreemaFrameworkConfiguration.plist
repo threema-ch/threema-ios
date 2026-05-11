@@ -65,9 +65,9 @@
 	<data>RQuXVzUnn97LMxNkj1/G7p/0Ng6pKowXUcZh5MDYyQk=</data>
 	<key>ThreemaWebURL</key>
 	<string>https://web.threema.ch/</string>
+	<key>ThreemaWorkBaseServerURL</key>
+	<string>https://work.threema.ch/</string>
 	<key>ThreemaWorkAPIURL</key>
-	<string>https://apip-work.threema.ch</string>
-	<key>ThreemaWorkAPIURLv6</key>
 	<string>https://ds-apip-work.threema.ch</string>
 	<key>ThreemaWorkServerNamePrefix</key>
 	<string>w-</string>

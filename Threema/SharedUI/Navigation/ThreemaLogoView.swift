@@ -3,7 +3,7 @@ import SwiftUI
 struct ThreemaLogoView: View {
     var body: some View {
         VStack {
-            Image(uiImage: Colors.callKitLogo)
+            Image(Colors.callKitLogoResource)
                 .renderingMode(.template)
                 .resizable()
                 .aspectRatio(contentMode: .fit)

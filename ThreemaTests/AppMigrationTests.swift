@@ -62,7 +62,7 @@ final class AppMigrationTests: XCTestCase {
         // database before the proper migration was initialized.
         try DatabaseManager(
             appGroupID: AppGroup.groupID(),
-            remoteSecretManager: AppLaunchManager.remoteSecretManager
+            remoteSecretManager: RemoteSecretProvider.remoteSecretManager
         ).migrateDB()
 
         // Setup mocks

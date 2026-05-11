@@ -23,7 +23,7 @@ struct MessagesRetentionBackgroundTask: ThreemaBackgroundTask {
         let businessInjector: BusinessInjectorProtocol
         
         // The app might still be in memory, thus only setup everything for business if RS is not already initialized
-        if AppLaunchManager.remoteSecretManager == nil {
+        if !RemoteSecretProvider.isRemoteSecretManagerSet {
             let remoteSecretManager = try await AppLaunchManager.shared.initializeRemoteSecret(
                 navigationController: nil,
                 onDelete: nil,

@@ -15,8 +15,9 @@ use syn::{
 ///
 /// Given the following:
 ///
-/// ```
+/// ```nobuild
 /// use libthreema_macros::Name;
+/// use crate::utils::debug::Name;
 ///
 /// #[derive(Name)]
 /// struct Something;
@@ -24,10 +25,10 @@ use syn::{
 ///
 /// the derive macro expands it to:
 ///
-/// ```
+/// ```nobuild
 /// struct Something;
-/// impl Something {
-///     pub const NAME: &'static str = "Something";
+/// impl Name for Something {
+///     const NAME: &'static str = "Something";
 /// }
 /// ```
 #[proc_macro_derive(Name)]
@@ -40,9 +41,9 @@ pub fn derive_name(input: TokenStream) -> TokenStream {
     let literal_name = name.to_string();
     let (impl_generics, type_generics, where_clause) = input.generics.split_for_impl();
     let expanded = quote! {
-        impl #impl_generics #name #type_generics #where_clause {
+        impl #impl_generics crate::utils::debug::Name for #name #type_generics #where_clause {
             /// The name for debugging purposes
-            pub const NAME: &'static str = #literal_name;
+            const NAME: &'static str = #literal_name;
         }
     };
 
@@ -273,7 +274,7 @@ pub fn concat_fixed_bytes(tokens: TokenStream) -> TokenStream {
 ///
 /// These fields will be marked as deprecated to discourage direct usage of it. Furthermore, the padding tag
 /// will be extracted and made available on the message as a `PADDING_TAG` const. See the
-/// `ProtobufPaddedMessage` trait.
+/// `protobuf::PaddedMessage` trait.
 #[proc_macro_attribute]
 pub fn protobuf_annotations(_attribute: TokenStream, input: TokenStream) -> TokenStream {
     fn annotate_protobuf_message(mut message: ItemStruct) -> syn::Result<TokenStream> {
@@ -332,7 +333,7 @@ pub fn protobuf_annotations(_attribute: TokenStream, input: TokenStream) -> Toke
 ///
 /// Note: All fields must implement [`subtle::ConstantTimeEq`].
 ///
-/// The proc macro was adapted from <https://github.com/dalek-cryptography/subtle/pull/111>
+/// The proc macro was adapted from <https://github.com/dalek-cryptography/subtle/pull/111>.
 ///
 /// # Examples
 ///

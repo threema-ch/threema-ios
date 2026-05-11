@@ -9,7 +9,15 @@
     }
 
     public final class MockMyIdentityStore: NSObject, MyIdentityStoreProtocol {
-        override public init() { /* no-op */ }
+        public var linkMobileNoVerificationID: String?
+    
+        public var linkMobileNoStartDate: Date?
+    
+        public var privateIdentityInfoLastUpdate: Date?
+    
+        public var lastWorkUpdateRequestHash: Data?
+    
+        public var lastWorkUpdateDate: Date?
 
         public var identity: String?
 
@@ -44,6 +52,10 @@
         public var department: String?
 
         public var category: String?
+        
+        public var licenseLogoLightURL: String?
+        
+        public var licenseLogoDarkURL: String?
 
         public var resolvedProfilePicture = UIImage.checkmark
 
@@ -66,6 +78,8 @@
         public var serverGroup: String?
 
         public var idColor: UIColor = .red
+    
+        override public init() { /* no-op */ }
 
         public func encryptData(_ data: Data, withNonce nonce: Data, publicKey: Data) -> Data? { nil }
 
@@ -78,6 +92,8 @@
         public func displayName() -> String { "" }
 
         public func backupIdentity(withPassword password: String) -> String? { nil }
+    
+        public func sendUpdateWorkInfoStatus() -> Bool { false }
     }
 
 #endif

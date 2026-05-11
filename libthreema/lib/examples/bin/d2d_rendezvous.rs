@@ -10,10 +10,11 @@ use std::{
 };
 
 use anyhow::Context as _;
-use data_encoding::HEXLOWER;
+use data_encoding::HEXLOWER_PERMISSIVE;
 use libthreema::{
     d2d_rendezvous::{
-        AuthenticationKey, OutgoingFrame, PathProcessResult, PathStateUpdate, RendezvousProtocol,
+        RendezvousAuthenticationKey, RendezvousOutgoingFrame, RendezvousPathProcessResult,
+        RendezvousPathStateUpdate, RendezvousProtocol,
     },
     utils::logging::init_stderr_logging,
 };
@@ -30,8 +31,8 @@ impl Keys {
 fn process_incoming_frame(
     protocol: &mut RendezvousProtocol,
     pid: u32,
-    incoming_frame: &OutgoingFrame,
-) -> anyhow::Result<Option<PathProcessResult>> {
+    incoming_frame: &RendezvousOutgoingFrame,
+) -> anyhow::Result<Option<RendezvousPathProcessResult>> {
     let (header, payload) = incoming_frame.encode();
     if let Some(nominated_pid) = protocol.nominated_path()
         && pid != nominated_pid
@@ -55,9 +56,9 @@ fn process_incoming_frame(
 #[expect(clippy::needless_pass_by_value, reason = "Prevent re-use")]
 fn run_protocol(
     mut protocol: RendezvousProtocol,
-    initial_outgoing_frames: Vec<(u32, OutgoingFrame)>,
-    tx: mpsc::Sender<(u32, OutgoingFrame)>,
-    rx: mpsc::Receiver<(u32, OutgoingFrame)>,
+    initial_outgoing_frames: Vec<(u32, RendezvousOutgoingFrame)>,
+    tx: mpsc::Sender<(u32, RendezvousOutgoingFrame)>,
+    rx: mpsc::Receiver<(u32, RendezvousOutgoingFrame)>,
 ) -> anyhow::Result<()> {
     // Send initial frames
     for outgoing_frame in initial_outgoing_frames {
@@ -85,7 +86,7 @@ fn run_protocol(
 
             // Handle any state update
             maybe_result = match result.state_update {
-                Some(PathStateUpdate::AwaitingNominate { measured_rtt }) => {
+                Some(RendezvousPathStateUpdate::AwaitingNominate { measured_rtt }) => {
                     // Check if we should nominate the path
                     //
                     // Note: A real implementation should wait a bit and then choose the _best_ path
@@ -97,7 +98,7 @@ fn run_protocol(
                         None
                     }
                 },
-                Some(PathStateUpdate::Nominated { rph }) => {
+                Some(RendezvousPathStateUpdate::Nominated { rph }) => {
                     // The path was nominated
                     break 'nomination (pid, rph);
                 },
@@ -108,7 +109,10 @@ fn run_protocol(
 
     // ULP loop where we can use the nominated path to exchange arbitrary data. For this example, we
     // will send a string every 3s and print out whatever remote sent us.
-    info!(rph = HEXLOWER.encode(&rph.0), "Path nominated, entering ULP loop");
+    info!(
+        rph = HEXLOWER_PERMISSIVE.encode(&rph.0),
+        "Path nominated, entering ULP loop"
+    );
     let (initial_timeout, outgoing_ulp_data) = if protocol.is_nominator() {
         (1000, "Tick")
     } else {
@@ -169,7 +173,7 @@ fn run_protocol(
                 assert!(result.incoming_ulp_data.is_none(), "Unexpected incoming ULP data");
 
                 // Reset timeout
-                timeout = Duration::from_millis(2000);
+                timeout = Duration::from_secs(2);
             },
 
             Err(RecvTimeoutError::Disconnected) => {
@@ -184,14 +188,15 @@ fn main() {
     init_stderr_logging(Level::TRACE);
 
     // Communication channels for RID and RRD
-    let (to_rrd, from_rid) = mpsc::channel::<(u32, OutgoingFrame)>();
-    let (to_rid, from_rrd) = mpsc::channel::<(u32, OutgoingFrame)>();
+    let (to_rrd, from_rid) = mpsc::channel::<(u32, RendezvousOutgoingFrame)>();
+    let (to_rid, from_rrd) = mpsc::channel::<(u32, RendezvousOutgoingFrame)>();
 
     // Start RID
     let rid_thread = thread::spawn(move || {
         trace_span!("initiator").in_scope(|| {
             // Create and run protocol for RID
-            let protocol = RendezvousProtocol::new_as_rid(true, AuthenticationKey(Keys::AK), &[0x1, 0x2]);
+            let protocol =
+                RendezvousProtocol::new_as_rid(true, RendezvousAuthenticationKey(Keys::AK), &[0x1, 0x2]);
             let result = run_protocol(protocol, vec![], to_rrd, from_rrd);
             info!("Initiator stopped: {result:?}");
         });
@@ -202,7 +207,7 @@ fn main() {
         trace_span!("responder").in_scope(|| {
             // Create and run protocol for RRD
             let (protocol, initial_outgoing_frames) =
-                RendezvousProtocol::new_as_rrd(false, AuthenticationKey(Keys::AK), &[0x1, 0x2]);
+                RendezvousProtocol::new_as_rrd(false, RendezvousAuthenticationKey(Keys::AK), &[0x1, 0x2]);
             let result = run_protocol(protocol, initial_outgoing_frames, to_rid, from_rid);
             info!("Responder stopped: {result:?}");
         });

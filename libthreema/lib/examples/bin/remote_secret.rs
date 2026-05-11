@@ -3,7 +3,7 @@
 #![expect(clippy::print_stdout, reason = "Examples are allowed to print")]
 
 use clap::{Parser, Subcommand};
-use data_encoding::HEXLOWER;
+use data_encoding::HEXLOWER_PERMISSIVE;
 use libthreema::{
     cli::{MinimalIdentityConfig, MinimalIdentityConfigOptions},
     common::keys::{RemoteSecretAuthenticationToken, RemoteSecretHash},
@@ -105,7 +105,7 @@ async fn run_monitor_remote_secret(
             } => {
                 if let Some(remote_secret) = remote_secret {
                     info!(
-                        remote_secret = HEXLOWER.encode(&remote_secret.0),
+                        remote_secret = HEXLOWER_PERMISSIVE.encode(&remote_secret.0),
                         remote_secret_hash = ?remote_secret.derive_hash(),
                         "Retrieved remote secret",
                     );
@@ -134,11 +134,11 @@ async fn main() -> anyhow::Result<()> {
             let result = run_create_remote_secret(http_client, context).await?;
             println!(
                 "--remote-secret-authentication-token {}",
-                HEXLOWER.encode(&result.remote_secret_authentication_token.0)
+                HEXLOWER_PERMISSIVE.encode(&result.remote_secret_authentication_token.0)
             );
             println!(
                 "--remote-secret-hash {}",
-                HEXLOWER.encode(&result.remote_secret.derive_hash().0)
+                HEXLOWER_PERMISSIVE.encode(&result.remote_secret.derive_hash().0)
             );
         },
 

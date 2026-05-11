@@ -1,7 +1,7 @@
 import Foundation
 import ThreemaMacros
 
-@objc final class SafeApiService: NSObject, SafeApiServiceProtocol {
+final class SafeApiService: NSObject, SafeApiServiceProtocol {
 
     enum SafeApiError: Error, LocalizedError {
         case invalidServerURL

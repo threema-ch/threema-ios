@@ -103,25 +103,79 @@ The following steps are defined as _MDM Merge And Apply Steps_.
 9. For each `parameter` of `merged-parameters`, run the associated steps defined
    for the parameter.
 
-¹: When running these steps as part of a Threema Work sync, the precedence is
-defined by the most recently received `override` parameter with `true` mapping
-to _threema_ and `false` mapping to _external_. For reflected
-`md-d2d-sync.MdmParameters`, the precedence is defined as part of the message.
+¹: When running these steps as part of a Work Sync, the precedence is defined by
+the most recently received `override` parameter with `true` mapping to _threema_
+and `false` mapping to _external_. For reflected `d2d_sync.MdmParameters`, the
+precedence is defined as part of the message.
 
 ## Parameters
 
 [//]: # TODO(SE-307): Document steps for all parameters.
 
+### th_enable_remote_secret (boolean)
+
+When this parameter is set:
+
+1. If `true` and storage is currently not protected by the Remote Secret feature
+   and no task is scheduled to run the _Remote Secret Activate Steps_, schedule
+   a persistent task bound to the application to run the _Remote Secret Activate
+   Steps_.
+2. If `false` and storage is currently protected by the Remote Secret feature
+   and no task is scheduled to run the _Remote Secret Deactivate Steps_,
+   schedule a persistent task bound to the application to run the _Remote Secret
+   Deactivate Steps_.
+
+When this parameter is unset:
+
+1. If storage is currently protected by the Remote Secret feature and no task is
+   scheduled to run the _Remote Secret Deactivate Steps_, schedule a persistent
+   task bound to the application to run the _Remote Secret Deactivate Steps_.
+
 ### th_disable_add_contact (boolean)
 
 When this parameter is set:
 
-1. Ensure that entry points for manually adding contacts are disabled if `true`
+1. Ensure that entrypoints for manually adding contacts are disabled if `true`
    or enabled if `false`.¹
 
 When this parameter is unset:
 
-1. Ensure that entry points for manually adding contacts are enabled.
+1. Ensure that entrypoints for manually adding contacts are enabled.
 
 ¹: Contacts can still be added implicitly, e.g. through contact import or when
 receiving a message from an unknown contact.
+
+### th_disable_multidevice (boolean)
+
+When this parameter is set:
+
+1. If `false`, ensure that entrypoints for enabling multi-device and adding new
+   devices are enabled.
+2. If `true`:
+   1. Ensure that entrypoints for enabling multi-device and adding new devices
+      are disabled.
+   2. If multi-device is currently enabled, schedule a persistent task to run
+      the _Drop Devices Steps_ with the intent to _deactivate_ multi-device.
+
+When this parameter is unset:
+
+1. Ensure that entrypoints for enabling multi-device and adding new devices are
+   enabled.
+
+### th_disable_ios_system_backups_id_key_inclusion (boolean)
+
+Note: This only applies to Threema for iOS.
+
+When this parameter is set:
+
+1. If `false`, the permanent client key associated to the Threema ID must be
+   included in system-backed¹ backups created in the future.
+2. If `true`, the permanent client key associated to the Threema ID must be
+   excluded from system-backed¹ backups created in the future.
+
+When this parameter is unset:
+
+1. The permanent client key associated to the Threema ID must be included in
+   system-backed¹ backups created in the future.
+
+¹: System-backed backups include encrypted _iTunes_ backups and _Quick Start_.

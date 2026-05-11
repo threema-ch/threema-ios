@@ -1536,4 +1536,85 @@ final class AbstractMessageEncodeDecodeTests: XCTestCase {
         XCTAssertFalse((result?.receivedAfterInitialQueueSend)!)
         XCTAssertNil(try XCTUnwrap(result) as? QuotedMessageProtocol)
     }
+
+    func testWebSessionResumeMessage() throws {
+        let msg: WebSessionResumeMessage = abstractMessage(
+            expectedFromIdentity,
+            expectedToIdentity,
+            expectedMessageID,
+            expectedPushFromName,
+            expectedDate,
+            expectedDeliveryDate,
+            expectedDelivered,
+            expectedUserAck,
+            expectedSendUserAck,
+            expectedNonce,
+            expectedFlags,
+            expectedReceivedAfterInitialQueueSend
+        )
+
+        let result: WebSessionResumeMessage? = try encodeDecode(message: msg)
+
+        XCTAssertEqual(expectedFromIdentity, result?.fromIdentity)
+        XCTAssertEqual(expectedToIdentity, result?.toIdentity)
+        XCTAssertEqual(expectedMessageID, result?.messageID)
+        XCTAssertEqual(expectedPushFromName, result?.pushFromName)
+        XCTAssertEqual(expectedDate, result?.date)
+        XCTAssertEqual(NSNumber(booleanLiteral: expectedDelivered), result?.delivered)
+        XCTAssertEqual(NSNumber(booleanLiteral: expectedUserAck), result?.userAck)
+        XCTAssertEqual(NSNumber(booleanLiteral: expectedSendUserAck), result?.sendUserAck)
+        XCTAssertTrue(try expectedNonce.elementsEqual(XCTUnwrap(result?.nonce)))
+        XCTAssertEqual(NSNumber(integerLiteral: expectedFlags), (result?.flags)!)
+        XCTAssertFalse((result?.receivedAfterInitialQueueSend)!)
+        XCTAssertNil(try XCTUnwrap(result) as? QuotedMessageProtocol)
+    }
+
+    func testWorkSyncDeltaMessage() throws {
+        var expectedContactSync = CspE2e_WorkSyncDelta.ContactSync()
+        expectedContactSync.action = .update(.with { $0.availabilityStatus = .with {
+            $0.category = .unavailable
+            $0.description_p = "123"
+        }})
+
+        var cspWorkSyncDelta = CspE2e_WorkSyncDelta()
+        cspWorkSyncDelta.action = .apply(.with { $0.deltas = [
+            .with { $0.action = .contactSync(expectedContactSync) },
+        ]
+        })
+
+        let msg: WorkSyncDeltaMessage = abstractMessage(
+            expectedFromIdentity,
+            expectedToIdentity,
+            expectedMessageID,
+            expectedPushFromName,
+            expectedDate,
+            expectedDeliveryDate,
+            expectedDelivered,
+            expectedUserAck,
+            expectedSendUserAck,
+            expectedNonce,
+            expectedFlags,
+            expectedReceivedAfterInitialQueueSend
+        )
+
+        msg.decoded = cspWorkSyncDelta
+
+        let result: WorkSyncDeltaMessage? = try encodeDecode(message: msg)
+
+        let decodedContactSync = try XCTUnwrap(result?.decoded?.apply.deltas.first)
+        XCTAssertTrue(decodedContactSync.contactSync == expectedContactSync)
+
+        XCTAssertEqual(expectedFromIdentity, result?.fromIdentity)
+        XCTAssertEqual(expectedToIdentity, result?.toIdentity)
+        XCTAssertEqual(expectedMessageID, result?.messageID)
+        XCTAssertEqual(expectedPushFromName, result?.pushFromName)
+        XCTAssertEqual(expectedDate, result?.date)
+        XCTAssertEqual(NSNumber(booleanLiteral: expectedDelivered), result?.delivered)
+        XCTAssertEqual(NSNumber(booleanLiteral: expectedUserAck), result?.userAck)
+        XCTAssertEqual(NSNumber(booleanLiteral: expectedSendUserAck), result?.sendUserAck)
+        XCTAssertTrue(try expectedNonce.elementsEqual(XCTUnwrap(result?.nonce)))
+        XCTAssertEqual(NSNumber(integerLiteral: expectedFlags), (result?.flags)!)
+        XCTAssertFalse((result?.receivedAfterInitialQueueSend)!)
+        XCTAssertNil(try XCTUnwrap(result) as? QuotedMessageProtocol)
+    }
 }

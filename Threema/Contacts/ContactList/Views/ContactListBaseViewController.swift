@@ -10,14 +10,14 @@ class ContactListBaseViewController: ThemedTableViewController {
     private let currentDestinationFetcher: () -> ContactListCoordinator.InternalDestination?
     private let shouldAllowAutoDeselection: () -> Bool
     weak var itemsDelegate: ContactListActionDelegate?
-    let businessInjector: BusinessInjectorProtocol
-    
+    let businessInjector: any BusinessInjectorProtocol
+
     // MARK: - Lifecycle
     
     init(
         currentDestinationFetcher: @escaping () -> ContactListCoordinator.InternalDestination?,
         shouldAllowAutoDeselection: @escaping () -> Bool,
-        businessInjector: BusinessInjectorProtocol = BusinessInjector.ui,
+        businessInjector: any BusinessInjectorProtocol = BusinessInjector.ui,
         itemsDelegate: ContactListActionDelegate? = nil
     ) {
         self.currentDestinationFetcher = currentDestinationFetcher
@@ -167,29 +167,37 @@ class ContactListBaseViewController: ThemedTableViewController {
     }
     
     private func updateWorkData() {
-        WorkDataFetcher.checkUpdateWorkDataForce(true, sendForce: true) { [weak self] in
-            NotificationPresenterWrapper.shared.present(type: .contactSyncSuccess)
-            self?.endPullToRefresh()
-        } onError: { [weak self] error in
-            guard let self else {
-                return
+        Task { @MainActor [weak self] in
+            do {
+                guard let self else {
+                    return
+                }
+                
+                try await businessInjector.workDataFetcher.checkUpdateWorkData(force: true, forceSendMDM: true)
+                NotificationPresenterWrapper.shared.present(type: .contactSyncSuccess)
+                endPullToRefresh()
             }
-            
-            if let nsError = error as? NSError, nsError.code == 401 || nsError.code == 409 {
-                UIAlertTemplate
-                    .showAlert(
-                        owner: self,
-                        title: nil,
-                        message: #localize("pull_to_sync_429_message_work")
-                    ) { _ in
-                        NotificationPresenterWrapper.shared.present(type: .updateWorkDataFailed)
-                    }
+            catch {
+                guard let self else {
+                    return
+                }
+                
+                if let nsError = error as? NSError, nsError.code == 401 || nsError.code == 409 {
+                    UIAlertTemplate
+                        .showAlert(
+                            owner: self,
+                            title: nil,
+                            message: #localize("pull_to_sync_429_message_work")
+                        ) { _ in
+                            NotificationPresenterWrapper.shared.present(type: .updateWorkDataFailed)
+                        }
+                }
+                else {
+                    NotificationPresenterWrapper.shared.present(type: .workSyncFailed)
+                }
+                endPullToRefresh()
+                DDLogError("[ContactList] Update work data failed: \(error.localizedDescription)")
             }
-            else {
-                NotificationPresenterWrapper.shared.present(type: .workSyncFailed)
-            }
-            endPullToRefresh()
-            DDLogError("[ContactList] Update work data failed: \(error?.localizedDescription ?? "nil")")
         }
     }
 }

@@ -32,20 +32,24 @@ final class LinkPhoneNumberViewModel: ObservableObject {
     private let connector: ServerAPIConnector
     private let businessInjector: BusinessInjector
     private let identityStore: MyIdentityStore
-    private lazy var normalizer = PhoneNumberNormalizer.sharedInstance()
-    
+    private let phoneNumberNormalizer: any PhoneNumberNormalizerProtocol
+
     // UI
-    lazy var phoneNumberPlaceholder = normalizer?
-        .examplePhoneNumber(forRegion: PhoneNumberNormalizer.userRegion()) ?? ""
-    
+    lazy var phoneNumberPlaceholder = phoneNumberNormalizer
+        .examplePhoneNumber(for: phoneNumberNormalizer.userRegion()) ?? ""
+
     private var callTimer: Timer?
     
     // MARK: - Lifecycle
 
-    init(businessInjector: BusinessInjector = BusinessInjector.ui) {
+    init(
+        businessInjector: BusinessInjector = BusinessInjector.ui,
+        phoneNumberNormalizer: any PhoneNumberNormalizerProtocol = PhoneNumberNormalizer()
+    ) {
         self.connector = ServerAPIConnector()
         self.businessInjector = businessInjector
         self.identityStore = businessInjector.myIdentityStore as! MyIdentityStore
+        self.phoneNumberNormalizer = phoneNumberNormalizer
    
         determineState()
         checkServerName()
@@ -200,13 +204,10 @@ final class LinkPhoneNumberViewModel: ObservableObject {
     // MARK: - Private functions
     
     private func formatPhoneNumber(_ phoneNumber: String) {
-        var formatted: NSString?
-        let normalized = normalizer?.phoneNumber(
-            toE164: phoneNumber,
-            withDefaultRegion: PhoneNumberNormalizer.userRegion(),
-            prettyFormat: &formatted
-        )
-        
+        let defaultRegion = phoneNumberNormalizer.userRegion()
+        let normalized = phoneNumberNormalizer.e164Format(from: phoneNumber, defaultRegion: defaultRegion)
+        let formatted = phoneNumberNormalizer.prettyFormat(from: phoneNumber, defaultRegion: defaultRegion)
+
         guard phoneNumber != "***" else {
             normalizedNumber = "+\(phoneNumber)"
             formattedNumber = "+\(phoneNumber)"
@@ -218,6 +219,6 @@ final class LinkPhoneNumberViewModel: ObservableObject {
         }
         
         normalizedNumber = normalized
-        formattedNumber = formatted as String
+        formattedNumber = formatted
     }
 }

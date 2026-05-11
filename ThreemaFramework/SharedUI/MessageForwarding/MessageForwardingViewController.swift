@@ -218,6 +218,14 @@ public final class MessageForwardingViewController: ThemedViewController {
         navigationItem.rightBarButtonItem = UIBarButtonItem.sendButton(
             target: self, selector: #selector(handleSendButtonTapped)
         )
+        
+        // TODO: (IOS-6077) Maybe don't use that with glass on iOS 26+
+        let opaqueAppearance = UINavigationBarAppearance()
+        opaqueAppearance.configureWithOpaqueBackground()
+        opaqueAppearance.backgroundColor = .systemGroupedBackground
+        opaqueAppearance.shadowColor = .clear // Remove bottom border
+        
+        navigationItem.scrollEdgeAppearance = opaqueAppearance
     }
 
     private func setupTableView() {
@@ -533,7 +541,6 @@ extension MessageForwardingViewController: UIGestureRecognizerDelegate {
 
 extension MessageForwardingViewController: UIAdaptivePresentationControllerDelegate {
     public func presentationControllerShouldDismiss(_ presentationController: UIPresentationController) -> Bool {
-        // TODO: (IOS-6075) Only disable interactive dismissal if there was any user input
-        false
+        model.isConfirmationButtonEnabled == false && messageInputModel.hasAdditionalText == false
     }
 }

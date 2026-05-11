@@ -45,13 +45,6 @@ final class DistributionListDetailsViewController: ThemedCodeModernGroupedTableV
     private lazy var entityManager = BusinessInjector.ui.entityManager
     
     private var observers = [NSKeyValueObservation]()
-
-    // Backwards compatibility
-    
-    @available(swift, obsoleted: 1.0, message: "Only use from old Objective-C code to keep it working")
-    @objc var _distributionList: DistributionList {
-        distributionList
-    }
     
     // MARK: - Lifecycle
     
@@ -62,7 +55,7 @@ final class DistributionListDetailsViewController: ThemedCodeModernGroupedTableV
     ///   - displayStyle: Appearance of the distribution list details
     ///   - delegate: Details delegate that is called on certain actions. This should be set when `displayMode` is
     /// `conversation`.
-    @objc init(
+    init(
         for distributionList: DistributionList,
         displayMode: DistributionListDetailsDisplayMode = .default,
         displayStyle: DetailsDisplayStyle = .default,

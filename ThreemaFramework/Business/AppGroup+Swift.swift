@@ -3,13 +3,15 @@ import Foundation
 
 extension AppGroup {
     @objc static func refreshDirtyObjects() {
-        guard let remoteSecretManager = AppLaunchManager.remoteSecretManager else {
+        guard RemoteSecretProvider.isRemoteSecretManagerSet else {
             DDLogWarn(
-                "Refresh of dirty objects not possible rigth now, because remote secret manager is not initialized"
+                "Refresh of dirty objects not possible right now, "
+                    + "because remote secret manager is not initialized"
             )
             return
         }
 
+        let remoteSecretManager = RemoteSecretProvider.remoteSecretManager
         let persistenceManager = PersistenceManager(
             appGroupID: AppGroup.groupID(),
             userDefaults: AppGroup.userDefaults(),

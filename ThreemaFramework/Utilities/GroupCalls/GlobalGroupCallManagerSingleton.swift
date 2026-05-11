@@ -104,7 +104,20 @@ public final class GlobalGroupCallManagerSingleton: NSObject {
     }
     
     // MARK: - Public functions
-        
+
+    /// Cancel the periodic refresh task when the app enters background.
+    /// This prevents stale in-flight peek requests from incorrectly removing
+    /// active calls after iOS suspends and resumes the app.
+    @objc public func handleAppDidEnterBackground() async {
+        await groupCallManager.cancelPeriodicRefresh()
+    }
+
+    /// Restart the periodic refresh task when the app enters foreground,
+    /// so we get a fresh peek of all tracked calls.
+    @objc public func handleAppWillEnterForeground() async {
+        await groupCallManager.startPeriodicCheckIfNeeded()
+    }
+
     /// Load calls from DB
     ///
     /// If the manager is still doing the initial load we'll just wait for that
@@ -312,6 +325,7 @@ public final class GlobalGroupCallManagerSingleton: NSObject {
         }
         
         guard !NavigationBarPromptHandler.isCallActiveInBackground else {
+            DDLogInfo("[GroupCall] Call exists in background.")
             uiDelegate?.showAlert(for: GroupCallError.alreadyInCall)
             return
         }
@@ -336,6 +350,7 @@ public final class GlobalGroupCallManagerSingleton: NSObject {
                 showGroupCallViewController()
             }
             catch let error as GroupCallError {
+                DDLogError("[GroupCall] Caught error, showing alert: \(error.localizedDescription).")
                 uiDelegate?.showAlert(for: error)
             }
             catch {
@@ -348,9 +363,11 @@ public final class GlobalGroupCallManagerSingleton: NSObject {
     public func showGroupCallViewController() {
         Task {
             guard let uiDelegate else {
+                DDLogError("[GroupCall] Delegate is nil, cannot show group call.")
                 return
             }
             guard let viewController = await groupCallManager.viewControllerForCurrentlyJoinedGroupCall() else {
+                DDLogError("[GroupCall] Getting view controller failed, cannot show group call.")
                 return
             }
             uiDelegate.showViewController(viewController)
@@ -422,20 +439,22 @@ public final class GlobalGroupCallManagerSingleton: NSObject {
             return groupCallEntity.objectID
         }
         
-        // Mark entity as dirty
-        currentBusinessInjector.entityManager.performBlock {
-            guard let addedObjectID else {
-                DDLogError("[GroupCall] Could not mark added group call as dirty.")
-                return
-            }
-            
-            let dirtyObjectManager = PersistenceManager(
-                appGroupID: AppGroup.groupID(),
-                userDefaults: AppGroup.userDefaults(),
-                remoteSecretManager: AppLaunchManager.remoteSecretManager
-            ).dirtyObjectManager
-            dirtyObjectManager.markAsDirty(objectID: addedObjectID) {
-                AppGroup.notifySyncNeeded()
+        Task {
+            // Mark entity as dirty
+            currentBusinessInjector.entityManager.perform {
+                guard let addedObjectID else {
+                    DDLogError("[GroupCall] Could not mark added group call as dirty.")
+                    return
+                }
+                
+                let dirtyObjectManager = PersistenceManager(
+                    appGroupID: AppGroup.groupID(),
+                    userDefaults: AppGroup.userDefaults(),
+                    remoteSecretManager: RemoteSecretProvider.remoteSecretManager
+                ).dirtyObjectManager
+                dirtyObjectManager.markAsDirty(objectID: addedObjectID) {
+                    AppGroup.notifySyncNeeded()
+                }
             }
         }
     }
@@ -709,7 +728,7 @@ extension GlobalGroupCallManagerSingleton: GroupCallManagerSingletonDelegate {
             return
         }
         
-        currentBusinessInjector.entityManager.performBlock {
+        currentBusinessInjector.entityManager.perform {
             guard let conversation = self.currentBusinessInjector.entityManager.entityFetcher
                 .conversationEntity(
                     for: groupModel.groupIdentity,

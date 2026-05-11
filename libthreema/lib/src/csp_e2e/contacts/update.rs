@@ -2,6 +2,7 @@
 //!
 //! TODO(LIB-16): This omits profile pictures. Is this a problem?
 use core::mem;
+use std::rc::Rc;
 
 use const_format::formatcp;
 use libthreema_macros::{DebugVariantNames, Name, VariantNames};
@@ -11,6 +12,7 @@ use crate::{
     common::{Nonce, ThreemaId, task::TaskLoop},
     csp_e2e::{
         CspE2eProtocolContext, CspE2eProtocolError,
+        contacts::codec::D2dContactEncoder as _,
         reflect::{ReflectFlags, ReflectPayload},
         transaction::{
             begin::{
@@ -25,6 +27,7 @@ use crate::{
         provider::{ContactProvider, ProviderError},
     },
     protobuf,
+    utils::debug::Name as _,
 };
 
 /// Instruction for updating contacts. See each variant's steps.
@@ -93,7 +96,7 @@ impl State {
         // MD: We need to create a transaction.
 
         // Precondition: All of the contacts must exist (hard error)
-        let contact_provider = context.contacts.clone();
+        let contact_provider = Rc::clone(&context.contacts);
         let precondition = Box::new(move || {
             let n_existing = contact_provider.borrow().has_many(&identities)?;
             if n_existing == identities.len() {
@@ -101,7 +104,7 @@ impl State {
             } else {
                 let message = "An existing contact disappeared";
                 error!(n_existing, n_expected = identities.len(), message);
-                Err(CspE2eProtocolError::DesyncError(message))
+                Err(CspE2eProtocolError::DesyncError(message.to_owned()))
             }
         });
 
@@ -127,7 +130,7 @@ impl State {
         let Some(d2x_context) = context.d2x.as_mut() else {
             let message = "D2X context missing";
             error!(message);
-            return Err(CspE2eProtocolError::InternalError(message.to_owned()));
+            return Err(CspE2eProtocolError::InternalError(message.into()));
         };
 
         // Poll until the transaction is in progress
@@ -144,7 +147,7 @@ impl State {
                     // The precondition should never abort, so this should never happen.
                     let message = "Transaction aborted unexpectedly";
                     error!(message);
-                    return Err(CspE2eProtocolError::InternalError(message.to_owned()));
+                    return Err(CspE2eProtocolError::InternalError(message.into()));
                 },
             },
         }
@@ -160,7 +163,7 @@ impl State {
                     protobuf::d2d::envelope::Content::ContactSync(protobuf::d2d::ContactSync {
                         action: Some(protobuf::d2d::contact_sync::Action::Update(
                             protobuf::d2d::contact_sync::Update {
-                                contact: Some(protobuf::d2d_sync::Contact::from(&*contact)),
+                                contact: Some(contact.encode()),
                             },
                         )),
                     }),

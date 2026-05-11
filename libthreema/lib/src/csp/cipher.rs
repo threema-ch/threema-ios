@@ -1,11 +1,6 @@
+use libthreema_macros::concat_fixed_bytes;
 use tracing::{debug, warn};
 
-use super::{
-    ClientCookie, ClientSequenceNumber, CspProtocolContext, CspProtocolError, Extensions, ServerCookie,
-    ServerSequenceNumber, TemporaryClientKey, TemporaryServerKey,
-    handshake_messages::{LoginAck, LoginData, ServerChallengeResponse},
-    payload::{IncomingPayload, OutgoingPayload},
-};
 use crate::{
     common::{
         Nonce,
@@ -18,7 +13,26 @@ use crate::{
         salsa20::XSalsa20Poly1305,
         x25519,
     },
+    csp::{
+        ClientCookie, ClientSequenceNumber, Cookie, CspProtocolContext, CspProtocolError,
+        CspProtocolInternalErrorCause, ServerCookie, ServerSequenceNumber, TemporaryClientKey,
+        TemporaryServerKey,
+        payload::{
+            IncomingPayload, OutgoingPayload,
+            handshake::{Extensions, LoginAck, LoginData, ServerChallengeResponse},
+        },
+    },
+    utils::{debug::Name as _, sequence_numbers::SequenceNumberValue},
 };
+
+/// Concatenate a cookie and a sequence number to create a nonce.
+///
+/// Note: The sequence number is not incremented within this function!
+#[inline]
+#[expect(clippy::needless_pass_by_value, reason = "Prevent sequence number re-use")]
+fn create_nonce(cookie: Cookie, sequence_number: SequenceNumberValue<u64>) -> Nonce {
+    Nonce(concat_fixed_bytes!(cookie.0, sequence_number.0.to_le_bytes()))
+}
 
 /// Decrypt an incoming `server-challenge-response`.
 ///
@@ -32,10 +46,7 @@ pub(super) fn decrypt_server_challenge_response(
     mut server_challenge_response_box: Vec<u8>,
 ) -> Result<(PublicKey, Vec<u8>), CspProtocolError> {
     // Compute the nonce once. Secure because we use different public keys for the same nonce.
-    let nonce = Nonce::from_cookie_and_sequence_number(
-        server_cookie.0,
-        server_sequence_number.0.get_and_increment()?,
-    );
+    let nonce = create_nonce(server_cookie.0, server_sequence_number.0.get_and_increment()?);
 
     // Try to decrypt the server challenge response with all available permanent server keys
     for permanent_server_key in &context.permanent_server_keys {
@@ -113,21 +124,23 @@ pub(super) struct SessionCipher {
     cipher: XSalsa20Poly1305,
 }
 impl SessionCipher {
-    /// Encrypt outgoing data in-place
+    /// Encrypt outgoing data in-place.
     fn encrypt(&mut self, name: &'static str, mut data: Vec<u8>) -> Result<Vec<u8>, CspProtocolError> {
-        let nonce = Nonce::from_cookie_and_sequence_number(
+        let nonce = create_nonce(
             self.client_cookie.0,
             self.client_sequence_number.0.get_and_increment()?,
         );
         self.cipher
             .encrypt_in_place((&nonce).into(), &[], &mut data)
-            .map_err(|_| CspProtocolError::EncryptionFailed { name })?;
+            .map_err(|_| {
+                CspProtocolError::InternalError(CspProtocolInternalErrorCause::EncryptionFailed { name })
+            })?;
         Ok(data)
     }
 
-    /// Decrypt incoming data in-place
+    /// Decrypt incoming data in-place.
     fn decrypt(&mut self, name: &'static str, mut data: Vec<u8>) -> Result<Vec<u8>, CspProtocolError> {
-        let nonce = Nonce::from_cookie_and_sequence_number(
+        let nonce = create_nonce(
             self.server_cookie.0,
             self.server_sequence_number.0.get_and_increment()?,
         );
@@ -148,7 +161,7 @@ pub(super) struct LoginCipher {
     session_cipher: SessionCipher,
 }
 impl LoginCipher {
-    /// Create the cipher needed to encrypt `login` contents
+    /// Create the cipher needed to encrypt `login` contents.
     pub(super) fn new(
         temporary_client_key: &TemporaryClientKey,
         client_cookie: ClientCookie,
@@ -183,7 +196,7 @@ impl LoginCipher {
         self.session_cipher
     }
 
-    /// Create a vouch MAC for use in the `login`
+    /// Create a vouch MAC for use in the `login`.
     #[inline]
     pub(super) fn vouch_session(
         &self,
@@ -197,7 +210,7 @@ impl LoginCipher {
         )
     }
 
-    /// Encrypt data of the `login` message in-place
+    /// Encrypt data of the `login` message in-place.
     #[inline]
     pub(super) fn encrypt_login(
         &mut self,
@@ -217,7 +230,7 @@ pub(super) struct LoginAckCipher {
     session_cipher: SessionCipher,
 }
 impl LoginAckCipher {
-    /// Create the cipher needed to decrypt `login-ack` contents
+    /// Create the cipher needed to decrypt `login-ack` contents.
     pub(super) fn new(session_cipher: SessionCipher) -> LoginAckCipher {
         Self { session_cipher }
     }
@@ -227,13 +240,13 @@ impl LoginAckCipher {
         self.session_cipher
     }
 
-    /// Decrypt data of the `login-ack` message in-place
+    /// Decrypt data of the `login-ack` message in-place.
     pub(super) fn decrypt(&mut self, login_ack_box: Vec<u8>) -> Result<Vec<u8>, CspProtocolError> {
         self.session_cipher.decrypt(LoginAck::NAME, login_ack_box)
     }
 }
 
-/// Cipher to encrypt/decrypt outgoing/incoming payloads
+/// Cipher to encrypt/decrypt outgoing/incoming payloads.
 pub(super) struct PayloadCipher(SessionCipher);
 impl PayloadCipher {
     /// Create the cipher needed to encrypt/decrypt payloads.
@@ -241,13 +254,13 @@ impl PayloadCipher {
         Self(session_cipher)
     }
 
-    /// Encrypt an outgoing payload in-place
+    /// Encrypt an outgoing payload in-place.
     #[inline]
     pub(super) fn encrypt_payload(&mut self, payload: Vec<u8>) -> Result<Vec<u8>, CspProtocolError> {
         self.0.encrypt(OutgoingPayload::NAME, payload)
     }
 
-    /// Decrypt an incoming payload in-place
+    /// Decrypt an incoming payload in-place.
     #[inline]
     pub(super) fn decrypt_payload(&mut self, payload: Vec<u8>) -> Result<Vec<u8>, CspProtocolError> {
         self.0.decrypt(IncomingPayload::NAME, payload)

@@ -3,7 +3,7 @@ import Foundation
 import ThreemaMacros
 import UIKit
 
-@objc public final class MarkupParser: NSObject {
+public final class MarkupParser: NSObject {
     // MARK: - Nested Types
 
     private enum MentionType {

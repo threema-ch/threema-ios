@@ -151,11 +151,11 @@
 - (void)updateProfileImage:(nullable NSData *)image identity:(nonnull NSString *)identity {
     __block BOOL hasChanged = NO;
 
-    [self.entityManager performBlockAndWait:^{
+    [self.entityManager performAndWait:^{
         ContactEntity *contact = [self.entityManager.entityFetcher contactEntityFor:identity];
 
         if ((image && [contact.imageData isEqualToData:image] == NO) || (image == nil && contact.imageData)) {
-            [self.entityManager performSyncBlockAndSafe:^{
+            [self.entityManager performAndWaitSave:^{
                 contact.imageData = image;
             }];
 

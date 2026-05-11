@@ -2,7 +2,7 @@ import CocoaLumberjack
 import Foundation
 import Reachability
 
-@objc final class ReachabilityWrapper: NSObject {
+final class ReachabilityWrapper: NSObject {
     
     private let reachability = try! Reachability()
     private var lastConnectionType: Reachability.Connection

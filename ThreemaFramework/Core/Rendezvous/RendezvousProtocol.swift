@@ -74,7 +74,7 @@ public enum RendezvousProtocol {
     
     private static func parseAndValidate(
         urlSafeBase64DeviceGroupJoinRequestOffer: String
-    ) throws -> Rendezvous_RendezvousInit {
+    ) throws -> D2dRendezvous_RendezvousInit {
         guard let deviceGroupJoinRequestOrOfferData = Data(
             urlSafeBase64Encoded: urlSafeBase64DeviceGroupJoinRequestOffer
         ) else {
@@ -118,7 +118,7 @@ public enum RendezvousProtocol {
         return true
     }
     
-    private static func validate(rendezvousInit: Rendezvous_RendezvousInit) throws -> Bool {
+    private static func validate(rendezvousInit: D2dRendezvous_RendezvousInit) throws -> Bool {
         
         // 1. If `version` is unsupported, abort these steps.
         switch rendezvousInit.version {
@@ -168,7 +168,7 @@ public enum RendezvousProtocol {
         
         // RRD ---- Handshake.RrdToRid.Hello ---> RID
 
-        let helloMessage = Rendezvous_Handshake.RrdToRid.Hello.with {
+        let helloMessage = D2dRendezvous_Handshake.RrdToRid.Hello.with {
             $0.challenge = outgoingChallenge
             $0.etk = ephemeralTransportKeyPair.publicKey
         }
@@ -181,7 +181,7 @@ public enum RendezvousProtocol {
         // RRD <- Handshake.RidToRrd.AuthHello -- RID
         
         let authHelloData = try await connection.receive()
-        let authHelloMessage = try Rendezvous_Handshake.RidToRrd.AuthHello(serializedData: authHelloData)
+        let authHelloMessage = try D2dRendezvous_Handshake.RidToRrd.AuthHello(serializedData: authHelloData)
         // In theory we should retry to receive more data/frames and see if we the combined data can be deserialized.
         // For now we assume that this message is enough small
         DDLogVerbose("Received auth hello: \(authHelloMessage)")
@@ -194,7 +194,7 @@ public enum RendezvousProtocol {
         
         // RRD ---- Handshake.RrdToRid.Auth ----> RID
 
-        let authMessage = Rendezvous_Handshake.RrdToRid.Auth.with {
+        let authMessage = D2dRendezvous_Handshake.RrdToRid.Auth.with {
             $0.response = authHelloMessage.challenge
         }
         
@@ -214,7 +214,7 @@ public enum RendezvousProtocol {
         // R*D ------- Handshake.Nominate ------> R*D
         
         if isNominator {
-            let nominateMessageData = try Rendezvous_Nominate().serializedData()
+            let nominateMessageData = try D2dRendezvous_Nominate().serializedData()
             
             DDLogNotice("Send nomination message")
             try await connection.send(nominateMessageData)
@@ -225,7 +225,7 @@ public enum RendezvousProtocol {
             
             DDLogVerbose("Received a message")
             
-            guard let _ = try? Rendezvous_Nominate(serializedData: authHelloData) else {
+            guard let _ = try? D2dRendezvous_Nominate(serializedData: authHelloData) else {
                 throw Error.unableToDeserializeData
             }
         }
@@ -261,13 +261,13 @@ public enum RendezvousProtocol {
 
         let helloData = try await connection.receive()
         
-        let helloMessage = try Rendezvous_Handshake.RrdToRid.Hello(serializedData: helloData)
+        let helloMessage = try D2dRendezvous_Handshake.RrdToRid.Hello(serializedData: helloData)
         
         DDLogVerbose("Received hello: \(helloMessage)")
 
         //     RRD <- Handshake.RidToRrd.AuthHello -- RID
         
-        let authHelloMessage = Rendezvous_Handshake.RidToRrd.AuthHello.with {
+        let authHelloMessage = D2dRendezvous_Handshake.RidToRrd.AuthHello.with {
             $0.response = helloMessage.challenge
             $0.challenge = outgoingChallenge
             $0.etk = ephemeralTransportKeyPair.publicKey
@@ -282,7 +282,7 @@ public enum RendezvousProtocol {
 
         let authData = try await connection.receive()
         
-        let authMessage = try Rendezvous_Handshake.RrdToRid.Auth(serializedData: authData)
+        let authMessage = try D2dRendezvous_Handshake.RrdToRid.Auth(serializedData: authData)
         
         DDLogVerbose("Received auth: \(authMessage)")
         

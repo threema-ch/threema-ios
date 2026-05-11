@@ -356,7 +356,7 @@ public final class Group: NSObject {
         self.sortedMembers = allSortedMembers()
         self.membersList = sortedMembers.map(\.shortDisplayName)
             .joined(separator: ", ")
-
+        
         // Subscribe group entity for DB updates or deletion
         subscribeForGroupEntityChanges(groupEntity: groupEntity)
 
@@ -490,11 +490,13 @@ public final class Group: NSObject {
                     // Check has members composition changed
                     let newMembers = Set(conversation.unwrappedMembers.map { Contact(contactEntity: $0) })
 
-                    if !members.contactsEqual(to: newMembers) {
+                    if !members.contactIdentitiesEqual(to: newMembers) {
                         members = newMembers
                         sortedMembers = allSortedMembers()
-                        membersList = sortedMembers.map(\.shortDisplayName)
-                            .joined(separator: ", ")
+                        membersList = sortedMembers.map(\.shortDisplayName).joined(separator: ", ")
+                    }
+                    else if !members.contactNameEqual(to: newMembers) {
+                        membersList = sortedMembers.map(\.shortDisplayName).joined(separator: ", ")
                     }
                 }
             }

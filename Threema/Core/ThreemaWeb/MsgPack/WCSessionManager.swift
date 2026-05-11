@@ -5,7 +5,7 @@ import ThreemaEssentials
 import ThreemaFramework
 import ThreemaMacros
 
-@objc final class WCSessionManager: NSObject {
+final class WCSessionManager: NSObject {
     
     @objc static let shared = WCSessionManager()
     
@@ -108,6 +108,7 @@ extension WCSessionManager {
         }
     }
     
+    @MainActor
     private func removeObservers() {
         UIDevice.current.isBatteryMonitoringEnabled = false
         NotificationCenter.default.removeObserver(self)
@@ -124,8 +125,19 @@ extension WCSessionManager {
         }
 
         DispatchQueue.main.async {
-            guard let mainTabBar = AppDelegate.shared().tabBarController(),
-                  let viewControllers = mainTabBar.viewControllers else {
+            let mainTabBar: UITabBarController?
+            
+            #if SCENE_DELEGATE_ROOT_COORDINATOR_DEVELOPMENT
+                mainTabBar =
+                    SceneDelegate.current?.rootCoordinator?.tabBarController
+            #else
+                mainTabBar = AppDelegate.shared().tabBarController()
+            #endif
+            
+            guard
+                let mainTabBar,
+                let viewControllers = mainTabBar.viewControllers
+            else {
                 UIApplication.shared.isIdleTimerDisabled = false
                 return
             }
@@ -199,7 +211,7 @@ extension WCSessionManager {
                         whiteList: webHosts
                     ) == false {
                         DDLogNotice("[Threema Web] Scanned qr code host is not white listed")
-                        if AppDelegate.shared().isAppInBackground() {
+                        if AppDelegate.isAppInBackground() {
                             ThreemaUtilityObjC.sendErrorLocalNotification(
                                 #localize("webClient_scan_error_mdm_host_title"),
                                 body: #localize("webClient_scan_error_mdm_host_message"),
@@ -295,7 +307,7 @@ extension WCSessionManager {
                         whiteList: webHosts
                     ) == false {
                         DDLogError("[Threema Web] Scanned qr code host is not white listed")
-                        if AppDelegate.shared().isAppInBackground() {
+                        if AppDelegate.isAppInBackground() {
                             ThreemaUtilityObjC.sendErrorLocalNotification(
                                 #localize("webClient_scan_error_mdm_host_title"),
                                 body: #localize("webClient_scan_error_mdm_host_message"),
@@ -329,7 +341,9 @@ extension WCSessionManager {
             DDLogNotice("[Threema Web] There is no active session")
             WebClientSessionStore.shared.setAllWebClientSessionsInactive()
 
-            removeObservers()
+            Task {
+                await removeObservers()
+            }
             return
         }
         canConnectToWebClient { isValid in
@@ -371,7 +385,9 @@ extension WCSessionManager {
                 session.stop(close: true, forget: false, sendDisconnect: true, reason: .stop)
             }
         }
-        removeObservers()
+        Task {
+            await removeObservers()
+        }
     }
     
     /// Stop and delete all running sessions.
@@ -426,7 +442,9 @@ extension WCSessionManager {
             }
         }
         if running.isEmpty {
-            removeObservers()
+            Task {
+                await removeObservers()
+            }
         }
     }
     
@@ -946,10 +964,10 @@ extension WCSessionManager {
                 
                 if changedValues.keys.contains(ConversationEntity.Field.name(
                     for: .groupName,
-                    encrypted: AppLaunchManager.remoteSecretManager.isRemoteSecretEnabled
+                    encrypted: RemoteSecretProvider.remoteSecretManager.isRemoteSecretEnabled
                 )) || changedValues.keys.contains(ConversationEntity.Field.name(
                     for: .members,
-                    encrypted: AppLaunchManager.remoteSecretManager.isRemoteSecretEnabled
+                    encrypted: RemoteSecretProvider.remoteSecretManager.isRemoteSecretEnabled
                 )) {
                     if let group = self.businessInjector.groupManager.getGroup(conversation: currentConversation) {
                         self.responseUpdateGroup(group: group, objectMode: .modified)
@@ -957,7 +975,7 @@ extension WCSessionManager {
                 }
                 else if changedValues.keys.contains(ConversationEntity.Field.name(
                     for: .groupImage,
-                    encrypted: AppLaunchManager.remoteSecretManager.isRemoteSecretEnabled
+                    encrypted: RemoteSecretProvider.remoteSecretManager.isRemoteSecretEnabled
                 )),
                     let group = self.businessInjector.groupManager.getGroup(conversation: currentConversation) {
                     self.responseUpdateAvatar(contact: nil, group: group)
@@ -966,7 +984,7 @@ extension WCSessionManager {
             else if let contact = currentConversation.contact,
                     changedValuesForCurrentEvent.keys.contains(ContactEntity.Field.name(
                         for: .typing,
-                        encrypted: AppLaunchManager.remoteSecretManager.isRemoteSecretEnabled
+                        encrypted: RemoteSecretProvider.remoteSecretManager.isRemoteSecretEnabled
                     )) {
                 self.responseUpdateTyping(
                     identity: contact.threemaIdentity,
@@ -977,19 +995,19 @@ extension WCSessionManager {
             if (
                 changedValues.keys.contains(ConversationEntity.Field.name(
                     for: .lastMessage,
-                    encrypted: AppLaunchManager.remoteSecretManager.isRemoteSecretEnabled
+                    encrypted: RemoteSecretProvider.remoteSecretManager.isRemoteSecretEnabled
                 )) ||
                     changedValues.keys.contains(ConversationEntity.Field.name(
                         for: .visibility,
-                        encrypted: AppLaunchManager.remoteSecretManager.isRemoteSecretEnabled
+                        encrypted: RemoteSecretProvider.remoteSecretManager.isRemoteSecretEnabled
                     )) ||
                     changedValues.keys.contains(ConversationEntity.Field.name(
                         for: .unreadMessageCount,
-                        encrypted: AppLaunchManager.remoteSecretManager.isRemoteSecretEnabled
+                        encrypted: RemoteSecretProvider.remoteSecretManager.isRemoteSecretEnabled
                     )) ||
                     changedValues.keys.contains(ConversationEntity.Field.name(
                         for: .lastUpdate,
-                        encrypted: AppLaunchManager.remoteSecretManager.isRemoteSecretEnabled
+                        encrypted: RemoteSecretProvider.remoteSecretManager.isRemoteSecretEnabled
                     )) ||
                     dirtyObjects
             ) && currentConversation.lastMessage != nil {
@@ -1000,10 +1018,10 @@ extension WCSessionManager {
                     let contact = conversation.contact,
                     changedValues.keys.contains(ConversationEntity.Field.name(
                         for: .category,
-                        encrypted: AppLaunchManager.remoteSecretManager.isRemoteSecretEnabled
+                        encrypted: RemoteSecretProvider.remoteSecretManager.isRemoteSecretEnabled
                     )) || changedValues.keys.contains(ConversationEntity.Field.name(
                         for: .visibility,
-                        encrypted: AppLaunchManager.remoteSecretManager.isRemoteSecretEnabled
+                        encrypted: RemoteSecretProvider.remoteSecretManager.isRemoteSecretEnabled
                     )) {
                 self.responseUpdateContact(contact: contact, objectMode: .modified)
             }
@@ -1119,7 +1137,7 @@ extension WCSessionManager {
         
         if changedValues.keys.contains(BaseMessageEntity.Field.name(
             for: .conversation,
-            encrypted: AppLaunchManager.remoteSecretManager.isRemoteSecretEnabled
+            encrypted: RemoteSecretProvider.remoteSecretManager.isRemoteSecretEnabled
         )), changedValuesForCurrentEvent["conversation"] != nil {
             conversation = changedValuesForCurrentEvent["conversation"] as? ConversationEntity
         }

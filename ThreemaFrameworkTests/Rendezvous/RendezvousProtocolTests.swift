@@ -9,7 +9,7 @@ final class RendezvousProtocolTests: XCTestCase {
         let expectedAuthResponse = Data(repeating: 0x12, count: 16)
         let expectedPathHash = Data(repeating: 0x43, count: 10)
         
-        let rendezvousInit = Rendezvous_RendezvousInit()
+        let rendezvousInit = D2dRendezvous_RendezvousInit()
         let urlDeviceGroupJoinRequestOrOffer = Url_DeviceGroupJoinRequestOrOffer.with {
             $0.version = .v10
             $0.variant.requestToJoin = Common_Unit()
@@ -21,9 +21,9 @@ final class RendezvousProtocolTests: XCTestCase {
                 throw EncryptedRendezvousConnectionError.unknownDataReceived
             }
             
-            let helloMessage = try Rendezvous_Handshake.RrdToRid.Hello(serializedData: lastDataSent)
+            let helloMessage = try D2dRendezvous_Handshake.RrdToRid.Hello(serializedData: lastDataSent)
             
-            return try Rendezvous_Handshake.RidToRrd.AuthHello.with {
+            return try D2dRendezvous_Handshake.RidToRrd.AuthHello.with {
                 $0.response = helloMessage.challenge
                 $0.challenge = expectedAuthResponse
             }.serializedData()
@@ -51,7 +51,7 @@ final class RendezvousProtocolTests: XCTestCase {
         XCTAssertEqual(encryptedRendezvousConnectionMock.receiveCallsCount, 1)
         
         let actualAuthData = encryptedRendezvousConnectionMock.dataSent[1]
-        let actualAuthMessage = try Rendezvous_Handshake.RrdToRid.Auth(serializedData: actualAuthData)
+        let actualAuthMessage = try D2dRendezvous_Handshake.RrdToRid.Auth(serializedData: actualAuthData)
         XCTAssertEqual(actualAuthMessage.response, expectedAuthResponse)
         
         // Switch should only be called once
@@ -59,7 +59,7 @@ final class RendezvousProtocolTests: XCTestCase {
         
         let actualNominateData = encryptedRendezvousConnectionMock.dataSent[2]
         // This will throw if the 3rd message is not a nominate message
-        _ = try Rendezvous_Nominate(serializedData: actualNominateData)
+        _ = try D2dRendezvous_Nominate(serializedData: actualNominateData)
         
         XCTAssertTrue(actualConnection === encryptedRendezvousConnectionMock)
         XCTAssertEqual(pathHash, expectedPathHash)

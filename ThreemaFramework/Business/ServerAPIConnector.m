@@ -22,7 +22,7 @@
 #endif
 @implementation ServerAPIConnector
 
-- (void)createIdentityWithStore:(MyIdentityStore*)identityStore onCompletion:(void(^)(MyIdentityStore *store))onCompletion onError:(void(^)(NSError *error))onError {
+- (void)createIdentityWithStore:(id<MyIdentityStoreProtocol>)identityStore onCompletion:(void(^)(MyIdentityStore *store))onCompletion onError:(void(^)(NSError *error))onError {
     
     static NSString *apiPath = @"identity/create";
     
@@ -116,7 +116,7 @@
     }];
 }
 
-- (void)fetchPrivateIdentityInfo:(MyIdentityStore*)identityStore onCompletion:(void(^)(NSString *serverGroup, NSString *email, NSString *mobileNo))onCompletion onError:(void(^)(NSError *error))onError {
+- (void)fetchPrivateIdentityInfo:(id<MyIdentityStoreProtocol>)identityStore onCompletion:(void(^)(NSString *serverGroup, NSString *email, NSString *mobileNo))onCompletion onError:(void(^)(NSError *error))onError {
     
     if (identityStore.identity == nil) {
         onError([ThreemaError threemaError:@"store has no valid identity"]);
@@ -151,7 +151,7 @@
     }];
 }
 
-- (void)updateMyIdentityStore:(MyIdentityStore*)identityStore onCompletion:(void(^)(void))onCompletion onError:(void(^)(NSError* error))onError {
+- (void)updateMyIdentityStore:(id<MyIdentityStoreProtocol>)identityStore onCompletion:(void(^)(void))onCompletion onError:(void(^)(NSError* error))onError {
     [self fetchPrivateIdentityInfo:identityStore onCompletion:^(NSString *serverGroup, NSString *email, NSString *mobileNo) {
         DDLogVerbose(@"Got identity info: serverGroup %@, email %@, mobileNo %@", serverGroup, email, mobileNo);
         
@@ -173,7 +173,7 @@
     }];
 }
 
-- (void)linkEmailWithStore:(MyIdentityStore*)identityStore email:(NSString*)email onCompletion:(void(^)(BOOL linked))onCompletion onError:(void(^)(NSError *error))onError {
+- (void)linkEmailWithStore:(id<MyIdentityStoreProtocol>)identityStore email:(NSString*)email onCompletion:(void(^)(BOOL linked))onCompletion onError:(void(^)(NSError *error))onError {
     
     static NSString *apiPath = @"identity/link_email";
     
@@ -239,7 +239,7 @@
     }
 }
 
-- (void)checkLinkEmailStatus:(MyIdentityStore*)identityStore email:(NSString*)email onCompletion:(void(^)(BOOL linked))onCompletion onError:(void(^)(NSError *error))onError {
+- (void)checkLinkEmailStatus:(id<MyIdentityStoreProtocol>)identityStore email:(NSString*)email onCompletion:(void(^)(BOOL linked))onCompletion onError:(void(^)(NSError *error))onError {
 
     if (identityStore.identity == nil) {
         onError([ThreemaError threemaError:@"store has no valid identity"]);
@@ -265,7 +265,7 @@
     } onError:onError];
 }
 
-- (void)linkMobileNoWithStore:(MyIdentityStore*)identityStore mobileNo:(NSString*)mobileNo onCompletion:(void(^)(BOOL linked))onCompletion onError:(void(^)(NSError *error))onError {
+- (void)linkMobileNoWithStore:(id<MyIdentityStoreProtocol>)identityStore mobileNo:(NSString*)mobileNo onCompletion:(void(^)(BOOL linked))onCompletion onError:(void(^)(NSError *error))onError {
     
     if (identityStore.identity == nil) {
         onError([ThreemaError threemaError:@"store has no valid identity"]);
@@ -331,7 +331,7 @@
     } onError:onError];
 }
 
-- (void)linkMobileNoWithStore:(MyIdentityStore*)identityStore code:(NSString*)code onCompletion:(void(^)(BOOL linked))onCompletion onError:(void(^)(NSError *error))onError {
+- (void)linkMobileNoWithStore:(id<MyIdentityStoreProtocol>)identityStore code:(NSString*)code onCompletion:(void(^)(BOOL linked))onCompletion onError:(void(^)(NSError *error))onError {
     
     if (!identityStore.linkMobileNoPending || identityStore.linkMobileNoVerificationId == nil) {
         DDLogWarn(@"No mobileNo verification pending");
@@ -358,7 +358,7 @@
     }];
 }
 
-- (void)linkMobileNoRequestCallWithStore:(MyIdentityStore*)identityStore onCompletion:(void(^)(void))onCompletion onError:(void(^)(NSError *error))onError {
+- (void)linkMobileNoRequestCallWithStore:(id<MyIdentityStoreProtocol>)identityStore onCompletion:(void(^)(void))onCompletion onError:(void(^)(NSError *error))onError {
     
     if (!identityStore.linkMobileNoPending || identityStore.linkMobileNoVerificationId == nil) {
         DDLogWarn(@"No mobileNo verification pending");
@@ -379,7 +379,7 @@
     }];
 }
 
-- (void)obtainMatchTokenForIdentity:(MyIdentityStore*)identityStore forceRefresh:(BOOL)forceRefresh onCompletion:(void(^)(NSString *matchToken))onCompletion onError:(void(^)(NSError *error))onError {
+- (void)obtainMatchTokenForIdentity:(id<MyIdentityStoreProtocol>)identityStore forceRefresh:(BOOL)forceRefresh onCompletion:(void(^)(NSString *matchToken))onCompletion onError:(void(^)(NSError *error))onError {
 
     if (!identityStore.isValidIdentity || !AppSetup.isIdentityProvisioned) {
         DDLogNotice(@"Skip obtaining token, because my identity is invalid or not provisioned.");
@@ -448,7 +448,7 @@
     }];
 }
 
-- (void)setFeatureMask:(NSNumber *)featureMask forStore:(MyIdentityStore*)identityStore onCompletion:(void(^)(void))onCompletion onError:(void(^)(NSError *error))onError {
+- (void)setFeatureMask:(NSNumber *)featureMask forStore:(id<MyIdentityStoreProtocol>)identityStore onCompletion:(void(^)(void))onCompletion onError:(void(^)(NSError *error))onError {
     if (identityStore.identity == nil) {
         onError([ThreemaError threemaError:@"store has no valid identity"]);
         return;
@@ -493,7 +493,7 @@
     }];
 }
 
-- (void)checkRevocationPasswordForStore:(MyIdentityStore*)identityStore onCompletion:(void(^)(BOOL revocationPasswordSet, NSDate *lastChanged))onCompletion onError:(void(^)(NSError *error))onError {
+- (void)checkRevocationPasswordForStore:(id<MyIdentityStoreProtocol>)identityStore onCompletion:(void(^)(BOOL revocationPasswordSet, NSDate *lastChanged))onCompletion onError:(void(^)(NSError *error))onError {
     
     if (identityStore.identity == nil) {
         onError([ThreemaError threemaError:@"store has no valid identity"]);
@@ -513,7 +513,7 @@
     } onError:onError];
 }
 
-- (void)setRevocationPassword:(NSString*)revocationPassword forStore:(MyIdentityStore*)identityStore onCompletion:(void(^)(void))onCompletion onError:(void(^)(NSError *error))onError {
+- (void)setRevocationPassword:(NSString*)revocationPassword forStore:(id<MyIdentityStoreProtocol>)identityStore onCompletion:(void(^)(void))onCompletion onError:(void(^)(NSError *error))onError {
     
     if (identityStore.identity == nil) {
         onError([ThreemaError threemaError:@"store has no valid identity"]);
@@ -539,7 +539,7 @@
     } onError:onError];
 }
 
-- (void)revokeID:(MyIdentityStore*)identityStore onCompletion:(void(^)(void))onCompletion onError:(void(^)(NSError *error))onError {
+- (void)revokeID:(id<MyIdentityStoreProtocol>)identityStore onCompletion:(void(^)(void))onCompletion onError:(void(^)(NSError *error))onError {
     
     if (identityStore.identity == nil) {
         onError([ThreemaError threemaError:@"store has no valid identity"]);
@@ -571,7 +571,7 @@
     }];
 }
 
-- (void)revokeIdForStore:(MyIdentityStore*)identityStore onCompletion:(void(^)(void))onCompletion onError:(void(^)(NSError *error))onError {
+- (void)revokeIdForStore:(id<MyIdentityStoreProtocol>)identityStore onCompletion:(void(^)(void))onCompletion onError:(void(^)(NSError *error))onError {
     
     if (identityStore.identity == nil) {
         onError([ThreemaError threemaError:@"store has no valid identity"]);
@@ -609,7 +609,7 @@
     } onError:onError];
 }
 
-- (void)updateWorkInfoForStore:(MyIdentityStore*)identityStore licenseUsername:(NSString*)licenseUsername password:(NSString*)licensePassword force:(BOOL)force onCompletion:(void(^)(BOOL sent))onCompletion onError:(void(^)(NSError *error))onError {
+- (void)updateWorkInfoForStore:(id<MyIdentityStoreProtocol>)identityStore licenseUsername:(NSString*)licenseUsername password:(NSString*)licensePassword force:(BOOL)force onCompletion:(void(^)(BOOL sent))onCompletion onError:(void(^)(NSError *error))onError {
     
     if (identityStore.identity == nil) {
         onError([ThreemaError threemaError:@"store has no valid identity"]);
@@ -674,7 +674,7 @@
     } onError:onError];
 }
 
-- (void)searchInDirectory:(NSString *)searchString categories:(NSArray *)categories page:(int)page forLicenseStore:(LicenseStore *)licenseStore forMyIdentityStore:(MyIdentityStore*)identityStore onCompletion:(void(^)(NSArray *contacts, NSDictionary *paging))onCompletion onError:(void(^)(NSError *error))onError {
+- (void)searchInDirectory:(NSString *)searchString categories:(NSArray *)categories page:(int)page forLicenseStore:(id<LicenseStoreProtocol> )licenseStore forMyIdentityStore:(id<MyIdentityStoreProtocol>)identityStore onCompletion:(void(^)(NSArray *contacts, NSDictionary *paging))onCompletion onError:(void(^)(NSError *error))onError {
     NSString *sortOrder = [[UserSettings sharedUserSettings] sortOrderFirstName] ? @"firstName" : @"lastName";
 
     NSMutableDictionary *req = [[NSMutableDictionary alloc] initWithDictionary:@{@"username": licenseStore.licenseUsername,
@@ -700,7 +700,7 @@
     }];
 }
 
-- (void)obtainTurnServersWithStore:(MyIdentityStore*)identityStore onCompletion:(void(^)(NSDictionary *response))onCompletion onError:(void(^)(NSError *error))onError {
+- (void)obtainTurnServersWithStore:(id<MyIdentityStoreProtocol>)identityStore onCompletion:(void(^)(NSDictionary *response))onCompletion onError:(void(^)(NSError *error))onError {
     
     if (identityStore.identity == nil) {
         onError([ThreemaError threemaError:@"No identity"]);
@@ -721,7 +721,7 @@
     } onError:onError];
 }
 
-- (void)obtainSFUCredentials:(MyIdentityStore*)identityStore onCompletion:(void(^)(NSDictionary *response))onCompletion onError:(void(^)(NSError *error))onError {
+- (void)obtainSFUCredentials:(id<MyIdentityStoreProtocol>)identityStore onCompletion:(void(^)(NSDictionary *response))onCompletion onError:(void(^)(NSError *error))onError {
     
     if (identityStore.identity == nil) {
         onError([ThreemaError threemaError:@"No identity"]);
@@ -751,7 +751,7 @@
     } onError:onError];
 }
 
-- (void)sendSignedRequest:(NSDictionary*)request toApiPath:(NSString*)apiPath forStore:(MyIdentityStore*)identityStore onCompletion:(void(^)(NSDictionary *response))onCompletion onError:(void(^)(NSError *error))onError {
+- (void)sendSignedRequest:(NSDictionary*)request toApiPath:(NSString*)apiPath forStore:(id<MyIdentityStoreProtocol>)identityStore onCompletion:(void(^)(NSDictionary *response))onCompletion onError:(void(^)(NSError *error))onError {
     [self sendSignedRequestPhase1:request toApiPath:apiPath onCompletion:^(NSDictionary *response) {
         [self sendSignedRequestPhase2:request toApiPath:apiPath phase1Response:response forStore:identityStore onCompletion:onCompletion onError:onError];
     } onError:onError];
@@ -767,7 +767,7 @@
     }];
 }
 
-- (void)sendSignedRequestPhase2:(NSDictionary*)request toApiPath:(NSString*)apiPath phase1Response:(id)phase1Response forStore:(MyIdentityStore*)identityStore onCompletion:(void(^)(NSDictionary *response))onCompletion onError:(void(^)(NSError *error))onError {
+- (void)sendSignedRequestPhase2:(NSDictionary*)request toApiPath:(NSString*)apiPath phase1Response:(id)phase1Response forStore:(id<MyIdentityStoreProtocol>)identityStore onCompletion:(void(^)(NSDictionary *response))onCompletion onError:(void(^)(NSError *error))onError {
     
     NSDictionary *resp1 = (NSDictionary*)phase1Response;
     

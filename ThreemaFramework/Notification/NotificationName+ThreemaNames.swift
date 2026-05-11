@@ -13,4 +13,6 @@ extension Notification.Name {
     public static let resetSSLCAHelperCache = Notification.Name("ThreemaResetSSLCAHelperCache")
     public static let backupInProgressStatus = Notification.Name("ThreemaBackupInProgressStatus")
     public static let profileUIRefresh = Notification.Name("ThreemaProfileUIRefresh")
+    public static let ownWorkAvailabilityStatusChangedName = Notification
+        .Name("ThreemaOwnWorkAvailabilityStatusChanged")
 }

@@ -24,6 +24,7 @@ public enum ThreemaURLProvider {
     public static let backupFAQ = URL(string: defaultURLString + "faq/backup-options")!
     public static let notificationTypesFAQ = URL(string: defaultURLString + "faq/ios-notification-types")!
     public static let interactionFAQ = URL(string: defaultURLString + "faq/ios-interactions")!
+    public static let thisDeviceOnlyFAQ = URL(string: defaultURLString + "faq/quickstart")!
         
     // Work
     public static let workDownload = URL(string: defaultURLString + "/work/download")!

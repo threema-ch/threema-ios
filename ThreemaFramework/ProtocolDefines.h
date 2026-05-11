@@ -108,6 +108,8 @@ static Float32 const kWebClientMediaQuality = 0.6;
 #define MSGTYPE_AUTH_TOKEN 0xff
 #define MSGTYPE_GROUP_CALL_START 0x4f
 #define MSGTYPE_EMPTY 0xfc
+#define MSGTYPE_WORK_SYNC_DELTA 0xfd
+#define MSGTYPE_WEB_SESSION_RESUME 0xfe
 
 #define MESSAGE_FLAG_SEND_PUSH 0x01
 #define MESSAGE_FLAG_DONT_QUEUE 0x02

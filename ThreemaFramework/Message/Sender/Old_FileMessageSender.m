@@ -107,7 +107,7 @@
     
     NSData *encryptionKey = [[NaClCrypto sharedCrypto] randomBytes:kBlobKeyLen];
 
-    [entityManager performSyncBlockAndSafe:^{
+    [entityManager performAndWaitSave:^{
         FileDataEntity *fileData = [entityManager.entityCreator fileDataEntityWithData:data message:nil];
 
         ConversationEntity *conversation = (ConversationEntity*)self.conversationObject;
@@ -222,7 +222,7 @@
 #pragma mark - BlobMessageSender
 
 - (void)sendMessage:(NSArray *)blobIds {
-    [entityManager performSyncBlockAndSafe:^{
+    [entityManager performAndWaitSave:^{
         FileMessageEntity *fileMessageEntity = (FileMessageEntity *)self.messageObject;
         fileMessageEntity.blobId = blobIds[0];
         if ([blobIds count] > 1) {

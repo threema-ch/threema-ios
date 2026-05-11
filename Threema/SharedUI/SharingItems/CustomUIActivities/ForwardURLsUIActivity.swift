@@ -39,7 +39,7 @@ final class ForwardURLsUIActivity: UIActivity {
             return nil
         }
 
-        pickerController.enableMultiSelection = true
+        pickerController.enableMultiselection = true
         pickerController.enableTextInput = true
         pickerController.submitOnSelect = false
 

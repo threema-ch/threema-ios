@@ -1,9 +1,7 @@
 #import "LinkIDViewController.h"
 #import "MyIdentityStore.h"
 #import "ServerAPIConnector.h"
-#import "NBMetadataHelper.h"
 #import "LinkIDCountryPickerRowView.h"
-#import "PhoneNumberNormalizer.h"
 #import "UIDefines.h"
 #import "ThreemaUtilityObjC.h"
 #import "IntroQuestionView.h"
@@ -15,7 +13,8 @@
 
 @interface LinkIDViewController () <UIPickerViewDataSource, UIPickerViewDelegate, UITextFieldDelegate, IntroQuestionDelegate>
 
-@property NBMetadataHelper *metaDataHelper;
+@property PhoneNumberNormalizer *normalizer;
+
 @property NSArray *allPhoneMetadata;
 @property NSDictionary *selectedPhoneMetadata;
 
@@ -50,7 +49,9 @@
     [self setup];
 
     [self setupCountrySelection];
-    
+
+    _normalizer = [PhoneNumberNormalizer new];
+
     _phoneViewYOffset = _phoneView.frame.origin.y;
     _countryViewYOffset = _countryView.frame.origin.y;
     _emailViewYOffset = _emailView.frame.origin.y;
@@ -132,18 +133,16 @@
 }
 
 - (void)setupCountrySelection {
+    MetadataHelper *metadataHelper = [MetadataHelper new];
+
+    NSDictionary *countriesDictionary = [metadataHelper countriesDictionary];
     NSMutableArray *countries = [NSMutableArray array];
-    NSMutableArray *codes = [NSMutableArray array];
     _country2Region = [NSMutableDictionary dictionary];
-    
-    NBMetadataHelper *metadataHelper = [[NBMetadataHelper alloc] init];
-    
-    [[metadataHelper countryCodeToCountryNumberDictionary] enumerateKeysAndObjectsUsingBlock:^(id  _Nonnull key, id  _Nonnull obj, BOOL * _Nonnull stop) {
+
+    [countriesDictionary enumerateKeysAndObjectsUsingBlock:^(id  _Nonnull key, id  _Nonnull obj, BOOL * _Nonnull stop) {
         NSString *countryName = [self countryNameForRegion:key];
         if (countryName) {
             [countries addObject:countryName];
-            [codes addObject:obj];
-            
             [_country2Region setObject:key forKey:countryName];
         }
     }];
@@ -244,19 +243,17 @@
 }
 
 - (void)updatePhonePlaceholder {
-    PhoneNumberNormalizer *normalizer = [PhoneNumberNormalizer sharedInstance];
-    
     NSString *region;
     if (_currentCountry) {
         region = [_country2Region objectForKey:_currentCountry];
     } else {
-        region = [PhoneNumberNormalizer userRegion];
+        region = [_normalizer userRegion];
     }
     
     if (region) {
         [self updateUIWithRegion:region];
 
-        NSString *examplePhone = [normalizer exampleRegionalPhoneNumberForRegion:region];
+        NSString *examplePhone = [_normalizer exampleRegionalPhoneNumberFor:region];
         if (examplePhone != nil) {
             NSString *placeholder = [NSString stringWithFormat:@"%@ %@", examplePhone, [BundleUtil localizedStringForKey:@"(optional)"]];
             _phoneTextField.attributedPlaceholder = [[NSAttributedString alloc] initWithString:placeholder attributes:@{NSForegroundColorAttributeName: THREEMA_COLOR_PLACEHOLDER}];
@@ -288,27 +285,30 @@
     } else if (self.setupConfiguration.linkEmail) {
         self.emailTextField.text = self.setupConfiguration.linkEmail;
     }
-    
+
     /* linked mobile number */
+    BOOL phoneDetailsUpdated = NO;
+
     if (_restoredLinkedPhone) {
         // A linked phone number was restored, but we don't know the actual number (linkedMobileNo will be "***").        
         _phoneTextField.text = [BundleUtil localizedStringForKey:@"(linked)"];
-    } else if (self.setupConfiguration.linkPhoneNumber) {
+        phoneDetailsUpdated = YES;
+    } else {
         NSString *phoneNumber = self.setupConfiguration.linkPhoneNumber;
-        
-        PhoneNumberNormalizer *normalizer = [PhoneNumberNormalizer sharedInstance];
-        NSString *region = [normalizer regionForPhoneNumber:phoneNumber];
-        if (region) {
-            [self updateUIWithRegion:region];
-            
-            NSString *regionalPart = [normalizer regionalPartForPhoneNumber:phoneNumber];
-            
-            _phoneTextField.text = regionalPart;
+        if (phoneNumber) {
+            NSString *region = [_normalizer regionFrom:phoneNumber];
+            if (region) {
+                [self updateUIWithRegion:region];
+                _phoneTextField.text = [_normalizer regionalPartFrom:phoneNumber];
+                phoneDetailsUpdated = YES;
+            }
         }
     }
 
-    [self updatePhonePlaceholder];
-    
+    if (!phoneDetailsUpdated) {
+        [self updatePhonePlaceholder];
+    }
+
     [self hideEmailIfNeeded];
 }
 
@@ -399,10 +399,10 @@
         _phoneStateImageView.hidden = YES;
         return YES;
     }
-    
-    PhoneNumberNormalizer *normalizer = [PhoneNumberNormalizer sharedInstance];
-    NSString *prettyMobileNo;
-    NSString *mobileNo = [normalizer phoneNumberToE164:phone withDefaultRegion:[PhoneNumberNormalizer userRegion] prettyFormat:&prettyMobileNo];
+
+    NSString *defaultRegion = [_normalizer userRegion];
+    NSString *mobileNo = [_normalizer e164FormatFrom:phone defaultRegion:defaultRegion];
+
     if (mobileNo) {
         _phoneStateImageView.hidden = YES;
         return YES;
@@ -420,10 +420,11 @@
 
 
 - (NSString *)codeForCountry:(NSString *)countryName {
+    MetadataHelper *metadataHelper = [MetadataHelper new];
+
     NSString *region = [_country2Region objectForKey:countryName];
-    NBMetadataHelper *metadataHelper = [[NBMetadataHelper alloc] init];
-    
-    NSString *code = [[metadataHelper countryCodeToCountryNumberDictionary] objectForKey:region];
+    NSString *code = [[metadataHelper countriesDictionary] objectForKey:region];
+
     return [NSString stringWithFormat:@"+%@", code];
 }
 
@@ -491,15 +492,18 @@
 
 - (IBAction)selectedCountryAction:(id)sender {
     [self hideCountrySelector];
-    
-    NSInteger row = [_countryPicker selectedRowInComponent:0];
-    NSString *name = [_countryNames objectAtIndex:row];
 
-    _countryLabel.text = name;
-    _currentCountry = name;
-    _countryCodeLabel.text = [self codeForCountry:name];
-    
-    [self updatePhonePlaceholder];
+    NSInteger row = [_countryPicker selectedRowInComponent:0];
+
+    if (row < _countryNames.count) {
+        NSString *name = [_countryNames objectAtIndex:row];
+
+        _countryLabel.text = name;
+        _currentCountry = name;
+        _countryCodeLabel.text = [self codeForCountry:name];
+
+        [self updatePhonePlaceholder];
+    }
 }
 
 #pragma mark - UIPickerViewDataSource, UIPickerViewDelegate

@@ -751,7 +751,7 @@ final class ChatBarView: UIView {
     private func sendStartOrStopTypingIndicator() {
         if continueTypingTimer == nil {
             continueTypingTimer = Timer.scheduledTimer(
-                withTimeInterval: TimeInterval(TypingIndicatorManager.typingIndicatorResendInterval()),
+                withTimeInterval: TypingIndicatorConfig.resendInterval,
                 repeats: false,
                 block: { [weak self, isTyping] _ in
                     guard let self, isTyping else {
@@ -770,7 +770,7 @@ final class ChatBarView: UIView {
         }
 
         typingTimer = Timer.scheduledTimer(
-            withTimeInterval: TimeInterval(TypingIndicatorManager.typingIndicatorTypingPauseInterval()),
+            withTimeInterval: TypingIndicatorConfig.typingPauseInterval,
             repeats: false,
             block: { _ in
                 self.isTyping = false

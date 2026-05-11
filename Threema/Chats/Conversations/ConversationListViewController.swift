@@ -34,6 +34,18 @@ final class ConversationListViewController: ThemedTableViewController {
         return UIButton(configuration: configuration, primaryAction: action)
     }()
     
+    private lazy var workStatusBanner: ConversationListWorkStatusBannerView? = {
+        guard TargetManager.isWork, ThreemaEnvironment.workAvailabilityStatusEnabled else {
+            return nil
+        }
+        
+        let status = businessInjector.workAvailabilityStatusManager.ownStatus()
+        let bannerView = ConversationListWorkStatusBannerView(status: status) { [weak self] in
+            self?.changeOwnWorkAvailabilityStatus()
+        }
+        return bannerView
+    }()
+    
     private lazy var newChatButton = UIBarButtonItem(
         image: UIImage(systemName: "square.and.pencil"),
         style: .plain,
@@ -163,7 +175,7 @@ final class ConversationListViewController: ThemedTableViewController {
     private var didStartMultiselect = false
     
     private var lastAppearance = Date()
-    private var viewLoadedInBackground = AppDelegate.shared().isAppInBackground()
+    private var viewLoadedInBackground: Bool
     
     private weak var previousNavigationControllerDelegate: UINavigationControllerDelegate?
     
@@ -180,15 +192,21 @@ final class ConversationListViewController: ThemedTableViewController {
     private let isRegularSizeClass: () -> Bool
     
     private var setBackButtonDebounceTask: Task<Void, Never>?
+    private let isAppInBackground: () -> Bool
+    private var didApplyReduceTransparencyLayoutFix = false
 
     // MARK: - Lifecycle
     
     init(
         delegate: ConversationListViewControllerDelegate,
-        isRegularSizeClass: @autoclosure @escaping () -> Bool
+        isRegularSizeClass: @autoclosure @escaping () -> Bool,
+        isLoadedInBackground: Bool,
+        isAppInBackground: @autoclosure @escaping () -> Bool,
     ) {
         self.delegate = delegate
         self.isRegularSizeClass = isRegularSizeClass
+        self.viewLoadedInBackground = isLoadedInBackground
+        self.isAppInBackground = isAppInBackground
         super.init(nibName: nil, bundle: nil)
         
         editButton.accessibilityLabel = #localize("edit")
@@ -215,6 +233,7 @@ final class ConversationListViewController: ThemedTableViewController {
     }
     
     deinit {
+        NotificationCenter.default.removeObserver(self)
         UserSettings.shared().removeObserver(
             self,
             forKeyPath: "blacklist"
@@ -236,6 +255,7 @@ final class ConversationListViewController: ThemedTableViewController {
         navigationController?.navigationBar.prefersLargeTitles = true
         globalSearchResultsViewController.setSearchController(searchController)
         
+        updateHeaderIfNeeded()
         tableView.tableFooterView = archivedChatsButton
 
         view.addSubview(bottomToolbar)
@@ -265,7 +285,6 @@ final class ConversationListViewController: ThemedTableViewController {
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        viewLoadedInBackground = AppDelegate.shared().isAppInBackground()
         
         checkDateAndUpdateTimestamps()
         updateDraftForCell()
@@ -281,16 +300,60 @@ final class ConversationListViewController: ThemedTableViewController {
         definesPresentationContext = true
     }
     
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+
+        // Fixes an issue where the navigation bar would cover table view content when reduce transparency is enabled.
+        // Only needs to run once!
+        if UIAccessibility.isReduceTransparencyEnabled, !didApplyReduceTransparencyLayoutFix {
+            didApplyReduceTransparencyLayoutFix = true
+            UIView.performWithoutAnimation {
+                searchController.isActive = true
+                searchController.isActive = false
+            }
+        }
+    }
+    
     override func viewWillLayoutSubviews() {
         super.viewWillLayoutSubviews()
-        if navigationItem.searchController == nil, AppLaunchManager.isRemoteSecretEnabled == false {
+        if navigationItem.searchController == nil, RemoteSecretProvider.isRemoteSecretEnabled == false {
             navigationItem.searchController = searchController
         }
         
+        if tableView.tableHeaderView != nil {
+            updateHeaderIfNeeded()
+        }
         updateFooterIfNeeded()
     }
     
-    func updateFooterIfNeeded() {
+    private func updateHeaderIfNeeded() {
+        guard let workStatusBanner else {
+            tableView.tableHeaderView = nil
+            return
+        }
+        let manager = businessInjector.workAvailabilityStatusManager
+        let ownStatus = manager.ownStatus()
+        
+        // Do not show banner if status is `.none`
+        guard ownStatus.category != .none else {
+            tableView.tableHeaderView = nil
+            return
+        }
+        
+        workStatusBanner.status = ownStatus
+        workStatusBanner.setNeedsLayout()
+        workStatusBanner.layoutIfNeeded()
+        
+        let fittingSize = CGSize(width: tableView.bounds.width, height: UIView.layoutFittingCompressedSize.height)
+        let targetHeight = workStatusBanner.systemLayoutSizeFitting(fittingSize).height
+        
+        if tableView.tableHeaderView?.frame.height != targetHeight {
+            workStatusBanner.frame = CGRect(x: 0, y: 0, width: tableView.bounds.width, height: targetHeight)
+            tableView.tableHeaderView = workStatusBanner
+        }
+    }
+    
+    private func updateFooterIfNeeded() {
         archivedChatsButton.setNeedsLayout()
         archivedChatsButton.layoutIfNeeded()
         
@@ -333,6 +396,24 @@ extension ConversationListViewController {
     @objc func newMessage() {
         let viewController = UINavigationController(rootViewController: StartChatViewController())
         present(viewController, animated: true, completion: nil)
+    }
+    
+    private func changeOwnWorkAvailabilityStatus() {
+        guard TargetManager.isWork, ThreemaEnvironment.workAvailabilityStatusEnabled else {
+            return
+        }
+        
+        let model = WorkAvailabilityStatusViewModel(
+            profileStore: businessInjector.profileStore,
+            onDismiss: { [weak self] in
+                self?.dismiss(animated: true)
+            }
+        )
+        let rootView = WorkAvailabilityStatusView(model: model)
+        let vc = UIHostingController(rootView: rootView)
+        let navC = UINavigationController(rootViewController: vc)
+        
+        present(navC, animated: true, completion: nil)
     }
 }
 
@@ -571,22 +652,29 @@ extension ConversationListViewController {
                 #localize("unread")
             }
         
-        let readAction = UIContextualAction(style: .normal, title: nil) { [weak self] _, _, handler in
-            guard let self else {
-                return
-            }
-            
-            if hasUnread {
-                Task {
-                    await self.utilities.read(conversation, isAppInBackground: AppDelegate.shared().isAppInBackground())
+        let readAction = UIContextualAction(
+            style: .normal,
+            title: nil,
+            handler: { [weak self] _, _, handler in
+                guard let self else {
+                    return
                 }
-            }
-            else {
-                utilities.unread(conversation)
-            }
             
-            handler(true)
-        }
+                if hasUnread {
+                    Task {
+                        await self.utilities.read(
+                            conversation,
+                            isAppInBackground: self.isAppInBackground()
+                        )
+                    }
+                }
+                else {
+                    utilities.unread(conversation)
+                }
+            
+                handler(true)
+            }
+        )
         
         if hasUnread {
             readAction.image = UIImage(systemName: "eye.fill")
@@ -691,7 +779,7 @@ extension ConversationListViewController {
         // Navbar
         navigationItem.leftBarButtonItem = editButton
         navigationItem.rightBarButtonItem = newChatButton
-        if !AppLaunchManager.isRemoteSecretEnabled {
+        if !RemoteSecretProvider.isRemoteSecretEnabled {
             navigationItem.searchController = searchController
         }
         navigationItem.title = #localize("chats_title")
@@ -990,6 +1078,23 @@ extension ConversationListViewController {
             name: NSNotification.Name(rawValue: kNotificationChangedHidePrivateChat),
             object: nil
         )
+        NotificationCenter.default.addObserver(
+            forName: UIContentSizeCategory.didChangeNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            // Force layout update for banner when font size changes
+            self?.updateHeaderIfNeeded()
+        }
+        
+        NotificationCenter.default.addObserver(
+            forName: Notification.Name.ownWorkAvailabilityStatusChangedName,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            self?.updateHeaderIfNeeded()
+        }
+        
         UserSettings.shared().addObserver(
             self,
             forKeyPath: "blacklist",

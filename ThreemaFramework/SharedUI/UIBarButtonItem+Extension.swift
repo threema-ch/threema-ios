@@ -5,14 +5,18 @@ import UIKit
 extension UIBarButtonItem {
     public static func cancelButton(title: String? = nil, target: Any, selector: Selector) -> UIBarButtonItem {
         if #available(iOS 26.0, *) {
-            UIBarButtonItem(
+            let item = UIBarButtonItem(
                 barButtonSystemItem: .cancel,
                 target: target,
                 action: selector
             )
+            if let title {
+                item.accessibilityLabel = title
+            }
+            return item
         }
         else {
-            UIBarButtonItem(
+            return UIBarButtonItem(
                 title: title ?? #localize("cancel"),
                 style: .plain,
                 target: target,
@@ -66,6 +70,7 @@ extension UIBarButtonItem {
                 target: target,
                 action: selector
             )
+            item.accessibilityLabel = #localize("send")
             return item
         }
         else {
@@ -80,15 +85,17 @@ extension UIBarButtonItem {
 
     public static func editButton(target: Any, selector: Selector) -> UIBarButtonItem {
         if #available(iOS 26.0, *) {
-            UIBarButtonItem(
+            let item = UIBarButtonItem(
                 image: UIImage(systemName: "pencil"),
                 style: .plain,
                 target: target,
                 action: selector
             )
+            item.accessibilityLabel = #localize("edit")
+            return item
         }
         else {
-            UIBarButtonItem(
+            return UIBarButtonItem(
                 title: #localize("edit"),
                 style: .plain,
                 target: target,
@@ -99,15 +106,17 @@ extension UIBarButtonItem {
     
     @objc public static func nextButton(target: Any, selector: Selector) -> UIBarButtonItem {
         if #available(iOS 26.0, *) {
-            UIBarButtonItem(
+            let item = UIBarButtonItem(
                 image: UIImage(systemName: "arrow.forward"),
                 style: .plain,
                 target: target,
                 action: selector
             )
+            item.accessibilityLabel = #localize("next")
+            return item
         }
         else {
-            UIBarButtonItem(
+            return UIBarButtonItem(
                 title: #localize("next"),
                 style: .plain,
                 target: target,

@@ -44,7 +44,7 @@ final class TaskExecutionRunForwardSecurityRefreshSteps: TaskExecution, TaskExec
             // Prepare sending for each message
             
             Promise { seal in
-                self.frameworkInjector.entityManager.performBlock {
+                self.frameworkInjector.entityManager.perform {
                     let sendMessagePromises = messages.map {
                         self.sendMessage(
                             message: $0,

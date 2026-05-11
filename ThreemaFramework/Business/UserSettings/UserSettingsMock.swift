@@ -1,4 +1,5 @@
 public final class UserSettingsMock: NSObject, UserSettingsProtocol {
+    
     override public init() {
         // no-op
     }
@@ -139,4 +140,8 @@ public final class UserSettingsMock: NSObject, UserSettingsProtocol {
     public var wallpaperType: WallpaperType = .threema
     
     public var showWorkReferral = false
+    
+    public var jbDetectionDismissed = false
+	
+    public var didShowIdentityThisDeviceOnly = true
 }

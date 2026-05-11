@@ -226,7 +226,18 @@ public final class ContactEntity: ThreemaManagedObject {
     /// This only means it's a verified contact from the admin (in the same work package). To check if this contact is a
     /// work ID, use the work identities list in user settings bad naming because of the history…
     @NSManaged public var workContact: NSNumber?
-    
+
+    @EncryptedField
+    @objc public dynamic var workLastFullSyncAt: Date? {
+        get {
+            getWorkLastFullSyncAt()
+        }
+
+        set {
+            setWorkLastFullSyncAt(newValue)
+        }
+    }
+
     // MARK: Custom getter/setter
     
     @objc public dynamic var contactImportStatus: ImportStatus {
@@ -306,7 +317,8 @@ public final class ContactEntity: ThreemaManagedObject {
     @NSManaged public var conversations: Set<ConversationEntity>?
     @NSManaged public var groupConversations: Set<ConversationEntity>?
     @NSManaged public var reactions: Set<MessageReactionEntity>?
-    
+    @NSManaged public var workAvailabilityStatus: WorkAvailabilityStatusEntity?
+
     /// All (group) messages that where rejected by this contact
     ///
     /// The inverse is `rejectedBy` of `BaseMessage`.
@@ -350,6 +362,7 @@ public final class ContactEntity: ThreemaManagedObject {
     private var decryptedVerificationLevel: Int16? // Non optional
     private var decryptedVerifiedEmail: String?
     private var decryptedVerifiedMobileNo: String?
+    private var decryptedWorkLastFullSyncAt: Date?
 
     // MARK: - Lifecycle
     
@@ -388,6 +401,9 @@ public final class ContactEntity: ThreemaManagedObject {
     ///   - groupConversations: Set of `ConversationEntity` of groups the contact is member in
     ///   - reactions: Set of `MessageReactionEntity` the contact has sent of
     ///   - rejectedMessages: Set of `BaseMessageEntity` the contact has rejected
+    ///   - sortOrderFirstName: Sort order from user settings
+    ///   - workAvailabilityStatus: Availability Status only for work contact
+    ///   - workLastFullSyncAt: Date of last full sync only for work contact
     init(
         context: NSManagedObjectContext,
         cnContactID: String? = nil,
@@ -422,7 +438,9 @@ public final class ContactEntity: ThreemaManagedObject {
         groupConversations: Set<ConversationEntity>? = nil,
         reactions: Set<MessageReactionEntity>? = nil,
         rejectedMessages: Set<BaseMessageEntity>? = nil,
-        sortOrderFirstName: Bool
+        sortOrderFirstName: Bool,
+        workAvailabilityStatus: WorkAvailabilityStatusEntity? = nil,
+        workLastFullSyncAt: Date? = nil
     ) {
         let entity = NSEntityDescription.entity(forEntityName: "Contact", in: context)!
         super.init(entity: entity, insertInto: context)
@@ -465,8 +483,9 @@ public final class ContactEntity: ThreemaManagedObject {
         self.groupConversations = groupConversations
         self.reactions = reactions
         self.rejectedMessages = rejectedMessages
-        
         updateSortInitial(sortOrderFirstName: sortOrderFirstName)
+        self.workAvailabilityStatus = workAvailabilityStatus
+        self.workLastFullSyncAt = workLastFullSyncAt
     }
     
     convenience init(context: NSManagedObjectContext, identity: String, publicKey: Data, sortOrderFirstName: Bool) {
@@ -1013,7 +1032,43 @@ public final class ContactEntity: ThreemaManagedObject {
             didChangeValue(forKey: Self.verifiedMobileNoName)
         }
     }
-    
+
+    // MARK: WorkLastFullSyncAt
+
+    private func getWorkLastFullSyncAt() -> Date? {
+        var value: Date?
+        guard let managedObjectContext else {
+            return value
+        }
+
+        if managedObjectContext.usesAdditionallyEncryptedModel {
+            decryptOptional(&decryptedWorkLastFullSyncAt, forKey: Self.encryptedWorkLastFullSyncAtName)
+            value = decryptedWorkLastFullSyncAt
+        }
+        else {
+            willAccessValue(forKey: Self.workLastFullSyncAtName)
+            value = primitiveValue(forKey: Self.workLastFullSyncAtName) as? Date
+            didAccessValue(forKey: Self.workLastFullSyncAtName)
+        }
+        return value
+    }
+
+    private func setWorkLastFullSyncAt(_ newValue: Date?) {
+        guard let managedObjectContext else {
+            return
+        }
+
+        if managedObjectContext.usesAdditionallyEncryptedModel {
+            encryptOptional(newValue, forKey: Self.encryptedWorkLastFullSyncAtName)
+            decryptedWorkLastFullSyncAt = newValue
+        }
+        else {
+            willChangeValue(forKey: Self.workLastFullSyncAtName)
+            setPrimitiveValue(newValue, forKey: Self.workLastFullSyncAtName)
+            didChangeValue(forKey: Self.workLastFullSyncAtName)
+        }
+    }
+
     // MARK: - Reset cached values
 
     override public func didChangeValue(forKey key: String) {
@@ -1056,6 +1111,9 @@ public final class ContactEntity: ThreemaManagedObject {
         else if key == Self.encryptedVerifiedMobileNoName {
             decryptedVerifiedMobileNo = nil
         }
+        else if key == Self.encryptedWorkLastFullSyncAtName {
+            decryptedWorkLastFullSyncAt = nil
+        }
         super.didChangeValue(forKey: key)
     }
 
@@ -1073,6 +1131,7 @@ public final class ContactEntity: ThreemaManagedObject {
         decryptedVerificationLevel = nil
         decryptedVerifiedEmail = nil
         decryptedVerifiedMobileNo = nil
+        decryptedWorkLastFullSyncAt = nil
         super.didTurnIntoFault()
     }
 

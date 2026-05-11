@@ -26,8 +26,6 @@
 @property (nonatomic) BOOL active;
 @property (nonatomic) BOOL firstPushHandled;
 
-@property (nonatomic, strong) NSString *urlRestoreData;
-
 @property (nonatomic, strong) NSDate *appLaunchDate;
 
 @property (nonatomic) BOOL isAppLocked;
@@ -46,11 +44,9 @@
 
 + (AppDelegate*)sharedAppDelegate;
 + (UIAlertController *)isAlertViewShown;
-+ (BOOL)hasBottomSafeAreaInsets;
 + (void)setupConnection;
 
 - (UITabBarController *)tabBarController;
-- (BOOL)isAppInBackground;
 - (BOOL)isPresentingKeyGeneration;
 - (BOOL)isPresentingEnterLicense;
 - (void)presentKeyGeneration;

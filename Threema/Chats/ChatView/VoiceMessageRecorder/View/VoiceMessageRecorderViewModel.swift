@@ -580,7 +580,10 @@ final class VoiceMessageRecorderViewModel: NSObject, ObservableObject {
     func saveVoiceMessageRecordingAsDraft() {
         terminateRecorder {
             // Moves recording file from tmp to documents folder for draft or the recording file will be deleted
-            guard !AppLaunchManager.isRemoteSecretEnabled, let combinedRecordings = self.combinedRecordings else {
+            guard
+                !RemoteSecretProvider.isRemoteSecretEnabled,
+                let combinedRecordings = self.combinedRecordings
+            else {
                 self.cleanupFiles()
                 return
             }

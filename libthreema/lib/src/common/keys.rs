@@ -3,7 +3,7 @@ use core::{array::TryFromSliceError, fmt};
 
 #[cfg(any(test, feature = "cli"))]
 use anyhow;
-use data_encoding::HEXLOWER;
+use data_encoding::HEXLOWER_PERMISSIVE;
 use educe::Educe;
 use libthreema_macros::{ConstantTimeEq, Name, concat_fixed_bytes};
 use rand::{self, Rng as _};
@@ -17,7 +17,7 @@ use crate::{
         digest::{FixedOutput as _, Mac as _},
         salsa20, x25519,
     },
-    utils::debug::debug_static_secret,
+    utils::debug::{Name as _, debug_static_secret},
 };
 
 /// Key for solving authentication challenges during the CSP handshake (aka _vouch key_).
@@ -190,7 +190,7 @@ impl RawClientKey {
     pub fn from_hex(string: &str) -> anyhow::Result<Self> {
         use anyhow::Context as _;
 
-        let bytes = HEXLOWER.decode(string.as_bytes())?;
+        let bytes = HEXLOWER_PERMISSIVE.decode(string.as_bytes())?;
         let bytes: [u8; ClientKey::LENGTH] = bytes.as_slice().try_into().context(format!(
             "must be {} bytes, got {}",
             ClientKey::LENGTH,
@@ -216,7 +216,7 @@ impl PublicKey {
     pub fn from_hex(string: &str) -> anyhow::Result<Self> {
         use anyhow::Context as _;
 
-        let bytes = HEXLOWER.decode(string.as_bytes())?;
+        let bytes = HEXLOWER_PERMISSIVE.decode(string.as_bytes())?;
         Self::try_from(bytes.as_slice()).context(format!(
             "must be {} bytes, got {}",
             Self::LENGTH,
@@ -243,7 +243,7 @@ impl TryFrom<&[u8]> for PublicKey {
 }
 impl fmt::Display for PublicKey {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        formatter.write_str(&HEXLOWER.encode(self.0.as_bytes()))
+        formatter.write_str(&HEXLOWER_PERMISSIVE.encode(self.0.as_bytes()))
     }
 }
 impl fmt::Debug for PublicKey {
@@ -256,10 +256,9 @@ impl fmt::Debug for PublicKey {
 }
 
 /// Cipher associated to the key computed as `X25519HSalsa20(DGPK.secret, ephemeral_server_key)`.
-#[expect(dead_code, reason = "Will use later")]
 pub(crate) struct DeviceGroupPathAuthenticationCipher(pub(crate) salsa20::XSalsa20Poly1305);
 
-/// The Device Group Path Key (DGPK)
+/// The Device Group Path Key (DGPK).
 pub(crate) struct DeviceGroupPathKey(x25519_dalek::StaticSecret);
 impl DeviceGroupPathKey {
     /// Byte length of the device group key.
@@ -272,7 +271,6 @@ impl DeviceGroupPathKey {
         PublicKey::from(&self.0)
     }
 
-    #[expect(dead_code, reason = "Will use later")]
     pub(crate) fn authentication_cipher(
         self,
         ephemeral_server_key: &PublicKey,
@@ -289,7 +287,6 @@ impl DeviceGroupPathKey {
 pub(crate) struct DeviceGroupReflectCipher(pub(crate) salsa20::XSalsa20Poly1305);
 
 /// Cipher associated to the Device Group Device Info Key (DGDIK).
-#[expect(dead_code, reason = "Will use later")]
 pub(crate) struct DeviceGroupDeviceInfoCipher(pub(crate) salsa20::XSalsa20Poly1305);
 
 /// Cipher associated to the Device Group Transaction Scope Key (DGTSK).
@@ -297,13 +294,13 @@ pub(crate) struct DeviceGroupTransactionScopeCipher(pub(crate) salsa20::XSalsa20
 
 #[derive(Educe, ZeroizeOnDrop)]
 #[educe(Debug)]
-/// The Device Group Key (DGK)
+/// The Device Group Key (DGK).
 pub struct DeviceGroupKey(#[educe(Debug(method(debug_static_secret)))] x25519::StaticSecret);
 impl DeviceGroupKey {
     /// Byte length of the device group key.
     pub const LENGTH: usize = 32;
 
-    /// Sample a random Device Group Key
+    /// Sample a random Device Group Key.
     #[must_use]
     pub fn random() -> Self {
         let mut device_group_key = [0_u8; Self::LENGTH];
@@ -313,7 +310,6 @@ impl DeviceGroupKey {
 
     /// Derive the Device Group Path Key (DGPK).
     #[must_use]
-    #[expect(dead_code, reason = "Will use later")]
     pub(crate) fn path_key(&self) -> DeviceGroupPathKey {
         let path_key: [u8; DeviceGroupPathKey::LENGTH] = self.derive_key(b"p").into();
         DeviceGroupPathKey(x25519::StaticSecret::from(path_key))
@@ -327,7 +323,6 @@ impl DeviceGroupKey {
 
     /// Derive the Device Group Device Info Key (DGDIK).
     #[must_use]
-    #[expect(dead_code, reason = "Will use later")]
     pub(crate) fn device_info_key(&self) -> DeviceGroupDeviceInfoCipher {
         DeviceGroupDeviceInfoCipher(salsa20::XSalsa20Poly1305::new(&self.derive_key(b"di")))
     }
@@ -382,7 +377,7 @@ impl RawDeviceGroupKey {
     pub fn from_hex(string: &str) -> anyhow::Result<Self> {
         use anyhow::Context as _;
 
-        let bytes = HEXLOWER.decode(string.as_bytes())?;
+        let bytes = HEXLOWER_PERMISSIVE.decode(string.as_bytes())?;
         let bytes: [u8; DeviceGroupKey::LENGTH] = bytes.as_slice().try_into().context(format!(
             "must be {} bytes, got {}",
             DeviceGroupKey::LENGTH,
@@ -408,7 +403,7 @@ impl RemoteSecretHash {
     pub fn from_hex(string: &str) -> anyhow::Result<Self> {
         use anyhow::Context as _;
 
-        let bytes = HEXLOWER.decode(string.as_bytes())?;
+        let bytes = HEXLOWER_PERMISSIVE.decode(string.as_bytes())?;
         let bytes: [u8; Self::LENGTH] = bytes.as_slice().try_into().context(format!(
             "must be {} bytes, got {}",
             Self::LENGTH,
@@ -437,7 +432,7 @@ impl From<[u8; Self::LENGTH]> for RemoteSecretHash {
 }
 impl fmt::Display for RemoteSecretHash {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        formatter.write_str(&HEXLOWER.encode(&self.0))
+        formatter.write_str(&HEXLOWER_PERMISSIVE.encode(&self.0))
     }
 }
 impl fmt::Debug for RemoteSecretHash {
@@ -463,7 +458,7 @@ impl From<[u8; Self::LENGTH]> for RemoteSecretHashForIdentity {
 }
 impl fmt::Display for RemoteSecretHashForIdentity {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        formatter.write_str(&HEXLOWER.encode(&self.0))
+        formatter.write_str(&HEXLOWER_PERMISSIVE.encode(&self.0))
     }
 }
 impl fmt::Debug for RemoteSecretHashForIdentity {
@@ -494,7 +489,7 @@ impl RemoteSecret {
     /// Byte length of the remote secret.
     pub const LENGTH: usize = 32;
 
-    /// Sample a random Remote Secret
+    /// Sample a random Remote Secret.
     #[must_use]
     pub fn random() -> Self {
         let mut remote_secret = [0_u8; Self::LENGTH];
@@ -535,13 +530,14 @@ impl From<[u8; Self::LENGTH]> for RemoteSecret {
 /// Wonky Field Cipher Key (WFCK).
 ///
 /// This key is derived from the [`RemoteSecret`] and used solely on iOS for the wonky field encryption.
+#[derive(ZeroizeOnDrop)]
 pub struct WonkyFieldCipherKey(pub(crate) [u8; Self::LENGTH]);
 impl WonkyFieldCipherKey {
     /// Byte length of the Wonky Field Cipher Key.
     pub const LENGTH: usize = 32;
 }
 
-/// Remote Secret Authentication Token (RSAT) associated to a Remote Secret (RS)
+/// Remote Secret Authentication Token (RSAT) associated to a Remote Secret (RS).
 #[derive(Clone, ZeroizeOnDrop)]
 pub struct RemoteSecretAuthenticationToken(pub [u8; Self::LENGTH]);
 impl RemoteSecretAuthenticationToken {
@@ -557,7 +553,7 @@ impl RemoteSecretAuthenticationToken {
     pub fn from_hex(string: &str) -> anyhow::Result<Self> {
         use anyhow::Context as _;
 
-        let bytes = HEXLOWER.decode(string.as_bytes())?;
+        let bytes = HEXLOWER_PERMISSIVE.decode(string.as_bytes())?;
         let bytes: [u8; Self::LENGTH] = bytes.as_slice().try_into().context(format!(
             "must be {} bytes, got {}",
             Self::LENGTH,

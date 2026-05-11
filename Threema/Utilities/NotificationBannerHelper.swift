@@ -4,7 +4,7 @@ import NotificationBannerSwift
 import ThreemaFramework
 import ThreemaMacros
 
-@objc final class NotificationBannerHelper: NSObject {
+final class NotificationBannerHelper: NSObject {
     @objc class func newBanner(baseMessage: BaseMessageEntity) {
         DispatchQueue.main.async {
             // Reload CoreData object because of concurrency problem
@@ -212,7 +212,7 @@ import ThreemaMacros
             banner.bannerQueue.dismissAllForced()
             // switch to selected conversation
             let entityManager = businessInjector.entityManager
-            entityManager.performBlock {
+            entityManager.perform {
                 if let conversation = entityManager.entityFetcher.managedObject(with: conversationManagedObjectID) {
                     NotificationCenter.default.post(
                         name: NSNotification.Name(rawValue: kNotificationShowConversation),

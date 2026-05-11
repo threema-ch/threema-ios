@@ -33,9 +33,9 @@ final class TaskDefinitionSettingsSync: TaskDefinition, TaskDefinitionTransactio
         .settingsSync
     }
 
-    var syncSettings: Sync_Settings
+    var syncSettings: D2dSync_Settings
 
-    init(syncSettings: Sync_Settings) {
+    init(syncSettings: D2dSync_Settings) {
         self.syncSettings = syncSettings
 
         super.init(type: .volatile)

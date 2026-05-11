@@ -587,4 +587,15 @@ public final class EntityCreator: NSObject {
     public func groupCallEntity() -> GroupCallEntity {
         GroupCallEntity(context: managedObjectContext)
     }
+    
+    // MARK: - WorkAvailabilityStatus
+
+    @discardableResult
+    @objc public func workAvailabilityStatusEntity(
+        value: Int,
+        text: String?,
+        contact: ContactEntity
+    ) -> WorkAvailabilityStatusEntity {
+        WorkAvailabilityStatusEntity(context: managedObjectContext, value: value, text: text, contact: contact)
+    }
 }

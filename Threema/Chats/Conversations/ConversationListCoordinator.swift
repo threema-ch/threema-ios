@@ -19,14 +19,23 @@ final class ConversationListCoordinator: Coordinator, CurrentDestinationHolderPr
 
         static func == (lhs: InternalDestination, rhs: InternalDestination) -> Bool {
             switch (lhs, rhs) {
-            case let (.conversation(lhsConversation, _), .conversation(rhsConversation, _)):
-                lhsConversation == rhsConversation
+            case let (.conversation(lhsConversation, lhsInfo), .conversation(rhsConversation, rhsInfo)):
+                
+                // If we have force compose in the new destination we push again even if we already show the chat, so we
+                // can update the text in chat bar.
+                if let rhsInfo, rhsInfo.forceCompose {
+                    return false
+                }
+                return lhsConversation == rhsConversation
+                
             case (.archivedConversationList, .archivedConversationList):
-                true
+                return true
+                
             case let (.archivedConversation(lhsConversation, _), .archivedConversation(rhsConversation, _)):
-                lhsConversation == rhsConversation
+                return lhsConversation == rhsConversation
+                
             default:
-                false
+                return false
             }
         }
     }
@@ -40,20 +49,9 @@ final class ConversationListCoordinator: Coordinator, CurrentDestinationHolderPr
     
     var currentDestination: InternalDestination?
     
-    private lazy var conversationListViewController: ConversationListViewController = {
-        let conversationListViewController = ConversationListViewController(
-            delegate: self,
-            isRegularSizeClass: { [weak self] in
-                self?.presentingViewController?.isCollapsed == false
-            }()
-        )
-        
-        let tab = ThreemaTab(.conversations)
-        conversationListViewController.tabBarItem = tab.tabBarItem
-        conversationListViewController.title = tab.title
-        
-        return conversationListViewController
-    }()
+    private let conversationListViewControllerFactory: ConversationListViewControllerFactory
+    private lazy var conversationListViewController: ConversationListViewController =
+        conversationListViewControllerFactory.make(with: self)
     
     private var archivedConversationListViewController: ArchivedConversationListViewController? {
         rootNavigationController.topViewController as? ArchivedConversationListViewController
@@ -100,10 +98,12 @@ final class ConversationListCoordinator: Coordinator, CurrentDestinationHolderPr
     
     init(
         presentingViewController: ThreemaSplitViewController,
+        conversationListViewControllerFactory: ConversationListViewControllerFactory,
         viewControllerForDestination: @escaping (InternalDestination) -> UIViewController,
         isPasscodeRequired: @autoclosure @escaping () -> Bool
     ) {
         self.presentingViewController = presentingViewController
+        self.conversationListViewControllerFactory = conversationListViewControllerFactory
         self.viewControllerForDestination = viewControllerForDestination
         self.isPasscodeRequired = isPasscodeRequired
     }
@@ -251,28 +251,21 @@ final class ConversationListCoordinator: Coordinator, CurrentDestinationHolderPr
                 rootNavigationController.viewControllers.first {
                     $0 is ArchivedConversationListViewController
                 }
-
-            /// Save destination before popping — the
-            /// `NavigationDestinationResetter` fires during
-            /// `popToRootViewController` and clears `currentDestination`.
-            let savedDestination = currentDestination
-            navigationController.popToRootViewController(animated: false)
-            currentDestination = savedDestination
-
+            
             var viewControllers: [UIViewController] = [chatViewController]
-
-            if case .archivedConversation = currentDestination,
-               archivedListViewController == nil {
-                let viewController = viewControllerForDestination(.archivedConversationList)
-                viewControllers.insert(viewController, at: 0)
+            
+            if case .archivedConversation = currentDestination {
+                if let archivedListViewController {
+                    viewControllers.insert(archivedListViewController, at: 0)
+                }
+                else {
+                    let viewController = viewControllerForDestination(.archivedConversationList)
+                    viewControllers.insert(viewController, at: 0)
+                }
             }
-            else if case .conversation = currentDestination,
-                    let archivedListViewController {
-                viewControllers.insert(archivedListViewController, at: 0)
-            }
-
+            
             viewControllers.insert(conversationListViewController, at: 0)
-
+            
             navigationController.setViewControllers(viewControllers, animated: true)
         }
         else {

@@ -9,10 +9,11 @@ protocol SafeComponentsFactory {
     func createSafeConfigManager(keychainManager: KeychainManagerProtocol) -> SafeConfigManagerProtocol
     func createSafeAPIService() -> SafeApiServiceProtocol
     func createSafeStore(
-        safeConfigManager: SafeConfigManagerProtocol,
+        safeConfigManager: any SafeConfigManagerProtocol,
         serverAPIConnector: ServerAPIConnector,
-        groupManager: GroupManagerProtocol,
-        myIdentityStore: MyIdentityStoreProtocol
+        groupManager: any GroupManagerProtocol,
+        myIdentityStore: any MyIdentityStoreProtocol,
+        phoneNumberNormalizer: any PhoneNumberNormalizerProtocol
     ) -> SafeStore
 }
 
@@ -29,16 +30,18 @@ final class LiveSafeComponentsFactory: SafeComponentsFactory {
     }
     
     func createSafeStore(
-        safeConfigManager: SafeConfigManagerProtocol,
+        safeConfigManager: any SafeConfigManagerProtocol,
         serverAPIConnector: ServerAPIConnector,
-        groupManager: GroupManagerProtocol,
-        myIdentityStore: MyIdentityStoreProtocol
+        groupManager: any GroupManagerProtocol,
+        myIdentityStore: any MyIdentityStoreProtocol,
+        phoneNumberNormalizer: any PhoneNumberNormalizerProtocol
     ) -> SafeStore {
         SafeStore(
             safeConfigManager: safeConfigManager,
             serverApiConnector: serverAPIConnector,
             groupManager: groupManager,
-            myIdentityStore: myIdentityStore
+            myIdentityStore: myIdentityStore,
+            phoneNumberNormalizer: phoneNumberNormalizer
         )
     }
 }

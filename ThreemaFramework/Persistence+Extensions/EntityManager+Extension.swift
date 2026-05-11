@@ -720,6 +720,45 @@ extension EntityManager {
         }
     }
 
+    public func updateWorkAvailabilityStatus(
+        changes: [D2dSync_Contact]?,
+        changedObjectID: ((NSManagedObjectID) -> Void)? = nil
+    ) {
+        guard let changes, !changes.isEmpty else {
+            DDLogInfo("No changes, we do not persist anything.")
+            return
+        }
+
+        for change in changes {
+            guard change.hasWorkAvailabilityStatus else {
+                continue
+            }
+
+            performAndWaitSave {
+                guard let contactEntity = self.entityFetcher.contactEntity(for: change.identity) else {
+                    DDLogError("Contact not found for changes. Skipping.")
+                    return
+                }
+
+                // Delete old status if existed
+                if let workAvailabilityStatus = contactEntity.workAvailabilityStatus {
+                    self.entityDestroyer.delete(workAvailabilityStatus: workAvailabilityStatus)
+                    changedObjectID?(workAvailabilityStatus.objectID)
+                }
+
+                // Save new, if not `.none`
+                if change.workAvailabilityStatus.category != .none {
+                    let workAvailabilityStatus = self.entityCreator.workAvailabilityStatusEntity(
+                        value: change.workAvailabilityStatus.category.rawValue,
+                        text: change.workAvailabilityStatus.description_p,
+                        contact: contactEntity
+                    )
+                    changedObjectID?(workAvailabilityStatus.objectID)
+                }
+            }
+        }
+    }
+
     /// Set delivered and delivery date of incoming message.
     /// - Parameters:
     /// - abstractMessage: Incoming message

@@ -16,7 +16,11 @@
 //
 // All strings are UTF-8 encoded.
 
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 import SwiftProtobuf
 
 // If the compiler emits an error on this type, it is because this file
@@ -232,6 +236,7 @@ public struct D2d_TransactionScope: Sendable {
     case mdmParameterSync // = 5
     case newDeviceSync // = 6
     case dropDevice // = 7
+    case workSyncDelta // = 8
     case UNRECOGNIZED(Int)
 
     public init() {
@@ -248,6 +253,7 @@ public struct D2d_TransactionScope: Sendable {
       case 5: self = .mdmParameterSync
       case 6: self = .newDeviceSync
       case 7: self = .dropDevice
+      case 8: self = .workSyncDelta
       default: self = .UNRECOGNIZED(rawValue)
       }
     }
@@ -262,6 +268,7 @@ public struct D2d_TransactionScope: Sendable {
       case .mdmParameterSync: return 5
       case .newDeviceSync: return 6
       case .dropDevice: return 7
+      case .workSyncDelta: return 8
       case .UNRECOGNIZED(let i): return i
       }
     }
@@ -276,6 +283,7 @@ public struct D2d_TransactionScope: Sendable {
       .mdmParameterSync,
       .newDeviceSync,
       .dropDevice,
+      .workSyncDelta,
     ]
 
   }
@@ -291,13 +299,13 @@ public struct D2d_Envelope: @unchecked Sendable {
 
   /// Random amount of padding, ignored by the receiver
   public var padding: Data {
-    get {return _storage._padding}
+    get {_storage._padding}
     set {_uniqueStorage()._padding = newValue}
   }
 
   /// Sender device id
   public var deviceID: UInt64 {
-    get {return _storage._deviceID}
+    get {_storage._deviceID}
     set {_uniqueStorage()._deviceID = newValue}
   }
 
@@ -305,7 +313,7 @@ public struct D2d_Envelope: @unchecked Sendable {
   ///
   /// If `0`, assume V0.1 (`0x0001`).
   public var protocolVersion: UInt32 {
-    get {return _storage._protocolVersion}
+    get {_storage._protocolVersion}
     set {_uniqueStorage()._protocolVersion = newValue}
   }
 
@@ -495,11 +503,11 @@ public struct D2d_OutgoingMessage: Sendable {
   /// the enclosed CSP E2E message must match the values of the supplied group
   /// identity. Otherwise, the message must be considered invalid.
   public var conversation: D2d_ConversationId {
-    get {return _conversation ?? D2d_ConversationId()}
+    get {_conversation ?? D2d_ConversationId()}
     set {_conversation = newValue}
   }
   /// Returns true if `conversation` has been explicitly set.
-  public var hasConversation: Bool {return self._conversation != nil}
+  public var hasConversation: Bool {self._conversation != nil}
   /// Clears the value of `conversation`. Subsequent reads from it will return its default value.
   public mutating func clearConversation() {self._conversation = nil}
 
@@ -509,11 +517,11 @@ public struct D2d_OutgoingMessage: Sendable {
   /// Optional thread message ID (the message ID of the last incoming message in
   /// the current conversation)
   public var threadMessageID: UInt64 {
-    get {return _threadMessageID ?? 0}
+    get {_threadMessageID ?? 0}
     set {_threadMessageID = newValue}
   }
   /// Returns true if `threadMessageID` has been explicitly set.
-  public var hasThreadMessageID: Bool {return self._threadMessageID != nil}
+  public var hasThreadMessageID: Bool {self._threadMessageID != nil}
   /// Clears the value of `threadMessageID`. Subsequent reads from it will return its default value.
   public mutating func clearThreadMessageID() {self._threadMessageID = nil}
 
@@ -581,11 +589,11 @@ public struct D2d_OutgoingMessageUpdate: Sendable {
 
     /// Conversation ID of the referred message.
     public var conversation: D2d_ConversationId {
-      get {return _conversation ?? D2d_ConversationId()}
+      get {_conversation ?? D2d_ConversationId()}
       set {_conversation = newValue}
     }
     /// Returns true if `conversation` has been explicitly set.
-    public var hasConversation: Bool {return self._conversation != nil}
+    public var hasConversation: Bool {self._conversation != nil}
     /// Clears the value of `conversation`. Subsequent reads from it will return its default value.
     public mutating func clearConversation() {self._conversation = nil}
 
@@ -709,11 +717,11 @@ public struct D2d_IncomingMessageUpdate: Sendable {
 
     /// Conversation ID of the referred message.
     public var conversation: D2d_ConversationId {
-      get {return _conversation ?? D2d_ConversationId()}
+      get {_conversation ?? D2d_ConversationId()}
       set {_conversation = newValue}
     }
     /// Returns true if `conversation` has been explicitly set.
-    public var hasConversation: Bool {return self._conversation != nil}
+    public var hasConversation: Bool {self._conversation != nil}
     /// Clears the value of `conversation`. Subsequent reads from it will return its default value.
     public mutating func clearConversation() {self._conversation = nil}
 
@@ -780,12 +788,12 @@ public struct D2d_UserProfileSync: Sendable {
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    public var userProfile: Sync_UserProfile {
-      get {return _userProfile ?? Sync_UserProfile()}
+    public var userProfile: D2dSync_UserProfile {
+      get {_userProfile ?? D2dSync_UserProfile()}
       set {_userProfile = newValue}
     }
     /// Returns true if `userProfile` has been explicitly set.
-    public var hasUserProfile: Bool {return self._userProfile != nil}
+    public var hasUserProfile: Bool {self._userProfile != nil}
     /// Clears the value of `userProfile`. Subsequent reads from it will return its default value.
     public mutating func clearUserProfile() {self._userProfile = nil}
 
@@ -793,7 +801,7 @@ public struct D2d_UserProfileSync: Sendable {
 
     public init() {}
 
-    fileprivate var _userProfile: Sync_UserProfile? = nil
+    fileprivate var _userProfile: D2dSync_UserProfile? = nil
   }
 
   public init() {}
@@ -843,12 +851,12 @@ public struct D2d_ContactSync: Sendable {
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    public var contact: Sync_Contact {
-      get {return _contact ?? Sync_Contact()}
+    public var contact: D2dSync_Contact {
+      get {_contact ?? D2dSync_Contact()}
       set {_contact = newValue}
     }
     /// Returns true if `contact` has been explicitly set.
-    public var hasContact: Bool {return self._contact != nil}
+    public var hasContact: Bool {self._contact != nil}
     /// Clears the value of `contact`. Subsequent reads from it will return its default value.
     public mutating func clearContact() {self._contact = nil}
 
@@ -856,7 +864,7 @@ public struct D2d_ContactSync: Sendable {
 
     public init() {}
 
-    fileprivate var _contact: Sync_Contact? = nil
+    fileprivate var _contact: D2dSync_Contact? = nil
   }
 
   /// Update a Threema contact.
@@ -865,12 +873,12 @@ public struct D2d_ContactSync: Sendable {
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    public var contact: Sync_Contact {
-      get {return _contact ?? Sync_Contact()}
+    public var contact: D2dSync_Contact {
+      get {_contact ?? D2dSync_Contact()}
       set {_contact = newValue}
     }
     /// Returns true if `contact` has been explicitly set.
-    public var hasContact: Bool {return self._contact != nil}
+    public var hasContact: Bool {self._contact != nil}
     /// Clears the value of `contact`. Subsequent reads from it will return its default value.
     public mutating func clearContact() {self._contact = nil}
 
@@ -878,7 +886,7 @@ public struct D2d_ContactSync: Sendable {
 
     public init() {}
 
-    fileprivate var _contact: Sync_Contact? = nil
+    fileprivate var _contact: D2dSync_Contact? = nil
   }
 
   public init() {}
@@ -939,12 +947,12 @@ public struct D2d_GroupSync: Sendable {
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    public var group: Sync_Group {
-      get {return _group ?? Sync_Group()}
+    public var group: D2dSync_Group {
+      get {_group ?? D2dSync_Group()}
       set {_group = newValue}
     }
     /// Returns true if `group` has been explicitly set.
-    public var hasGroup: Bool {return self._group != nil}
+    public var hasGroup: Bool {self._group != nil}
     /// Clears the value of `group`. Subsequent reads from it will return its default value.
     public mutating func clearGroup() {self._group = nil}
 
@@ -952,7 +960,7 @@ public struct D2d_GroupSync: Sendable {
 
     public init() {}
 
-    fileprivate var _group: Sync_Group? = nil
+    fileprivate var _group: D2dSync_Group? = nil
   }
 
   /// Update a group.
@@ -971,25 +979,22 @@ public struct D2d_GroupSync: Sendable {
   ///       `member-changes`.
   /// 5. Group `member-changes` by their associated `state-change` and add
   ///    appropriate status messages to the associated conversation.
-  public struct Update: @unchecked Sendable {
+  public struct Update: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    public var group: Sync_Group {
-      get {return _storage._group ?? Sync_Group()}
-      set {_uniqueStorage()._group = newValue}
+    public var group: D2dSync_Group {
+      get {_group ?? D2dSync_Group()}
+      set {_group = newValue}
     }
     /// Returns true if `group` has been explicitly set.
-    public var hasGroup: Bool {return _storage._group != nil}
+    public var hasGroup: Bool {self._group != nil}
     /// Clears the value of `group`. Subsequent reads from it will return its default value.
-    public mutating func clearGroup() {_uniqueStorage()._group = nil}
+    public mutating func clearGroup() {self._group = nil}
 
     /// A map of the member identity string to the member state change.
-    public var memberStateChanges: Dictionary<String,D2d_GroupSync.Update.MemberStateChange> {
-      get {return _storage._memberStateChanges}
-      set {_uniqueStorage()._memberStateChanges = newValue}
-    }
+    public var memberStateChanges: Dictionary<String,D2d_GroupSync.Update.MemberStateChange> = [:]
 
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
@@ -1039,7 +1044,7 @@ public struct D2d_GroupSync: Sendable {
 
     public init() {}
 
-    fileprivate var _storage = _StorageClass.defaultInstance
+    fileprivate var _group: D2dSync_Group? = nil
   }
 
   /// Delete a group.
@@ -1050,11 +1055,11 @@ public struct D2d_GroupSync: Sendable {
 
     /// Unique group identity
     public var groupIdentity: Common_GroupIdentity {
-      get {return _groupIdentity ?? Common_GroupIdentity()}
+      get {_groupIdentity ?? Common_GroupIdentity()}
       set {_groupIdentity = newValue}
     }
     /// Returns true if `groupIdentity` has been explicitly set.
-    public var hasGroupIdentity: Bool {return self._groupIdentity != nil}
+    public var hasGroupIdentity: Bool {self._groupIdentity != nil}
     /// Clears the value of `groupIdentity`. Subsequent reads from it will return its default value.
     public mutating func clearGroupIdentity() {self._groupIdentity = nil}
 
@@ -1123,12 +1128,12 @@ public struct D2d_DistributionListSync: Sendable {
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    public var distributionList: Sync_DistributionList {
-      get {return _distributionList ?? Sync_DistributionList()}
+    public var distributionList: D2dSync_DistributionList {
+      get {_distributionList ?? D2dSync_DistributionList()}
       set {_distributionList = newValue}
     }
     /// Returns true if `distributionList` has been explicitly set.
-    public var hasDistributionList: Bool {return self._distributionList != nil}
+    public var hasDistributionList: Bool {self._distributionList != nil}
     /// Clears the value of `distributionList`. Subsequent reads from it will return its default value.
     public mutating func clearDistributionList() {self._distributionList = nil}
 
@@ -1136,7 +1141,7 @@ public struct D2d_DistributionListSync: Sendable {
 
     public init() {}
 
-    fileprivate var _distributionList: Sync_DistributionList? = nil
+    fileprivate var _distributionList: D2dSync_DistributionList? = nil
   }
 
   /// Update a distribution list.
@@ -1145,12 +1150,12 @@ public struct D2d_DistributionListSync: Sendable {
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    public var distributionList: Sync_DistributionList {
-      get {return _distributionList ?? Sync_DistributionList()}
+    public var distributionList: D2dSync_DistributionList {
+      get {_distributionList ?? D2dSync_DistributionList()}
       set {_distributionList = newValue}
     }
     /// Returns true if `distributionList` has been explicitly set.
-    public var hasDistributionList: Bool {return self._distributionList != nil}
+    public var hasDistributionList: Bool {self._distributionList != nil}
     /// Clears the value of `distributionList`. Subsequent reads from it will return its default value.
     public mutating func clearDistributionList() {self._distributionList = nil}
 
@@ -1158,7 +1163,7 @@ public struct D2d_DistributionListSync: Sendable {
 
     public init() {}
 
-    fileprivate var _distributionList: Sync_DistributionList? = nil
+    fileprivate var _distributionList: D2dSync_DistributionList? = nil
   }
 
   /// Delete a distribution list.
@@ -1209,12 +1214,12 @@ public struct D2d_SettingsSync: Sendable {
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    public var settings: Sync_Settings {
-      get {return _settings ?? Sync_Settings()}
+    public var settings: D2dSync_Settings {
+      get {_settings ?? D2dSync_Settings()}
       set {_settings = newValue}
     }
     /// Returns true if `settings` has been explicitly set.
-    public var hasSettings: Bool {return self._settings != nil}
+    public var hasSettings: Bool {self._settings != nil}
     /// Clears the value of `settings`. Subsequent reads from it will return its default value.
     public mutating func clearSettings() {self._settings = nil}
 
@@ -1222,7 +1227,7 @@ public struct D2d_SettingsSync: Sendable {
 
     public init() {}
 
-    fileprivate var _settings: Sync_Settings? = nil
+    fileprivate var _settings: D2dSync_Settings? = nil
   }
 
   public init() {}
@@ -1261,12 +1266,12 @@ public struct D2d_MdmParameterSync: Sendable {
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    public var parameters: Sync_MdmParameters {
-      get {return _parameters ?? Sync_MdmParameters()}
+    public var parameters: D2dSync_MdmParameters {
+      get {_parameters ?? D2dSync_MdmParameters()}
       set {_parameters = newValue}
     }
     /// Returns true if `parameters` has been explicitly set.
-    public var hasParameters: Bool {return self._parameters != nil}
+    public var hasParameters: Bool {self._parameters != nil}
     /// Clears the value of `parameters`. Subsequent reads from it will return its default value.
     public mutating func clearParameters() {self._parameters = nil}
 
@@ -1274,7 +1279,7 @@ public struct D2d_MdmParameterSync: Sendable {
 
     public init() {}
 
-    fileprivate var _parameters: Sync_MdmParameters? = nil
+    fileprivate var _parameters: D2dSync_MdmParameters? = nil
   }
 
   public init() {}
@@ -1408,7 +1413,7 @@ extension D2d_TransactionScope: SwiftProtobuf.Message, SwiftProtobuf._MessageImp
 }
 
 extension D2d_TransactionScope.Scope: SwiftProtobuf._ProtoNameProviding {
-  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0USER_PROFILE_SYNC\0\u{1}CONTACT_SYNC\0\u{1}GROUP_SYNC\0\u{1}DISTRIBUTION_LIST_SYNC\0\u{1}SETTINGS_SYNC\0\u{1}MDM_PARAMETER_SYNC\0\u{1}NEW_DEVICE_SYNC\0\u{1}DROP_DEVICE\0")
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0USER_PROFILE_SYNC\0\u{1}CONTACT_SYNC\0\u{1}GROUP_SYNC\0\u{1}DISTRIBUTION_LIST_SYNC\0\u{1}SETTINGS_SYNC\0\u{1}MDM_PARAMETER_SYNC\0\u{1}NEW_DEVICE_SYNC\0\u{1}DROP_DEVICE\0\u{1}WORK_SYNC_DELTA\0")
 }
 
 extension D2d_Envelope: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
@@ -2421,74 +2426,36 @@ extension D2d_GroupSync.Update: SwiftProtobuf.Message, SwiftProtobuf._MessageImp
   public static let protoMessageName: String = D2d_GroupSync.protoMessageName + ".Update"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}group\0\u{3}member_state_changes\0")
 
-  fileprivate class _StorageClass {
-    var _group: Sync_Group? = nil
-    var _memberStateChanges: Dictionary<String,D2d_GroupSync.Update.MemberStateChange> = [:]
-
-      // This property is used as the initial default value for new instances of the type.
-      // The type itself is protecting the reference to its storage via CoW semantics.
-      // This will force a copy to be made of this reference when the first mutation occurs;
-      // hence, it is safe to mark this as `nonisolated(unsafe)`.
-      static nonisolated(unsafe) let defaultInstance = _StorageClass()
-
-    private init() {}
-
-    init(copying source: _StorageClass) {
-      _group = source._group
-      _memberStateChanges = source._memberStateChanges
-    }
-  }
-
-  fileprivate mutating func _uniqueStorage() -> _StorageClass {
-    if !isKnownUniquelyReferenced(&_storage) {
-      _storage = _StorageClass(copying: _storage)
-    }
-    return _storage
-  }
-
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
-    _ = _uniqueStorage()
-    try withExtendedLifetime(_storage) { (_storage: _StorageClass) in
-      while let fieldNumber = try decoder.nextFieldNumber() {
-        // The use of inline closures is to circumvent an issue where the compiler
-        // allocates stack space for every case branch when no optimizations are
-        // enabled. https://github.com/apple/swift-protobuf/issues/1034
-        switch fieldNumber {
-        case 1: try { try decoder.decodeSingularMessageField(value: &_storage._group) }()
-        case 2: try { try decoder.decodeMapField(fieldType: SwiftProtobuf._ProtobufEnumMap<SwiftProtobuf.ProtobufString,D2d_GroupSync.Update.MemberStateChange>.self, value: &_storage._memberStateChanges) }()
-        default: break
-        }
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularMessageField(value: &self._group) }()
+      case 2: try { try decoder.decodeMapField(fieldType: SwiftProtobuf._ProtobufEnumMap<SwiftProtobuf.ProtobufString,D2d_GroupSync.Update.MemberStateChange>.self, value: &self.memberStateChanges) }()
+      default: break
       }
     }
   }
 
   public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    try withExtendedLifetime(_storage) { (_storage: _StorageClass) in
-      // The use of inline closures is to circumvent an issue where the compiler
-      // allocates stack space for every if/case branch local when no optimizations
-      // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
-      // https://github.com/apple/swift-protobuf/issues/1182
-      try { if let v = _storage._group {
-        try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
-      } }()
-      if !_storage._memberStateChanges.isEmpty {
-        try visitor.visitMapField(fieldType: SwiftProtobuf._ProtobufEnumMap<SwiftProtobuf.ProtobufString,D2d_GroupSync.Update.MemberStateChange>.self, value: _storage._memberStateChanges, fieldNumber: 2)
-      }
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
+    try { if let v = self._group {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
+    } }()
+    if !self.memberStateChanges.isEmpty {
+      try visitor.visitMapField(fieldType: SwiftProtobuf._ProtobufEnumMap<SwiftProtobuf.ProtobufString,D2d_GroupSync.Update.MemberStateChange>.self, value: self.memberStateChanges, fieldNumber: 2)
     }
     try unknownFields.traverse(visitor: &visitor)
   }
 
   public static func ==(lhs: D2d_GroupSync.Update, rhs: D2d_GroupSync.Update) -> Bool {
-    if lhs._storage !== rhs._storage {
-      let storagesAreEqual: Bool = withExtendedLifetime((lhs._storage, rhs._storage)) { (_args: (_StorageClass, _StorageClass)) in
-        let _storage = _args.0
-        let rhs_storage = _args.1
-        if _storage._group != rhs_storage._group {return false}
-        if _storage._memberStateChanges != rhs_storage._memberStateChanges {return false}
-        return true
-      }
-      if !storagesAreEqual {return false}
-    }
+    if lhs._group != rhs._group {return false}
+    if lhs.memberStateChanges != rhs.memberStateChanges {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

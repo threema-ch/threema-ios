@@ -148,7 +148,7 @@ final class ChatViewDefaultMessageTapActionProvider: NSObject {
     
     private func showBallot(ballotMessage: BallotMessageEntity) {
         // Opens the ballot of a ballot message in a modal
-        entityManager.performBlock { [weak self] in
+        entityManager.perform { [weak self] in
             if let self,
                let ballot = ballotMessage.ballot,
                let fetchedBallot = entityManager.entityFetcher.ballotEntity(for: ballot.id) {

@@ -92,7 +92,7 @@ final class TaskExecutionUpdateContactSyncTests: XCTestCase {
             blobUploader: BlobUploaderMock(blobIDs: [BytesUtility.generateBlobID()])
         )
 
-        var sc1 = Sync_Contact()
+        var sc1 = D2dSync_Contact()
         sc1.identity = "TESTER01"
         var dsc1 = DeltaSyncContact(
             syncContact: sc1,
@@ -101,7 +101,7 @@ final class TaskExecutionUpdateContactSyncTests: XCTestCase {
         dsc1.contactProfilePicture = .updated
         dsc1.contactImage = contactImage
 
-        var sc2 = Sync_Contact()
+        var sc2 = D2dSync_Contact()
         sc2.identity = "TESTER02"
         var dsc2 = DeltaSyncContact(
             syncContact: sc2,

@@ -2,7 +2,7 @@ import Foundation
 import ThreemaEssentials
 import ThreemaProtocols
 
-@objc class ForwardSecurityData: NSObject {
+class ForwardSecurityData: NSObject {
     let sessionID: DHSessionID
     
     init(sessionID: DHSessionID) {

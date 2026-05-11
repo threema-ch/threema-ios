@@ -39,7 +39,7 @@ public enum ContactListSearchToken: ContactListTokenProtocol, Identifiable, Hash
             }
             
         case .work, .blue, .onPrem, .customOnPrem:
-            guard !AppLaunchManager.isRemoteSecretEnabled else {
+            guard !RemoteSecretProvider.isRemoteSecretEnabled else {
                 if BusinessInjector.ui.userSettings.companyDirectory {
                     return [.contacts, .directoryContacts]
                 }

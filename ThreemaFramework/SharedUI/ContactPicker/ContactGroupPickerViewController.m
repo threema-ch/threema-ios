@@ -46,7 +46,7 @@ typedef enum : NSUInteger {
     
     ContactGroupPickerViewController *picker = (ContactGroupPickerViewController *)[navigationController topViewController];
     picker.delegate = delegate;
-    picker.enableMultiSelection = YES; //defaults to YES
+    picker.enableMultiselection = YES; //defaults to YES
     picker.enableTextInput = YES; //defaults to YES
     picker.enableControlView = YES;
     
@@ -147,7 +147,7 @@ typedef enum : NSUInteger {
     
     _tableView.dataSource = _currentDataSource;
     _tableView.delegate = self;
-    _tableView.allowsMultipleSelection = _enableMultiSelection;
+    _tableView.allowsMultipleSelection = _enableMultiselection;
     
     [self registerForKeyboardNotifications];
     
@@ -236,9 +236,9 @@ typedef enum : NSUInteger {
     [defaults setValue:[NSNumber numberWithInteger:_mode] forKey:LAST_SELECTED_MODE];
 }
 
-- (void)setEnableMultiSelection:(BOOL)allowMulitSelection {
-    _enableMultiSelection = allowMulitSelection;
-    _tableView.allowsMultipleSelection = _enableMultiSelection;
+- (void)setEnableMultiselection:(BOOL)allowMultiselection {
+    _enableMultiselection = allowMultiselection;
+    _tableView.allowsMultipleSelection = _enableMultiselection;
 }
 
 - (BOOL)shouldAutorotate {
@@ -339,7 +339,7 @@ typedef enum : NSUInteger {
         [contactCell updateColors];
         BOOL found = false;
         for (ConversationEntity *conversation in [_currentDataSource selectedConversations]) {
-            if (conversation.contact != nil && conversation.contact == contactCell._contact && !conversation.isGroup) {
+            if (conversation.contact != nil && conversation.contact == contactCell._contactEntity && !conversation.isGroup) {
                 found = true;
             }
         }

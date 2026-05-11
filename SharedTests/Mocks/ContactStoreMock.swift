@@ -158,6 +158,7 @@ final class ContactStoreMock: NSObject, ContactStoreProtocol {
         jobTitle: String?,
         department: String?,
         acquaintanceLevel: ContactAcquaintanceLevel,
+        workAvailabilityStatus: WorkAvailabilityStatus?,
         onCompletion: @escaping (NSObject) -> Void,
         onError: @escaping (any Error) -> Void
     ) {

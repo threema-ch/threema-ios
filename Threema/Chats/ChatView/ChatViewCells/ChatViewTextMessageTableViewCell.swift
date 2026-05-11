@@ -175,6 +175,11 @@ final class ChatViewTextMessageTableViewCell: ChatViewBaseTableViewCell, Measura
     // MARK: - Lifecycle
     
     deinit {
+        NSLayoutConstraint.deactivate(
+            messageQuoteStackViewConstraints +
+                contentStackViewConstraints +
+                contentStackViewWithQuoteConstraints
+        )
         invalidateObservers()
     }
     

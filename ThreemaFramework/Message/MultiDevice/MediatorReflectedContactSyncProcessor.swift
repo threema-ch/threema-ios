@@ -4,12 +4,14 @@ import PromiseKit
 import ThreemaEssentials
 import ThreemaProtocols
 
-class MediatorReflectedContactSyncProcessor {
+final class MediatorReflectedContactSyncProcessor {
 
     private let frameworkInjector: FrameworkInjectorProtocol
+    private let messageProcessorDelegate: MessageProcessorDelegate
 
-    required init(frameworkInjector: FrameworkInjectorProtocol) {
+    required init(frameworkInjector: FrameworkInjectorProtocol, messageProcessorDelegate: MessageProcessorDelegate) {
         self.frameworkInjector = frameworkInjector
+        self.messageProcessorDelegate = messageProcessorDelegate
     }
 
     func process(contactSync: D2d_ContactSync) -> Promise<Void> {
@@ -24,7 +26,7 @@ class MediatorReflectedContactSyncProcessor {
         return Promise()
     }
 
-    private func create(contact syncContact: Sync_Contact) -> Promise<Void> {
+    private func create(contact syncContact: D2dSync_Contact) -> Promise<Void> {
         Promise { seal in
             guard self.frameworkInjector.entityManager.entityFetcher
                 .contactEntity(for: syncContact.identity) == nil else {
@@ -56,6 +58,8 @@ class MediatorReflectedContactSyncProcessor {
                     contact.createdAt = syncContact.createdAtNullable?.date
                 }
                 contact.contactVerificationLevel = .unverified
+
+                self.messageProcessorDelegate.changedManagedObjectID(contact.objectID)
             }
 
             self.update(with: syncContact)
@@ -68,9 +72,9 @@ class MediatorReflectedContactSyncProcessor {
         }
     }
 
-    private func update(contact syncContact: Sync_Contact) -> Promise<Void> {
+    private func update(contact syncContact: D2dSync_Contact) -> Promise<Void> {
         Promise { seal in
-            frameworkInjector.entityManager.performAndWaitSave {
+            frameworkInjector.entityManager.performAndWait {
                 guard self.frameworkInjector.entityManager.entityFetcher
                     .contactEntity(for: syncContact.identity) != nil else {
                     seal
@@ -92,7 +96,7 @@ class MediatorReflectedContactSyncProcessor {
     /// - Parameter with: Contact to sync
     /// - Throws: `MediatorReflectedProcessorError.messageNotProcessed`,
     /// `MediatorReflectedProcessorError.contactNotFound`
-    private func update(with syncContact: Sync_Contact) -> Promise<Void> {
+    private func update(with syncContact: D2dSync_Contact) -> Promise<Void> {
         var contactDefinedProfilePicture: Data?
         var contactDefinedProfilePictureIndex: Int?
         var userDefinedProfilePicture: Data?
@@ -152,6 +156,7 @@ class MediatorReflectedContactSyncProcessor {
                                     userDefinedProfilePicture: userDefinedProfilePicture,
                                     contactDefinedProfilePicture: contactDefinedProfilePicture,
                                     entityManager: frameworkInjector.entityManager,
+                                    messageProcessorDelegate: messageProcessorDelegate,
                                     contactStore: frameworkInjector.contactStore
                                 )
 
@@ -159,15 +164,18 @@ class MediatorReflectedContactSyncProcessor {
                                     frameworkInjector.entityManager.entityDestroyer
                                         .deleteOneToOneConversation(for: contactEntity) { conversationEntity in
                                             MessageDraftStore.shared.deleteDraft(for: conversationEntity)
+
+                                            messageProcessorDelegate.changedManagedObjectID(conversationEntity.objectID)
                                         }
                                 }
                                 else {
                                     // Save on main thread (main DB context), otherwise observer of `Conversation` will
-                                    // not
-                                    // be called
+                                    // not be called
                                     frameworkInjector.conversationStoreInternal
                                         .updateConversation(withContact: syncContact)
                                 }
+
+                                messageProcessorDelegate.changedManagedObjectID(contactEntity.objectID)
 
                                 return contactEntity.threemaIdentity
                             }

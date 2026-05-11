@@ -1054,6 +1054,10 @@ extension VoIPCallPeerConnectionClient {
             options.candidatePairsFlag = .OVERVIEW_AND_DETAILED
             
             // One-shot stats fetch before disconnect
+            guard let peerConnection else {
+                completion()
+                return
+            }
             logDebugStats(dict: ["connection": peerConnection, "options": options, "callback": completion])
         }
         else {
@@ -1067,9 +1071,14 @@ extension VoIPCallPeerConnectionClient {
             return
         }
 
-        let connection = dict["connection"] as! RTCPeerConnection
-        let options = dict["options"] as! VoIPStatsOptions
-                
+        guard let connection = dict["connection"] as? RTCPeerConnection,
+              let options = dict["options"] as? VoIPStatsOptions else {
+            if let callback = dict["callback"] as? (() -> Void) {
+                callback()
+            }
+            return
+        }
+
         connection.statistics { report in
             let stats = VoIPStats(
                 report: report,
@@ -1097,9 +1106,11 @@ extension VoIPCallPeerConnectionClient {
     }
     
     func checkIsReceivingVideo(dict: [AnyHashable: Any]) {
-        let connection = dict["connection"] as! RTCPeerConnection
-        let options = dict["options"] as! VoIPStatsOptions
-        
+        guard let connection = dict["connection"] as? RTCPeerConnection,
+              let options = dict["options"] as? VoIPStatsOptions else {
+            return
+        }
+
         connection.statistics { report in
             let stats = VoIPStats(
                 report: report,

@@ -18,10 +18,6 @@ struct LockCoverView: View {
     }
 }
 
-@objc public final class LockCoverViewProvider: NSObject {
-    @objc static let lockCoverViewController: UIViewController = UIHostingController(rootView: LockCoverView())
-}
-
 #Preview {
     LockCoverView()
 }

@@ -52,7 +52,7 @@ final class ConversationExporter: NSObject {
         entityManager: EntityManager = PersistenceManager(
             appGroupID: AppGroup.groupID(),
             userDefaults: AppGroup.userDefaults(),
-            remoteSecretManager: AppLaunchManager.remoteSecretManager
+            remoteSecretManager: RemoteSecretProvider.remoteSecretManager
         ).backgroundEntityManager,
         withMedia: Bool
     ) {

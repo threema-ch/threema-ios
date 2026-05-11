@@ -6,7 +6,7 @@ import ThreemaMacros
 /// To add a new shortcut item, add a new case to the `ActionType` enum.
 /// Then add the new case to the `items(for:)` method.
 ///
-@objc final class UIApplicationShortcutItemProvider: NSObject {
+final class UIApplicationShortcutItemProvider: NSObject {
     
     enum ActionType {
         case newMessage

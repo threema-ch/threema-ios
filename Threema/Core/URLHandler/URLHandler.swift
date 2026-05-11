@@ -5,13 +5,13 @@ import ThreemaEssentials
 import ThreemaFramework
 import ThreemaMacros
 
-@objc public class URLHandler: NSObject {
+@objc public final class URLHandler: NSObject {
     
-    private let businessInjector: BusinessInjectorProtocol
+    private let businessInjector: any BusinessInjectorProtocol
     
     // MARK: Lifecycle
 
-    required init(businessInjector: BusinessInjectorProtocol) {
+    required init(businessInjector: any BusinessInjectorProtocol) {
         self.businessInjector = businessInjector
     }
     
@@ -265,7 +265,7 @@ extension URLHandler {
             return
         }
         
-        appDelegate.urlRestoreData = query.replacingOccurrences(of: "backup=", with: "")
+        RestoreDataURLProvider.urlString = query.replacingOccurrences(of: "backup=", with: "")
         appDelegate.presentIDBackupRestore()
     }
     
@@ -394,8 +394,9 @@ extension URLHandler {
     }
     
     /// Handle and verify the provided license.
+    /// - Parameter licenseStore: Store to handle license in
     /// - Parameter query: Query containing username, password, and server information if provided.
-    private static func handleLicense(licenseStore: LicenseStore, query: [String: String]) {
+    private static func handleLicense(licenseStore: any LicenseStoreProtocol, query: [String: String]) {
         DDLogVerbose("[URLHandler] Handle license: \(query)")
         
         guard TargetManager.isBusinessApp else {
@@ -403,7 +404,7 @@ extension URLHandler {
             return
         }
         
-        Task {
+        Task { @MainActor in
             guard !licenseStore.isValid(),
                   await !licenseStore.performLicenseCheck() else {
                 Task { @MainActor in
@@ -470,8 +471,8 @@ extension URLHandler {
     
     /// Perform the license check using asynchronous/await programming.
     /// - Parameter licenseStore: LicenseStore
-    private static func performLicenseCheck(with licenseStore: LicenseStore) {
-        Task {
+    private static func performLicenseCheck(with licenseStore: any LicenseStoreProtocol) {
+        Task { @MainActor in
             guard await licenseStore.performLicenseCheck() else {
                 NotificationCenter.default.post(
                     name: Notification.Name(rawValue: kNotificationLicenseMissing),
@@ -481,20 +482,21 @@ extension URLHandler {
                 return
             }
             
-            WorkDataFetcher.checkUpdateThreemaMDM {
-                Task { @MainActor in
-                    guard AppDelegate.shared().isPresentingEnterLicense() else {
-                        DDLogError(
-                            "[URLHandler] Failed to handle URL: License screen is not presented. Aborting perform license check."
-                        )
-                        return
-                    }
-                    
-                    AppDelegate.shared().window.rootViewController?.dismiss(animated: true) {
-                        AppDelegate.setupConnection()
-                    }
+            do {
+                try await WorkDataThreemaMDMFetcher(licenseStore: licenseStore).checkUpdateThreemaMDM()
+                
+                guard await AppDelegate.shared().isPresentingEnterLicense() else {
+                    DDLogError(
+                        "[URLHandler] Failed to handle URL: License screen is not presented. Aborting perform license check."
+                    )
+                    return
                 }
-            } onError: { _ in
+                
+                AppDelegate.shared().window.rootViewController?.dismiss(animated: true) {
+                    AppDelegate.setupConnection()
+                }
+            }
+            catch {
                 DDLogError("[URLHandler] Failed to handle URL: License is missing. Aborting perform license check.")
                 NotificationCenter.default.post(
                     name: Notification.Name(rawValue: kNotificationLicenseMissing),

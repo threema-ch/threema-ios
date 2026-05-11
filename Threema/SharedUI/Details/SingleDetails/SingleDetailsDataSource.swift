@@ -425,7 +425,7 @@ extension SingleDetailsDataSource {
         var conversationDetailsQuickActions = [QuickAction]()
         
         conversationDetailsQuickActions.append(doNotDisturbQuickAction(in: viewController))
-        if !AppLaunchManager.isRemoteSecretEnabled {
+        if !RemoteSecretProvider.isRemoteSecretEnabled {
             conversationDetailsQuickActions.append(contentsOf: searchChatQuickAction(
                 in: viewController,
                 for: conversation
@@ -836,7 +836,7 @@ extension SingleDetailsDataSource {
                         
                         strongSingleDetailsViewController.willDeleteAllMessages()
                         
-                        strongSelf.businessInjector.entityManager.performBlock {
+                        strongSelf.businessInjector.entityManager.perform {
                             _ = strongSelf.businessInjector.entityManager.entityDestroyer
                                 .deleteMessages(of: conversation)
                             strongSelf.reload(sections: [.contentActions])
@@ -1184,18 +1184,14 @@ extension SingleDetailsDataSource {
         let shareAction = Details.Action(
             title: #localize("share_contact_id_button")
         ) { [weak self, weak singleDetailsViewController] cell in
-            guard let strongSelf = self,
-                  let strongSingleDetailsViewController = singleDetailsViewController
-            else {
+            guard let self, let presentingVC = singleDetailsViewController else {
                 return
             }
-            
-            let identity = strongSelf.contact.identity
             
             // Pick up activity items
             var activityItems = [Any]()
             
-            let contactShareLink = "\(THREEMA_ID_SHARE_LINK)\(identity)"
+            let contactShareLink = "\(THREEMA_ID_SHARE_LINK)\(contact.identity)"
             if let url = URL(string: contactShareLink) {
                 activityItems.append(url)
             }
@@ -1203,21 +1199,22 @@ extension SingleDetailsDataSource {
                 activityItems.append(contactShareLink)
             }
             
-            activityItems.append(strongSelf.contact.displayName)
+            activityItems.append(contact.displayName)
             
             // Create our Share Sheet
-            let activityViewController = UIActivityViewController(
+            let activityVC = UIActivityViewController(
                 activityItems: activityItems,
                 applicationActivities: nil
             )
             
             // Show
-            ModalPresenter.present(
-                activityViewController,
-                on: strongSingleDetailsViewController,
-                from: cell.frame,
-                in: strongSingleDetailsViewController.view
-            )
+            if presentingVC.traitCollection.horizontalSizeClass == .regular {
+                activityVC.modalPresentationStyle = .automatic
+                activityVC.popoverPresentationController?.sourceRect = cell.frame
+                activityVC.popoverPresentationController?.sourceView = presentingVC.view
+            }
+
+            presentingVC.present(activityVC, animated: true)
         }
         
         return [.action(shareAction)]

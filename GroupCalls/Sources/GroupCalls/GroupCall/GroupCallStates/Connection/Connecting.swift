@@ -12,7 +12,7 @@ struct Connecting: GroupCallState {
     // MARK: - Internal Properties
 
     let groupCallActor: GroupCallActor
-    let joinResponse: Groupcall_SfuHttpResponse.Join
+    let joinResponse: GroupCall_SfuHttpResponse.Join
     let certificate: RTCCertificate
     
     // MARK: - Private Properties
@@ -24,7 +24,7 @@ struct Connecting: GroupCallState {
 
     init(
         groupCallActor: GroupCallActor,
-        joinResponse: Groupcall_SfuHttpResponse.Join,
+        joinResponse: GroupCall_SfuHttpResponse.Join,
         certificate: RTCCertificate
     ) throws {
         
@@ -119,7 +119,7 @@ struct Connecting: GroupCallState {
             throw GroupCallError.firstMessageNotReceived
         }
         
-        guard let envelope = try? Groupcall_SfuToParticipant.Envelope(serializedData: messageData).hello else {
+        guard let envelope = try? GroupCall_SfuToParticipant.Envelope(serializedData: messageData).hello else {
             throw GroupCallError.serializationFailure
         }
         

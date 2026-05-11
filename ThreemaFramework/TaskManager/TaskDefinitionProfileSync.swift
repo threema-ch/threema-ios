@@ -33,13 +33,13 @@ final class TaskDefinitionProfileSync: TaskDefinition, TaskDefinitionTransaction
         .userProfileSync
     }
 
-    var syncUserProfile: Sync_UserProfile
+    var syncUserProfile: D2dSync_UserProfile
     var profileImage: Data?
     var linkMobileNoPending: Bool
     var linkEmailPending: Bool
 
     init(
-        syncUserProfile: Sync_UserProfile,
+        syncUserProfile: D2dSync_UserProfile,
         profileImage: Data?,
         linkMobileNoPending: Bool,
         linkEmailPending: Bool

@@ -37,8 +37,10 @@ struct NotificationTypeSelectionView: View {
                 .multilineTextAlignment(.center)
                 .padding(.bottom, 4)
                 
-                let notificationTypes: [NotificationType] = AppLaunchManager.isRemoteSecretEnabled ? NotificationType
-                    .remoteSecretCases : NotificationType.allCases
+                let notificationTypes: [NotificationType] =
+                    RemoteSecretProvider.isRemoteSecretEnabled
+                        ? NotificationType.remoteSecretCases
+                        : NotificationType.allCases
                 
                 ForEach(notificationTypes, id: \.self) { notificationType in
                     NotificationTypeView(

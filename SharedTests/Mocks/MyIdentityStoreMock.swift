@@ -3,6 +3,16 @@ import ThreemaFramework
 import ThreemaMacros
 
 final class MyIdentityStoreMock: NSObject, MyIdentityStoreProtocol {
+    var linkMobileNoVerificationID: String?
+    
+    var linkMobileNoStartDate: Date?
+    
+    var privateIdentityInfoLastUpdate: Date?
+    
+    var lastWorkUpdateRequestHash: Data?
+    
+    var lastWorkUpdateDate: Date?
+    
     var companyName: String?
     
     var directoryCategories: NSMutableDictionary?
@@ -14,6 +24,10 @@ final class MyIdentityStoreMock: NSObject, MyIdentityStoreProtocol {
     var csi: String?
 
     var category: String?
+    
+    var licenseLogoLightURL: String?
+    
+    var licenseLogoDarkURL: String?
 
     var firstName: String?
 
@@ -104,4 +118,8 @@ final class MyIdentityStoreMock: NSObject, MyIdentityStoreProtocol {
     var resolvedGroupCallProfilePicture: UIImage
     
     var idColor: UIColor = .red
+    
+    func sendUpdateWorkInfoStatus() -> Bool {
+        false
+    }
 }

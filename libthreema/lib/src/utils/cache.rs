@@ -4,11 +4,11 @@ use std::collections::{HashMap, hash_map::Entry};
 
 use crate::utils::time::Instant;
 
-/// Cache store bound by time
+/// Cache store bound by time.
 ///
 /// Values are timestamped when inserted and are evicted if expired at time of retrieval.
 ///
-/// Note: This cache is in-memory only
+/// Note: This cache is in-memory only.
 #[derive(Debug)]
 pub(crate) struct TimedCache<K, V, const EXPIRES_AT_S: u64>(HashMap<K, (Instant, V)>);
 impl<K: Hash + Eq, V, const EXPIRES_AT_S: u64> TimedCache<K, V, EXPIRES_AT_S> {
@@ -70,7 +70,7 @@ mod tests {
             [(
                 1,
                 (
-                    Instant::now().checked_sub(Duration::from_secs(60)).unwrap(),
+                    Instant::now().checked_sub(Duration::from_mins(1)).unwrap(),
                     "gone",
                 ),
             )]
@@ -103,7 +103,7 @@ mod tests {
             [(
                 1,
                 (
-                    Instant::now().checked_sub(Duration::from_secs(60)).unwrap(),
+                    Instant::now().checked_sub(Duration::from_mins(1)).unwrap(),
                     "gone",
                 ),
             )]

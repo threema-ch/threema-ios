@@ -44,3 +44,4 @@ export/
 
 .env
 !.env.example
+skills-lock.json

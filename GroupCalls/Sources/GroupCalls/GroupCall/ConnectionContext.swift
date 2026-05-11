@@ -261,7 +261,7 @@ extension ConnectionContext {
         try await webRTCConnectionContext.set(patchedDescription)
     }
      
-    func addIceCandidates(addresses: [Groupcall_SfuHttpResponse.Join.Address]) async throws {
+    func addIceCandidates(addresses: [GroupCall_SfuHttpResponse.Join.Address]) async throws {
         // Connect to the SFU
         let candidates = addresses.map { Address(ip: $0.ip, port: $0.port) }.filter { address in
             guard !dependencies.userSettings.ipv6Enabled else {
@@ -616,8 +616,8 @@ extension ConnectionContext {
 // MARK: - DataChannel Sending
 
 extension ConnectionContext {
-    func relay(_ relay: Groupcall_ParticipantToParticipant.OuterEnvelope) throws {
-        var relayEnvelope = Groupcall_ParticipantToSfu.Envelope()
+    func relay(_ relay: GroupCall_ParticipantToParticipant.OuterEnvelope) throws {
+        var relayEnvelope = GroupCall_ParticipantToSfu.Envelope()
         relayEnvelope.padding = dependencies.groupCallCrypto.padding()
         relayEnvelope.relay = relay
         

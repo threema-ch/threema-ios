@@ -87,23 +87,14 @@
 
     [messageProcessorDelegate beforeDecode];
     
-    /* *3MAPush? */
-    if ([PredefinedContactsObjC is3MAPushWithIdentity:boxedMessage.fromIdentity]) {
-        DDLogWarn(@"Discard message from %@", boxedMessage.fromIdentity);
-        
-        // Do not process message, send server ack
-        [messageProcessorDelegate incomingMessageFailed:boxedMessage];
-        onCompletion(nil, nil);
-        return;
-    }
-
     ContactAcquaintanceLevel acquaintanceLevel = boxedMessage.flags & MESSAGE_FLAG_GROUP ? ContactAcquaintanceLevelGroupOrDeleted : ContactAcquaintanceLevelDirect;
 
     [[ContactStore sharedContactStore] fetchPublicKeyForIdentity:boxedMessage.fromIdentity acquaintanceLevel:acquaintanceLevel entityManager:entityManager ignoreBlockUnknown:false onCompletion:^(NSData *publicKey) {
         NSAssert(!([NSThread isMainThread] == YES), @"Should not running in main thread");
 
-        [entityManager performBlock:^{
+        [entityManager perform:^{
             AbstractMessage *amsg = [MessageDecoder decodeFromBoxed:boxedMessage withPublicKey:publicKey];
+
             if (amsg == nil) {
                 // Can't process message at this time, try it later
                 [messageProcessorDelegate incomingMessageFailed:boxedMessage];
@@ -120,9 +111,34 @@
                 return;
             }
 
-            /* blacklisted? */
-            if ([self isBlacklisted:amsg]) {
+            // 19. If inner-type does not have dedicated blocking exemption steps and is not exempted from blocking, run the Identity Blocked Steps
+            //     for sender-identity. If the result indicates that sender-identity is blocked, Acknowledge and discard the message and abort these steps.
+            if ([self isBlocked:amsg]) {
                 DDLogWarn(@"Ignoring message from blocked ID %@ %@", boxedMessage.fromIdentity, boxedMessage.loggingDescription);
+
+                // Do not process message, send server ack
+                [messageProcessorDelegate incomingMessageFailed:boxedMessage];
+                onCompletion(nil, nil);
+                return;
+            }
+
+            // 20. If sender-identity equals *3MAPUSH:
+            //      1. If inner-type is not 0xfe, log a warning, Acknowledge and discard the message and abort these steps.
+            //
+            // Note that the message type 0xfe is only for Android relevant, in that case we don't process any messages from *3MAPUSH.
+            if ([PredefinedContactsObjC is3MAPushWithIdentity:boxedMessage.fromIdentity]) {
+                DDLogWarn(@"Discard message (type %d) from %@", amsg.type, boxedMessage.fromIdentity);
+
+                // Do not process message, send server ack
+                [messageProcessorDelegate incomingMessageFailed:boxedMessage];
+                onCompletion(nil, nil);
+                return;
+            }
+
+            // 21. If sender-identity equals *3MAW0RK:
+            //      1. If inner-type is not 0xfd, log a warning, Acknowledge and discard the message and abort these steps.
+            if ([PredefinedContactsObjC is3MAW0rkWithIdentity:boxedMessage.fromIdentity] && [amsg isKindOfClass:[WorkSyncDeltaMessage class]] == NO) {
+                DDLogWarn(@"Discard message (type %d) from %@, because is not a WorkSyncDeltaMessage", amsg.type, boxedMessage.fromIdentity);
 
                 // Do not process message, send server ack
                 [messageProcessorDelegate incomingMessageFailed:boxedMessage];
@@ -191,7 +207,7 @@
     /* Find contact for message */
     __block NSData *senderPublicKey;
     __block NSError *fetchContactError;
-    [entityManager performBlockAndWait:^{
+    [entityManager performAndWait:^{
         ContactEntity *contact = [entityManager.entityFetcher contactEntityFor: amsg.fromIdentity];
         if (contact) {
             senderPublicKey = contact.publicKey;
@@ -333,14 +349,14 @@ Process incoming message.
     }
 
     if (conversation == nil) {
-        [entityManager performSyncBlockAndSafe:^{
+        [entityManager performAndWaitSave:^{
             conversation = [entityManager conversationForContact:sender createIfNotExisting:[amsg canCreateConversation]];
         }];
     }
     
     // Set the contact to active if we received a message
     // Automatic sync is only once a day
-    [entityManager performBlockAndWait:^{
+    [entityManager performAndWait:^{
         if (sender.contactState == ContactStateInactive) {
             [[ContactStore sharedContactStore] updateStateToActiveFor:sender entityManager:entityManager];
         }
@@ -505,6 +521,37 @@ Process incoming message.
         else {
             onCompletion(nil);
         }
+    } else if ([amsg isKindOfClass:[WebSessionResumeMessage class]]) {
+        if ([PredefinedContactsObjC is3MAPushWithIdentity:amsg.fromIdentity] == NO) {
+            DDLogError(@"[MessageProcessor] Received web session message from wrong identity: %@", amsg.fromIdentity);
+            onError(nil, nil);
+            return;
+        }
+        onCompletion(nil);
+    } else if ([amsg isKindOfClass:[WorkSyncDeltaMessage class]]) {
+        // 1. If not Work flavour, log a warning, discard the message and abort these steps.
+        if (TargetManagerObjC.isWork == false) {
+            DDLogError(@"[MessageProcessor] Received work sync delta message but we are not a work app.");
+            onError(nil, nil);
+            return;
+        }
+        
+        // 2. If the sender is not `*3MAW0RK`, discard the message and abort these steps.
+        if ([PredefinedContactsObjC is3MAW0rkWithIdentity:amsg.fromIdentity] == NO) {
+            DDLogError(@"[MessageProcessor] Received work sync delta message from wrong identity: %@", amsg.fromIdentity);
+            onError(nil, nil);
+            return;
+        }
+
+        WorkSyncDeltaMessageProcessor *workSyncDeltaMessageProcessor = [[WorkSyncDeltaMessageProcessor alloc] initWithAppGroupType:[AppGroup getActiveType] entityManager:self->entityManager messageProcessorDelegate:self->messageProcessorDelegate];
+        [workSyncDeltaMessageProcessor handleWithMessage:(WorkSyncDeltaMessage*)amsg completionHandler:^(NSError * _Nullable error) {
+            if (error) {
+                onError(error, nil);
+                return;
+            }
+
+            onCompletion(nil);
+        }];
     } else {
         // Do not Ack message, try process this message later because of protocol changes
         onError([ThreemaError threemaError:@"Invalid message class"], nil);
@@ -538,7 +585,7 @@ Process incoming message.
 
         // Set the contact to active if we received a message
         // Automatic sync is only once a day
-        [entityManager performBlockAndWait:^{
+        [entityManager performAndWait:^{
             if (sender.contactState == ContactStateInactive) {
                 [[ContactStore sharedContactStore] updateStateToActiveFor:sender entityManager:entityManager];
             }
@@ -759,7 +806,7 @@ Process incoming message.
 - (void)resolveAddressFor:(LocationMessageEntity*)message onCompletion:(void(^ _Nonnull)(void))onCompletion {
     __block BOOL hasExistingPOIAddress = false;
     
-    [entityManager performBlockAndWait:^{
+    [entityManager performAndWait:^{
         hasExistingPOIAddress = (message.poiAddress != nil);
     }];
     
@@ -773,7 +820,7 @@ Process incoming message.
     __block CLLocation *location = [[CLLocation alloc] initWithCoordinate:CLLocationCoordinate2DMake(message.latitude.doubleValue, message.longitude.doubleValue) altitude:0 horizontalAccuracy:message.accuracy.doubleValue verticalAccuracy:-1 timestamp:[NSDate date]];
 
     [ThreemaUtility fetchAddressObjcFor:location completionHandler:^(NSString * _Nonnull address) {
-        [entityManager performAsyncBlockAndSafe:^{
+        [entityManager performSave:^{
             if (![message wasDeleted]) {
                 message.poiAddress = address;
             }
@@ -784,7 +831,7 @@ Process incoming message.
 }
 
 - (void)processIncomingDeliveryReceipt:(DeliveryReceiptMessage*)msg onCompletion:(void(^ _Nonnull)(void))onCompletion onError:(void(^ _Nonnull)(NSError * _Nonnull))onError {
-    [entityManager performAsyncBlockAndSafe:^{
+    [entityManager performSave:^{
         ConversationEntity *conversation = [[entityManager entityFetcher] conversationEntityFor:[msg fromIdentity]];
 
         for (NSData *receiptMessageId in msg.receiptMessageIds) {
@@ -831,7 +878,7 @@ Process incoming message.
 }
 
 - (void)processIncomingGroupDeliveryReceipt:(GroupDeliveryReceiptMessage*)msg onCompletion:(void(^ _Nonnull)(void))onCompletion onError:(void(^ _Nonnull)(NSError * _Nonnull))onError {
-    [entityManager performAsyncBlockAndSafe:^{
+    [entityManager performSave:^{
         ConversationEntity *conversation = [entityManager.entityFetcher groupConversationEntityFor:msg.groupId creatorID:msg.groupCreator myIdentity:[[MyIdentityStore sharedMyIdentityStore] identity]];
 
         for (NSData *receiptMessageId in msg.receiptMessageIds) {
@@ -909,7 +956,7 @@ Process incoming message.
     /* Create Message in DB */
     BallotMessageDecoder *decoder = [[BallotMessageDecoder alloc] initWith:entityManager];
     
-    [entityManager performAsyncBlockAndSafe:^{
+    [entityManager performSave:^{
         if ([decoder decodeVoteFromGroupBox: msg] == NO) {
             onError([ThreemaError threemaError:[NSString stringWithFormat: @"[Ballot] Error processing ballot vote in ballot with ID: %@.", [NSString stringWithHexData:msg.ballotId]]]);
             return;
@@ -926,7 +973,7 @@ Process incoming message.
     DDLogInfo(@"[Ballot] Start Processing BoxBallotVoteMessage in ballot with ID %@.", [NSString stringWithHexData:msg.ballotId]);
     /* Create Message in DB */
     BallotMessageDecoder *decoder = [[BallotMessageDecoder alloc] initWith:entityManager];
-    [entityManager performAsyncBlockAndSafe:^{
+    [entityManager performSave:^{
         
         if ([decoder decodeVoteFromBox: msg] == NO) {
             onError([ThreemaError threemaError:[NSString stringWithFormat: @"[Ballot] Error parsing json for ballot vote in ballot with ID: %@.", [NSString stringWithHexData:msg.ballotId]]]);
@@ -1030,9 +1077,17 @@ Process incoming message.
 
 #pragma private methods
 
-/// Check is the sender in the black list. If it's a group control message and the sender is on the black list, we will process the message if the group is still active on the receiver side
+/// Check is the sender identity is blocked.
+/// If identity is a Special Contact, return that it is not blocked.
+/// If identity is explicitly blocked (black list), return that it is blocked.
+/// If contact is part of a group that is not marked as left, return that it is not blocked.
+///
 /// @param amsg Decoded abstract message
-- (BOOL)isBlacklisted:(AbstractMessage *)amsg {
+- (BOOL)isBlocked:(AbstractMessage *)amsg {
+    if ([PredefinedContactsObjC isSpecialContactWithIdentity:amsg.fromIdentity]) {
+        return NO;
+    }
+
     if ([[UserSettings sharedUserSettings].blacklist containsObject:amsg.fromIdentity]) {
         if ([amsg isKindOfClass:[AbstractGroupMessage class]]) {
             AbstractGroupMessage *groupMessage = (AbstractGroupMessage *)amsg;
@@ -1077,7 +1132,7 @@ Process incoming message.
 }
 
 -  (void)changedBallotWithID:(NSData * _Nonnull)ID {
-    [entityManager performBlockAndWait:^{
+    [entityManager performAndWait:^{
         BallotEntity *ballot = [[entityManager entityFetcher] ballotEntityFor:ID];
         if (ballot) {
             [messageProcessorDelegate changedManagedObjectID:ballot.objectID];
@@ -1086,7 +1141,7 @@ Process incoming message.
 }
 
 - (void)changedContactWithIdentity:(NSString * _Nonnull)identity {
-    [entityManager performBlockAndWait:^{
+    [entityManager performAndWait:^{
         ContactEntity *contact = [entityManager.entityFetcher contactEntityFor:identity];
         if (contact) {
             [messageProcessorDelegate changedManagedObjectID:contact.objectID];
@@ -1095,7 +1150,7 @@ Process incoming message.
 }
 
 - (void)changedConversationAndGroupEntityWithGroupID:(NSData * _Nonnull)groupID groupCreatorIdentity:(NSString * _Nonnull)groupCreatorIdentity {
-    [entityManager performBlockAndWait:^{
+    [entityManager performAndWait:^{
         ConversationEntity *conversation = [entityManager.entityFetcher groupConversationEntityFor:groupID creatorID:groupCreatorIdentity myIdentity:[[MyIdentityStore sharedMyIdentityStore] identity]];
         if (conversation) {
             [messageProcessorDelegate changedManagedObjectID:conversation.objectID];

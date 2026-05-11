@@ -1,5 +1,7 @@
 import Foundation
+import RemoteSecretProtocol
 import SwiftUI
+import ThreemaFramework
 
 @MainActor
 final class LaunchModalManager {
@@ -13,6 +15,7 @@ final class LaunchModalManager {
         case safeSetupInfo
         case remoteSecretActivate
         case remoteSecretDeactivate
+        case showIdentityThisDeviceOnly
     }
 
     // MARK: - Public properties
@@ -49,15 +52,30 @@ final class LaunchModalManager {
         safeConfigManager: safeConfigManager,
         serverApiConnector: serverApiConnector,
         groupManager: groupManager,
-        myIdentityStore: myIdentityStore
+        myIdentityStore: myIdentityStore,
+        phoneNumberNormalizer: PhoneNumberNormalizer()
     )
+    
+    private var remoteSecretManager: RemoteSecretManagerProtocol {
+        RemoteSecretProvider.remoteSecretManager
+    }
 
     private var topViewController: UIViewController {
-        guard let vc = AppDelegate.shared().currentTopViewController() else {
+        let topViewController: UIViewController?
+        
+        #if SCENE_DELEGATE_ROOT_COORDINATOR_DEVELOPMENT
+            topViewController =
+                SceneDelegate.current?.currentTopViewController
+        #else
+            topViewController = AppDelegate.shared().currentTopViewController()
+        #endif
+        
+        guard let topViewController else {
             assertionFailure("Error: Could not get top view controller.")
             return .init()
         }
-        return vc
+        
+        return topViewController
     }
     
     private var didCheckLocalNetworkForOnPrem = false
@@ -97,6 +115,9 @@ final class LaunchModalManager {
 
             case .remoteSecretDeactivate:
                 showRemoteSecret(type: .deactivate)
+                
+            case .showIdentityThisDeviceOnly:
+                showIdentityThisDeviceOnly()
             }
         }
     }
@@ -126,6 +147,9 @@ final class LaunchModalManager {
         }
         else if checkRemoteSecretDeactivate() {
             return .remoteSecretDeactivate
+        }
+        else if checkCanShowIdentityThisDeviceOnly() {
+            return .showIdentityThisDeviceOnly
         }
         else if checkMicForOnPrem() {
             // We ask mic permission to improve the UX for calls
@@ -169,25 +193,34 @@ final class LaunchModalManager {
     }
     
     private func checkRemoteSecretActivate() -> Bool {
-        guard let remoteSecretManager = AppLaunchManager.remoteSecretManager else {
-            return false
-        }
-        
-        return mdmSetup.enableRemoteSecret() && !remoteSecretManager.isRemoteSecretEnabled
+        mdmSetup.enableRemoteSecret() && !remoteSecretManager.isRemoteSecretEnabled
     }
     
     private func checkRemoteSecretDeactivate() -> Bool {
-        guard let remoteSecretManager = AppLaunchManager.remoteSecretManager else {
+        !mdmSetup.enableRemoteSecret() && remoteSecretManager.isRemoteSecretEnabled
+    }
+    
+    private func checkCanShowIdentityThisDeviceOnly() -> Bool {
+        guard ThreemaEnvironment.allowEasyDeviceSwitch,
+              !UserSettings.shared().didShowIdentityThisDeviceOnly,
+              !TargetManager.isBusinessApp || TargetManager.isSandbox,
+              let mdmSetup = MDMSetup(),
+              let thisDeviceOnly = try? BusinessInjector.ui.keychainManager.isIdentityThisDeviceOnly(),
+              thisDeviceOnly
+        else {
             return false
         }
         
-        return !mdmSetup.enableRemoteSecret() && remoteSecretManager.isRemoteSecretEnabled
+        return !(
+            mdmSetup.disableIOSSystemBackupsIDKeyInclusion() || mdmSetup.disableBackups() || mdmSetup
+                .disableSystemBackups()
+        )
     }
-    
+
     private func checkMicForOnPrem() -> Bool {
         TargetManager.isOnPrem && AVAudioApplication.shared.recordPermission == .undetermined
     }
-
+    
     private func checkNetworkForOnPrem() -> Bool {
         guard TargetManager.isOnPrem else {
             return false
@@ -260,6 +293,12 @@ final class LaunchModalManager {
     private func showRemoteSecret(type: RemoteSecretActivateDeactivateViewModel.ViewType) {
         let model = RemoteSecretActivateDeactivateViewModel(type: type)
         let view = RemoteSecretActivateDeactivateView(viewModel: model)
+        let vc = UIHostingController(rootView: view)
+        topViewController.present(vc, animated: true)
+    }
+
+    private func showIdentityThisDeviceOnly() {
+        let view = IdentityThisDeviceOnlyDecisionView(businessInjector: BusinessInjector.ui)
         let vc = UIHostingController(rootView: view)
         topViewController.present(vc, animated: true)
     }

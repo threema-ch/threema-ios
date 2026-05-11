@@ -199,7 +199,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 - (NSSet *)selectedConversations {
     NSMutableSet *conversations = [NSMutableSet setWithCapacity:[_selectedWorkContacts count]];
     for (ContactEntity *contact in _selectedWorkContacts) {
-        [_entityManager performSyncBlockAndSafe:^{
+        [_entityManager performAndWaitSave:^{
             ConversationEntity *conversation = [_entityManager.entityFetcher conversationEntityFor:contact.identity];
             if (conversation == nil) {
                 // create & immediately save
@@ -352,7 +352,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     ContactEntity *contact = [self workContactAtIndexPath:indexPath];
     
     ContactCell *cell = [tableView dequeueReusableCellWithIdentifier:@"ContactCell"];
-    cell._contact = contact;
+    cell._contactEntity = contact;
     
     return cell;
 }

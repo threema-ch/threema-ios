@@ -21,7 +21,7 @@ final class MessageForwardingLocationMessageView: UIStackView {
         }
 
         enum IconLabel {
-            static let spacing: CGFloat = 2.0
+            static let spacing: CGFloat = 4.0
         }
     }
 
@@ -74,6 +74,7 @@ final class MessageForwardingLocationMessageView: UIStackView {
         label.translatesAutoresizingMaskIntoConstraints = false
         label.adjustsFontForContentSizeCategory = true
         label.numberOfLines = 4
+        label.font = .preferredFont(forTextStyle: .body)
         label.lineBreakMode = .byTruncatingTail
         label.textColor = .label
         label.setContentCompressionResistancePriority(.required, for: .vertical)
@@ -82,7 +83,7 @@ final class MessageForwardingLocationMessageView: UIStackView {
     }()
 
     private lazy var iconImageView: UIImageView = {
-        let config = UIImage.SymbolConfiguration(font: .preferredFont(forTextStyle: .subheadline))
+        let config = UIImage.SymbolConfiguration(font: .preferredFont(forTextStyle: .body), scale: .medium)
         let image = UIImage(systemName: symbol ?? "")
         let imageView = UIImageView(image: image)
         imageView.translatesAutoresizingMaskIntoConstraints = false
@@ -99,7 +100,7 @@ final class MessageForwardingLocationMessageView: UIStackView {
         stackView.translatesAutoresizingMaskIntoConstraints = false
         stackView.axis = .horizontal
         stackView.spacing = Layout.IconLabel.spacing
-        stackView.alignment = .top
+        stackView.alignment = .firstBaseline
         stackView.distribution = .fill
         return stackView
     }()
@@ -203,11 +204,10 @@ final class MessageForwardingLocationMessageView: UIStackView {
             messageLabel.numberOfLines = 4
         }
 
+        // We ensure that on the next layout pass the layout is reevaluated. We don't enforce it here. Otherwise some
+        // constraints and the layout breaks
         chatTextView.invalidateIntrinsicContentSize()
-        chatTextView.layoutIfNeeded()
-
         setNeedsLayout()
-        layoutIfNeeded()
     }
 
     private func setupTraitRegistration() {

@@ -370,6 +370,11 @@ final class VoIPCallService {
     
     private var reconnectingTimer: Timer?
     private var peerWasConnected = false
+
+    /// Tracks whether the audio session is currently interrupted (e.g. by a system alarm).
+    /// While true, observeAudioRoutes must not touch the audio session to avoid fighting
+    /// with the interrupting audio and causing cracks/artifacts.
+    private var isAudioInterrupted = false
     
     private var isModal: Bool {
         // Check whether our callViewController is currently in the state presented modally
@@ -416,7 +421,14 @@ final class VoIPCallService {
             name: AVAudioSession.routeChangeNotification,
             object: nil
         )
-        
+
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleAudioSessionInterruption),
+            name: AVAudioSession.interruptionNotification,
+            object: nil
+        )
+
         callKitManager.delegate = self
     }
 
@@ -483,10 +495,29 @@ final class VoIPCallService {
     /// Set the RTC audio session from CallKit
     /// - parameter audioSession: AVAudioSession from CallKit
     func setRTCAudio(_ audioSession: AVAudioSession) {
+        let rtcAudioSession = RTCAudioSession.sharedInstance()
+
         handleTones(state: state, oldState: state)
-        RTCAudioSession.sharedInstance().audioSessionDidActivate(audioSession)
+
+        // Let WebRTC know the session is activated
+        rtcAudioSession.audioSessionDidActivate(audioSession)
+
+        // Turn on WebRTC audio processing
+        rtcAudioSession.isAudioEnabled = true
     }
-    
+
+    /// Disable RTC audio session from CallKit
+    /// - parameter audioSession: AVAudioSession from CallKit
+    func deactivateRTCAudio(_ audioSession: AVAudioSession) {
+        let rtcAudioSession = RTCAudioSession.sharedInstance()
+
+        // Turn off WebRTC audio processing
+        rtcAudioSession.isAudioEnabled = false
+
+        // Let WebRTC know the session is deactivated
+        rtcAudioSession.audioSessionDidDeactivate(audioSession)
+    }
+
     /// Configure the audio session and set RTC audio active
     func activateRTCAudio() {
         peerConnectionClient.activateRTCAudio(speakerActive: speakerActive)
@@ -549,12 +580,56 @@ final class VoIPCallService {
     }
 
     // MARK: - Private functions
-    
+
+    @objc private func handleAudioSessionInterruption(_ notification: Notification) {
+        guard let info = notification.userInfo,
+              let typeValue = info[AVAudioSessionInterruptionTypeKey] as? UInt,
+              let type = AVAudioSession.InterruptionType(rawValue: typeValue) else {
+            return
+        }
+
+        switch type {
+        case .began:
+            DDLogNotice(
+                "VoipCallService: [cid=\(callID.callID)]: Audio session interruption began (state=\(state.description()))"
+            )
+            // Mark as interrupted so observeAudioRoutes stops touching the audio session.
+            // Fighting the alarm's route changes causes cracks and artifacts.
+            isAudioInterrupted = true
+        case .ended:
+            let optionsValue = info[AVAudioSessionInterruptionOptionKey] as? UInt ?? 0
+            let options = AVAudioSession.InterruptionOptions(rawValue: optionsValue)
+            let shouldResume = options.contains(.shouldResume)
+            DDLogNotice(
+                "VoipCallService: [cid=\(callID.callID)]: Audio session interruption ended (shouldResume=\(shouldResume), state=\(state.description()))"
+            )
+
+            isAudioInterrupted = false
+
+            // Force CallKit to go through a didDeactivate → didActivate cycle via hold/unhold.
+            // This is the ONLY way to restore the audio session input route after a system alarm
+            // interruption, because CallKit owns the audio session activation and no app-level
+            // API can restore the input route.
+            if shouldResume, state == .calling || state == .reconnecting {
+                callKitManager.requestAudioSessionReactivation(for: callID)
+            }
+        @unknown default:
+            break
+        }
+    }
+
     @objc private func observeAudioRoutes(_ notification: Notification) {
         guard state != .idle else {
             return
         }
-        
+
+        // During an audio interruption (e.g. system alarm), the system controls the audio
+        // route. Do not override output ports or change configuration — it fights the
+        // interrupting audio and causes cracks/artifacts.
+        guard !isAudioInterrupted else {
+            return
+        }
+
         guard let info = notification.userInfo,
               let value = info[AVAudioSessionRouteChangeReasonKey] as? UInt,
               let reason = AVAudioSession.RouteChangeReason(rawValue: value) else {
@@ -759,7 +834,7 @@ final class VoIPCallService {
         
         var appRunsInBackground = false
         DispatchQueue.main.sync {
-            appRunsInBackground = AppDelegate.shared().isAppInBackground()
+            appRunsInBackground = SceneDelegate.isAppInBackground
         }
 
         DDLogNotice(
@@ -1440,7 +1515,7 @@ final class VoIPCallService {
     /// - parameter completion: Completion block
     private func createPeerConnectionForInitiator(action: VoIPCallUserAction, completion: @escaping (() -> Void)) {
         let entityManager = businessInjector.entityManager
-        entityManager.performBlock {
+        entityManager.perform {
             guard let contact = entityManager.entityFetcher.contactEntity(for: self.callPartnerIdentity) else {
                 completion()
                 return
@@ -1517,9 +1592,7 @@ final class VoIPCallService {
                                 return
                             }
                             
-                            self.peerConnectionClient.offer {
-                                sdp,
-                                    sdpError in
+                            self.peerConnectionClient.offer { sdp, sdpError in
                                 if sdpError != nil {
                                     self.callCantCreateOffer(error: error)
                                     completion()
@@ -1626,7 +1699,7 @@ final class VoIPCallService {
         peerConnectionClient.close()
 
         let entityManager = businessInjector.entityManager
-        entityManager.performBlock {
+        entityManager.perform {
             
             guard let offer = self.incomingOffer,
                   let identity = offer.contactIdentity,
@@ -2363,7 +2436,7 @@ final class VoIPCallService {
     
     private func addMissedCall() {
         DispatchQueue.main.async {
-            guard AppDelegate.shared().isAppInBackground(),
+            guard SceneDelegate.isAppInBackground,
                   !self.callStartedBySelf,
                   self.callDurationTime == 0 else {
                 return

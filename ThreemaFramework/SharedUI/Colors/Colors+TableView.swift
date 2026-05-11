@@ -10,7 +10,7 @@ extension Colors {
         }
     }
     
-    @objc public class var backgroundTableView: UIColor {
+    public class var backgroundTableView: UIColor {
         switch theme {
         case .light:
             UIColor(resource: .gray150)
@@ -19,7 +19,7 @@ extension Colors {
         }
     }
     
-    @objc public class var plainBackgroundTableView: UIColor {
+    public class var plainBackgroundTableView: UIColor {
         switch theme {
         case .light:
             .white
@@ -28,7 +28,7 @@ extension Colors {
         }
     }
         
-    @objc public class var backgroundTableViewCellSelected: UIColor {
+    public class var backgroundTableViewCellSelected: UIColor {
         switch theme {
         case .light:
             UIColor(resource: .backgroundCellSelectedLight)

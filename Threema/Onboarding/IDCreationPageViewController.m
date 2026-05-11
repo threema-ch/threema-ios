@@ -14,7 +14,8 @@
 
     CGRect mainRect = _mainContentView.frame;
     
-    if ([AppDelegate hasBottomSafeAreaInsets]) {
+    CGFloat bottomInset = self.view.safeAreaInsets.bottom;
+    if (bottomInset > 0) {
         mainRect.size.height -= 20.0;
     }
     
@@ -33,7 +34,8 @@
     
     CGRect mainRect = _mainContentView.frame;
         
-    if ([AppDelegate hasBottomSafeAreaInsets]) {
+    CGFloat bottomInset = self.view.safeAreaInsets.bottom;
+    if (bottomInset > 0) {
         mainRect.size.height -= 20.0;
     }
     

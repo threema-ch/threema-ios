@@ -1,5 +1,5 @@
 {
-  "originHash" : "c3e0a70a1b9ab0a35a7d05e1efe0392a484290d6f6be63cf8cb17a0d1d2b0ec7",
+  "originHash" : "a656b8f83f4a5b9c263be7e8ac76e7818db784a79e25f7853e2b5e2c8bb417b1",
   "pins" : [
     {
       "identity" : "chunked-dc-swift",
@@ -61,6 +61,15 @@
       "state" : {
         "revision" : "8214549f7e2a472174a743c4f9bf64f005f6aacc",
         "version" : "2.2.4"
+      }
+    },
+    {
+      "identity" : "libphonenumber-ios",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/iziz/libPhoneNumber-iOS",
+      "state" : {
+        "revision" : "89d037a5988c0894c30a92d8f0fdd848b48e23e0",
+        "version" : "1.4.0"
       }
     },
     {

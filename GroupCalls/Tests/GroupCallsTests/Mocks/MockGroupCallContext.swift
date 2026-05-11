@@ -53,7 +53,7 @@ final class MockGroupCallContext: GroupCallContextProtocol {
     
     // MARK: - Message Handling
 
-    func handle(_ message: ThreemaProtocols.Groupcall_ParticipantToParticipant.OuterEnvelope) async -> GroupCalls
+    func handle(_ message: ThreemaProtocols.GroupCall_ParticipantToParticipant.OuterEnvelope) async -> GroupCalls
         .MessageResponseAction {
         handleCallCount += 1
         return GroupCalls.MessageResponseAction.none
@@ -62,12 +62,12 @@ final class MockGroupCallContext: GroupCallContextProtocol {
     // MARK: - Message Sending
 
     func outerEnvelope(for innerData: Data, to participant: GroupCalls.RemoteParticipant) -> ThreemaProtocols
-        .Groupcall_ParticipantToParticipant.OuterEnvelope {
+        .GroupCall_ParticipantToParticipant.OuterEnvelope {
         // Noop
-        ThreemaProtocols.Groupcall_ParticipantToParticipant.OuterEnvelope()
+        ThreemaProtocols.GroupCall_ParticipantToParticipant.OuterEnvelope()
     }
     
-    func verifyReceiver(for message: ThreemaProtocols.Groupcall_ParticipantToParticipant.OuterEnvelope) -> Bool {
+    func verifyReceiver(for message: ThreemaProtocols.GroupCall_ParticipantToParticipant.OuterEnvelope) -> Bool {
         true
     }
    
@@ -147,7 +147,7 @@ final class MockGroupCallContext: GroupCallContextProtocol {
     
     // MARK: - Connection
 
-    func relay(_ relay: ThreemaProtocols.Groupcall_ParticipantToParticipant.OuterEnvelope) {
+    func relay(_ relay: ThreemaProtocols.GroupCall_ParticipantToParticipant.OuterEnvelope) {
         // Noop
     }
     
@@ -155,7 +155,7 @@ final class MockGroupCallContext: GroupCallContextProtocol {
         // Noop
     }
     
-    func send(_ envelope: ThreemaProtocols.Groupcall_ParticipantToSfu.Envelope) throws {
+    func send(_ envelope: ThreemaProtocols.GroupCall_ParticipantToSfu.Envelope) throws {
         // Noop
     }
 }

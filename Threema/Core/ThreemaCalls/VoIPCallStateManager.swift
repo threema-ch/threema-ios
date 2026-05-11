@@ -6,7 +6,7 @@ import ThreemaFramework
 import ThreemaMacros
 import UserNotifications
 
-@objc final class VoIPCallStateManager: NSObject {
+final class VoIPCallStateManager: NSObject {
 
     @objc static let shared = VoIPCallStateManager()
 
@@ -201,19 +201,22 @@ import UserNotifications
     ///   - callPartnerIdentity: Caller identity
     ///   - callPartnerName: Caller name
     ///   - ringtoneSound: Filename of ringtone to be used
+    ///   - fromPush: Whether we report from the NSE
     ///   - completion: Completion handler returns a task to update call
     func newIncomingCallFromBackground(
         with callID: VoIPCallID,
         callPartnerIdentity: String,
         callPartnerName: String?,
         ringtoneSound: String,
+        fromPush: Bool = false,
         completion: @escaping (@escaping () -> Void) -> Void
     ) {
         callKitManager.reportIncomingCall(
             with: callID,
             callPartnerIdentity: callPartnerIdentity,
             callPartnerName: callPartnerName,
-            ringtoneSound: ringtoneSound
+            ringtoneSound: ringtoneSound,
+            fromPush: fromPush
         ) { _ in
             // Task to update call when business is ready
             let task: (() -> Void) = {
@@ -221,11 +224,11 @@ import UserNotifications
                     PersistenceManager(
                         appGroupID: AppGroup.groupID(),
                         userDefaults: AppGroup.userDefaults(),
-                        remoteSecretManager: AppLaunchManager.remoteSecretManager
+                        remoteSecretManager: RemoteSecretProvider.remoteSecretManager
                     ).dirtyObjectManager.refreshDirtyObjects(reset: true)
 
                     if ServerConnector.shared().connectionState == .disconnected {
-                        ServerConnector.shared().isAppInBackground = AppDelegate.shared().isAppInBackground()
+                        ServerConnector.shared().isAppInBackground = SceneDelegate.isAppInBackground
                         ServerConnector.shared().connectWait(initiator: .threemaCall)
                     }
 

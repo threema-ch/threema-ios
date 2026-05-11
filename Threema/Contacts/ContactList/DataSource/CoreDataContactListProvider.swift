@@ -81,6 +81,12 @@ class CoreDataContactListProvider<Entity: NSObject, BusinessEntity: NSObject>: N
         _ controller: NSFetchedResultsController<any NSFetchRequestResult>,
         didChangeContentWith snapshot: NSDiffableDataSourceSnapshotReference
     ) {
-        snapshotSubject.send(convert(snapshot))
+        // Break the synchronous chain at the CoreData delegate boundary. Without this hop,
+        // the save (and the chain of contact operations above it) cannot unwind before the
+        // table view reload runs, which queries UILocalizedIndexedCollation and deadlocks.
+        let converted = convert(snapshot)
+        DispatchQueue.main.async { [weak self] in
+            self?.snapshotSubject.send(converted)
+        }
     }
 }

@@ -129,7 +129,7 @@
         if (_licenseUsername.length < 1 || _licensePassword.length < 1) {
             dispatch_semaphore_signal(_sema);
             
-            _errorMessage = @"License username/password too short";
+            errorMessage = @"License username/password too short";
             onCompletion(NO);
             return;
         }
@@ -139,26 +139,26 @@
         
         ServerAPIConnector *connector = [[ServerAPIConnector alloc] init];
         [connector validateLicenseUsername:_licenseUsername password:_licensePassword appId:appId version:version deviceId:[self licenseDeviceID] onCompletion:^(BOOL success, NSDictionary *info) {
-            _error = nil;
-            _errorMessage = nil;
+            error = nil;
+            errorMessage = nil;
             if (success) {
                 [MyIdentityStore sharedMyIdentityStore].licenseLastCheck = [NSDate date];
                 _didCheckLicense = YES;
             } else {
                 [MyIdentityStore sharedMyIdentityStore].licenseLastCheck = nil;
                 _didCheckLicense = NO;
-                _errorMessage = info[@"error"];
+                errorMessage = info[@"error"];
             }
             MDMSetup *mdmSetup = [MDMSetup new];
             [mdmSetup applyCompanyMDMWithCachedThreemaMDMSendForce:false];
             dispatch_semaphore_signal(_sema);
             onCompletion(success);
         } onError:^(NSError *error) {
-            _errorMessage = error.localizedDescription;
-            _error = error;
+            errorMessage = error.localizedDescription;
+            error = error;
             
-            if ([_error.domain hasPrefix:@"NSURL"] == NO && _error.code != 256) {
-                // Remove licenceLastCheck. If notification extension will be startet, it will not process the messages
+            if ([error.domain hasPrefix:@"NSURL"] == NO && error.code != 256) {
+                // Remove licenseLastCheck. If notification extension will be started, it will not process the messages
                 [MyIdentityStore sharedMyIdentityStore].licenseLastCheck = nil;
                 _didCheckLicense = NO;
             }
@@ -304,5 +304,9 @@
         internalDeviceID = nil;
     }
 }
+
+@synthesize error;
+
+@synthesize errorMessage;
 
 @end

@@ -97,7 +97,7 @@ private func usageString(scriptFilePath: String?, with error: BuildRustError?) -
         \(Option.swiftOutputFilePath.rawValue) <swift-file-output-path> \
         \(Option.targets.rawValue) <one-or-more-rust-targets> \
         [\(Option.force.rawValue) \(Option.verbose.rawValue)]
-
+        
         
         ARGUMENTS:
         \(options)

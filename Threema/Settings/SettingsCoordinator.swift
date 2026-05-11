@@ -2,6 +2,7 @@ import CocoaLumberjackSwift
 import Coordinator
 import Foundation
 import SwiftUI
+import ThreemaFramework
 import ThreemaMacros
 
 final class SettingsCoordinator: NSObject, Coordinator, CurrentDestinationHolderProtocol {
@@ -177,9 +178,10 @@ final class SettingsCoordinator: NSObject, Coordinator, CurrentDestinationHolder
     // MARK: - Private functions
     
     private func openBetaFeedbackChat() {
+        let versionText = "Version: \(ThreemaUtility.clientVersionWithMDM)"
         if let contact = BusinessInjector.ui.entityManager.entityFetcher
             .contactEntity(for: Constants.betaFeedbackIdentity) {
-            showConversation(for: contact)
+            showConversation(for: contact, text: versionText)
         }
         else {
             BusinessInjector.ui.contactStore.addContact(
@@ -191,25 +193,9 @@ final class SettingsCoordinator: NSObject, Coordinator, CurrentDestinationHolder
                     return
                 }
                 
-                showConversation(for: contactEntity)
+                self.showConversation(for: contactEntity, text: versionText)
             } onError: { error in
                 DDLogError("Can't add \(Constants.betaFeedbackIdentity) as contact \(error)")
-            }
-        }
-        
-        func showConversation(for contact: ContactEntity) {
-            let info = [
-                kKeyContact: contact,
-                kKeyForceCompose: NSNumber(booleanLiteral: true),
-                kKeyText: "Version: \(ThreemaUtility.clientVersionWithMDM)",
-            ] as [String: Any]
-            
-            DispatchQueue.main.async {
-                NotificationCenter.default.post(
-                    name: NSNotification.Name(rawValue: kNotificationShowConversation),
-                    object: nil,
-                    userInfo: info
-                )
             }
         }
     }
@@ -300,8 +286,119 @@ final class SettingsCoordinator: NSObject, Coordinator, CurrentDestinationHolder
     }
     
     private func openChannelChat() {
-        // TODO: (IOS-5212) Add once conversations coordinator is in
-        assertionFailure("Not implemented")
+        guard TargetManager.isPrivate || TargetManager.isWork else {
+            return
+        }
+        
+        let identity = TargetManager.isPrivate ? PredefinedContacts.threema.identity : PredefinedContacts.threemaWork.identity
+        
+        guard let identity else {
+            return
+        }
+        let businessInjector = BusinessInjector.ui
+        let entityManager = businessInjector.entityManager
+        let contactEntity = entityManager.performAndWait {
+            entityManager.entityFetcher.contactEntity(for: identity.rawValue)
+        }
+        
+        if let contactEntity {
+            showConversation(for: contactEntity)
+            return
+        }
+        
+        let title = TargetManager.isPrivate ? #localize("threema_channel_intro") : #localize(
+            "threema_work_channel_intro"
+        )
+        let message = TargetManager.isPrivate ? #localize("threema_channel_info") : #localize(
+            "threema_work_channel_info"
+        )
+        
+        UIAlertTemplate.showAlert(
+            owner: rootViewController,
+            title: title,
+            message: message,
+            titleOk: #localize("add_button"),
+            actionOk: { _ in
+                addChannel(in: self.rootViewController, identity: identity.rawValue)
+            }
+        ) { _ in
+            self.currentDestination = nil
+        }
+        
+        func addChannel(in viewController: UIViewController, identity: String) {
+            ContactStore.shared().addContact(
+                with: identity,
+                verificationLevel: Int32(ContactEntity.VerificationLevel.unverified.rawValue),
+                onCompletion: { contact, _ in
+                    guard let contactEntity = contact as? ContactEntity else {
+                        let title = TargetManager.isPrivate ? #localize("threema_channel_failed") : #localize(
+                            "threema_work_channel_failed"
+                        )
+                        UIAlertTemplate.showAlert(
+                            owner: viewController,
+                            title: title,
+                            message: nil
+                        )
+                        return
+                    }
+                    
+                    self.showConversation(for: contactEntity)
+                    
+                    let initialMessages = createInitialMessages()
+                    dispatchInitialMessages(messages: initialMessages, with: contactEntity)
+                    
+                }, onError: { error in
+                    let title = TargetManager.isPrivate ? #localize("threema_channel_failed") : #localize(
+                        "threema_work_channel_failed"
+                    )
+                    UIAlertTemplate.showAlert(
+                        owner: viewController,
+                        title: title,
+                        message: error.localizedDescription
+                    )
+                }
+            )
+        }
+        
+        func createInitialMessages() -> [String] {
+            var initialMessages = [String]()
+            
+            if !(Bundle.main.preferredLocalizations[0].hasPrefix("de")) {
+                initialMessages.append("en")
+            }
+            else {
+                initialMessages.append("de")
+            }
+            
+            if TargetManager.isPrivate {
+                initialMessages.append("Start News")
+            }
+            initialMessages.append("Start iOS")
+            initialMessages.append("Info")
+            
+            return initialMessages
+        }
+            
+        func dispatchInitialMessages(messages: [String], with contact: ContactEntity) {
+            DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(100)) {
+                let businessInjector = BusinessInjector.ui
+
+                guard let conversation = businessInjector.entityManager.entityFetcher
+                    .conversationEntity(for: contact.identity) else {
+                    DDLogWarn("Unable to add initial messages to Threema Channel. Reason: conversation not found.")
+                    return
+                }
+                
+                for (index, message) in messages.enumerated() {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(index)) {
+                        businessInjector.messageSender.sendTextMessage(
+                            containing: message,
+                            in: conversation
+                        )
+                    }
+                }
+            }
+        }
     }
     
     private func showSupportInfo() {
@@ -337,5 +434,26 @@ final class SettingsCoordinator: NSObject, Coordinator, CurrentDestinationHolder
     private func showAdvancedSettings() {
         let vc = UIHostingController(rootView: AdvancedSettingsView().environmentObject(settingsStore))
         presentingViewController?.show(vc, sender: self)
+    }
+    
+    // MARK: - Helper functions
+    
+    private func showConversation(for contact: ContactEntity, text: String? = nil) {
+        var info = [
+            kKeyContact: contact,
+            kKeyForceCompose: NSNumber(booleanLiteral: text != nil),
+        ] as [String: Any]
+        
+        if let text {
+            info[kKeyText] = text
+        }
+        
+        DispatchQueue.main.async {
+            NotificationCenter.default.post(
+                name: NSNotification.Name(rawValue: kNotificationShowConversation),
+                object: nil,
+                userInfo: info
+            )
+        }
     }
 }

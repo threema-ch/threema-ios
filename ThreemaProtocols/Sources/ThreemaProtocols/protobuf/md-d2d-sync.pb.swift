@@ -40,7 +40,11 @@
 // If any of these rules is violated, the message should be discarded and logged
 // as an error (but still acknowledged, if necessary).
 
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 import SwiftProtobuf
 
 // If the compiler emits an error on this type, it is because this file
@@ -54,7 +58,7 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
 }
 
 /// _Read_ receipt policy (when an unread message has been read)
-public enum Sync_ReadReceiptPolicy: SwiftProtobuf.Enum, Swift.CaseIterable {
+public enum D2dSync_ReadReceiptPolicy: SwiftProtobuf.Enum, Swift.CaseIterable {
   public typealias RawValue = Int
 
   /// Send _read_ receipt when an unread message has been read
@@ -85,7 +89,7 @@ public enum Sync_ReadReceiptPolicy: SwiftProtobuf.Enum, Swift.CaseIterable {
   }
 
   // The compiler won't synthesize support with the UNRECOGNIZED case.
-  public static let allCases: [Sync_ReadReceiptPolicy] = [
+  public static let allCases: [D2dSync_ReadReceiptPolicy] = [
     .sendReadReceipt,
     .dontSendReadReceipt,
   ]
@@ -93,7 +97,7 @@ public enum Sync_ReadReceiptPolicy: SwiftProtobuf.Enum, Swift.CaseIterable {
 }
 
 /// Typing indicator policy (signal _currently typing_)
-public enum Sync_TypingIndicatorPolicy: SwiftProtobuf.Enum, Swift.CaseIterable {
+public enum D2dSync_TypingIndicatorPolicy: SwiftProtobuf.Enum, Swift.CaseIterable {
   public typealias RawValue = Int
 
   /// Send _typing_ indicator when a message is being composed
@@ -124,48 +128,60 @@ public enum Sync_TypingIndicatorPolicy: SwiftProtobuf.Enum, Swift.CaseIterable {
   }
 
   // The compiler won't synthesize support with the UNRECOGNIZED case.
-  public static let allCases: [Sync_TypingIndicatorPolicy] = [
+  public static let allCases: [D2dSync_TypingIndicatorPolicy] = [
     .sendTypingIndicator,
     .dontSendTypingIndicator,
   ]
 
 }
 
-/// Notification sound policy.
-public enum Sync_NotificationSoundPolicy: SwiftProtobuf.Enum, Swift.CaseIterable {
+/// Availability status category.
+public enum D2dSync_WorkAvailabilityStatusCategory: SwiftProtobuf.Enum, Swift.CaseIterable {
   public typealias RawValue = Int
 
-  /// Do not emit a sound when notifying of a _conversation_ message.
-  case muted // = 0
+  /// None (i.e. no (un)availability).
+  case none // = 0
+
+  /// Unavailable (i.e. for generic signalling of unavailability).
+  case unavailable // = 1
+
+  /// Busy.
+  case busy // = 2
   case UNRECOGNIZED(Int)
 
   public init() {
-    self = .muted
+    self = .none
   }
 
   public init?(rawValue: Int) {
     switch rawValue {
-    case 0: self = .muted
+    case 0: self = .none
+    case 1: self = .unavailable
+    case 2: self = .busy
     default: self = .UNRECOGNIZED(rawValue)
     }
   }
 
   public var rawValue: Int {
     switch self {
-    case .muted: return 0
+    case .none: return 0
+    case .unavailable: return 1
+    case .busy: return 2
     case .UNRECOGNIZED(let i): return i
     }
   }
 
   // The compiler won't synthesize support with the UNRECOGNIZED case.
-  public static let allCases: [Sync_NotificationSoundPolicy] = [
-    .muted,
+  public static let allCases: [D2dSync_WorkAvailabilityStatusCategory] = [
+    .none,
+    .unavailable,
+    .busy,
   ]
 
 }
 
 /// Visibility of a conversation.
-public enum Sync_ConversationVisibility: SwiftProtobuf.Enum, Swift.CaseIterable {
+public enum D2dSync_ConversationVisibility: SwiftProtobuf.Enum, Swift.CaseIterable {
   public typealias RawValue = Int
 
   /// Appears normally in the list of conversations
@@ -201,7 +217,7 @@ public enum Sync_ConversationVisibility: SwiftProtobuf.Enum, Swift.CaseIterable 
   }
 
   // The compiler won't synthesize support with the UNRECOGNIZED case.
-  public static let allCases: [Sync_ConversationVisibility] = [
+  public static let allCases: [D2dSync_ConversationVisibility] = [
     .normal,
     .pinned,
     .archived,
@@ -210,7 +226,7 @@ public enum Sync_ConversationVisibility: SwiftProtobuf.Enum, Swift.CaseIterable 
 }
 
 /// Category of a conversation.
-public enum Sync_ConversationCategory: SwiftProtobuf.Enum, Swift.CaseIterable {
+public enum D2dSync_ConversationCategory: SwiftProtobuf.Enum, Swift.CaseIterable {
   public typealias RawValue = Int
 
   /// No specific (default) category
@@ -241,11 +257,42 @@ public enum Sync_ConversationCategory: SwiftProtobuf.Enum, Swift.CaseIterable {
   }
 
   // The compiler won't synthesize support with the UNRECOGNIZED case.
-  public static let allCases: [Sync_ConversationCategory] = [
+  public static let allCases: [D2dSync_ConversationCategory] = [
     .default,
     .protected,
   ]
 
+}
+
+/// Availability status of the
+///
+/// - user, or,
+/// - a contact, sourced from the _Work Sync_ or _Work Contacts_ or _Work
+///   Directory_ endpoint.
+///
+/// Note 1: The default is `WorkAvailabilityStatusCategory.NONE` and no
+/// description (i.e. empty string). Supplying these values explicitly is also
+/// the way to _reset_ the availability status.
+///
+/// Note 2: Supplying a description with `WorkAvailabilityStatusCategory.NONE` is
+/// bogus and will be treated as `WorkAvailabilityStatusCategory.NONE` without a
+/// description.
+public struct D2dSync_WorkAvailabilityStatus: Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  /// Status category.
+  public var category: D2dSync_WorkAvailabilityStatusCategory = .none
+
+  /// Optional custom status description as chosen by the contact. Must be ≤
+  /// 256 bytes. An empty string means no custom status description is
+  /// present.
+  public var description_p: String = String()
+
+  public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  public init() {}
 }
 
 /// Application configuration parameters shared across Threema Work devices.
@@ -255,22 +302,22 @@ public enum Sync_ConversationCategory: SwiftProtobuf.Enum, Swift.CaseIterable {
 /// for the first time, modified, or removed.
 ///
 /// Note: MDM parameters are always transmitted fully, not as delta updates.
-public struct Sync_MdmParameters: Sendable {
+public struct D2dSync_MdmParameters: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   /// A map of MDM parameters, originating from an external MDM system. The map
   /// key is the identifier of the MDM parameter (e.g. `th_nickname`).
-  public var externalParameters: Dictionary<String,Sync_MdmParameters.Parameter> = [:]
+  public var externalParameters: Dictionary<String,D2dSync_MdmParameters.Parameter> = [:]
 
   /// A map of MDM parameters, originating from Threema App Configuration. The
   /// map key is the identifier of the MDM parameter (e.g. `th_nickname`).
-  public var threemaParameters: Dictionary<String,Sync_MdmParameters.Parameter> = [:]
+  public var threemaParameters: Dictionary<String,D2dSync_MdmParameters.Parameter> = [:]
 
   /// The parameter precedence defines how to resolve conflicting parameters
   /// between an external MDM and the Threema App Configuration.
-  public var parameterPrecedence: Sync_MdmParameters.ParameterPrecedence = .threema
+  public var parameterPrecedence: D2dSync_MdmParameters.ParameterPrecedence = .threema
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
@@ -306,7 +353,7 @@ public struct Sync_MdmParameters: Sendable {
     }
 
     // The compiler won't synthesize support with the UNRECOGNIZED case.
-    public static let allCases: [Sync_MdmParameters.ParameterPrecedence] = [
+    public static let allCases: [D2dSync_MdmParameters.ParameterPrecedence] = [
       .threema,
       .external,
     ]
@@ -319,7 +366,7 @@ public struct Sync_MdmParameters: Sendable {
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    public var value: Sync_MdmParameters.Parameter.OneOf_Value? = nil
+    public var value: D2dSync_MdmParameters.Parameter.OneOf_Value? = nil
 
     /// String parameter
     public var stringValue: String {
@@ -367,7 +414,7 @@ public struct Sync_MdmParameters: Sendable {
 }
 
 /// Threema Work credentials for authentication towards Work APIs.
-public struct Sync_ThreemaWorkCredentials: Sendable {
+public struct D2dSync_ThreemaWorkCredentials: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -384,7 +431,7 @@ public struct Sync_ThreemaWorkCredentials: Sendable {
 }
 
 /// The user's profile.
-public struct Sync_UserProfile: Sendable {
+public struct D2dSync_UserProfile: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -399,11 +446,11 @@ public struct Sync_UserProfile: Sendable {
   /// When an empty string was received, store the empty string as-is and fall
   /// back to the users Threema ID when sending an end-to-end encrypted message.
   public var nickname: String {
-    get {return _nickname ?? String()}
+    get {_nickname ?? String()}
     set {_nickname = newValue}
   }
   /// Returns true if `nickname` has been explicitly set.
-  public var hasNickname: Bool {return self._nickname != nil}
+  public var hasNickname: Bool {self._nickname != nil}
   /// Clears the value of `nickname`. Subsequent reads from it will return its default value.
   public mutating func clearNickname() {self._nickname = nil}
 
@@ -411,31 +458,45 @@ public struct Sync_UserProfile: Sendable {
   ///
   /// Always optional.
   public var profilePicture: Common_DeltaImage {
-    get {return _profilePicture ?? Common_DeltaImage()}
+    get {_profilePicture ?? Common_DeltaImage()}
     set {_profilePicture = newValue}
   }
   /// Returns true if `profilePicture` has been explicitly set.
-  public var hasProfilePicture: Bool {return self._profilePicture != nil}
+  public var hasProfilePicture: Bool {self._profilePicture != nil}
   /// Clears the value of `profilePicture`. Subsequent reads from it will return its default value.
   public mutating func clearProfilePicture() {self._profilePicture = nil}
 
-  public var profilePictureShareWith: Sync_UserProfile.ProfilePictureShareWith {
-    get {return _profilePictureShareWith ?? Sync_UserProfile.ProfilePictureShareWith()}
+  public var profilePictureShareWith: D2dSync_UserProfile.ProfilePictureShareWith {
+    get {_profilePictureShareWith ?? D2dSync_UserProfile.ProfilePictureShareWith()}
     set {_profilePictureShareWith = newValue}
   }
   /// Returns true if `profilePictureShareWith` has been explicitly set.
-  public var hasProfilePictureShareWith: Bool {return self._profilePictureShareWith != nil}
+  public var hasProfilePictureShareWith: Bool {self._profilePictureShareWith != nil}
   /// Clears the value of `profilePictureShareWith`. Subsequent reads from it will return its default value.
   public mutating func clearProfilePictureShareWith() {self._profilePictureShareWith = nil}
 
-  public var identityLinks: Sync_UserProfile.IdentityLinks {
-    get {return _identityLinks ?? Sync_UserProfile.IdentityLinks()}
+  public var identityLinks: D2dSync_UserProfile.IdentityLinks {
+    get {_identityLinks ?? D2dSync_UserProfile.IdentityLinks()}
     set {_identityLinks = newValue}
   }
   /// Returns true if `identityLinks` has been explicitly set.
-  public var hasIdentityLinks: Bool {return self._identityLinks != nil}
+  public var hasIdentityLinks: Bool {self._identityLinks != nil}
   /// Clears the value of `identityLinks`. Subsequent reads from it will return its default value.
   public mutating func clearIdentityLinks() {self._identityLinks = nil}
+
+  /// Availability status of the user.
+  ///
+  /// Shall not be present in the _Consumer_ flavour.
+  ///
+  /// Always optional in the _Work_ flavour.
+  public var workAvailabilityStatus: D2dSync_WorkAvailabilityStatus {
+    get {_workAvailabilityStatus ?? D2dSync_WorkAvailabilityStatus()}
+    set {_workAvailabilityStatus = newValue}
+  }
+  /// Returns true if `workAvailabilityStatus` has been explicitly set.
+  public var hasWorkAvailabilityStatus: Bool {self._workAvailabilityStatus != nil}
+  /// Clears the value of `workAvailabilityStatus`. Subsequent reads from it will return its default value.
+  public mutating func clearWorkAvailabilityStatus() {self._workAvailabilityStatus = nil}
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
@@ -447,7 +508,7 @@ public struct Sync_UserProfile: Sendable {
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    public var policy: Sync_UserProfile.ProfilePictureShareWith.OneOf_Policy? = nil
+    public var policy: D2dSync_UserProfile.ProfilePictureShareWith.OneOf_Policy? = nil
 
     /// Don't share
     public var nobody: Common_Unit {
@@ -509,7 +570,7 @@ public struct Sync_UserProfile: Sendable {
     // methods supported on all messages.
 
     /// List of identity links
-    public var links: [Sync_UserProfile.IdentityLinks.IdentityLink] = []
+    public var links: [D2dSync_UserProfile.IdentityLinks.IdentityLink] = []
 
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
@@ -520,7 +581,7 @@ public struct Sync_UserProfile: Sendable {
       // methods supported on all messages.
 
       /// Identity link type
-      public var type: Sync_UserProfile.IdentityLinks.IdentityLink.OneOf_Type? = nil
+      public var type: D2dSync_UserProfile.IdentityLinks.IdentityLink.OneOf_Type? = nil
 
       /// Linked with a verified telephone number (E.164 format without leading
       /// `+`)
@@ -566,12 +627,13 @@ public struct Sync_UserProfile: Sendable {
 
   fileprivate var _nickname: String? = nil
   fileprivate var _profilePicture: Common_DeltaImage? = nil
-  fileprivate var _profilePictureShareWith: Sync_UserProfile.ProfilePictureShareWith? = nil
-  fileprivate var _identityLinks: Sync_UserProfile.IdentityLinks? = nil
+  fileprivate var _profilePictureShareWith: D2dSync_UserProfile.ProfilePictureShareWith? = nil
+  fileprivate var _identityLinks: D2dSync_UserProfile.IdentityLinks? = nil
+  fileprivate var _workAvailabilityStatus: D2dSync_WorkAvailabilityStatus? = nil
 }
 
 /// Threema contact.
-public struct Sync_Contact: @unchecked Sendable {
+public struct D2dSync_Contact: @unchecked Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -580,7 +642,7 @@ public struct Sync_Contact: @unchecked Sendable {
   ///
   /// Always required.
   public var identity: String {
-    get {return _storage._identity}
+    get {_storage._identity}
     set {_uniqueStorage()._identity = newValue}
   }
 
@@ -590,11 +652,11 @@ public struct Sync_Contact: @unchecked Sendable {
   /// for existing contacts and must be ignored (a public key for an identity
   /// cannot be changed).
   public var publicKey: Data {
-    get {return _storage._publicKey ?? Data()}
+    get {_storage._publicKey ?? Data()}
     set {_uniqueStorage()._publicKey = newValue}
   }
   /// Returns true if `publicKey` has been explicitly set.
-  public var hasPublicKey: Bool {return _storage._publicKey != nil}
+  public var hasPublicKey: Bool {_storage._publicKey != nil}
   /// Clears the value of `publicKey`. Subsequent reads from it will return its default value.
   public mutating func clearPublicKey() {_uniqueStorage()._publicKey = nil}
 
@@ -604,11 +666,11 @@ public struct Sync_Contact: @unchecked Sendable {
   /// Required towards a new device and for a new contact. Optional for an
   /// existing contact.
   public var createdAt: UInt64 {
-    get {return _storage._createdAt ?? 0}
+    get {_storage._createdAt ?? 0}
     set {_uniqueStorage()._createdAt = newValue}
   }
   /// Returns true if `createdAt` has been explicitly set.
-  public var hasCreatedAt: Bool {return _storage._createdAt != nil}
+  public var hasCreatedAt: Bool {_storage._createdAt != nil}
   /// Clears the value of `createdAt`. Subsequent reads from it will return its default value.
   public mutating func clearCreatedAt() {_uniqueStorage()._createdAt = nil}
 
@@ -619,11 +681,11 @@ public struct Sync_Contact: @unchecked Sendable {
   /// An empty string is valid. When both `first_name` and `last_name` are
   /// empty string, the `nickname` should be used as display name.
   public var firstName: String {
-    get {return _storage._firstName ?? String()}
+    get {_storage._firstName ?? String()}
     set {_uniqueStorage()._firstName = newValue}
   }
   /// Returns true if `firstName` has been explicitly set.
-  public var hasFirstName: Bool {return _storage._firstName != nil}
+  public var hasFirstName: Bool {_storage._firstName != nil}
   /// Clears the value of `firstName`. Subsequent reads from it will return its default value.
   public mutating func clearFirstName() {_uniqueStorage()._firstName = nil}
 
@@ -634,11 +696,11 @@ public struct Sync_Contact: @unchecked Sendable {
   /// An empty string is valid. When both `first_name` and `last_name` are
   /// empty string, the `nickname` should be used as display name.
   public var lastName: String {
-    get {return _storage._lastName ?? String()}
+    get {_storage._lastName ?? String()}
     set {_uniqueStorage()._lastName = newValue}
   }
   /// Returns true if `lastName` has been explicitly set.
-  public var hasLastName: Bool {return _storage._lastName != nil}
+  public var hasLastName: Bool {_storage._lastName != nil}
   /// Clears the value of `lastName`. Subsequent reads from it will return its default value.
   public mutating func clearLastName() {_uniqueStorage()._lastName = nil}
 
@@ -649,56 +711,56 @@ public struct Sync_Contact: @unchecked Sendable {
   /// An empty string is valid. If `first_name`, `last_name` and `nickname` are
   /// empty string, the Threema ID should be used as display name.
   public var nickname: String {
-    get {return _storage._nickname ?? String()}
+    get {_storage._nickname ?? String()}
     set {_uniqueStorage()._nickname = newValue}
   }
   /// Returns true if `nickname` has been explicitly set.
-  public var hasNickname: Bool {return _storage._nickname != nil}
+  public var hasNickname: Bool {_storage._nickname != nil}
   /// Clears the value of `nickname`. Subsequent reads from it will return its default value.
   public mutating func clearNickname() {_uniqueStorage()._nickname = nil}
 
-  public var verificationLevel: Sync_Contact.VerificationLevel {
-    get {return _storage._verificationLevel ?? .unverified}
+  public var verificationLevel: D2dSync_Contact.VerificationLevel {
+    get {_storage._verificationLevel ?? .unverified}
     set {_uniqueStorage()._verificationLevel = newValue}
   }
   /// Returns true if `verificationLevel` has been explicitly set.
-  public var hasVerificationLevel: Bool {return _storage._verificationLevel != nil}
+  public var hasVerificationLevel: Bool {_storage._verificationLevel != nil}
   /// Clears the value of `verificationLevel`. Subsequent reads from it will return its default value.
   public mutating func clearVerificationLevel() {_uniqueStorage()._verificationLevel = nil}
 
-  public var workVerificationLevel: Sync_Contact.WorkVerificationLevel {
-    get {return _storage._workVerificationLevel ?? .none}
+  public var workVerificationLevel: D2dSync_Contact.WorkVerificationLevel {
+    get {_storage._workVerificationLevel ?? .none}
     set {_uniqueStorage()._workVerificationLevel = newValue}
   }
   /// Returns true if `workVerificationLevel` has been explicitly set.
-  public var hasWorkVerificationLevel: Bool {return _storage._workVerificationLevel != nil}
+  public var hasWorkVerificationLevel: Bool {_storage._workVerificationLevel != nil}
   /// Clears the value of `workVerificationLevel`. Subsequent reads from it will return its default value.
   public mutating func clearWorkVerificationLevel() {_uniqueStorage()._workVerificationLevel = nil}
 
-  public var identityType: Sync_Contact.IdentityType {
-    get {return _storage._identityType ?? .regular}
+  public var identityType: D2dSync_Contact.IdentityType {
+    get {_storage._identityType ?? .regular}
     set {_uniqueStorage()._identityType = newValue}
   }
   /// Returns true if `identityType` has been explicitly set.
-  public var hasIdentityType: Bool {return _storage._identityType != nil}
+  public var hasIdentityType: Bool {_storage._identityType != nil}
   /// Clears the value of `identityType`. Subsequent reads from it will return its default value.
   public mutating func clearIdentityType() {_uniqueStorage()._identityType = nil}
 
-  public var acquaintanceLevel: Sync_Contact.AcquaintanceLevel {
-    get {return _storage._acquaintanceLevel ?? .direct}
+  public var acquaintanceLevel: D2dSync_Contact.AcquaintanceLevel {
+    get {_storage._acquaintanceLevel ?? .direct}
     set {_uniqueStorage()._acquaintanceLevel = newValue}
   }
   /// Returns true if `acquaintanceLevel` has been explicitly set.
-  public var hasAcquaintanceLevel: Bool {return _storage._acquaintanceLevel != nil}
+  public var hasAcquaintanceLevel: Bool {_storage._acquaintanceLevel != nil}
   /// Clears the value of `acquaintanceLevel`. Subsequent reads from it will return its default value.
   public mutating func clearAcquaintanceLevel() {_uniqueStorage()._acquaintanceLevel = nil}
 
-  public var activityState: Sync_Contact.ActivityState {
-    get {return _storage._activityState ?? .active}
+  public var activityState: D2dSync_Contact.ActivityState {
+    get {_storage._activityState ?? .active}
     set {_uniqueStorage()._activityState = newValue}
   }
   /// Returns true if `activityState` has been explicitly set.
-  public var hasActivityState: Bool {return _storage._activityState != nil}
+  public var hasActivityState: Bool {_storage._activityState != nil}
   /// Clears the value of `activityState`. Subsequent reads from it will return its default value.
   public mutating func clearActivityState() {_uniqueStorage()._activityState = nil}
 
@@ -708,69 +770,33 @@ public struct Sync_Contact: @unchecked Sendable {
   /// Required towards a new device and for a new contact. Optional for an
   /// existing contact.
   public var featureMask: UInt64 {
-    get {return _storage._featureMask ?? 0}
+    get {_storage._featureMask ?? 0}
     set {_uniqueStorage()._featureMask = newValue}
   }
   /// Returns true if `featureMask` has been explicitly set.
-  public var hasFeatureMask: Bool {return _storage._featureMask != nil}
+  public var hasFeatureMask: Bool {_storage._featureMask != nil}
   /// Clears the value of `featureMask`. Subsequent reads from it will return its default value.
   public mutating func clearFeatureMask() {_uniqueStorage()._featureMask = nil}
 
-  public var syncState: Sync_Contact.SyncState {
-    get {return _storage._syncState ?? .initial}
+  public var syncState: D2dSync_Contact.SyncState {
+    get {_storage._syncState ?? .initial}
     set {_uniqueStorage()._syncState = newValue}
   }
   /// Returns true if `syncState` has been explicitly set.
-  public var hasSyncState: Bool {return _storage._syncState != nil}
+  public var hasSyncState: Bool {_storage._syncState != nil}
   /// Clears the value of `syncState`. Subsequent reads from it will return its default value.
   public mutating func clearSyncState() {_uniqueStorage()._syncState = nil}
-
-  public var readReceiptPolicyOverride: Sync_Contact.ReadReceiptPolicyOverride {
-    get {return _storage._readReceiptPolicyOverride ?? Sync_Contact.ReadReceiptPolicyOverride()}
-    set {_uniqueStorage()._readReceiptPolicyOverride = newValue}
-  }
-  /// Returns true if `readReceiptPolicyOverride` has been explicitly set.
-  public var hasReadReceiptPolicyOverride: Bool {return _storage._readReceiptPolicyOverride != nil}
-  /// Clears the value of `readReceiptPolicyOverride`. Subsequent reads from it will return its default value.
-  public mutating func clearReadReceiptPolicyOverride() {_uniqueStorage()._readReceiptPolicyOverride = nil}
-
-  public var typingIndicatorPolicyOverride: Sync_Contact.TypingIndicatorPolicyOverride {
-    get {return _storage._typingIndicatorPolicyOverride ?? Sync_Contact.TypingIndicatorPolicyOverride()}
-    set {_uniqueStorage()._typingIndicatorPolicyOverride = newValue}
-  }
-  /// Returns true if `typingIndicatorPolicyOverride` has been explicitly set.
-  public var hasTypingIndicatorPolicyOverride: Bool {return _storage._typingIndicatorPolicyOverride != nil}
-  /// Clears the value of `typingIndicatorPolicyOverride`. Subsequent reads from it will return its default value.
-  public mutating func clearTypingIndicatorPolicyOverride() {_uniqueStorage()._typingIndicatorPolicyOverride = nil}
-
-  public var notificationTriggerPolicyOverride: Sync_Contact.NotificationTriggerPolicyOverride {
-    get {return _storage._notificationTriggerPolicyOverride ?? Sync_Contact.NotificationTriggerPolicyOverride()}
-    set {_uniqueStorage()._notificationTriggerPolicyOverride = newValue}
-  }
-  /// Returns true if `notificationTriggerPolicyOverride` has been explicitly set.
-  public var hasNotificationTriggerPolicyOverride: Bool {return _storage._notificationTriggerPolicyOverride != nil}
-  /// Clears the value of `notificationTriggerPolicyOverride`. Subsequent reads from it will return its default value.
-  public mutating func clearNotificationTriggerPolicyOverride() {_uniqueStorage()._notificationTriggerPolicyOverride = nil}
-
-  public var notificationSoundPolicyOverride: Sync_Contact.NotificationSoundPolicyOverride {
-    get {return _storage._notificationSoundPolicyOverride ?? Sync_Contact.NotificationSoundPolicyOverride()}
-    set {_uniqueStorage()._notificationSoundPolicyOverride = newValue}
-  }
-  /// Returns true if `notificationSoundPolicyOverride` has been explicitly set.
-  public var hasNotificationSoundPolicyOverride: Bool {return _storage._notificationSoundPolicyOverride != nil}
-  /// Clears the value of `notificationSoundPolicyOverride`. Subsequent reads from it will return its default value.
-  public mutating func clearNotificationSoundPolicyOverride() {_uniqueStorage()._notificationSoundPolicyOverride = nil}
 
   /// Contact-defined profile picture as received from the contact in a
   /// `set-profile-picture` message.
   ///
   /// Always optional.
   public var contactDefinedProfilePicture: Common_DeltaImage {
-    get {return _storage._contactDefinedProfilePicture ?? Common_DeltaImage()}
+    get {_storage._contactDefinedProfilePicture ?? Common_DeltaImage()}
     set {_uniqueStorage()._contactDefinedProfilePicture = newValue}
   }
   /// Returns true if `contactDefinedProfilePicture` has been explicitly set.
-  public var hasContactDefinedProfilePicture: Bool {return _storage._contactDefinedProfilePicture != nil}
+  public var hasContactDefinedProfilePicture: Bool {_storage._contactDefinedProfilePicture != nil}
   /// Clears the value of `contactDefinedProfilePicture`. Subsequent reads from it will return its default value.
   public mutating func clearContactDefinedProfilePicture() {_uniqueStorage()._contactDefinedProfilePicture = nil}
 
@@ -779,24 +805,92 @@ public struct Sync_Contact: @unchecked Sendable {
   ///
   /// Always optional.
   public var userDefinedProfilePicture: Common_DeltaImage {
-    get {return _storage._userDefinedProfilePicture ?? Common_DeltaImage()}
+    get {_storage._userDefinedProfilePicture ?? Common_DeltaImage()}
     set {_uniqueStorage()._userDefinedProfilePicture = newValue}
   }
   /// Returns true if `userDefinedProfilePicture` has been explicitly set.
-  public var hasUserDefinedProfilePicture: Bool {return _storage._userDefinedProfilePicture != nil}
+  public var hasUserDefinedProfilePicture: Bool {_storage._userDefinedProfilePicture != nil}
   /// Clears the value of `userDefinedProfilePicture`. Subsequent reads from it will return its default value.
   public mutating func clearUserDefinedProfilePicture() {_uniqueStorage()._userDefinedProfilePicture = nil}
+
+  /// Server-reported UNIX-ish timestamp in milliseconds of the last incident all
+  /// work properties of this contact were retrieved (and any potential changes
+  /// were applied) from a _Work Sync_, a _Work Contacts_, or a _Work Directory_
+  /// endpoint.
+  ///
+  /// Shall not be present in the _Consumer_ flavour.
+  ///
+  /// Always optional in the _Work_ flavour.
+  public var workLastFullSyncAt: UInt64 {
+    get {_storage._workLastFullSyncAt ?? 0}
+    set {_uniqueStorage()._workLastFullSyncAt = newValue}
+  }
+  /// Returns true if `workLastFullSyncAt` has been explicitly set.
+  public var hasWorkLastFullSyncAt: Bool {_storage._workLastFullSyncAt != nil}
+  /// Clears the value of `workLastFullSyncAt`. Subsequent reads from it will return its default value.
+  public mutating func clearWorkLastFullSyncAt() {_uniqueStorage()._workLastFullSyncAt = nil}
+
+  /// Availability status of the contact.
+  ///
+  /// Shall not be present in the _Consumer_ flavour.
+  ///
+  /// Always optional in the _Work_ flavour.
+  public var workAvailabilityStatus: D2dSync_WorkAvailabilityStatus {
+    get {_storage._workAvailabilityStatus ?? D2dSync_WorkAvailabilityStatus()}
+    set {_uniqueStorage()._workAvailabilityStatus = newValue}
+  }
+  /// Returns true if `workAvailabilityStatus` has been explicitly set.
+  public var hasWorkAvailabilityStatus: Bool {_storage._workAvailabilityStatus != nil}
+  /// Clears the value of `workAvailabilityStatus`. Subsequent reads from it will return its default value.
+  public mutating func clearWorkAvailabilityStatus() {_uniqueStorage()._workAvailabilityStatus = nil}
+
+  public var readReceiptPolicyOverride: D2dSync_Contact.ReadReceiptPolicyOverride {
+    get {_storage._readReceiptPolicyOverride ?? D2dSync_Contact.ReadReceiptPolicyOverride()}
+    set {_uniqueStorage()._readReceiptPolicyOverride = newValue}
+  }
+  /// Returns true if `readReceiptPolicyOverride` has been explicitly set.
+  public var hasReadReceiptPolicyOverride: Bool {_storage._readReceiptPolicyOverride != nil}
+  /// Clears the value of `readReceiptPolicyOverride`. Subsequent reads from it will return its default value.
+  public mutating func clearReadReceiptPolicyOverride() {_uniqueStorage()._readReceiptPolicyOverride = nil}
+
+  public var typingIndicatorPolicyOverride: D2dSync_Contact.TypingIndicatorPolicyOverride {
+    get {_storage._typingIndicatorPolicyOverride ?? D2dSync_Contact.TypingIndicatorPolicyOverride()}
+    set {_uniqueStorage()._typingIndicatorPolicyOverride = newValue}
+  }
+  /// Returns true if `typingIndicatorPolicyOverride` has been explicitly set.
+  public var hasTypingIndicatorPolicyOverride: Bool {_storage._typingIndicatorPolicyOverride != nil}
+  /// Clears the value of `typingIndicatorPolicyOverride`. Subsequent reads from it will return its default value.
+  public mutating func clearTypingIndicatorPolicyOverride() {_uniqueStorage()._typingIndicatorPolicyOverride = nil}
+
+  public var notificationTriggerPolicyOverride: D2dSync_Contact.NotificationTriggerPolicyOverride {
+    get {_storage._notificationTriggerPolicyOverride ?? D2dSync_Contact.NotificationTriggerPolicyOverride()}
+    set {_uniqueStorage()._notificationTriggerPolicyOverride = newValue}
+  }
+  /// Returns true if `notificationTriggerPolicyOverride` has been explicitly set.
+  public var hasNotificationTriggerPolicyOverride: Bool {_storage._notificationTriggerPolicyOverride != nil}
+  /// Clears the value of `notificationTriggerPolicyOverride`. Subsequent reads from it will return its default value.
+  public mutating func clearNotificationTriggerPolicyOverride() {_uniqueStorage()._notificationTriggerPolicyOverride = nil}
+
+  /// NOTE: This field was marked as deprecated in the .proto file.
+  public var deprecatedNotificationSoundPolicyOverride: D2dSync_Contact.DeprecatedNotificationSoundPolicyOverride {
+    get {_storage._deprecatedNotificationSoundPolicyOverride ?? D2dSync_Contact.DeprecatedNotificationSoundPolicyOverride()}
+    set {_uniqueStorage()._deprecatedNotificationSoundPolicyOverride = newValue}
+  }
+  /// Returns true if `deprecatedNotificationSoundPolicyOverride` has been explicitly set.
+  public var hasDeprecatedNotificationSoundPolicyOverride: Bool {_storage._deprecatedNotificationSoundPolicyOverride != nil}
+  /// Clears the value of `deprecatedNotificationSoundPolicyOverride`. Subsequent reads from it will return its default value.
+  public mutating func clearDeprecatedNotificationSoundPolicyOverride() {_uniqueStorage()._deprecatedNotificationSoundPolicyOverride = nil}
 
   /// Conversation category of the contact
   ///
   /// Required towards a new device and for a new contact. Optional for an
   /// existing contact.
-  public var conversationCategory: Sync_ConversationCategory {
-    get {return _storage._conversationCategory ?? .default}
+  public var conversationCategory: D2dSync_ConversationCategory {
+    get {_storage._conversationCategory ?? .default}
     set {_uniqueStorage()._conversationCategory = newValue}
   }
   /// Returns true if `conversationCategory` has been explicitly set.
-  public var hasConversationCategory: Bool {return _storage._conversationCategory != nil}
+  public var hasConversationCategory: Bool {_storage._conversationCategory != nil}
   /// Clears the value of `conversationCategory`. Subsequent reads from it will return its default value.
   public mutating func clearConversationCategory() {_uniqueStorage()._conversationCategory = nil}
 
@@ -804,12 +898,12 @@ public struct Sync_Contact: @unchecked Sendable {
   ///
   /// Required towards a new device and for a new contact. Optional for an
   /// existing contact.
-  public var conversationVisibility: Sync_ConversationVisibility {
-    get {return _storage._conversationVisibility ?? .normal}
+  public var conversationVisibility: D2dSync_ConversationVisibility {
+    get {_storage._conversationVisibility ?? .normal}
     set {_uniqueStorage()._conversationVisibility = newValue}
   }
   /// Returns true if `conversationVisibility` has been explicitly set.
-  public var hasConversationVisibility: Bool {return _storage._conversationVisibility != nil}
+  public var hasConversationVisibility: Bool {_storage._conversationVisibility != nil}
   /// Clears the value of `conversationVisibility`. Subsequent reads from it will return its default value.
   public mutating func clearConversationVisibility() {_uniqueStorage()._conversationVisibility = nil}
 
@@ -861,7 +955,7 @@ public struct Sync_Contact: @unchecked Sendable {
     }
 
     // The compiler won't synthesize support with the UNRECOGNIZED case.
-    public static let allCases: [Sync_Contact.VerificationLevel] = [
+    public static let allCases: [D2dSync_Contact.VerificationLevel] = [
       .unverified,
       .serverVerified,
       .fullyVerified,
@@ -869,7 +963,8 @@ public struct Sync_Contact: @unchecked Sendable {
 
   }
 
-  /// Threema Work verification level of the contact.
+  /// Threema Work verification level of the contact, sourced from the _Work
+  /// Sync_ or _Work Contacts_ endpoint.
   ///
   /// Required towards a new device and for a new contact. Optional for an
   /// existing contact.
@@ -908,7 +1003,7 @@ public struct Sync_Contact: @unchecked Sendable {
     }
 
     // The compiler won't synthesize support with the UNRECOGNIZED case.
-    public static let allCases: [Sync_Contact.WorkVerificationLevel] = [
+    public static let allCases: [D2dSync_Contact.WorkVerificationLevel] = [
       .none,
       .workSubscriptionVerified,
     ]
@@ -950,7 +1045,7 @@ public struct Sync_Contact: @unchecked Sendable {
     }
 
     // The compiler won't synthesize support with the UNRECOGNIZED case.
-    public static let allCases: [Sync_Contact.IdentityType] = [
+    public static let allCases: [D2dSync_Contact.IdentityType] = [
       .regular,
       .work,
     ]
@@ -1004,7 +1099,7 @@ public struct Sync_Contact: @unchecked Sendable {
     }
 
     // The compiler won't synthesize support with the UNRECOGNIZED case.
-    public static let allCases: [Sync_Contact.AcquaintanceLevel] = [
+    public static let allCases: [D2dSync_Contact.AcquaintanceLevel] = [
       .direct,
       .groupOrDeleted,
     ]
@@ -1060,7 +1155,7 @@ public struct Sync_Contact: @unchecked Sendable {
     }
 
     // The compiler won't synthesize support with the UNRECOGNIZED case.
-    public static let allCases: [Sync_Contact.ActivityState] = [
+    public static let allCases: [D2dSync_Contact.ActivityState] = [
       .active,
       .inactive,
       .invalid,
@@ -1115,7 +1210,7 @@ public struct Sync_Contact: @unchecked Sendable {
     }
 
     // The compiler won't synthesize support with the UNRECOGNIZED case.
-    public static let allCases: [Sync_Contact.SyncState] = [
+    public static let allCases: [D2dSync_Contact.SyncState] = [
       .initial,
       .imported,
       .custom,
@@ -1132,7 +1227,7 @@ public struct Sync_Contact: @unchecked Sendable {
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    public var override: Sync_Contact.ReadReceiptPolicyOverride.OneOf_Override? = nil
+    public var override: D2dSync_Contact.ReadReceiptPolicyOverride.OneOf_Override? = nil
 
     /// Apply the _read_ receipt policy specified in the settings
     public var `default`: Common_Unit {
@@ -1144,7 +1239,7 @@ public struct Sync_Contact: @unchecked Sendable {
     }
 
     /// Apply the following _read_ receipt policy
-    public var policy: Sync_ReadReceiptPolicy {
+    public var policy: D2dSync_ReadReceiptPolicy {
       get {
         if case .policy(let v)? = override {return v}
         return .sendReadReceipt
@@ -1158,7 +1253,7 @@ public struct Sync_Contact: @unchecked Sendable {
       /// Apply the _read_ receipt policy specified in the settings
       case `default`(Common_Unit)
       /// Apply the following _read_ receipt policy
-      case policy(Sync_ReadReceiptPolicy)
+      case policy(D2dSync_ReadReceiptPolicy)
 
     }
 
@@ -1174,7 +1269,7 @@ public struct Sync_Contact: @unchecked Sendable {
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    public var override: Sync_Contact.TypingIndicatorPolicyOverride.OneOf_Override? = nil
+    public var override: D2dSync_Contact.TypingIndicatorPolicyOverride.OneOf_Override? = nil
 
     /// Apply the typing indicator policy specified in the settings
     public var `default`: Common_Unit {
@@ -1186,7 +1281,7 @@ public struct Sync_Contact: @unchecked Sendable {
     }
 
     /// Apply the following typing indicator policy
-    public var policy: Sync_TypingIndicatorPolicy {
+    public var policy: D2dSync_TypingIndicatorPolicy {
       get {
         if case .policy(let v)? = override {return v}
         return .sendTypingIndicator
@@ -1200,7 +1295,7 @@ public struct Sync_Contact: @unchecked Sendable {
       /// Apply the typing indicator policy specified in the settings
       case `default`(Common_Unit)
       /// Apply the following typing indicator policy
-      case policy(Sync_TypingIndicatorPolicy)
+      case policy(D2dSync_TypingIndicatorPolicy)
 
     }
 
@@ -1216,7 +1311,7 @@ public struct Sync_Contact: @unchecked Sendable {
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    public var override: Sync_Contact.NotificationTriggerPolicyOverride.OneOf_Override? = nil
+    public var override: D2dSync_Contact.NotificationTriggerPolicyOverride.OneOf_Override? = nil
 
     /// Apply the trigger policy specified in the settings (i.e. trigger on
     /// every _conversation_ message).
@@ -1229,10 +1324,10 @@ public struct Sync_Contact: @unchecked Sendable {
     }
 
     /// Apply the following notification trigger policy
-    public var policy: Sync_Contact.NotificationTriggerPolicyOverride.Policy {
+    public var policy: D2dSync_Contact.NotificationTriggerPolicyOverride.Policy {
       get {
         if case .policy(let v)? = override {return v}
-        return Sync_Contact.NotificationTriggerPolicyOverride.Policy()
+        return D2dSync_Contact.NotificationTriggerPolicyOverride.Policy()
       }
       set {override = .policy(newValue)}
     }
@@ -1244,7 +1339,7 @@ public struct Sync_Contact: @unchecked Sendable {
       /// every _conversation_ message).
       case `default`(Common_Unit)
       /// Apply the following notification trigger policy
-      case policy(Sync_Contact.NotificationTriggerPolicyOverride.Policy)
+      case policy(D2dSync_Contact.NotificationTriggerPolicyOverride.Policy)
 
     }
 
@@ -1253,17 +1348,17 @@ public struct Sync_Contact: @unchecked Sendable {
       // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
       // methods supported on all messages.
 
-      public var policy: Sync_Contact.NotificationTriggerPolicyOverride.Policy.NotificationTriggerPolicy = .never
+      public var policy: D2dSync_Contact.NotificationTriggerPolicyOverride.Policy.NotificationTriggerPolicy = .never
 
       /// Unix-ish timestamp in milliseconds when the provided policy should
       /// expire and fall back to the default. If not provided, the policy does
       /// not expire.
       public var expiresAt: UInt64 {
-        get {return _expiresAt ?? 0}
+        get {_expiresAt ?? 0}
         set {_expiresAt = newValue}
       }
       /// Returns true if `expiresAt` has been explicitly set.
-      public var hasExpiresAt: Bool {return self._expiresAt != nil}
+      public var hasExpiresAt: Bool {self._expiresAt != nil}
       /// Clears the value of `expiresAt`. Subsequent reads from it will return its default value.
       public mutating func clearExpiresAt() {self._expiresAt = nil}
 
@@ -1296,7 +1391,7 @@ public struct Sync_Contact: @unchecked Sendable {
         }
 
         // The compiler won't synthesize support with the UNRECOGNIZED case.
-        public static let allCases: [Sync_Contact.NotificationTriggerPolicyOverride.Policy.NotificationTriggerPolicy] = [
+        public static let allCases: [D2dSync_Contact.NotificationTriggerPolicyOverride.Policy.NotificationTriggerPolicy] = [
           .never,
         ]
 
@@ -1310,22 +1405,17 @@ public struct Sync_Contact: @unchecked Sendable {
     public init() {}
   }
 
-  /// Notification sound policy for the contact
+  /// Deprecated notification sound policy.
   ///
-  /// Required towards a new device and for a new contact. Optional for an
-  /// existing contact.
-  ///
-  /// Custom sounds are not reflected but are to be (re-)applied in case the
-  /// policy is _default_.
-  public struct NotificationSoundPolicyOverride: Sendable {
+  /// Required towards a new device and for a new contact until the field has
+  /// been phased out. Optional for an existing contact.
+  public struct DeprecatedNotificationSoundPolicyOverride: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    public var override: Sync_Contact.NotificationSoundPolicyOverride.OneOf_Override? = nil
+    public var override: D2dSync_Contact.DeprecatedNotificationSoundPolicyOverride.OneOf_Override? = nil
 
-    /// Apply the notification sound policy specified in the settings (i.e.
-    /// always emit a sound when notifying of a _conversation_ message).
     public var `default`: Common_Unit {
       get {
         if case .default(let v)? = override {return v}
@@ -1334,23 +1424,10 @@ public struct Sync_Contact: @unchecked Sendable {
       set {override = .default(newValue)}
     }
 
-    /// Apply the following notification sound policy
-    public var policy: Sync_NotificationSoundPolicy {
-      get {
-        if case .policy(let v)? = override {return v}
-        return .muted
-      }
-      set {override = .policy(newValue)}
-    }
-
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
     public enum OneOf_Override: Equatable, Sendable {
-      /// Apply the notification sound policy specified in the settings (i.e.
-      /// always emit a sound when notifying of a _conversation_ message).
       case `default`(Common_Unit)
-      /// Apply the following notification sound policy
-      case policy(Sync_NotificationSoundPolicy)
 
     }
 
@@ -1363,7 +1440,7 @@ public struct Sync_Contact: @unchecked Sendable {
 }
 
 /// Threema contacts associated to a group.
-public struct Sync_Group: Sendable {
+public struct D2dSync_Group: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -1372,11 +1449,11 @@ public struct Sync_Group: Sendable {
   ///
   /// Always required.
   public var groupIdentity: Common_GroupIdentity {
-    get {return _groupIdentity ?? Common_GroupIdentity()}
+    get {_groupIdentity ?? Common_GroupIdentity()}
     set {_groupIdentity = newValue}
   }
   /// Returns true if `groupIdentity` has been explicitly set.
-  public var hasGroupIdentity: Bool {return self._groupIdentity != nil}
+  public var hasGroupIdentity: Bool {self._groupIdentity != nil}
   /// Clears the value of `groupIdentity`. Subsequent reads from it will return its default value.
   public mutating func clearGroupIdentity() {self._groupIdentity = nil}
 
@@ -1388,11 +1465,11 @@ public struct Sync_Group: Sendable {
   /// An empty string is valid. In such a case, the display name of the
   /// group is the list of its members.
   public var name: String {
-    get {return _name ?? String()}
+    get {_name ?? String()}
     set {_name = newValue}
   }
   /// Returns true if `name` has been explicitly set.
-  public var hasName: Bool {return self._name != nil}
+  public var hasName: Bool {self._name != nil}
   /// Clears the value of `name`. Subsequent reads from it will return its default value.
   public mutating func clearName() {self._name = nil}
 
@@ -1401,20 +1478,20 @@ public struct Sync_Group: Sendable {
   /// Required towards a new device and for a new group. Optional for an
   /// existing group.
   public var createdAt: UInt64 {
-    get {return _createdAt ?? 0}
+    get {_createdAt ?? 0}
     set {_createdAt = newValue}
   }
   /// Returns true if `createdAt` has been explicitly set.
-  public var hasCreatedAt: Bool {return self._createdAt != nil}
+  public var hasCreatedAt: Bool {self._createdAt != nil}
   /// Clears the value of `createdAt`. Subsequent reads from it will return its default value.
   public mutating func clearCreatedAt() {self._createdAt = nil}
 
-  public var userState: Sync_Group.UserState {
-    get {return _userState ?? .member}
+  public var userState: D2dSync_Group.UserState {
+    get {_userState ?? .member}
     set {_userState = newValue}
   }
   /// Returns true if `userState` has been explicitly set.
-  public var hasUserState: Bool {return self._userState != nil}
+  public var hasUserState: Bool {self._userState != nil}
   /// Clears the value of `userState`. Subsequent reads from it will return its default value.
   public mutating func clearUserState() {self._userState = nil}
 
@@ -1422,11 +1499,11 @@ public struct Sync_Group: Sendable {
   ///
   /// Always optional.
   public var profilePicture: Common_DeltaImage {
-    get {return _profilePicture ?? Common_DeltaImage()}
+    get {_profilePicture ?? Common_DeltaImage()}
     set {_profilePicture = newValue}
   }
   /// Returns true if `profilePicture` has been explicitly set.
-  public var hasProfilePicture: Bool {return self._profilePicture != nil}
+  public var hasProfilePicture: Bool {self._profilePicture != nil}
   /// Clears the value of `profilePicture`. Subsequent reads from it will return its default value.
   public mutating func clearProfilePicture() {self._profilePicture = nil}
 
@@ -1445,42 +1522,43 @@ public struct Sync_Group: Sendable {
   ///
   /// An empty list is valid.
   public var memberIdentities: Common_Identities {
-    get {return _memberIdentities ?? Common_Identities()}
+    get {_memberIdentities ?? Common_Identities()}
     set {_memberIdentities = newValue}
   }
   /// Returns true if `memberIdentities` has been explicitly set.
-  public var hasMemberIdentities: Bool {return self._memberIdentities != nil}
+  public var hasMemberIdentities: Bool {self._memberIdentities != nil}
   /// Clears the value of `memberIdentities`. Subsequent reads from it will return its default value.
   public mutating func clearMemberIdentities() {self._memberIdentities = nil}
 
-  public var notificationTriggerPolicyOverride: Sync_Group.NotificationTriggerPolicyOverride {
-    get {return _notificationTriggerPolicyOverride ?? Sync_Group.NotificationTriggerPolicyOverride()}
+  public var notificationTriggerPolicyOverride: D2dSync_Group.NotificationTriggerPolicyOverride {
+    get {_notificationTriggerPolicyOverride ?? D2dSync_Group.NotificationTriggerPolicyOverride()}
     set {_notificationTriggerPolicyOverride = newValue}
   }
   /// Returns true if `notificationTriggerPolicyOverride` has been explicitly set.
-  public var hasNotificationTriggerPolicyOverride: Bool {return self._notificationTriggerPolicyOverride != nil}
+  public var hasNotificationTriggerPolicyOverride: Bool {self._notificationTriggerPolicyOverride != nil}
   /// Clears the value of `notificationTriggerPolicyOverride`. Subsequent reads from it will return its default value.
   public mutating func clearNotificationTriggerPolicyOverride() {self._notificationTriggerPolicyOverride = nil}
 
-  public var notificationSoundPolicyOverride: Sync_Group.NotificationSoundPolicyOverride {
-    get {return _notificationSoundPolicyOverride ?? Sync_Group.NotificationSoundPolicyOverride()}
-    set {_notificationSoundPolicyOverride = newValue}
+  /// NOTE: This field was marked as deprecated in the .proto file.
+  public var deprecatedNotificationSoundPolicyOverride: D2dSync_Group.DeprecatedNotificationSoundPolicyOverride {
+    get {_deprecatedNotificationSoundPolicyOverride ?? D2dSync_Group.DeprecatedNotificationSoundPolicyOverride()}
+    set {_deprecatedNotificationSoundPolicyOverride = newValue}
   }
-  /// Returns true if `notificationSoundPolicyOverride` has been explicitly set.
-  public var hasNotificationSoundPolicyOverride: Bool {return self._notificationSoundPolicyOverride != nil}
-  /// Clears the value of `notificationSoundPolicyOverride`. Subsequent reads from it will return its default value.
-  public mutating func clearNotificationSoundPolicyOverride() {self._notificationSoundPolicyOverride = nil}
+  /// Returns true if `deprecatedNotificationSoundPolicyOverride` has been explicitly set.
+  public var hasDeprecatedNotificationSoundPolicyOverride: Bool {self._deprecatedNotificationSoundPolicyOverride != nil}
+  /// Clears the value of `deprecatedNotificationSoundPolicyOverride`. Subsequent reads from it will return its default value.
+  public mutating func clearDeprecatedNotificationSoundPolicyOverride() {self._deprecatedNotificationSoundPolicyOverride = nil}
 
   /// Conversation category of the group
   ///
   /// Required towards a new device and for a new group. Optional for an
   /// existing group.
-  public var conversationCategory: Sync_ConversationCategory {
-    get {return _conversationCategory ?? .default}
+  public var conversationCategory: D2dSync_ConversationCategory {
+    get {_conversationCategory ?? .default}
     set {_conversationCategory = newValue}
   }
   /// Returns true if `conversationCategory` has been explicitly set.
-  public var hasConversationCategory: Bool {return self._conversationCategory != nil}
+  public var hasConversationCategory: Bool {self._conversationCategory != nil}
   /// Clears the value of `conversationCategory`. Subsequent reads from it will return its default value.
   public mutating func clearConversationCategory() {self._conversationCategory = nil}
 
@@ -1488,12 +1566,12 @@ public struct Sync_Group: Sendable {
   ///
   /// Required towards a new device and for a new group. Optional for an
   /// existing group.
-  public var conversationVisibility: Sync_ConversationVisibility {
-    get {return _conversationVisibility ?? .normal}
+  public var conversationVisibility: D2dSync_ConversationVisibility {
+    get {_conversationVisibility ?? .normal}
     set {_conversationVisibility = newValue}
   }
   /// Returns true if `conversationVisibility` has been explicitly set.
-  public var hasConversationVisibility: Bool {return self._conversationVisibility != nil}
+  public var hasConversationVisibility: Bool {self._conversationVisibility != nil}
   /// Clears the value of `conversationVisibility`. Subsequent reads from it will return its default value.
   public mutating func clearConversationVisibility() {self._conversationVisibility = nil}
 
@@ -1542,7 +1620,7 @@ public struct Sync_Group: Sendable {
     }
 
     // The compiler won't synthesize support with the UNRECOGNIZED case.
-    public static let allCases: [Sync_Group.UserState] = [
+    public static let allCases: [D2dSync_Group.UserState] = [
       .member,
       .kicked,
       .left,
@@ -1559,7 +1637,7 @@ public struct Sync_Group: Sendable {
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    public var override: Sync_Group.NotificationTriggerPolicyOverride.OneOf_Override? = nil
+    public var override: D2dSync_Group.NotificationTriggerPolicyOverride.OneOf_Override? = nil
 
     /// Apply the trigger policy specified in the settings (i.e. trigger on
     /// every _conversation_ message).
@@ -1572,10 +1650,10 @@ public struct Sync_Group: Sendable {
     }
 
     /// Apply the following notification trigger policy
-    public var policy: Sync_Group.NotificationTriggerPolicyOverride.Policy {
+    public var policy: D2dSync_Group.NotificationTriggerPolicyOverride.Policy {
       get {
         if case .policy(let v)? = override {return v}
-        return Sync_Group.NotificationTriggerPolicyOverride.Policy()
+        return D2dSync_Group.NotificationTriggerPolicyOverride.Policy()
       }
       set {override = .policy(newValue)}
     }
@@ -1587,7 +1665,7 @@ public struct Sync_Group: Sendable {
       /// every _conversation_ message).
       case `default`(Common_Unit)
       /// Apply the following notification trigger policy
-      case policy(Sync_Group.NotificationTriggerPolicyOverride.Policy)
+      case policy(D2dSync_Group.NotificationTriggerPolicyOverride.Policy)
 
     }
 
@@ -1596,17 +1674,17 @@ public struct Sync_Group: Sendable {
       // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
       // methods supported on all messages.
 
-      public var policy: Sync_Group.NotificationTriggerPolicyOverride.Policy.NotificationTriggerPolicy = .mentioned
+      public var policy: D2dSync_Group.NotificationTriggerPolicyOverride.Policy.NotificationTriggerPolicy = .mentioned
 
       /// Unix-ish timestamp in milliseconds when the provided policy should
       /// expire and fall back to the default. If not provided, the policy does
       /// not expire.
       public var expiresAt: UInt64 {
-        get {return _expiresAt ?? 0}
+        get {_expiresAt ?? 0}
         set {_expiresAt = newValue}
       }
       /// Returns true if `expiresAt` has been explicitly set.
-      public var hasExpiresAt: Bool {return self._expiresAt != nil}
+      public var hasExpiresAt: Bool {self._expiresAt != nil}
       /// Clears the value of `expiresAt`. Subsequent reads from it will return its default value.
       public mutating func clearExpiresAt() {self._expiresAt = nil}
 
@@ -1644,7 +1722,7 @@ public struct Sync_Group: Sendable {
         }
 
         // The compiler won't synthesize support with the UNRECOGNIZED case.
-        public static let allCases: [Sync_Group.NotificationTriggerPolicyOverride.Policy.NotificationTriggerPolicy] = [
+        public static let allCases: [D2dSync_Group.NotificationTriggerPolicyOverride.Policy.NotificationTriggerPolicy] = [
           .mentioned,
           .never,
         ]
@@ -1659,22 +1737,17 @@ public struct Sync_Group: Sendable {
     public init() {}
   }
 
-  /// Notification sound policy for the group
+  /// Deprecated notification sound policy.
   ///
-  /// Required towards a new device and for a new group. Optional for an existing
-  /// group.
-  ///
-  /// Custom sounds are not reflected but are to be (re-)applied in case the
-  /// policy is _default_.
-  public struct NotificationSoundPolicyOverride: Sendable {
+  /// Required towards a new device and for a new group until the field has
+  /// been phased out. Optional for an existing group.
+  public struct DeprecatedNotificationSoundPolicyOverride: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
-    public var override: Sync_Group.NotificationSoundPolicyOverride.OneOf_Override? = nil
+    public var override: D2dSync_Group.DeprecatedNotificationSoundPolicyOverride.OneOf_Override? = nil
 
-    /// Apply the notification sound policy specified in the settings (i.e.
-    /// always emit a sound when notifying of a _conversation_ message).
     public var `default`: Common_Unit {
       get {
         if case .default(let v)? = override {return v}
@@ -1683,23 +1756,10 @@ public struct Sync_Group: Sendable {
       set {override = .default(newValue)}
     }
 
-    /// Apply the following notification sound policy
-    public var policy: Sync_NotificationSoundPolicy {
-      get {
-        if case .policy(let v)? = override {return v}
-        return .muted
-      }
-      set {override = .policy(newValue)}
-    }
-
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
     public enum OneOf_Override: Equatable, Sendable {
-      /// Apply the notification sound policy specified in the settings (i.e.
-      /// always emit a sound when notifying of a _conversation_ message).
       case `default`(Common_Unit)
-      /// Apply the following notification sound policy
-      case policy(Sync_NotificationSoundPolicy)
 
     }
 
@@ -1711,17 +1771,17 @@ public struct Sync_Group: Sendable {
   fileprivate var _groupIdentity: Common_GroupIdentity? = nil
   fileprivate var _name: String? = nil
   fileprivate var _createdAt: UInt64? = nil
-  fileprivate var _userState: Sync_Group.UserState? = nil
+  fileprivate var _userState: D2dSync_Group.UserState? = nil
   fileprivate var _profilePicture: Common_DeltaImage? = nil
   fileprivate var _memberIdentities: Common_Identities? = nil
-  fileprivate var _notificationTriggerPolicyOverride: Sync_Group.NotificationTriggerPolicyOverride? = nil
-  fileprivate var _notificationSoundPolicyOverride: Sync_Group.NotificationSoundPolicyOverride? = nil
-  fileprivate var _conversationCategory: Sync_ConversationCategory? = nil
-  fileprivate var _conversationVisibility: Sync_ConversationVisibility? = nil
+  fileprivate var _notificationTriggerPolicyOverride: D2dSync_Group.NotificationTriggerPolicyOverride? = nil
+  fileprivate var _deprecatedNotificationSoundPolicyOverride: D2dSync_Group.DeprecatedNotificationSoundPolicyOverride? = nil
+  fileprivate var _conversationCategory: D2dSync_ConversationCategory? = nil
+  fileprivate var _conversationVisibility: D2dSync_ConversationVisibility? = nil
 }
 
 /// Threema contacts associated to a distribution list.
-public struct Sync_DistributionList: Sendable {
+public struct D2dSync_DistributionList: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -1739,11 +1799,11 @@ public struct Sync_DistributionList: Sendable {
   /// An empty string is valid. In such a case, the display name of the
   /// distribution list is the list of its members.
   public var name: String {
-    get {return _name ?? String()}
+    get {_name ?? String()}
     set {_name = newValue}
   }
   /// Returns true if `name` has been explicitly set.
-  public var hasName: Bool {return self._name != nil}
+  public var hasName: Bool {self._name != nil}
   /// Clears the value of `name`. Subsequent reads from it will return its default value.
   public mutating func clearName() {self._name = nil}
 
@@ -1752,11 +1812,11 @@ public struct Sync_DistributionList: Sendable {
   /// Required towards a new device and for a new distribution list. Optional
   /// for an existing distribution list.
   public var createdAt: UInt64 {
-    get {return _createdAt ?? 0}
+    get {_createdAt ?? 0}
     set {_createdAt = newValue}
   }
   /// Returns true if `createdAt` has been explicitly set.
-  public var hasCreatedAt: Bool {return self._createdAt != nil}
+  public var hasCreatedAt: Bool {self._createdAt != nil}
   /// Clears the value of `createdAt`. Subsequent reads from it will return its default value.
   public mutating func clearCreatedAt() {self._createdAt = nil}
 
@@ -1768,11 +1828,11 @@ public struct Sync_DistributionList: Sendable {
   /// An empty list is **not** valid. Clearing all members should be prevented
   /// by the UI.
   public var memberIdentities: Common_Identities {
-    get {return _memberIdentities ?? Common_Identities()}
+    get {_memberIdentities ?? Common_Identities()}
     set {_memberIdentities = newValue}
   }
   /// Returns true if `memberIdentities` has been explicitly set.
-  public var hasMemberIdentities: Bool {return self._memberIdentities != nil}
+  public var hasMemberIdentities: Bool {self._memberIdentities != nil}
   /// Clears the value of `memberIdentities`. Subsequent reads from it will return its default value.
   public mutating func clearMemberIdentities() {self._memberIdentities = nil}
 
@@ -1780,12 +1840,12 @@ public struct Sync_DistributionList: Sendable {
   ///
   /// Required towards a new device and for a new distribution list. Optional
   /// for an existing distribution list.
-  public var conversationCategory: Sync_ConversationCategory {
-    get {return _conversationCategory ?? .default}
+  public var conversationCategory: D2dSync_ConversationCategory {
+    get {_conversationCategory ?? .default}
     set {_conversationCategory = newValue}
   }
   /// Returns true if `conversationCategory` has been explicitly set.
-  public var hasConversationCategory: Bool {return self._conversationCategory != nil}
+  public var hasConversationCategory: Bool {self._conversationCategory != nil}
   /// Clears the value of `conversationCategory`. Subsequent reads from it will return its default value.
   public mutating func clearConversationCategory() {self._conversationCategory = nil}
 
@@ -1793,12 +1853,12 @@ public struct Sync_DistributionList: Sendable {
   ///
   /// Required towards a new device and for a new distribution list. Optional
   /// for an existing distribution list.
-  public var conversationVisibility: Sync_ConversationVisibility {
-    get {return _conversationVisibility ?? .normal}
+  public var conversationVisibility: D2dSync_ConversationVisibility {
+    get {_conversationVisibility ?? .normal}
     set {_conversationVisibility = newValue}
   }
   /// Returns true if `conversationVisibility` has been explicitly set.
-  public var hasConversationVisibility: Bool {return self._conversationVisibility != nil}
+  public var hasConversationVisibility: Bool {self._conversationVisibility != nil}
   /// Clears the value of `conversationVisibility`. Subsequent reads from it will return its default value.
   public mutating func clearConversationVisibility() {self._conversationVisibility = nil}
 
@@ -1809,8 +1869,8 @@ public struct Sync_DistributionList: Sendable {
   fileprivate var _name: String? = nil
   fileprivate var _createdAt: UInt64? = nil
   fileprivate var _memberIdentities: Common_Identities? = nil
-  fileprivate var _conversationCategory: Sync_ConversationCategory? = nil
-  fileprivate var _conversationVisibility: Sync_ConversationVisibility? = nil
+  fileprivate var _conversationCategory: D2dSync_ConversationCategory? = nil
+  fileprivate var _conversationVisibility: D2dSync_ConversationVisibility? = nil
 }
 
 /// App settings
@@ -1827,104 +1887,104 @@ public struct Sync_DistributionList: Sendable {
 ///
 /// 1. For each setting that is being included by this message, run the
 ///    associated steps of the setting and apply the modified setting.
-public struct Sync_Settings: Sendable {
+public struct D2dSync_Settings: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var contactSyncPolicy: Sync_Settings.ContactSyncPolicy {
-    get {return _contactSyncPolicy ?? .notSynced}
+  public var contactSyncPolicy: D2dSync_Settings.ContactSyncPolicy {
+    get {_contactSyncPolicy ?? .notSynced}
     set {_contactSyncPolicy = newValue}
   }
   /// Returns true if `contactSyncPolicy` has been explicitly set.
-  public var hasContactSyncPolicy: Bool {return self._contactSyncPolicy != nil}
+  public var hasContactSyncPolicy: Bool {self._contactSyncPolicy != nil}
   /// Clears the value of `contactSyncPolicy`. Subsequent reads from it will return its default value.
   public mutating func clearContactSyncPolicy() {self._contactSyncPolicy = nil}
 
-  public var unknownContactPolicy: Sync_Settings.UnknownContactPolicy {
-    get {return _unknownContactPolicy ?? .allowUnknown}
+  public var unknownContactPolicy: D2dSync_Settings.UnknownContactPolicy {
+    get {_unknownContactPolicy ?? .allowUnknown}
     set {_unknownContactPolicy = newValue}
   }
   /// Returns true if `unknownContactPolicy` has been explicitly set.
-  public var hasUnknownContactPolicy: Bool {return self._unknownContactPolicy != nil}
+  public var hasUnknownContactPolicy: Bool {self._unknownContactPolicy != nil}
   /// Clears the value of `unknownContactPolicy`. Subsequent reads from it will return its default value.
   public mutating func clearUnknownContactPolicy() {self._unknownContactPolicy = nil}
 
   /// _Read_ receipt policy (when an unread message has been read)
   ///
   /// Required towards a new device. Optional otherwise.
-  public var readReceiptPolicy: Sync_ReadReceiptPolicy {
-    get {return _readReceiptPolicy ?? .sendReadReceipt}
+  public var readReceiptPolicy: D2dSync_ReadReceiptPolicy {
+    get {_readReceiptPolicy ?? .sendReadReceipt}
     set {_readReceiptPolicy = newValue}
   }
   /// Returns true if `readReceiptPolicy` has been explicitly set.
-  public var hasReadReceiptPolicy: Bool {return self._readReceiptPolicy != nil}
+  public var hasReadReceiptPolicy: Bool {self._readReceiptPolicy != nil}
   /// Clears the value of `readReceiptPolicy`. Subsequent reads from it will return its default value.
   public mutating func clearReadReceiptPolicy() {self._readReceiptPolicy = nil}
 
   /// Typing indicator policy (signal _currently typing_)
   ///
   /// Required towards a new device. Optional otherwise.
-  public var typingIndicatorPolicy: Sync_TypingIndicatorPolicy {
-    get {return _typingIndicatorPolicy ?? .sendTypingIndicator}
+  public var typingIndicatorPolicy: D2dSync_TypingIndicatorPolicy {
+    get {_typingIndicatorPolicy ?? .sendTypingIndicator}
     set {_typingIndicatorPolicy = newValue}
   }
   /// Returns true if `typingIndicatorPolicy` has been explicitly set.
-  public var hasTypingIndicatorPolicy: Bool {return self._typingIndicatorPolicy != nil}
+  public var hasTypingIndicatorPolicy: Bool {self._typingIndicatorPolicy != nil}
   /// Clears the value of `typingIndicatorPolicy`. Subsequent reads from it will return its default value.
   public mutating func clearTypingIndicatorPolicy() {self._typingIndicatorPolicy = nil}
 
-  public var o2OCallPolicy: Sync_Settings.O2oCallPolicy {
-    get {return _o2OCallPolicy ?? .allowO2OCall}
+  public var o2OCallPolicy: D2dSync_Settings.O2oCallPolicy {
+    get {_o2OCallPolicy ?? .allowO2OCall}
     set {_o2OCallPolicy = newValue}
   }
   /// Returns true if `o2OCallPolicy` has been explicitly set.
-  public var hasO2OCallPolicy: Bool {return self._o2OCallPolicy != nil}
+  public var hasO2OCallPolicy: Bool {self._o2OCallPolicy != nil}
   /// Clears the value of `o2OCallPolicy`. Subsequent reads from it will return its default value.
   public mutating func clearO2OCallPolicy() {self._o2OCallPolicy = nil}
 
-  public var o2OCallConnectionPolicy: Sync_Settings.O2oCallConnectionPolicy {
-    get {return _o2OCallConnectionPolicy ?? .allowDirectConnection}
+  public var o2OCallConnectionPolicy: D2dSync_Settings.O2oCallConnectionPolicy {
+    get {_o2OCallConnectionPolicy ?? .allowDirectConnection}
     set {_o2OCallConnectionPolicy = newValue}
   }
   /// Returns true if `o2OCallConnectionPolicy` has been explicitly set.
-  public var hasO2OCallConnectionPolicy: Bool {return self._o2OCallConnectionPolicy != nil}
+  public var hasO2OCallConnectionPolicy: Bool {self._o2OCallConnectionPolicy != nil}
   /// Clears the value of `o2OCallConnectionPolicy`. Subsequent reads from it will return its default value.
   public mutating func clearO2OCallConnectionPolicy() {self._o2OCallConnectionPolicy = nil}
 
-  public var o2OCallVideoPolicy: Sync_Settings.O2oCallVideoPolicy {
-    get {return _o2OCallVideoPolicy ?? .allowVideo}
+  public var o2OCallVideoPolicy: D2dSync_Settings.O2oCallVideoPolicy {
+    get {_o2OCallVideoPolicy ?? .allowVideo}
     set {_o2OCallVideoPolicy = newValue}
   }
   /// Returns true if `o2OCallVideoPolicy` has been explicitly set.
-  public var hasO2OCallVideoPolicy: Bool {return self._o2OCallVideoPolicy != nil}
+  public var hasO2OCallVideoPolicy: Bool {self._o2OCallVideoPolicy != nil}
   /// Clears the value of `o2OCallVideoPolicy`. Subsequent reads from it will return its default value.
   public mutating func clearO2OCallVideoPolicy() {self._o2OCallVideoPolicy = nil}
 
-  public var groupCallPolicy: Sync_Settings.GroupCallPolicy {
-    get {return _groupCallPolicy ?? .allowGroupCall}
+  public var groupCallPolicy: D2dSync_Settings.GroupCallPolicy {
+    get {_groupCallPolicy ?? .allowGroupCall}
     set {_groupCallPolicy = newValue}
   }
   /// Returns true if `groupCallPolicy` has been explicitly set.
-  public var hasGroupCallPolicy: Bool {return self._groupCallPolicy != nil}
+  public var hasGroupCallPolicy: Bool {self._groupCallPolicy != nil}
   /// Clears the value of `groupCallPolicy`. Subsequent reads from it will return its default value.
   public mutating func clearGroupCallPolicy() {self._groupCallPolicy = nil}
 
-  public var screenshotPolicy: Sync_Settings.ScreenshotPolicy {
-    get {return _screenshotPolicy ?? .allowScreenshot}
+  public var screenshotPolicy: D2dSync_Settings.ScreenshotPolicy {
+    get {_screenshotPolicy ?? .allowScreenshot}
     set {_screenshotPolicy = newValue}
   }
   /// Returns true if `screenshotPolicy` has been explicitly set.
-  public var hasScreenshotPolicy: Bool {return self._screenshotPolicy != nil}
+  public var hasScreenshotPolicy: Bool {self._screenshotPolicy != nil}
   /// Clears the value of `screenshotPolicy`. Subsequent reads from it will return its default value.
   public mutating func clearScreenshotPolicy() {self._screenshotPolicy = nil}
 
-  public var keyboardDataCollectionPolicy: Sync_Settings.KeyboardDataCollectionPolicy {
-    get {return _keyboardDataCollectionPolicy ?? .allowDataCollection}
+  public var keyboardDataCollectionPolicy: D2dSync_Settings.KeyboardDataCollectionPolicy {
+    get {_keyboardDataCollectionPolicy ?? .allowDataCollection}
     set {_keyboardDataCollectionPolicy = newValue}
   }
   /// Returns true if `keyboardDataCollectionPolicy` has been explicitly set.
-  public var hasKeyboardDataCollectionPolicy: Bool {return self._keyboardDataCollectionPolicy != nil}
+  public var hasKeyboardDataCollectionPolicy: Bool {self._keyboardDataCollectionPolicy != nil}
   /// Clears the value of `keyboardDataCollectionPolicy`. Subsequent reads from it will return its default value.
   public mutating func clearKeyboardDataCollectionPolicy() {self._keyboardDataCollectionPolicy = nil}
 
@@ -1934,11 +1994,11 @@ public struct Sync_Settings: Sendable {
   ///
   /// An empty list is valid.
   public var blockedIdentities: Common_Identities {
-    get {return _blockedIdentities ?? Common_Identities()}
+    get {_blockedIdentities ?? Common_Identities()}
     set {_blockedIdentities = newValue}
   }
   /// Returns true if `blockedIdentities` has been explicitly set.
-  public var hasBlockedIdentities: Bool {return self._blockedIdentities != nil}
+  public var hasBlockedIdentities: Bool {self._blockedIdentities != nil}
   /// Clears the value of `blockedIdentities`. Subsequent reads from it will return its default value.
   public mutating func clearBlockedIdentities() {self._blockedIdentities = nil}
 
@@ -1948,11 +2008,11 @@ public struct Sync_Settings: Sendable {
   ///
   /// An empty list is valid.
   public var excludeFromSyncIdentities: Common_Identities {
-    get {return _excludeFromSyncIdentities ?? Common_Identities()}
+    get {_excludeFromSyncIdentities ?? Common_Identities()}
     set {_excludeFromSyncIdentities = newValue}
   }
   /// Returns true if `excludeFromSyncIdentities` has been explicitly set.
-  public var hasExcludeFromSyncIdentities: Bool {return self._excludeFromSyncIdentities != nil}
+  public var hasExcludeFromSyncIdentities: Bool {self._excludeFromSyncIdentities != nil}
   /// Clears the value of `excludeFromSyncIdentities`. Subsequent reads from it will return its default value.
   public mutating func clearExcludeFromSyncIdentities() {self._excludeFromSyncIdentities = nil}
 
@@ -1992,7 +2052,7 @@ public struct Sync_Settings: Sendable {
     }
 
     // The compiler won't synthesize support with the UNRECOGNIZED case.
-    public static let allCases: [Sync_Settings.ContactSyncPolicy] = [
+    public static let allCases: [D2dSync_Settings.ContactSyncPolicy] = [
       .notSynced,
       .sync,
     ]
@@ -2033,7 +2093,7 @@ public struct Sync_Settings: Sendable {
     }
 
     // The compiler won't synthesize support with the UNRECOGNIZED case.
-    public static let allCases: [Sync_Settings.UnknownContactPolicy] = [
+    public static let allCases: [D2dSync_Settings.UnknownContactPolicy] = [
       .allowUnknown,
       .blockUnknown,
     ]
@@ -2074,7 +2134,7 @@ public struct Sync_Settings: Sendable {
     }
 
     // The compiler won't synthesize support with the UNRECOGNIZED case.
-    public static let allCases: [Sync_Settings.O2oCallPolicy] = [
+    public static let allCases: [D2dSync_Settings.O2oCallPolicy] = [
       .allowO2OCall,
       .denyO2OCall,
     ]
@@ -2117,7 +2177,7 @@ public struct Sync_Settings: Sendable {
     }
 
     // The compiler won't synthesize support with the UNRECOGNIZED case.
-    public static let allCases: [Sync_Settings.O2oCallConnectionPolicy] = [
+    public static let allCases: [D2dSync_Settings.O2oCallConnectionPolicy] = [
       .allowDirectConnection,
       .requireRelayedConnection,
     ]
@@ -2158,7 +2218,7 @@ public struct Sync_Settings: Sendable {
     }
 
     // The compiler won't synthesize support with the UNRECOGNIZED case.
-    public static let allCases: [Sync_Settings.O2oCallVideoPolicy] = [
+    public static let allCases: [D2dSync_Settings.O2oCallVideoPolicy] = [
       .allowVideo,
       .denyVideo,
     ]
@@ -2199,7 +2259,7 @@ public struct Sync_Settings: Sendable {
     }
 
     // The compiler won't synthesize support with the UNRECOGNIZED case.
-    public static let allCases: [Sync_Settings.GroupCallPolicy] = [
+    public static let allCases: [D2dSync_Settings.GroupCallPolicy] = [
       .allowGroupCall,
       .denyGroupCall,
     ]
@@ -2240,7 +2300,7 @@ public struct Sync_Settings: Sendable {
     }
 
     // The compiler won't synthesize support with the UNRECOGNIZED case.
-    public static let allCases: [Sync_Settings.ScreenshotPolicy] = [
+    public static let allCases: [D2dSync_Settings.ScreenshotPolicy] = [
       .allowScreenshot,
       .denyScreenshot,
     ]
@@ -2281,7 +2341,7 @@ public struct Sync_Settings: Sendable {
     }
 
     // The compiler won't synthesize support with the UNRECOGNIZED case.
-    public static let allCases: [Sync_Settings.KeyboardDataCollectionPolicy] = [
+    public static let allCases: [D2dSync_Settings.KeyboardDataCollectionPolicy] = [
       .allowDataCollection,
       .denyDataCollection,
     ]
@@ -2290,45 +2350,80 @@ public struct Sync_Settings: Sendable {
 
   public init() {}
 
-  fileprivate var _contactSyncPolicy: Sync_Settings.ContactSyncPolicy? = nil
-  fileprivate var _unknownContactPolicy: Sync_Settings.UnknownContactPolicy? = nil
-  fileprivate var _readReceiptPolicy: Sync_ReadReceiptPolicy? = nil
-  fileprivate var _typingIndicatorPolicy: Sync_TypingIndicatorPolicy? = nil
-  fileprivate var _o2OCallPolicy: Sync_Settings.O2oCallPolicy? = nil
-  fileprivate var _o2OCallConnectionPolicy: Sync_Settings.O2oCallConnectionPolicy? = nil
-  fileprivate var _o2OCallVideoPolicy: Sync_Settings.O2oCallVideoPolicy? = nil
-  fileprivate var _groupCallPolicy: Sync_Settings.GroupCallPolicy? = nil
-  fileprivate var _screenshotPolicy: Sync_Settings.ScreenshotPolicy? = nil
-  fileprivate var _keyboardDataCollectionPolicy: Sync_Settings.KeyboardDataCollectionPolicy? = nil
+  fileprivate var _contactSyncPolicy: D2dSync_Settings.ContactSyncPolicy? = nil
+  fileprivate var _unknownContactPolicy: D2dSync_Settings.UnknownContactPolicy? = nil
+  fileprivate var _readReceiptPolicy: D2dSync_ReadReceiptPolicy? = nil
+  fileprivate var _typingIndicatorPolicy: D2dSync_TypingIndicatorPolicy? = nil
+  fileprivate var _o2OCallPolicy: D2dSync_Settings.O2oCallPolicy? = nil
+  fileprivate var _o2OCallConnectionPolicy: D2dSync_Settings.O2oCallConnectionPolicy? = nil
+  fileprivate var _o2OCallVideoPolicy: D2dSync_Settings.O2oCallVideoPolicy? = nil
+  fileprivate var _groupCallPolicy: D2dSync_Settings.GroupCallPolicy? = nil
+  fileprivate var _screenshotPolicy: D2dSync_Settings.ScreenshotPolicy? = nil
+  fileprivate var _keyboardDataCollectionPolicy: D2dSync_Settings.KeyboardDataCollectionPolicy? = nil
   fileprivate var _blockedIdentities: Common_Identities? = nil
   fileprivate var _excludeFromSyncIdentities: Common_Identities? = nil
 }
 
 // MARK: - Code below here is support for the SwiftProtobuf runtime.
 
-fileprivate let _protobuf_package = "sync"
+fileprivate let _protobuf_package = "d2d_sync"
 
-extension Sync_ReadReceiptPolicy: SwiftProtobuf._ProtoNameProviding {
+extension D2dSync_ReadReceiptPolicy: SwiftProtobuf._ProtoNameProviding {
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0SEND_READ_RECEIPT\0\u{1}DONT_SEND_READ_RECEIPT\0")
 }
 
-extension Sync_TypingIndicatorPolicy: SwiftProtobuf._ProtoNameProviding {
+extension D2dSync_TypingIndicatorPolicy: SwiftProtobuf._ProtoNameProviding {
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0SEND_TYPING_INDICATOR\0\u{1}DONT_SEND_TYPING_INDICATOR\0")
 }
 
-extension Sync_NotificationSoundPolicy: SwiftProtobuf._ProtoNameProviding {
-  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0MUTED\0")
+extension D2dSync_WorkAvailabilityStatusCategory: SwiftProtobuf._ProtoNameProviding {
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0NONE\0\u{1}UNAVAILABLE\0\u{1}BUSY\0")
 }
 
-extension Sync_ConversationVisibility: SwiftProtobuf._ProtoNameProviding {
+extension D2dSync_ConversationVisibility: SwiftProtobuf._ProtoNameProviding {
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0NORMAL\0\u{1}ARCHIVED\0\u{1}PINNED\0")
 }
 
-extension Sync_ConversationCategory: SwiftProtobuf._ProtoNameProviding {
+extension D2dSync_ConversationCategory: SwiftProtobuf._ProtoNameProviding {
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0DEFAULT\0\u{1}PROTECTED\0")
 }
 
-extension Sync_MdmParameters: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+extension D2dSync_WorkAvailabilityStatus: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = _protobuf_package + ".WorkAvailabilityStatus"
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}category\0\u{1}description\0")
+
+  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularEnumField(value: &self.category) }()
+      case 2: try { try decoder.decodeSingularStringField(value: &self.description_p) }()
+      default: break
+      }
+    }
+  }
+
+  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if self.category != .none {
+      try visitor.visitSingularEnumField(value: self.category, fieldNumber: 1)
+    }
+    if !self.description_p.isEmpty {
+      try visitor.visitSingularStringField(value: self.description_p, fieldNumber: 2)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  public static func ==(lhs: D2dSync_WorkAvailabilityStatus, rhs: D2dSync_WorkAvailabilityStatus) -> Bool {
+    if lhs.category != rhs.category {return false}
+    if lhs.description_p != rhs.description_p {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension D2dSync_MdmParameters: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".MdmParameters"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}external_parameters\0\u{3}threema_parameters\0\u{3}parameter_precedence\0")
 
@@ -2338,8 +2433,8 @@ extension Sync_MdmParameters: SwiftProtobuf.Message, SwiftProtobuf._MessageImple
       // allocates stack space for every case branch when no optimizations are
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
-      case 1: try { try decoder.decodeMapField(fieldType: SwiftProtobuf._ProtobufMessageMap<SwiftProtobuf.ProtobufString,Sync_MdmParameters.Parameter>.self, value: &self.externalParameters) }()
-      case 2: try { try decoder.decodeMapField(fieldType: SwiftProtobuf._ProtobufMessageMap<SwiftProtobuf.ProtobufString,Sync_MdmParameters.Parameter>.self, value: &self.threemaParameters) }()
+      case 1: try { try decoder.decodeMapField(fieldType: SwiftProtobuf._ProtobufMessageMap<SwiftProtobuf.ProtobufString,D2dSync_MdmParameters.Parameter>.self, value: &self.externalParameters) }()
+      case 2: try { try decoder.decodeMapField(fieldType: SwiftProtobuf._ProtobufMessageMap<SwiftProtobuf.ProtobufString,D2dSync_MdmParameters.Parameter>.self, value: &self.threemaParameters) }()
       case 3: try { try decoder.decodeSingularEnumField(value: &self.parameterPrecedence) }()
       default: break
       }
@@ -2348,10 +2443,10 @@ extension Sync_MdmParameters: SwiftProtobuf.Message, SwiftProtobuf._MessageImple
 
   public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
     if !self.externalParameters.isEmpty {
-      try visitor.visitMapField(fieldType: SwiftProtobuf._ProtobufMessageMap<SwiftProtobuf.ProtobufString,Sync_MdmParameters.Parameter>.self, value: self.externalParameters, fieldNumber: 1)
+      try visitor.visitMapField(fieldType: SwiftProtobuf._ProtobufMessageMap<SwiftProtobuf.ProtobufString,D2dSync_MdmParameters.Parameter>.self, value: self.externalParameters, fieldNumber: 1)
     }
     if !self.threemaParameters.isEmpty {
-      try visitor.visitMapField(fieldType: SwiftProtobuf._ProtobufMessageMap<SwiftProtobuf.ProtobufString,Sync_MdmParameters.Parameter>.self, value: self.threemaParameters, fieldNumber: 2)
+      try visitor.visitMapField(fieldType: SwiftProtobuf._ProtobufMessageMap<SwiftProtobuf.ProtobufString,D2dSync_MdmParameters.Parameter>.self, value: self.threemaParameters, fieldNumber: 2)
     }
     if self.parameterPrecedence != .threema {
       try visitor.visitSingularEnumField(value: self.parameterPrecedence, fieldNumber: 3)
@@ -2359,7 +2454,7 @@ extension Sync_MdmParameters: SwiftProtobuf.Message, SwiftProtobuf._MessageImple
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: Sync_MdmParameters, rhs: Sync_MdmParameters) -> Bool {
+  public static func ==(lhs: D2dSync_MdmParameters, rhs: D2dSync_MdmParameters) -> Bool {
     if lhs.externalParameters != rhs.externalParameters {return false}
     if lhs.threemaParameters != rhs.threemaParameters {return false}
     if lhs.parameterPrecedence != rhs.parameterPrecedence {return false}
@@ -2368,12 +2463,12 @@ extension Sync_MdmParameters: SwiftProtobuf.Message, SwiftProtobuf._MessageImple
   }
 }
 
-extension Sync_MdmParameters.ParameterPrecedence: SwiftProtobuf._ProtoNameProviding {
+extension D2dSync_MdmParameters.ParameterPrecedence: SwiftProtobuf._ProtoNameProviding {
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0THREEMA\0\u{1}EXTERNAL\0")
 }
 
-extension Sync_MdmParameters.Parameter: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = Sync_MdmParameters.protoMessageName + ".Parameter"
+extension D2dSync_MdmParameters.Parameter: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = D2dSync_MdmParameters.protoMessageName + ".Parameter"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}string_value\0\u{3}boolean_value\0\u{3}integer_value\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -2434,14 +2529,14 @@ extension Sync_MdmParameters.Parameter: SwiftProtobuf.Message, SwiftProtobuf._Me
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: Sync_MdmParameters.Parameter, rhs: Sync_MdmParameters.Parameter) -> Bool {
+  public static func ==(lhs: D2dSync_MdmParameters.Parameter, rhs: D2dSync_MdmParameters.Parameter) -> Bool {
     if lhs.value != rhs.value {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
 }
 
-extension Sync_ThreemaWorkCredentials: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+extension D2dSync_ThreemaWorkCredentials: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".ThreemaWorkCredentials"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}username\0\u{1}password\0")
 
@@ -2468,7 +2563,7 @@ extension Sync_ThreemaWorkCredentials: SwiftProtobuf.Message, SwiftProtobuf._Mes
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: Sync_ThreemaWorkCredentials, rhs: Sync_ThreemaWorkCredentials) -> Bool {
+  public static func ==(lhs: D2dSync_ThreemaWorkCredentials, rhs: D2dSync_ThreemaWorkCredentials) -> Bool {
     if lhs.username != rhs.username {return false}
     if lhs.password != rhs.password {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
@@ -2476,9 +2571,9 @@ extension Sync_ThreemaWorkCredentials: SwiftProtobuf.Message, SwiftProtobuf._Mes
   }
 }
 
-extension Sync_UserProfile: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+extension D2dSync_UserProfile: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".UserProfile"
-  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}nickname\0\u{3}profile_picture\0\u{3}profile_picture_share_with\0\u{3}identity_links\0")
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}nickname\0\u{3}profile_picture\0\u{3}profile_picture_share_with\0\u{3}identity_links\0\u{3}work_availability_status\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -2490,6 +2585,7 @@ extension Sync_UserProfile: SwiftProtobuf.Message, SwiftProtobuf._MessageImpleme
       case 2: try { try decoder.decodeSingularMessageField(value: &self._profilePicture) }()
       case 3: try { try decoder.decodeSingularMessageField(value: &self._profilePictureShareWith) }()
       case 4: try { try decoder.decodeSingularMessageField(value: &self._identityLinks) }()
+      case 5: try { try decoder.decodeSingularMessageField(value: &self._workAvailabilityStatus) }()
       default: break
       }
     }
@@ -2512,21 +2608,25 @@ extension Sync_UserProfile: SwiftProtobuf.Message, SwiftProtobuf._MessageImpleme
     try { if let v = self._identityLinks {
       try visitor.visitSingularMessageField(value: v, fieldNumber: 4)
     } }()
+    try { if let v = self._workAvailabilityStatus {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 5)
+    } }()
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: Sync_UserProfile, rhs: Sync_UserProfile) -> Bool {
+  public static func ==(lhs: D2dSync_UserProfile, rhs: D2dSync_UserProfile) -> Bool {
     if lhs._nickname != rhs._nickname {return false}
     if lhs._profilePicture != rhs._profilePicture {return false}
     if lhs._profilePictureShareWith != rhs._profilePictureShareWith {return false}
     if lhs._identityLinks != rhs._identityLinks {return false}
+    if lhs._workAvailabilityStatus != rhs._workAvailabilityStatus {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
 }
 
-extension Sync_UserProfile.ProfilePictureShareWith: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = Sync_UserProfile.protoMessageName + ".ProfilePictureShareWith"
+extension D2dSync_UserProfile.ProfilePictureShareWith: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = D2dSync_UserProfile.protoMessageName + ".ProfilePictureShareWith"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}nobody\0\u{1}everyone\0\u{3}allow_list\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -2602,15 +2702,15 @@ extension Sync_UserProfile.ProfilePictureShareWith: SwiftProtobuf.Message, Swift
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: Sync_UserProfile.ProfilePictureShareWith, rhs: Sync_UserProfile.ProfilePictureShareWith) -> Bool {
+  public static func ==(lhs: D2dSync_UserProfile.ProfilePictureShareWith, rhs: D2dSync_UserProfile.ProfilePictureShareWith) -> Bool {
     if lhs.policy != rhs.policy {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
 }
 
-extension Sync_UserProfile.IdentityLinks: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = Sync_UserProfile.protoMessageName + ".IdentityLinks"
+extension D2dSync_UserProfile.IdentityLinks: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = D2dSync_UserProfile.protoMessageName + ".IdentityLinks"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}links\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -2632,15 +2732,15 @@ extension Sync_UserProfile.IdentityLinks: SwiftProtobuf.Message, SwiftProtobuf._
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: Sync_UserProfile.IdentityLinks, rhs: Sync_UserProfile.IdentityLinks) -> Bool {
+  public static func ==(lhs: D2dSync_UserProfile.IdentityLinks, rhs: D2dSync_UserProfile.IdentityLinks) -> Bool {
     if lhs.links != rhs.links {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
 }
 
-extension Sync_UserProfile.IdentityLinks.IdentityLink: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = Sync_UserProfile.IdentityLinks.protoMessageName + ".IdentityLink"
+extension D2dSync_UserProfile.IdentityLinks.IdentityLink: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = D2dSync_UserProfile.IdentityLinks.protoMessageName + ".IdentityLink"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}phone_number\0\u{1}email\0\u{1}description\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -2693,7 +2793,7 @@ extension Sync_UserProfile.IdentityLinks.IdentityLink: SwiftProtobuf.Message, Sw
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: Sync_UserProfile.IdentityLinks.IdentityLink, rhs: Sync_UserProfile.IdentityLinks.IdentityLink) -> Bool {
+  public static func ==(lhs: D2dSync_UserProfile.IdentityLinks.IdentityLink, rhs: D2dSync_UserProfile.IdentityLinks.IdentityLink) -> Bool {
     if lhs.type != rhs.type {return false}
     if lhs.description_p != rhs.description_p {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
@@ -2701,9 +2801,9 @@ extension Sync_UserProfile.IdentityLinks.IdentityLink: SwiftProtobuf.Message, Sw
   }
 }
 
-extension Sync_Contact: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+extension D2dSync_Contact: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".Contact"
-  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}identity\0\u{3}public_key\0\u{3}created_at\0\u{3}first_name\0\u{3}last_name\0\u{1}nickname\0\u{3}verification_level\0\u{3}identity_type\0\u{3}acquaintance_level\0\u{3}activity_state\0\u{3}conversation_category\0\u{3}conversation_visibility\0\u{3}sync_state\0\u{3}contact_defined_profile_picture\0\u{3}user_defined_profile_picture\0\u{3}read_receipt_policy_override\0\u{3}typing_indicator_policy_override\0\u{3}feature_mask\0\u{3}notification_trigger_policy_override\0\u{3}notification_sound_policy_override\0\u{3}work_verification_level\0")
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}identity\0\u{3}public_key\0\u{3}created_at\0\u{3}first_name\0\u{3}last_name\0\u{1}nickname\0\u{3}verification_level\0\u{3}identity_type\0\u{3}acquaintance_level\0\u{3}activity_state\0\u{3}conversation_category\0\u{3}conversation_visibility\0\u{3}sync_state\0\u{3}contact_defined_profile_picture\0\u{3}user_defined_profile_picture\0\u{3}read_receipt_policy_override\0\u{3}typing_indicator_policy_override\0\u{3}feature_mask\0\u{3}notification_trigger_policy_override\0\u{3}deprecated_notification_sound_policy_override\0\u{3}work_verification_level\0\u{4}\u{5}work_last_full_sync_at\0\u{3}work_availability_status\0")
 
   fileprivate class _StorageClass {
     var _identity: String = String()
@@ -2712,21 +2812,23 @@ extension Sync_Contact: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementat
     var _firstName: String? = nil
     var _lastName: String? = nil
     var _nickname: String? = nil
-    var _verificationLevel: Sync_Contact.VerificationLevel? = nil
-    var _workVerificationLevel: Sync_Contact.WorkVerificationLevel? = nil
-    var _identityType: Sync_Contact.IdentityType? = nil
-    var _acquaintanceLevel: Sync_Contact.AcquaintanceLevel? = nil
-    var _activityState: Sync_Contact.ActivityState? = nil
+    var _verificationLevel: D2dSync_Contact.VerificationLevel? = nil
+    var _workVerificationLevel: D2dSync_Contact.WorkVerificationLevel? = nil
+    var _identityType: D2dSync_Contact.IdentityType? = nil
+    var _acquaintanceLevel: D2dSync_Contact.AcquaintanceLevel? = nil
+    var _activityState: D2dSync_Contact.ActivityState? = nil
     var _featureMask: UInt64? = nil
-    var _syncState: Sync_Contact.SyncState? = nil
-    var _readReceiptPolicyOverride: Sync_Contact.ReadReceiptPolicyOverride? = nil
-    var _typingIndicatorPolicyOverride: Sync_Contact.TypingIndicatorPolicyOverride? = nil
-    var _notificationTriggerPolicyOverride: Sync_Contact.NotificationTriggerPolicyOverride? = nil
-    var _notificationSoundPolicyOverride: Sync_Contact.NotificationSoundPolicyOverride? = nil
+    var _syncState: D2dSync_Contact.SyncState? = nil
     var _contactDefinedProfilePicture: Common_DeltaImage? = nil
     var _userDefinedProfilePicture: Common_DeltaImage? = nil
-    var _conversationCategory: Sync_ConversationCategory? = nil
-    var _conversationVisibility: Sync_ConversationVisibility? = nil
+    var _workLastFullSyncAt: UInt64? = nil
+    var _workAvailabilityStatus: D2dSync_WorkAvailabilityStatus? = nil
+    var _readReceiptPolicyOverride: D2dSync_Contact.ReadReceiptPolicyOverride? = nil
+    var _typingIndicatorPolicyOverride: D2dSync_Contact.TypingIndicatorPolicyOverride? = nil
+    var _notificationTriggerPolicyOverride: D2dSync_Contact.NotificationTriggerPolicyOverride? = nil
+    var _deprecatedNotificationSoundPolicyOverride: D2dSync_Contact.DeprecatedNotificationSoundPolicyOverride? = nil
+    var _conversationCategory: D2dSync_ConversationCategory? = nil
+    var _conversationVisibility: D2dSync_ConversationVisibility? = nil
 
       // This property is used as the initial default value for new instances of the type.
       // The type itself is protecting the reference to its storage via CoW semantics.
@@ -2750,12 +2852,14 @@ extension Sync_Contact: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementat
       _activityState = source._activityState
       _featureMask = source._featureMask
       _syncState = source._syncState
+      _contactDefinedProfilePicture = source._contactDefinedProfilePicture
+      _userDefinedProfilePicture = source._userDefinedProfilePicture
+      _workLastFullSyncAt = source._workLastFullSyncAt
+      _workAvailabilityStatus = source._workAvailabilityStatus
       _readReceiptPolicyOverride = source._readReceiptPolicyOverride
       _typingIndicatorPolicyOverride = source._typingIndicatorPolicyOverride
       _notificationTriggerPolicyOverride = source._notificationTriggerPolicyOverride
-      _notificationSoundPolicyOverride = source._notificationSoundPolicyOverride
-      _contactDefinedProfilePicture = source._contactDefinedProfilePicture
-      _userDefinedProfilePicture = source._userDefinedProfilePicture
+      _deprecatedNotificationSoundPolicyOverride = source._deprecatedNotificationSoundPolicyOverride
       _conversationCategory = source._conversationCategory
       _conversationVisibility = source._conversationVisibility
     }
@@ -2795,8 +2899,10 @@ extension Sync_Contact: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementat
         case 17: try { try decoder.decodeSingularMessageField(value: &_storage._typingIndicatorPolicyOverride) }()
         case 18: try { try decoder.decodeSingularUInt64Field(value: &_storage._featureMask) }()
         case 19: try { try decoder.decodeSingularMessageField(value: &_storage._notificationTriggerPolicyOverride) }()
-        case 20: try { try decoder.decodeSingularMessageField(value: &_storage._notificationSoundPolicyOverride) }()
+        case 20: try { try decoder.decodeSingularMessageField(value: &_storage._deprecatedNotificationSoundPolicyOverride) }()
         case 21: try { try decoder.decodeSingularEnumField(value: &_storage._workVerificationLevel) }()
+        case 26: try { try decoder.decodeSingularUInt64Field(value: &_storage._workLastFullSyncAt) }()
+        case 27: try { try decoder.decodeSingularMessageField(value: &_storage._workAvailabilityStatus) }()
         default: break
         }
       }
@@ -2866,17 +2972,23 @@ extension Sync_Contact: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementat
       try { if let v = _storage._notificationTriggerPolicyOverride {
         try visitor.visitSingularMessageField(value: v, fieldNumber: 19)
       } }()
-      try { if let v = _storage._notificationSoundPolicyOverride {
+      try { if let v = _storage._deprecatedNotificationSoundPolicyOverride {
         try visitor.visitSingularMessageField(value: v, fieldNumber: 20)
       } }()
       try { if let v = _storage._workVerificationLevel {
         try visitor.visitSingularEnumField(value: v, fieldNumber: 21)
       } }()
+      try { if let v = _storage._workLastFullSyncAt {
+        try visitor.visitSingularUInt64Field(value: v, fieldNumber: 26)
+      } }()
+      try { if let v = _storage._workAvailabilityStatus {
+        try visitor.visitSingularMessageField(value: v, fieldNumber: 27)
+      } }()
     }
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: Sync_Contact, rhs: Sync_Contact) -> Bool {
+  public static func ==(lhs: D2dSync_Contact, rhs: D2dSync_Contact) -> Bool {
     if lhs._storage !== rhs._storage {
       let storagesAreEqual: Bool = withExtendedLifetime((lhs._storage, rhs._storage)) { (_args: (_StorageClass, _StorageClass)) in
         let _storage = _args.0
@@ -2894,12 +3006,14 @@ extension Sync_Contact: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementat
         if _storage._activityState != rhs_storage._activityState {return false}
         if _storage._featureMask != rhs_storage._featureMask {return false}
         if _storage._syncState != rhs_storage._syncState {return false}
+        if _storage._contactDefinedProfilePicture != rhs_storage._contactDefinedProfilePicture {return false}
+        if _storage._userDefinedProfilePicture != rhs_storage._userDefinedProfilePicture {return false}
+        if _storage._workLastFullSyncAt != rhs_storage._workLastFullSyncAt {return false}
+        if _storage._workAvailabilityStatus != rhs_storage._workAvailabilityStatus {return false}
         if _storage._readReceiptPolicyOverride != rhs_storage._readReceiptPolicyOverride {return false}
         if _storage._typingIndicatorPolicyOverride != rhs_storage._typingIndicatorPolicyOverride {return false}
         if _storage._notificationTriggerPolicyOverride != rhs_storage._notificationTriggerPolicyOverride {return false}
-        if _storage._notificationSoundPolicyOverride != rhs_storage._notificationSoundPolicyOverride {return false}
-        if _storage._contactDefinedProfilePicture != rhs_storage._contactDefinedProfilePicture {return false}
-        if _storage._userDefinedProfilePicture != rhs_storage._userDefinedProfilePicture {return false}
+        if _storage._deprecatedNotificationSoundPolicyOverride != rhs_storage._deprecatedNotificationSoundPolicyOverride {return false}
         if _storage._conversationCategory != rhs_storage._conversationCategory {return false}
         if _storage._conversationVisibility != rhs_storage._conversationVisibility {return false}
         return true
@@ -2911,32 +3025,32 @@ extension Sync_Contact: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementat
   }
 }
 
-extension Sync_Contact.VerificationLevel: SwiftProtobuf._ProtoNameProviding {
+extension D2dSync_Contact.VerificationLevel: SwiftProtobuf._ProtoNameProviding {
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0UNVERIFIED\0\u{1}SERVER_VERIFIED\0\u{1}FULLY_VERIFIED\0")
 }
 
-extension Sync_Contact.WorkVerificationLevel: SwiftProtobuf._ProtoNameProviding {
+extension D2dSync_Contact.WorkVerificationLevel: SwiftProtobuf._ProtoNameProviding {
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0NONE\0\u{1}WORK_SUBSCRIPTION_VERIFIED\0")
 }
 
-extension Sync_Contact.IdentityType: SwiftProtobuf._ProtoNameProviding {
+extension D2dSync_Contact.IdentityType: SwiftProtobuf._ProtoNameProviding {
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0REGULAR\0\u{1}WORK\0")
 }
 
-extension Sync_Contact.AcquaintanceLevel: SwiftProtobuf._ProtoNameProviding {
+extension D2dSync_Contact.AcquaintanceLevel: SwiftProtobuf._ProtoNameProviding {
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0DIRECT\0\u{1}GROUP_OR_DELETED\0")
 }
 
-extension Sync_Contact.ActivityState: SwiftProtobuf._ProtoNameProviding {
+extension D2dSync_Contact.ActivityState: SwiftProtobuf._ProtoNameProviding {
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0ACTIVE\0\u{1}INACTIVE\0\u{1}INVALID\0")
 }
 
-extension Sync_Contact.SyncState: SwiftProtobuf._ProtoNameProviding {
+extension D2dSync_Contact.SyncState: SwiftProtobuf._ProtoNameProviding {
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0INITIAL\0\u{1}IMPORTED\0\u{1}CUSTOM\0")
 }
 
-extension Sync_Contact.ReadReceiptPolicyOverride: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = Sync_Contact.protoMessageName + ".ReadReceiptPolicyOverride"
+extension D2dSync_Contact.ReadReceiptPolicyOverride: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = D2dSync_Contact.protoMessageName + ".ReadReceiptPolicyOverride"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}default\0\u{1}policy\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -2959,7 +3073,7 @@ extension Sync_Contact.ReadReceiptPolicyOverride: SwiftProtobuf.Message, SwiftPr
         }
       }()
       case 2: try {
-        var v: Sync_ReadReceiptPolicy?
+        var v: D2dSync_ReadReceiptPolicy?
         try decoder.decodeSingularEnumField(value: &v)
         if let v = v {
           if self.override != nil {try decoder.handleConflictingOneOf()}
@@ -2990,15 +3104,15 @@ extension Sync_Contact.ReadReceiptPolicyOverride: SwiftProtobuf.Message, SwiftPr
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: Sync_Contact.ReadReceiptPolicyOverride, rhs: Sync_Contact.ReadReceiptPolicyOverride) -> Bool {
+  public static func ==(lhs: D2dSync_Contact.ReadReceiptPolicyOverride, rhs: D2dSync_Contact.ReadReceiptPolicyOverride) -> Bool {
     if lhs.override != rhs.override {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
 }
 
-extension Sync_Contact.TypingIndicatorPolicyOverride: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = Sync_Contact.protoMessageName + ".TypingIndicatorPolicyOverride"
+extension D2dSync_Contact.TypingIndicatorPolicyOverride: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = D2dSync_Contact.protoMessageName + ".TypingIndicatorPolicyOverride"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}default\0\u{1}policy\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -3021,7 +3135,7 @@ extension Sync_Contact.TypingIndicatorPolicyOverride: SwiftProtobuf.Message, Swi
         }
       }()
       case 2: try {
-        var v: Sync_TypingIndicatorPolicy?
+        var v: D2dSync_TypingIndicatorPolicy?
         try decoder.decodeSingularEnumField(value: &v)
         if let v = v {
           if self.override != nil {try decoder.handleConflictingOneOf()}
@@ -3052,15 +3166,15 @@ extension Sync_Contact.TypingIndicatorPolicyOverride: SwiftProtobuf.Message, Swi
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: Sync_Contact.TypingIndicatorPolicyOverride, rhs: Sync_Contact.TypingIndicatorPolicyOverride) -> Bool {
+  public static func ==(lhs: D2dSync_Contact.TypingIndicatorPolicyOverride, rhs: D2dSync_Contact.TypingIndicatorPolicyOverride) -> Bool {
     if lhs.override != rhs.override {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
 }
 
-extension Sync_Contact.NotificationTriggerPolicyOverride: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = Sync_Contact.protoMessageName + ".NotificationTriggerPolicyOverride"
+extension D2dSync_Contact.NotificationTriggerPolicyOverride: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = D2dSync_Contact.protoMessageName + ".NotificationTriggerPolicyOverride"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}default\0\u{1}policy\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -3083,7 +3197,7 @@ extension Sync_Contact.NotificationTriggerPolicyOverride: SwiftProtobuf.Message,
         }
       }()
       case 2: try {
-        var v: Sync_Contact.NotificationTriggerPolicyOverride.Policy?
+        var v: D2dSync_Contact.NotificationTriggerPolicyOverride.Policy?
         var hadOneofValue = false
         if let current = self.override {
           hadOneofValue = true
@@ -3119,15 +3233,15 @@ extension Sync_Contact.NotificationTriggerPolicyOverride: SwiftProtobuf.Message,
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: Sync_Contact.NotificationTriggerPolicyOverride, rhs: Sync_Contact.NotificationTriggerPolicyOverride) -> Bool {
+  public static func ==(lhs: D2dSync_Contact.NotificationTriggerPolicyOverride, rhs: D2dSync_Contact.NotificationTriggerPolicyOverride) -> Bool {
     if lhs.override != rhs.override {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
 }
 
-extension Sync_Contact.NotificationTriggerPolicyOverride.Policy: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = Sync_Contact.NotificationTriggerPolicyOverride.protoMessageName + ".Policy"
+extension D2dSync_Contact.NotificationTriggerPolicyOverride.Policy: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = D2dSync_Contact.NotificationTriggerPolicyOverride.protoMessageName + ".Policy"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}policy\0\u{3}expires_at\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -3157,7 +3271,7 @@ extension Sync_Contact.NotificationTriggerPolicyOverride.Policy: SwiftProtobuf.M
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: Sync_Contact.NotificationTriggerPolicyOverride.Policy, rhs: Sync_Contact.NotificationTriggerPolicyOverride.Policy) -> Bool {
+  public static func ==(lhs: D2dSync_Contact.NotificationTriggerPolicyOverride.Policy, rhs: D2dSync_Contact.NotificationTriggerPolicyOverride.Policy) -> Bool {
     if lhs.policy != rhs.policy {return false}
     if lhs._expiresAt != rhs._expiresAt {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
@@ -3165,13 +3279,13 @@ extension Sync_Contact.NotificationTriggerPolicyOverride.Policy: SwiftProtobuf.M
   }
 }
 
-extension Sync_Contact.NotificationTriggerPolicyOverride.Policy.NotificationTriggerPolicy: SwiftProtobuf._ProtoNameProviding {
+extension D2dSync_Contact.NotificationTriggerPolicyOverride.Policy.NotificationTriggerPolicy: SwiftProtobuf._ProtoNameProviding {
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0NEVER\0")
 }
 
-extension Sync_Contact.NotificationSoundPolicyOverride: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = Sync_Contact.protoMessageName + ".NotificationSoundPolicyOverride"
-  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}default\0\u{1}policy\0")
+extension D2dSync_Contact.DeprecatedNotificationSoundPolicyOverride: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = D2dSync_Contact.protoMessageName + ".DeprecatedNotificationSoundPolicyOverride"
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}default\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -3192,14 +3306,6 @@ extension Sync_Contact.NotificationSoundPolicyOverride: SwiftProtobuf.Message, S
           self.override = .default(v)
         }
       }()
-      case 2: try {
-        var v: Sync_NotificationSoundPolicy?
-        try decoder.decodeSingularEnumField(value: &v)
-        if let v = v {
-          if self.override != nil {try decoder.handleConflictingOneOf()}
-          self.override = .policy(v)
-        }
-      }()
       default: break
       }
     }
@@ -3210,30 +3316,22 @@ extension Sync_Contact.NotificationSoundPolicyOverride: SwiftProtobuf.Message, S
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
     // https://github.com/apple/swift-protobuf/issues/1182
-    switch self.override {
-    case .default?: try {
-      guard case .default(let v)? = self.override else { preconditionFailure() }
+    try { if case .default(let v)? = self.override {
       try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
-    }()
-    case .policy?: try {
-      guard case .policy(let v)? = self.override else { preconditionFailure() }
-      try visitor.visitSingularEnumField(value: v, fieldNumber: 2)
-    }()
-    case nil: break
-    }
+    } }()
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: Sync_Contact.NotificationSoundPolicyOverride, rhs: Sync_Contact.NotificationSoundPolicyOverride) -> Bool {
+  public static func ==(lhs: D2dSync_Contact.DeprecatedNotificationSoundPolicyOverride, rhs: D2dSync_Contact.DeprecatedNotificationSoundPolicyOverride) -> Bool {
     if lhs.override != rhs.override {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
 }
 
-extension Sync_Group: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+extension D2dSync_Group: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".Group"
-  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}group_identity\0\u{1}name\0\u{3}created_at\0\u{3}conversation_category\0\u{3}conversation_visibility\0\u{3}user_state\0\u{3}profile_picture\0\u{3}member_identities\0\u{3}notification_trigger_policy_override\0\u{3}notification_sound_policy_override\0")
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}group_identity\0\u{1}name\0\u{3}created_at\0\u{3}conversation_category\0\u{3}conversation_visibility\0\u{3}user_state\0\u{3}profile_picture\0\u{3}member_identities\0\u{3}notification_trigger_policy_override\0\u{3}deprecated_notification_sound_policy_override\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -3250,7 +3348,7 @@ extension Sync_Group: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementatio
       case 7: try { try decoder.decodeSingularMessageField(value: &self._profilePicture) }()
       case 8: try { try decoder.decodeSingularMessageField(value: &self._memberIdentities) }()
       case 9: try { try decoder.decodeSingularMessageField(value: &self._notificationTriggerPolicyOverride) }()
-      case 10: try { try decoder.decodeSingularMessageField(value: &self._notificationSoundPolicyOverride) }()
+      case 10: try { try decoder.decodeSingularMessageField(value: &self._deprecatedNotificationSoundPolicyOverride) }()
       default: break
       }
     }
@@ -3288,13 +3386,13 @@ extension Sync_Group: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementatio
     try { if let v = self._notificationTriggerPolicyOverride {
       try visitor.visitSingularMessageField(value: v, fieldNumber: 9)
     } }()
-    try { if let v = self._notificationSoundPolicyOverride {
+    try { if let v = self._deprecatedNotificationSoundPolicyOverride {
       try visitor.visitSingularMessageField(value: v, fieldNumber: 10)
     } }()
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: Sync_Group, rhs: Sync_Group) -> Bool {
+  public static func ==(lhs: D2dSync_Group, rhs: D2dSync_Group) -> Bool {
     if lhs._groupIdentity != rhs._groupIdentity {return false}
     if lhs._name != rhs._name {return false}
     if lhs._createdAt != rhs._createdAt {return false}
@@ -3302,7 +3400,7 @@ extension Sync_Group: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementatio
     if lhs._profilePicture != rhs._profilePicture {return false}
     if lhs._memberIdentities != rhs._memberIdentities {return false}
     if lhs._notificationTriggerPolicyOverride != rhs._notificationTriggerPolicyOverride {return false}
-    if lhs._notificationSoundPolicyOverride != rhs._notificationSoundPolicyOverride {return false}
+    if lhs._deprecatedNotificationSoundPolicyOverride != rhs._deprecatedNotificationSoundPolicyOverride {return false}
     if lhs._conversationCategory != rhs._conversationCategory {return false}
     if lhs._conversationVisibility != rhs._conversationVisibility {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
@@ -3310,12 +3408,12 @@ extension Sync_Group: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementatio
   }
 }
 
-extension Sync_Group.UserState: SwiftProtobuf._ProtoNameProviding {
+extension D2dSync_Group.UserState: SwiftProtobuf._ProtoNameProviding {
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0MEMBER\0\u{1}KICKED\0\u{1}LEFT\0")
 }
 
-extension Sync_Group.NotificationTriggerPolicyOverride: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = Sync_Group.protoMessageName + ".NotificationTriggerPolicyOverride"
+extension D2dSync_Group.NotificationTriggerPolicyOverride: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = D2dSync_Group.protoMessageName + ".NotificationTriggerPolicyOverride"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}default\0\u{1}policy\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -3338,7 +3436,7 @@ extension Sync_Group.NotificationTriggerPolicyOverride: SwiftProtobuf.Message, S
         }
       }()
       case 2: try {
-        var v: Sync_Group.NotificationTriggerPolicyOverride.Policy?
+        var v: D2dSync_Group.NotificationTriggerPolicyOverride.Policy?
         var hadOneofValue = false
         if let current = self.override {
           hadOneofValue = true
@@ -3374,15 +3472,15 @@ extension Sync_Group.NotificationTriggerPolicyOverride: SwiftProtobuf.Message, S
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: Sync_Group.NotificationTriggerPolicyOverride, rhs: Sync_Group.NotificationTriggerPolicyOverride) -> Bool {
+  public static func ==(lhs: D2dSync_Group.NotificationTriggerPolicyOverride, rhs: D2dSync_Group.NotificationTriggerPolicyOverride) -> Bool {
     if lhs.override != rhs.override {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
 }
 
-extension Sync_Group.NotificationTriggerPolicyOverride.Policy: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = Sync_Group.NotificationTriggerPolicyOverride.protoMessageName + ".Policy"
+extension D2dSync_Group.NotificationTriggerPolicyOverride.Policy: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = D2dSync_Group.NotificationTriggerPolicyOverride.protoMessageName + ".Policy"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}policy\0\u{3}expires_at\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -3412,7 +3510,7 @@ extension Sync_Group.NotificationTriggerPolicyOverride.Policy: SwiftProtobuf.Mes
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: Sync_Group.NotificationTriggerPolicyOverride.Policy, rhs: Sync_Group.NotificationTriggerPolicyOverride.Policy) -> Bool {
+  public static func ==(lhs: D2dSync_Group.NotificationTriggerPolicyOverride.Policy, rhs: D2dSync_Group.NotificationTriggerPolicyOverride.Policy) -> Bool {
     if lhs.policy != rhs.policy {return false}
     if lhs._expiresAt != rhs._expiresAt {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
@@ -3420,13 +3518,13 @@ extension Sync_Group.NotificationTriggerPolicyOverride.Policy: SwiftProtobuf.Mes
   }
 }
 
-extension Sync_Group.NotificationTriggerPolicyOverride.Policy.NotificationTriggerPolicy: SwiftProtobuf._ProtoNameProviding {
+extension D2dSync_Group.NotificationTriggerPolicyOverride.Policy.NotificationTriggerPolicy: SwiftProtobuf._ProtoNameProviding {
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0MENTIONED\0\u{1}NEVER\0")
 }
 
-extension Sync_Group.NotificationSoundPolicyOverride: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = Sync_Group.protoMessageName + ".NotificationSoundPolicyOverride"
-  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}default\0\u{1}policy\0")
+extension D2dSync_Group.DeprecatedNotificationSoundPolicyOverride: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = D2dSync_Group.protoMessageName + ".DeprecatedNotificationSoundPolicyOverride"
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}default\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -3447,14 +3545,6 @@ extension Sync_Group.NotificationSoundPolicyOverride: SwiftProtobuf.Message, Swi
           self.override = .default(v)
         }
       }()
-      case 2: try {
-        var v: Sync_NotificationSoundPolicy?
-        try decoder.decodeSingularEnumField(value: &v)
-        if let v = v {
-          if self.override != nil {try decoder.handleConflictingOneOf()}
-          self.override = .policy(v)
-        }
-      }()
       default: break
       }
     }
@@ -3465,28 +3555,20 @@ extension Sync_Group.NotificationSoundPolicyOverride: SwiftProtobuf.Message, Swi
     // allocates stack space for every if/case branch local when no optimizations
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
     // https://github.com/apple/swift-protobuf/issues/1182
-    switch self.override {
-    case .default?: try {
-      guard case .default(let v)? = self.override else { preconditionFailure() }
+    try { if case .default(let v)? = self.override {
       try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
-    }()
-    case .policy?: try {
-      guard case .policy(let v)? = self.override else { preconditionFailure() }
-      try visitor.visitSingularEnumField(value: v, fieldNumber: 2)
-    }()
-    case nil: break
-    }
+    } }()
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: Sync_Group.NotificationSoundPolicyOverride, rhs: Sync_Group.NotificationSoundPolicyOverride) -> Bool {
+  public static func ==(lhs: D2dSync_Group.DeprecatedNotificationSoundPolicyOverride, rhs: D2dSync_Group.DeprecatedNotificationSoundPolicyOverride) -> Bool {
     if lhs.override != rhs.override {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
 }
 
-extension Sync_DistributionList: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+extension D2dSync_DistributionList: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".DistributionList"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}distribution_list_id\0\u{1}name\0\u{3}created_at\0\u{3}conversation_category\0\u{3}conversation_visibility\0\u{3}member_identities\0")
 
@@ -3533,7 +3615,7 @@ extension Sync_DistributionList: SwiftProtobuf.Message, SwiftProtobuf._MessageIm
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: Sync_DistributionList, rhs: Sync_DistributionList) -> Bool {
+  public static func ==(lhs: D2dSync_DistributionList, rhs: D2dSync_DistributionList) -> Bool {
     if lhs.distributionListID != rhs.distributionListID {return false}
     if lhs._name != rhs._name {return false}
     if lhs._createdAt != rhs._createdAt {return false}
@@ -3545,7 +3627,7 @@ extension Sync_DistributionList: SwiftProtobuf.Message, SwiftProtobuf._MessageIm
   }
 }
 
-extension Sync_Settings: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+extension D2dSync_Settings: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".Settings"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}contact_sync_policy\0\u{3}unknown_contact_policy\0\u{3}read_receipt_policy\0\u{3}typing_indicator_policy\0\u{3}o2o_call_policy\0\u{3}o2o_call_connection_policy\0\u{3}screenshot_policy\0\u{3}keyboard_data_collection_policy\0\u{3}blocked_identities\0\u{3}exclude_from_sync_identities\0\u{3}group_call_policy\0\u{3}o2o_call_video_policy\0")
 
@@ -3616,7 +3698,7 @@ extension Sync_Settings: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementa
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: Sync_Settings, rhs: Sync_Settings) -> Bool {
+  public static func ==(lhs: D2dSync_Settings, rhs: D2dSync_Settings) -> Bool {
     if lhs._contactSyncPolicy != rhs._contactSyncPolicy {return false}
     if lhs._unknownContactPolicy != rhs._unknownContactPolicy {return false}
     if lhs._readReceiptPolicy != rhs._readReceiptPolicy {return false}
@@ -3634,34 +3716,34 @@ extension Sync_Settings: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementa
   }
 }
 
-extension Sync_Settings.ContactSyncPolicy: SwiftProtobuf._ProtoNameProviding {
+extension D2dSync_Settings.ContactSyncPolicy: SwiftProtobuf._ProtoNameProviding {
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0NOT_SYNCED\0\u{1}SYNC\0")
 }
 
-extension Sync_Settings.UnknownContactPolicy: SwiftProtobuf._ProtoNameProviding {
+extension D2dSync_Settings.UnknownContactPolicy: SwiftProtobuf._ProtoNameProviding {
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0ALLOW_UNKNOWN\0\u{1}BLOCK_UNKNOWN\0")
 }
 
-extension Sync_Settings.O2oCallPolicy: SwiftProtobuf._ProtoNameProviding {
+extension D2dSync_Settings.O2oCallPolicy: SwiftProtobuf._ProtoNameProviding {
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0ALLOW_O2O_CALL\0\u{1}DENY_O2O_CALL\0")
 }
 
-extension Sync_Settings.O2oCallConnectionPolicy: SwiftProtobuf._ProtoNameProviding {
+extension D2dSync_Settings.O2oCallConnectionPolicy: SwiftProtobuf._ProtoNameProviding {
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0ALLOW_DIRECT_CONNECTION\0\u{1}REQUIRE_RELAYED_CONNECTION\0")
 }
 
-extension Sync_Settings.O2oCallVideoPolicy: SwiftProtobuf._ProtoNameProviding {
+extension D2dSync_Settings.O2oCallVideoPolicy: SwiftProtobuf._ProtoNameProviding {
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0ALLOW_VIDEO\0\u{1}DENY_VIDEO\0")
 }
 
-extension Sync_Settings.GroupCallPolicy: SwiftProtobuf._ProtoNameProviding {
+extension D2dSync_Settings.GroupCallPolicy: SwiftProtobuf._ProtoNameProviding {
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0ALLOW_GROUP_CALL\0\u{1}DENY_GROUP_CALL\0")
 }
 
-extension Sync_Settings.ScreenshotPolicy: SwiftProtobuf._ProtoNameProviding {
+extension D2dSync_Settings.ScreenshotPolicy: SwiftProtobuf._ProtoNameProviding {
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0ALLOW_SCREENSHOT\0\u{1}DENY_SCREENSHOT\0")
 }
 
-extension Sync_Settings.KeyboardDataCollectionPolicy: SwiftProtobuf._ProtoNameProviding {
+extension D2dSync_Settings.KeyboardDataCollectionPolicy: SwiftProtobuf._ProtoNameProviding {
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0ALLOW_DATA_COLLECTION\0\u{1}DENY_DATA_COLLECTION\0")
 }

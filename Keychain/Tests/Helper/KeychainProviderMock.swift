@@ -2,7 +2,7 @@ import Foundation
 import ThreemaEssentials
 @testable import Keychain
 
-// MARK: - KeychainItem + Hashable, Sendable
+// MARK: - KeychainItem + Hashable, @unchecked Sendable
 
 extension KeychainItem: Hashable, @unchecked Sendable {
     public func hash(into hasher: inout Hasher) {
@@ -132,10 +132,11 @@ final class KeychainProviderMock: KeychainProviding, @unchecked Sendable {
     
     @Atomic
     private(set) var calls = [OperationType]()
-    
+
+    // Key is the lable of the keychain item
     @Atomic
-    private var storage = [KeychainItem: KeychainItemData]()
-    
+    private var storage = [String: KeychainItemData]()
+
     var loadCalls: [LoadOperation] {
         calls.compactMap { operation in
             if case let .load(loadOperation) = operation {
@@ -211,7 +212,7 @@ final class KeychainProviderMock: KeychainProviding, @unchecked Sendable {
             generic: generic,
             service: service
         )
-        $storage.set(searchItem ?? item, data)
+        $storage.set(searchItem?.label ?? item.label, data)
     }
     
     func delete(_ searchItem: Keychain.KeychainItem) throws {
@@ -221,7 +222,7 @@ final class KeychainProviderMock: KeychainProviding, @unchecked Sendable {
             throw error
         }
         
-        $storage.removeValue(forKey: searchItem)
+        $storage.removeValue(forKey: searchItem.label)
     }
     
     /// Clear all stored data and call history
@@ -234,12 +235,11 @@ final class KeychainProviderMock: KeychainProviding, @unchecked Sendable {
     }
     
     func storedData(for item: Keychain.KeychainItem?) -> KeychainItemData? {
-        guard let item,
-              let keychainItemData = storage[item] else {
+        guard let item else {
             return nil
         }
-        
-        return keychainItemData
+
+        return storage[item.label]
     }
     
     func updateError(_ errorType: KeychainProviderMock.ErrorType) {

@@ -60,7 +60,7 @@ final class SelectContactListViewController: ThemedViewController {
             businessInjector: BusinessInjector.ui,
             cellProvider: cellProvider,
             provider: provider,
-            allowsMultiSelect: true
+            allowsMultiselect: true
         )
         controller.delegate = self
         
@@ -80,7 +80,7 @@ final class SelectContactListViewController: ThemedViewController {
         super.init(nibName: nil, bundle: nil)
     }
     
-    @objc convenience init(
+    convenience init(
         forGroupCreation selectedContacts: [Contact],
         onSaveDisplayMode: OnSaveDisplayMode = .showDetails
     ) {
@@ -90,7 +90,7 @@ final class SelectContactListViewController: ThemedViewController {
         )
     }
 
-    @objc convenience init(
+    convenience init(
         forListCreation selectedContacts: [Contact],
         onSaveDisplayMode: OnSaveDisplayMode = .showDetails
     ) {

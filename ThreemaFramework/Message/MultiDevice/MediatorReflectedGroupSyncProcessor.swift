@@ -59,7 +59,7 @@ final class MediatorReflectedGroupSyncProcessor {
         }
     }
 
-    private func updateGroupSettings(of syncGroup: Sync_Group) async throws {
+    private func updateGroupSettings(of syncGroup: D2dSync_Group) async throws {
         let groupIdentity = try GroupIdentity(commonGroupIdentity: syncGroup.groupIdentity)
 
         guard let group = frameworkInjector.groupManager.getGroup(

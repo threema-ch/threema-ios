@@ -26,19 +26,6 @@
     }];
 }
 
-+ (void)loadJSONFromWorkAPIPath:(NSString*)apiPath getParams:(NSString*)getParams withCachePolicy:(NSURLRequestCachePolicy)cachePolicy onCompletion:(CompletionCallback)onCompletion onError:(ErrorCallback)onError {
-    [[ServerInfoProviderFactory makeServerInfoProvider] workServerWithIpv6:[UserSettings sharedUserSettings].enableIPv6 completionHandler:^(WorkServerInfo * _Nullable workServerInfo, NSError * _Nullable error) {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            if (workServerInfo == nil) {
-                onError(error);
-                return;
-            }
-            
-            [ServerAPIRequest loadJSONFromAPIPath:apiPath apiUrl:[NSURL URLWithString:workServerInfo.url] getParams:getParams withCachePolicy:cachePolicy onCompletion:onCompletion onError:onError];
-        });
-    }];
-}
-
 + (void)loadJSONFromAPIPath:(NSString*)apiPath apiUrl:(NSURL*)apiUrl getParams:(NSString*)getParams withCachePolicy:(NSURLRequestCachePolicy)cachePolicy onCompletion:(CompletionCallback)onCompletion onError:(ErrorCallback)onError {
 	ServerAPIRequest *loader = [[ServerAPIRequest alloc] init];
 	

@@ -15,7 +15,9 @@ public final class DeviceGroupKeyManager: NSObject, DeviceGroupKeyManagerProtoco
     private let keychainManager: KeychainManagerProtocol
 
     @objc override public convenience init() {
-        self.init(keychainManager: KeychainManager(remoteSecretManager: AppLaunchManager.remoteSecretManager))
+        self.init(keychainManager: KeychainManager(
+            remoteSecretManager: RemoteSecretProvider.remoteSecretManager
+        ))
     }
 
     public required init(keychainManager: KeychainManagerProtocol) {

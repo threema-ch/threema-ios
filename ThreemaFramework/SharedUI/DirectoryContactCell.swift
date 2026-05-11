@@ -51,9 +51,9 @@ public final class DirectoryContactCell: ThemedCodeTableViewCell {
         return imageView
     }()
     
-    private lazy var nameLabel: ContactNameLabel = {
-        let label = ContactNameLabel()
-            
+    private lazy var nameLabel: UILabel = {
+        let label = UILabel()
+
         label.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         
         if traitCollection.preferredContentSizeCategory.isAccessibilityCategory {
@@ -166,7 +166,7 @@ public final class DirectoryContactCell: ThemedCodeTableViewCell {
     // MARK: - Reuse configuration
     
     private func configureCell(for contact: CompanyDirectoryContact) {
-        profilePictureView.info = .directoryContact
+        profilePictureView.info = .directoryContact(contact.workAvailabilityStatus)
         
         nameLabel.text = contact.fullName()
         

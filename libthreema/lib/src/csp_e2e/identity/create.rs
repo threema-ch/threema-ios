@@ -1,16 +1,33 @@
 //! Task structures to create a new identity.
+//!
+//! TODO(LIB-150): This should be moved away from `csp_e2e`.
 use core::mem;
-use std::rc::Rc;
+use std::sync::Arc;
 
 use const_format::formatcp;
+use educe::Educe;
 use libthreema_macros::{DebugVariantNames, Name, VariantNames};
 use tracing::{debug, error, info};
 
 use crate::{
     common::{ChatServerGroup, ClientInfo, ThreemaId, config::Config, keys::ClientKey, task::TaskLoop},
+    // TODO(LIB-150): We should not re-use `CspE2eProtocolError` for this standalone task!
     csp_e2e::{CspE2eProtocolError, Flavor},
     https::{HttpsRequest, HttpsResult, directory},
+    utils::debug::Name as _,
 };
+
+/// Context for creating an identity.
+pub struct CreateIdentityContext {
+    /// Client info.
+    pub client_info: ClientInfo,
+
+    /// Configuration used by the protocol.
+    pub config: Arc<Config>,
+
+    /// Application flavour.
+    pub flavor: Flavor,
+}
 
 /// 1. Run the HTTPS request as defined by [`HttpsRequest`] and let `response` be the result.
 /// 2. Provide `response` to the associated task as a [`CreateIdentityResponse`] and poll again.
@@ -40,18 +57,6 @@ pub struct CreateIdentityResult {
 
 /// Result of polling a [`CreateIdentityTask`].
 pub type CreateIdentityLoop = TaskLoop<CreateIdentityInstruction, CreateIdentityResult>;
-
-/// Context for creating an identity.
-pub struct CreateIdentityContext {
-    /// Client info.
-    pub client_info: ClientInfo,
-
-    /// Configuration used by the protocol.
-    pub config: Rc<Config>,
-
-    /// Application flavour.
-    pub flavor: Flavor,
-}
 
 struct InitState {
     client_key: ClientKey,
@@ -212,7 +217,7 @@ impl State {
         let Flavor::Work(work_context) = &context.flavor else {
             let message = "Work context missing";
             error!(message);
-            return Err(CspE2eProtocolError::InternalError(message.to_owned()));
+            return Err(CspE2eProtocolError::InternalError(message.into()));
         };
 
         // Handle the result
@@ -264,16 +269,19 @@ impl State {
 }
 
 /// Task for creating a new identity.
-#[derive(Debug, Name)]
+#[derive(Name, Educe)]
+#[educe(Debug)]
 pub struct CreateIdentityTask {
+    #[educe(Debug(ignore))]
+    context: CreateIdentityContext,
     state: State,
 }
 impl CreateIdentityTask {
     /// Create a new task for creating a new identity.
     #[must_use]
-    #[expect(clippy::new_without_default, reason = "Task pattern")]
-    pub fn new() -> Self {
+    pub fn new(context: CreateIdentityContext) -> Self {
         Self {
+            context,
             state: State::Init(InitState {
                 client_key: ClientKey::random(),
             }),
@@ -286,10 +294,7 @@ impl CreateIdentityTask {
     ///
     /// Returns [`CspE2eProtocolError`] for all possible reasons.
     #[tracing::instrument(skip_all, fields(?self))]
-    pub fn poll(
-        &mut self,
-        context: &CreateIdentityContext,
-    ) -> Result<CreateIdentityLoop, CspE2eProtocolError> {
+    pub fn poll(&mut self) -> Result<CreateIdentityLoop, CspE2eProtocolError> {
         let result = match mem::replace(
             &mut self.state,
             State::Error(CspE2eProtocolError::InvalidState(formatcp!(
@@ -298,10 +303,10 @@ impl CreateIdentityTask {
             ))),
         ) {
             State::Error(error) => Err(error),
-            State::Init(state) => Ok(State::poll_init(context, state)),
-            State::DirectoryChallenge(state) => State::poll_directory_challenge(context, state),
-            State::DirectoryCreate(state) => State::poll_directory_create(context, state),
-            State::RegisterWorkChallenge(state) => State::poll_register_work_challenge(context, state),
+            State::Init(state) => Ok(State::poll_init(&self.context, state)),
+            State::DirectoryChallenge(state) => State::poll_directory_challenge(&self.context, state),
+            State::DirectoryCreate(state) => State::poll_directory_create(&self.context, state),
+            State::RegisterWorkChallenge(state) => State::poll_register_work_challenge(&self.context, state),
             State::RegisterWork(state) => State::poll_register_work(state),
             State::Done => Err(CspE2eProtocolError::InvalidState(formatcp!(
                 "{} already done",

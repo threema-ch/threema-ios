@@ -12,7 +12,7 @@ final class GroupManagerTests: XCTestCase {
     
     override func setUpWithError() throws {
         AppGroup.setGroupID("group.ch.threema") // THREEMA_GROUP_IDENTIFIER @"group.ch.threema"
-        AppLaunchManager.remoteSecretManager = RemoteSecretManagerMock()
+        RemoteSecretProvider.setRemoteSecretManager(RemoteSecretManagerMock())
 
         ddLoggerMock = DDLoggerMock()
         DDTTYLogger.sharedInstance?.logFormatter = LogFormatterCustom()

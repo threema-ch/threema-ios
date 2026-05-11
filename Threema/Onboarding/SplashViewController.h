@@ -35,6 +35,12 @@
                                                   error:(NSError * _Nullable)error;
 - (void)showRestoreOptionDataViewController;
 - (void)showRestoreOptionBackupViewController;
+- (void)navigateToRestoreOptionDataViewController;
+- (void)navigateToRestoreOptionBackupViewController;
+- (void)navigateToRestoreSafeViewController:(BOOL)identityOnly NS_SWIFT_NAME(navigateToRestoreSafeViewController(identityOnly:));
+- (void)navigateBackToRestoreOptionDataViewController;
+- (void)navigateBackToRestoreOptionBackupViewController;
+- (void)navigateBackToSplash;
 - (void)showIDBackupQuestion;
 - (void)showIDExistsQuestion;
 - (void)showRemoteSecretExistsQuestion;
@@ -43,5 +49,7 @@
 - (void)showIdentityCreationError:(NSError *_Nonnull)error;
 - (void)setAcceptPrivacyPolicyValues:(AcceptPrivacyPolicyVariant)variant;
 - (void)presentPageViewControllerWithSetupConfiguration:(SetupConfiguration *_Nonnull)setupConfiguration;
+
+- (void)cancelIDCreation;
 
 @end

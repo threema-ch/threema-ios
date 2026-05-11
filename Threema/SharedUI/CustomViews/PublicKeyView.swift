@@ -104,7 +104,7 @@ final class PublicKeyView: UIView {
        
     // MARK: - Initialization
     
-    @objc init(for contact: ContactEntity) {
+    init(for contact: ContactEntity) {
         super.init(frame: UIScreen.main.bounds)
         
         self.contact = contact
@@ -112,7 +112,7 @@ final class PublicKeyView: UIView {
         configureView()
     }
     
-    @objc init(identity: String, publicKey: Data, onDismiss: (() -> Void)? = nil) {
+    init(identity: String, publicKey: Data, onDismiss: (() -> Void)? = nil) {
         super.init(frame: UIScreen.main.bounds)
         
         self.identity = identity
@@ -185,7 +185,7 @@ final class PublicKeyView: UIView {
     
     // MARK: - Public functions
 
-    @objc public func show() {
+    public func show() {
         alpha = 0.0
         reloadConstraints()
         AppDelegate.shared().window.addSubview(self)

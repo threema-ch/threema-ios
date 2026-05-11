@@ -45,7 +45,7 @@ public final class DeleteRevokeIdentityManager: NSObject {
         // Stop RS monitoring to prevent any monitoring error crashing during deletion
         do {
             try KeychainManager.deleteRemoteSecret()
-            await AppLaunchManager.remoteSecretManager.stopMonitoring()
+            await RemoteSecretProvider.remoteSecretManager.stopMonitoring()
         }
         catch {
             DDLogError("Stopping RS monitoring failed: \(error)")
@@ -71,7 +71,8 @@ public final class DeleteRevokeIdentityManager: NSObject {
             safeConfigManager: safeConfigManager,
             serverApiConnector: ServerAPIConnector(),
             groupManager: BusinessInjector.ui.groupManager,
-            myIdentityStore: BusinessInjector.ui.myIdentityStore
+            myIdentityStore: BusinessInjector.ui.myIdentityStore,
+            phoneNumberNormalizer: PhoneNumberNormalizer()
         )
         let safeManager = SafeManager(
             safeConfigManager: safeConfigManager,
@@ -87,7 +88,7 @@ public final class DeleteRevokeIdentityManager: NSObject {
         try? PersistenceManager(
             appGroupID: AppGroup.groupID(),
             userDefaults: AppGroup.userDefaults(),
-            remoteSecretManager: AppLaunchManager.remoteSecretManager
+            remoteSecretManager: RemoteSecretProvider.remoteSecretManager
         ).databaseManager.eraseDB()
 
         Task { @MainActor in
@@ -126,7 +127,8 @@ public final class DeleteRevokeIdentityManager: NSObject {
             safeConfigManager: safeConfigManager,
             serverApiConnector: ServerAPIConnector(),
             groupManager: BusinessInjector.ui.groupManager,
-            myIdentityStore: BusinessInjector.ui.myIdentityStore
+            myIdentityStore: BusinessInjector.ui.myIdentityStore,
+            phoneNumberNormalizer: PhoneNumberNormalizer()
         )
         let safeManager = SafeManager(
             safeConfigManager: safeConfigManager,

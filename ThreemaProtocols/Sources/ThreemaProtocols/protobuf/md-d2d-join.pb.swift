@@ -48,14 +48,14 @@
 //
 // #### Connection Setup
 //
-// RID creates a `rendezvous.RendezvousInit` by following the Connection
+// RID creates a `d2d_rendezvous.RendezvousInit` by following the Connection
 // Rendezvous Protocol. It wraps it in a `url.DeviceGroupJoinRequestOrOffer` and
 // offers it in form of a URL or a QR code.
 //
 // RRD scans the QR code or decodes the URL and then parses the
 // `url.DeviceGroupJoinRequestOrOffer`. It will then receive the data over a
 // sufficiently secure channel (e.g. a QR code). Once decoded, the enclosed
-// `rendezvous.RendezvousInit` must be handled according to the Connection
+// `d2d_rendezvous.RendezvousInit` must be handled according to the Connection
 // Rendezvous Protocol.
 //
 // Once the Connection Rendezvous Protocol has established at least one
@@ -139,7 +139,11 @@
 // protection against a malicious non-web app claiming to be a Threema App is
 // not possible.
 
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 import SwiftProtobuf
 
 // If the compiler emits an error on this type, it is because this file
@@ -154,18 +158,18 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
 
 /// Root message envelope for messages from the new device (ND) to the existing
 /// device (ED).
-public struct Join_NdToEd: Sendable {
+public struct D2dJoin_NdToEd: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   /// The enveloped message
-  public var content: Join_NdToEd.OneOf_Content? = nil
+  public var content: D2dJoin_NdToEd.OneOf_Content? = nil
 
-  public var registered: Join_Registered {
+  public var registered: D2dJoin_Registered {
     get {
       if case .registered(let v)? = content {return v}
-      return Join_Registered()
+      return D2dJoin_Registered()
     }
     set {content = .registered(newValue)}
   }
@@ -174,7 +178,7 @@ public struct Join_NdToEd: Sendable {
 
   /// The enveloped message
   public enum OneOf_Content: Equatable, Sendable {
-    case registered(Join_Registered)
+    case registered(D2dJoin_Registered)
 
   }
 
@@ -183,18 +187,18 @@ public struct Join_NdToEd: Sendable {
 
 /// Root message envelope for messages from the existing device (ED) to the new
 /// device (ND).
-public struct Join_EdToNd: Sendable {
+public struct D2dJoin_EdToNd: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   /// The enveloped message
-  public var content: Join_EdToNd.OneOf_Content? = nil
+  public var content: D2dJoin_EdToNd.OneOf_Content? = nil
 
-  public var begin: Join_Begin {
+  public var begin: D2dJoin_Begin {
     get {
       if case .begin(let v)? = content {return v}
-      return Join_Begin()
+      return D2dJoin_Begin()
     }
     set {content = .begin(newValue)}
   }
@@ -215,10 +219,10 @@ public struct Join_EdToNd: Sendable {
     set {content = .blobData(newValue)}
   }
 
-  public var essentialData: Join_EssentialData {
+  public var essentialData: D2dJoin_EssentialData {
     get {
       if case .essentialData(let v)? = content {return v}
-      return Join_EssentialData()
+      return D2dJoin_EssentialData()
     }
     set {content = .essentialData(newValue)}
   }
@@ -227,7 +231,7 @@ public struct Join_EdToNd: Sendable {
 
   /// The enveloped message
   public enum OneOf_Content: Equatable, Sendable {
-    case begin(Join_Begin)
+    case begin(D2dJoin_Begin)
     /// A Blob that is referenced as part of `EssentialData`.
     ///
     /// When receiving this variant:
@@ -237,7 +241,7 @@ public struct Join_EdToNd: Sendable {
     /// 2. Store the Blob data temporarily or permanently and store its
     ///    associated Blob ID in the device's database.
     case blobData(Common_BlobData)
-    case essentialData(Join_EssentialData)
+    case essentialData(D2dJoin_EssentialData)
 
   }
 
@@ -267,7 +271,7 @@ public struct Join_EdToNd: Sendable {
 ///    steps.
 /// 2. Stop displaying RPH and notify the user that the device join process is in
 ///    progress.
-public struct Join_Begin: Sendable {
+public struct D2dJoin_Begin: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -311,100 +315,103 @@ public struct Join_Begin: Sendable {
 ///       the connection and abort these steps.
 ///    2. If the user wants to request conversation history data from ED, leave
 ///       the connection running and start the History Exchange Protocol.
-public struct Join_EssentialData: @unchecked Sendable {
+public struct D2dJoin_EssentialData: @unchecked Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var identityData: Join_EssentialData.IdentityData {
-    get {return _storage._identityData ?? Join_EssentialData.IdentityData()}
+  public var identityData: D2dJoin_EssentialData.IdentityData {
+    get {_storage._identityData ?? D2dJoin_EssentialData.IdentityData()}
     set {_uniqueStorage()._identityData = newValue}
   }
   /// Returns true if `identityData` has been explicitly set.
-  public var hasIdentityData: Bool {return _storage._identityData != nil}
+  public var hasIdentityData: Bool {_storage._identityData != nil}
   /// Clears the value of `identityData`. Subsequent reads from it will return its default value.
   public mutating func clearIdentityData() {_uniqueStorage()._identityData = nil}
 
   /// Threema Work credentials
   ///
-  /// Required for a Threema Work app. Must not be present in a Threema consumer
-  /// app.
-  public var workCredentials: Sync_ThreemaWorkCredentials {
-    get {return _storage._workCredentials ?? Sync_ThreemaWorkCredentials()}
+  /// Shall not be present in the _Consumer_ flavour.
+  ///
+  /// Required in the _Work_ flavour.
+  public var workCredentials: D2dSync_ThreemaWorkCredentials {
+    get {_storage._workCredentials ?? D2dSync_ThreemaWorkCredentials()}
     set {_uniqueStorage()._workCredentials = newValue}
   }
   /// Returns true if `workCredentials` has been explicitly set.
-  public var hasWorkCredentials: Bool {return _storage._workCredentials != nil}
+  public var hasWorkCredentials: Bool {_storage._workCredentials != nil}
   /// Clears the value of `workCredentials`. Subsequent reads from it will return its default value.
   public mutating func clearWorkCredentials() {_uniqueStorage()._workCredentials = nil}
 
-  public var deviceGroupData: Join_EssentialData.DeviceGroupData {
-    get {return _storage._deviceGroupData ?? Join_EssentialData.DeviceGroupData()}
+  public var deviceGroupData: D2dJoin_EssentialData.DeviceGroupData {
+    get {_storage._deviceGroupData ?? D2dJoin_EssentialData.DeviceGroupData()}
     set {_uniqueStorage()._deviceGroupData = newValue}
   }
   /// Returns true if `deviceGroupData` has been explicitly set.
-  public var hasDeviceGroupData: Bool {return _storage._deviceGroupData != nil}
+  public var hasDeviceGroupData: Bool {_storage._deviceGroupData != nil}
   /// Clears the value of `deviceGroupData`. Subsequent reads from it will return its default value.
   public mutating func clearDeviceGroupData() {_uniqueStorage()._deviceGroupData = nil}
 
   /// User's profile
-  public var userProfile: Sync_UserProfile {
-    get {return _storage._userProfile ?? Sync_UserProfile()}
+  public var userProfile: D2dSync_UserProfile {
+    get {_storage._userProfile ?? D2dSync_UserProfile()}
     set {_uniqueStorage()._userProfile = newValue}
   }
   /// Returns true if `userProfile` has been explicitly set.
-  public var hasUserProfile: Bool {return _storage._userProfile != nil}
+  public var hasUserProfile: Bool {_storage._userProfile != nil}
   /// Clears the value of `userProfile`. Subsequent reads from it will return its default value.
   public mutating func clearUserProfile() {_uniqueStorage()._userProfile = nil}
 
   /// Shared settings
-  public var settings: Sync_Settings {
-    get {return _storage._settings ?? Sync_Settings()}
+  public var settings: D2dSync_Settings {
+    get {_storage._settings ?? D2dSync_Settings()}
     set {_uniqueStorage()._settings = newValue}
   }
   /// Returns true if `settings` has been explicitly set.
-  public var hasSettings: Bool {return _storage._settings != nil}
+  public var hasSettings: Bool {_storage._settings != nil}
   /// Clears the value of `settings`. Subsequent reads from it will return its default value.
   public mutating func clearSettings() {_uniqueStorage()._settings = nil}
 
   /// MDM parameters
   ///
-  /// Optional for a Threema Work app. Must not be present in a Threema consumer app.
+  /// Shall not be present in the _Consumer_ flavour.
+  ///
+  /// Optional in the _Work_ flavour.
   ///
   /// [//]: # "TODO(SE-307): Make this required for Threema Work!"
-  public var mdmParameters: Sync_MdmParameters {
-    get {return _storage._mdmParameters ?? Sync_MdmParameters()}
+  public var mdmParameters: D2dSync_MdmParameters {
+    get {_storage._mdmParameters ?? D2dSync_MdmParameters()}
     set {_uniqueStorage()._mdmParameters = newValue}
   }
   /// Returns true if `mdmParameters` has been explicitly set.
-  public var hasMdmParameters: Bool {return _storage._mdmParameters != nil}
+  public var hasMdmParameters: Bool {_storage._mdmParameters != nil}
   /// Clears the value of `mdmParameters`. Subsequent reads from it will return its default value.
   public mutating func clearMdmParameters() {_uniqueStorage()._mdmParameters = nil}
 
-  public var contacts: [Join_EssentialData.AugmentedContact] {
-    get {return _storage._contacts}
+  public var contacts: [D2dJoin_EssentialData.AugmentedContact] {
+    get {_storage._contacts}
     set {_uniqueStorage()._contacts = newValue}
   }
 
-  public var groups: [Join_EssentialData.AugmentedGroup] {
-    get {return _storage._groups}
+  public var groups: [D2dJoin_EssentialData.AugmentedGroup] {
+    get {_storage._groups}
     set {_uniqueStorage()._groups = newValue}
   }
 
-  public var distributionLists: [Join_EssentialData.AugmentedDistributionList] {
-    get {return _storage._distributionLists}
+  public var distributionLists: [D2dJoin_EssentialData.AugmentedDistributionList] {
+    get {_storage._distributionLists}
     set {_uniqueStorage()._distributionLists = newValue}
   }
 
   /// Hashed nonces that were used for CSP messages.
   public var cspHashedNonces: [Data] {
-    get {return _storage._cspHashedNonces}
+    get {_storage._cspHashedNonces}
     set {_uniqueStorage()._cspHashedNonces = newValue}
   }
 
-  /// Hashed nonces thate were used for D2D messages.
+  /// Hashed nonces that were used for D2D messages.
   public var d2DHashedNonces: [Data] {
-    get {return _storage._d2DHashedNonces}
+    get {_storage._d2DHashedNonces}
     set {_uniqueStorage()._d2DHashedNonces = newValue}
   }
 
@@ -454,12 +461,12 @@ public struct Join_EssentialData: @unchecked Sendable {
     // methods supported on all messages.
 
     /// The contact's data.
-    public var contact: Sync_Contact {
-      get {return _contact ?? Sync_Contact()}
+    public var contact: D2dSync_Contact {
+      get {_contact ?? D2dSync_Contact()}
       set {_contact = newValue}
     }
     /// Returns true if `contact` has been explicitly set.
-    public var hasContact: Bool {return self._contact != nil}
+    public var hasContact: Bool {self._contact != nil}
     /// Clears the value of `contact`. Subsequent reads from it will return its default value.
     public mutating func clearContact() {self._contact = nil}
 
@@ -468,11 +475,11 @@ public struct Join_EssentialData: @unchecked Sendable {
     ///
     /// Optional if no conversation exists for this contact.
     public var lastUpdateAt: UInt64 {
-      get {return _lastUpdateAt ?? 0}
+      get {_lastUpdateAt ?? 0}
       set {_lastUpdateAt = newValue}
     }
     /// Returns true if `lastUpdateAt` has been explicitly set.
-    public var hasLastUpdateAt: Bool {return self._lastUpdateAt != nil}
+    public var hasLastUpdateAt: Bool {self._lastUpdateAt != nil}
     /// Clears the value of `lastUpdateAt`. Subsequent reads from it will return its default value.
     public mutating func clearLastUpdateAt() {self._lastUpdateAt = nil}
 
@@ -480,38 +487,35 @@ public struct Join_EssentialData: @unchecked Sendable {
 
     public init() {}
 
-    fileprivate var _contact: Sync_Contact? = nil
+    fileprivate var _contact: D2dSync_Contact? = nil
     fileprivate var _lastUpdateAt: UInt64? = nil
   }
 
   /// Groups
-  public struct AugmentedGroup: @unchecked Sendable {
+  public struct AugmentedGroup: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
     /// The group's data.
-    public var group: Sync_Group {
-      get {return _storage._group ?? Sync_Group()}
-      set {_uniqueStorage()._group = newValue}
+    public var group: D2dSync_Group {
+      get {_group ?? D2dSync_Group()}
+      set {_group = newValue}
     }
     /// Returns true if `group` has been explicitly set.
-    public var hasGroup: Bool {return _storage._group != nil}
+    public var hasGroup: Bool {self._group != nil}
     /// Clears the value of `group`. Subsequent reads from it will return its default value.
-    public mutating func clearGroup() {_uniqueStorage()._group = nil}
+    public mutating func clearGroup() {self._group = nil}
 
     /// Unix-ish timestamp in milliseconds when the conversation with this
     /// group was last updated.
-    public var lastUpdateAt: UInt64 {
-      get {return _storage._lastUpdateAt}
-      set {_uniqueStorage()._lastUpdateAt = newValue}
-    }
+    public var lastUpdateAt: UInt64 = 0
 
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
     public init() {}
 
-    fileprivate var _storage = _StorageClass.defaultInstance
+    fileprivate var _group: D2dSync_Group? = nil
   }
 
   /// Distribution lists
@@ -521,12 +525,12 @@ public struct Join_EssentialData: @unchecked Sendable {
     // methods supported on all messages.
 
     /// The distribution list's data.
-    public var distributionList: Sync_DistributionList {
-      get {return _distributionList ?? Sync_DistributionList()}
+    public var distributionList: D2dSync_DistributionList {
+      get {_distributionList ?? D2dSync_DistributionList()}
       set {_distributionList = newValue}
     }
     /// Returns true if `distributionList` has been explicitly set.
-    public var hasDistributionList: Bool {return self._distributionList != nil}
+    public var hasDistributionList: Bool {self._distributionList != nil}
     /// Clears the value of `distributionList`. Subsequent reads from it will return its default value.
     public mutating func clearDistributionList() {self._distributionList = nil}
 
@@ -538,7 +542,7 @@ public struct Join_EssentialData: @unchecked Sendable {
 
     public init() {}
 
-    fileprivate var _distributionList: Sync_DistributionList? = nil
+    fileprivate var _distributionList: D2dSync_DistributionList? = nil
   }
 
   public init() {}
@@ -557,7 +561,7 @@ public struct Join_EssentialData: @unchecked Sendable {
 /// 2. Wait for ND to either close the connection or for ND to request
 ///    conversation history data. Any further messages from ND will move into
 ///    the History Exchange Protocol.
-public struct Join_Registered: Sendable {
+public struct D2dJoin_Registered: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -569,9 +573,9 @@ public struct Join_Registered: Sendable {
 
 // MARK: - Code below here is support for the SwiftProtobuf runtime.
 
-fileprivate let _protobuf_package = "join"
+fileprivate let _protobuf_package = "d2d_join"
 
-extension Join_NdToEd: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+extension D2dJoin_NdToEd: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".NdToEd"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}registered\0")
 
@@ -582,7 +586,7 @@ extension Join_NdToEd: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementati
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
       case 1: try {
-        var v: Join_Registered?
+        var v: D2dJoin_Registered?
         var hadOneofValue = false
         if let current = self.content {
           hadOneofValue = true
@@ -610,14 +614,14 @@ extension Join_NdToEd: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementati
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: Join_NdToEd, rhs: Join_NdToEd) -> Bool {
+  public static func ==(lhs: D2dJoin_NdToEd, rhs: D2dJoin_NdToEd) -> Bool {
     if lhs.content != rhs.content {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
 }
 
-extension Join_EdToNd: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+extension D2dJoin_EdToNd: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".EdToNd"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}begin\0\u{3}blob_data\0\u{3}essential_data\0")
 
@@ -628,7 +632,7 @@ extension Join_EdToNd: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementati
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
       case 1: try {
-        var v: Join_Begin?
+        var v: D2dJoin_Begin?
         var hadOneofValue = false
         if let current = self.content {
           hadOneofValue = true
@@ -654,7 +658,7 @@ extension Join_EdToNd: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementati
         }
       }()
       case 3: try {
-        var v: Join_EssentialData?
+        var v: D2dJoin_EssentialData?
         var hadOneofValue = false
         if let current = self.content {
           hadOneofValue = true
@@ -694,14 +698,14 @@ extension Join_EdToNd: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementati
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: Join_EdToNd, rhs: Join_EdToNd) -> Bool {
+  public static func ==(lhs: D2dJoin_EdToNd, rhs: D2dJoin_EdToNd) -> Bool {
     if lhs.content != rhs.content {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
 }
 
-extension Join_Begin: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+extension D2dJoin_Begin: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".Begin"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap()
 
@@ -714,26 +718,26 @@ extension Join_Begin: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementatio
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: Join_Begin, rhs: Join_Begin) -> Bool {
+  public static func ==(lhs: D2dJoin_Begin, rhs: D2dJoin_Begin) -> Bool {
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
 }
 
-extension Join_EssentialData: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+extension D2dJoin_EssentialData: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".EssentialData"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{4}\u{2}identity_data\0\u{3}device_group_data\0\u{3}user_profile\0\u{1}settings\0\u{3}mdm_parameters\0\u{1}contacts\0\u{1}groups\0\u{3}distribution_lists\0\u{3}csp_hashed_nonces\0\u{3}d2d_hashed_nonces\0\u{3}work_credentials\0\u{c}\u{1}\u{1}")
 
   fileprivate class _StorageClass {
-    var _identityData: Join_EssentialData.IdentityData? = nil
-    var _workCredentials: Sync_ThreemaWorkCredentials? = nil
-    var _deviceGroupData: Join_EssentialData.DeviceGroupData? = nil
-    var _userProfile: Sync_UserProfile? = nil
-    var _settings: Sync_Settings? = nil
-    var _mdmParameters: Sync_MdmParameters? = nil
-    var _contacts: [Join_EssentialData.AugmentedContact] = []
-    var _groups: [Join_EssentialData.AugmentedGroup] = []
-    var _distributionLists: [Join_EssentialData.AugmentedDistributionList] = []
+    var _identityData: D2dJoin_EssentialData.IdentityData? = nil
+    var _workCredentials: D2dSync_ThreemaWorkCredentials? = nil
+    var _deviceGroupData: D2dJoin_EssentialData.DeviceGroupData? = nil
+    var _userProfile: D2dSync_UserProfile? = nil
+    var _settings: D2dSync_Settings? = nil
+    var _mdmParameters: D2dSync_MdmParameters? = nil
+    var _contacts: [D2dJoin_EssentialData.AugmentedContact] = []
+    var _groups: [D2dJoin_EssentialData.AugmentedGroup] = []
+    var _distributionLists: [D2dJoin_EssentialData.AugmentedDistributionList] = []
     var _cspHashedNonces: [Data] = []
     var _d2DHashedNonces: [Data] = []
 
@@ -835,7 +839,7 @@ extension Join_EssentialData: SwiftProtobuf.Message, SwiftProtobuf._MessageImple
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: Join_EssentialData, rhs: Join_EssentialData) -> Bool {
+  public static func ==(lhs: D2dJoin_EssentialData, rhs: D2dJoin_EssentialData) -> Bool {
     if lhs._storage !== rhs._storage {
       let storagesAreEqual: Bool = withExtendedLifetime((lhs._storage, rhs._storage)) { (_args: (_StorageClass, _StorageClass)) in
         let _storage = _args.0
@@ -860,8 +864,8 @@ extension Join_EssentialData: SwiftProtobuf.Message, SwiftProtobuf._MessageImple
   }
 }
 
-extension Join_EssentialData.IdentityData: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = Join_EssentialData.protoMessageName + ".IdentityData"
+extension D2dJoin_EssentialData.IdentityData: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = D2dJoin_EssentialData.protoMessageName + ".IdentityData"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}identity\0\u{1}ck\0\u{3}csp_device_cookie\0\u{3}csp_server_group\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -895,7 +899,7 @@ extension Join_EssentialData.IdentityData: SwiftProtobuf.Message, SwiftProtobuf.
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: Join_EssentialData.IdentityData, rhs: Join_EssentialData.IdentityData) -> Bool {
+  public static func ==(lhs: D2dJoin_EssentialData.IdentityData, rhs: D2dJoin_EssentialData.IdentityData) -> Bool {
     if lhs.identity != rhs.identity {return false}
     if lhs.ck != rhs.ck {return false}
     if lhs.cspDeviceCookie != rhs.cspDeviceCookie {return false}
@@ -905,8 +909,8 @@ extension Join_EssentialData.IdentityData: SwiftProtobuf.Message, SwiftProtobuf.
   }
 }
 
-extension Join_EssentialData.DeviceGroupData: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = Join_EssentialData.protoMessageName + ".DeviceGroupData"
+extension D2dJoin_EssentialData.DeviceGroupData: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = D2dJoin_EssentialData.protoMessageName + ".DeviceGroupData"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}dgk\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -928,15 +932,15 @@ extension Join_EssentialData.DeviceGroupData: SwiftProtobuf.Message, SwiftProtob
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: Join_EssentialData.DeviceGroupData, rhs: Join_EssentialData.DeviceGroupData) -> Bool {
+  public static func ==(lhs: D2dJoin_EssentialData.DeviceGroupData, rhs: D2dJoin_EssentialData.DeviceGroupData) -> Bool {
     if lhs.dgk != rhs.dgk {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
 }
 
-extension Join_EssentialData.AugmentedContact: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = Join_EssentialData.protoMessageName + ".AugmentedContact"
+extension D2dJoin_EssentialData.AugmentedContact: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = D2dJoin_EssentialData.protoMessageName + ".AugmentedContact"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}contact\0\u{3}last_update_at\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -966,7 +970,7 @@ extension Join_EssentialData.AugmentedContact: SwiftProtobuf.Message, SwiftProto
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: Join_EssentialData.AugmentedContact, rhs: Join_EssentialData.AugmentedContact) -> Bool {
+  public static func ==(lhs: D2dJoin_EssentialData.AugmentedContact, rhs: D2dJoin_EssentialData.AugmentedContact) -> Bool {
     if lhs._contact != rhs._contact {return false}
     if lhs._lastUpdateAt != rhs._lastUpdateAt {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
@@ -974,85 +978,47 @@ extension Join_EssentialData.AugmentedContact: SwiftProtobuf.Message, SwiftProto
   }
 }
 
-extension Join_EssentialData.AugmentedGroup: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = Join_EssentialData.protoMessageName + ".AugmentedGroup"
+extension D2dJoin_EssentialData.AugmentedGroup: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = D2dJoin_EssentialData.protoMessageName + ".AugmentedGroup"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}group\0\u{3}last_update_at\0")
 
-  fileprivate class _StorageClass {
-    var _group: Sync_Group? = nil
-    var _lastUpdateAt: UInt64 = 0
-
-      // This property is used as the initial default value for new instances of the type.
-      // The type itself is protecting the reference to its storage via CoW semantics.
-      // This will force a copy to be made of this reference when the first mutation occurs;
-      // hence, it is safe to mark this as `nonisolated(unsafe)`.
-      static nonisolated(unsafe) let defaultInstance = _StorageClass()
-
-    private init() {}
-
-    init(copying source: _StorageClass) {
-      _group = source._group
-      _lastUpdateAt = source._lastUpdateAt
-    }
-  }
-
-  fileprivate mutating func _uniqueStorage() -> _StorageClass {
-    if !isKnownUniquelyReferenced(&_storage) {
-      _storage = _StorageClass(copying: _storage)
-    }
-    return _storage
-  }
-
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
-    _ = _uniqueStorage()
-    try withExtendedLifetime(_storage) { (_storage: _StorageClass) in
-      while let fieldNumber = try decoder.nextFieldNumber() {
-        // The use of inline closures is to circumvent an issue where the compiler
-        // allocates stack space for every case branch when no optimizations are
-        // enabled. https://github.com/apple/swift-protobuf/issues/1034
-        switch fieldNumber {
-        case 1: try { try decoder.decodeSingularMessageField(value: &_storage._group) }()
-        case 2: try { try decoder.decodeSingularUInt64Field(value: &_storage._lastUpdateAt) }()
-        default: break
-        }
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularMessageField(value: &self._group) }()
+      case 2: try { try decoder.decodeSingularUInt64Field(value: &self.lastUpdateAt) }()
+      default: break
       }
     }
   }
 
   public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    try withExtendedLifetime(_storage) { (_storage: _StorageClass) in
-      // The use of inline closures is to circumvent an issue where the compiler
-      // allocates stack space for every if/case branch local when no optimizations
-      // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
-      // https://github.com/apple/swift-protobuf/issues/1182
-      try { if let v = _storage._group {
-        try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
-      } }()
-      if _storage._lastUpdateAt != 0 {
-        try visitor.visitSingularUInt64Field(value: _storage._lastUpdateAt, fieldNumber: 2)
-      }
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
+    try { if let v = self._group {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
+    } }()
+    if self.lastUpdateAt != 0 {
+      try visitor.visitSingularUInt64Field(value: self.lastUpdateAt, fieldNumber: 2)
     }
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: Join_EssentialData.AugmentedGroup, rhs: Join_EssentialData.AugmentedGroup) -> Bool {
-    if lhs._storage !== rhs._storage {
-      let storagesAreEqual: Bool = withExtendedLifetime((lhs._storage, rhs._storage)) { (_args: (_StorageClass, _StorageClass)) in
-        let _storage = _args.0
-        let rhs_storage = _args.1
-        if _storage._group != rhs_storage._group {return false}
-        if _storage._lastUpdateAt != rhs_storage._lastUpdateAt {return false}
-        return true
-      }
-      if !storagesAreEqual {return false}
-    }
+  public static func ==(lhs: D2dJoin_EssentialData.AugmentedGroup, rhs: D2dJoin_EssentialData.AugmentedGroup) -> Bool {
+    if lhs._group != rhs._group {return false}
+    if lhs.lastUpdateAt != rhs.lastUpdateAt {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
 }
 
-extension Join_EssentialData.AugmentedDistributionList: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = Join_EssentialData.protoMessageName + ".AugmentedDistributionList"
+extension D2dJoin_EssentialData.AugmentedDistributionList: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = D2dJoin_EssentialData.protoMessageName + ".AugmentedDistributionList"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}distribution_list\0\u{3}last_update_at\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -1082,7 +1048,7 @@ extension Join_EssentialData.AugmentedDistributionList: SwiftProtobuf.Message, S
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: Join_EssentialData.AugmentedDistributionList, rhs: Join_EssentialData.AugmentedDistributionList) -> Bool {
+  public static func ==(lhs: D2dJoin_EssentialData.AugmentedDistributionList, rhs: D2dJoin_EssentialData.AugmentedDistributionList) -> Bool {
     if lhs._distributionList != rhs._distributionList {return false}
     if lhs.lastUpdateAt != rhs.lastUpdateAt {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
@@ -1090,7 +1056,7 @@ extension Join_EssentialData.AugmentedDistributionList: SwiftProtobuf.Message, S
   }
 }
 
-extension Join_Registered: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+extension D2dJoin_Registered: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".Registered"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap()
 
@@ -1103,7 +1069,7 @@ extension Join_Registered: SwiftProtobuf.Message, SwiftProtobuf._MessageImplemen
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: Join_Registered, rhs: Join_Registered) -> Bool {
+  public static func ==(lhs: D2dJoin_Registered, rhs: D2dJoin_Registered) -> Bool {
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

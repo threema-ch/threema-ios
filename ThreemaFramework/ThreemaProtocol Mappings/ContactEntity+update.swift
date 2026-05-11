@@ -4,10 +4,11 @@ import ThreemaProtocols
 
 extension ContactEntity {
     func update(
-        syncContact: Sync_Contact,
+        syncContact: D2dSync_Contact,
         userDefinedProfilePicture: Data?,
         contactDefinedProfilePicture: Data?,
         entityManager: EntityManager,
+        messageProcessorDelegate: MessageProcessorDelegate,
         contactStore: ContactStoreProtocol
     ) {
         guard let managedObjectContext,
@@ -140,6 +141,23 @@ extension ContactEntity {
             case .UNRECOGNIZED:
                 break
             }
+        }
+        if let workAvailabilityStatus {
+            entityManager.entityDestroyer.delete(workAvailabilityStatus: workAvailabilityStatus)
+            messageProcessorDelegate.changedManagedObjectID(workAvailabilityStatus.objectID)
+        }
+        
+        if syncContact.hasWorkAvailabilityStatus, syncContact.workAvailabilityStatus.category != .none {
+            let workAvailabilityStatus = entityManager.entityCreator.workAvailabilityStatusEntity(
+                value: syncContact.workAvailabilityStatus.category.rawValue,
+                text: syncContact.workAvailabilityStatus.description_p,
+                contact: self
+            )
+            messageProcessorDelegate.changedManagedObjectID(workAvailabilityStatus.objectID)
+        }
+
+        if syncContact.hasWorkLastFullSyncAt {
+            workLastFullSyncAt = syncContact.workLastFullSyncAtNullable?.date
         }
     }
 }

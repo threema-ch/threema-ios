@@ -1,6 +1,6 @@
 import Foundation
 
-@objc final class SafeSetupWork: NSObject {
+final class SafeSetupWork: NSObject {
     
     @objc static let backupEnable = 2 << 0
     @objc static let backupDisable = 2 << 1

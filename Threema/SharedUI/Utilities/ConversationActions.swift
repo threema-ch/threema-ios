@@ -90,7 +90,7 @@ class ConversationActions {
         _ conversationObjectID: NSManagedObjectID,
         messageObjectIDs: [NSManagedObjectID]
     ) -> Int {
-        let isAppInBackground = AppDelegate.shared().isAppInBackground()
+        let isAppInBackground = SceneDelegate.isAppInBackground
 
         return businessInjector.runInBackgroundAndWait { backgroundBusinessInjector in
             backgroundBusinessInjector.entityManager.performAndWait {

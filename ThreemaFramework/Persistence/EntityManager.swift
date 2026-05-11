@@ -43,37 +43,25 @@ public final class EntityManager: NSObject {
         dbContext.current === managedObjectContext
     }
 
-    @available(*, deprecated, renamed: "performSave(_:)")
-    @objc public func performAsyncBlockAndSafe(_ block: (() -> Void)?) {
-        // perform always runs on the correct queue for `current`
+    @objc public func perform(_ block: @escaping () -> Void) {
         dbContext.current.perform {
-            block?()
-            try? self.internalSave()
-        }
-    }
-    
-    @available(*, deprecated, renamed: "performAndWaitSave(_:)")
-    @objc public func performSyncBlockAndSafe(_ block: (() -> Void)?) {
-        dbContext.current.performAndWait {
-            block?()
-            try? internalSave()
-        }
-    }
-    
-    @available(*, deprecated, renamed: "perform(_:)")
-    @objc public func performBlock(_ block: (() -> Void)?) {
-        dbContext.current.perform {
-            block?()
+            block()
         }
     }
 
-    @available(*, deprecated, renamed: "performAndWait(_:)")
-    @objc public func performBlockAndWait(_ block: (() -> Void)?) {
+    @objc public func performAndWait(_ block: @escaping () -> Void) {
         dbContext.current.performAndWait {
-            block?()
+            block()
         }
     }
-    
+
+    @objc public func performSave(_ block: @escaping () -> Void) {
+        dbContext.current.perform {
+            block()
+            try? self.internalSave()
+        }
+    }
+
     @objc public func performAndWaitSave(_ block: @escaping () -> Void) {
         dbContext.current.performAndWait {
             block()
@@ -164,18 +152,12 @@ extension EntityManager {
     /// Check and repair database integrity at the moment just the relationship of `Conversation.lastMessage`.
     public func repairDatabaseIntegrity() {
         performAndWaitSave {
-            guard let conversations = self.entityFetcher.conversationEntities() else {
+            guard let conversations = self.entityFetcher.conversationEntitiesWithBrokenLastMessage() else {
                 return
             }
 
             for conversation in conversations {
-                guard let lastMessage = conversation.lastMessage else {
-                    continue
-                }
-
-                if self.entityFetcher.message(with: lastMessage.id, in: conversation) == nil {
-                    conversation.lastMessage = nil
-                }
+                conversation.lastMessage = nil
             }
         }
     }

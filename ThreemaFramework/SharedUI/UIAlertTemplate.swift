@@ -49,7 +49,7 @@ import ThreemaMacros
         owner.present(alert, animated: true)
     }
     
-    @objc public static func showDestructiveAlert(
+    public static func showDestructiveAlert(
         owner: UIViewController,
         title: String?,
         message: String?,

@@ -2,9 +2,9 @@ import ThreemaProtocols
 
 // TODO: Implement (IOS-3869)
 
-extension Sync_Group {
-    static func from(group: Group) -> Sync_Group {
-        var syncGroup = Sync_Group()
+extension D2dSync_Group {
+    static func from(group: Group) -> D2dSync_Group {
+        var syncGroup = D2dSync_Group()
 
         syncGroup.update(state: group.state)
 
@@ -13,7 +13,7 @@ extension Sync_Group {
 
     mutating func update(conversationCategory: ConversationEntity.Category?) {
         if let conversationCategory,
-           let category = Sync_ConversationCategory(rawValue: conversationCategory.rawValue) {
+           let category = D2dSync_ConversationCategory(rawValue: conversationCategory.rawValue) {
             self.conversationCategory = category
         }
         else if hasConversationCategory {
@@ -23,7 +23,7 @@ extension Sync_Group {
 
     mutating func update(conversationVisibility: ConversationEntity.Visibility?) {
         if let conversationVisibility,
-           let visibility = Sync_ConversationVisibility(rawValue: conversationVisibility.rawValue) {
+           let visibility = D2dSync_ConversationVisibility(rawValue: conversationVisibility.rawValue) {
             self.conversationVisibility = visibility
         }
         else if hasConversationVisibility {
@@ -67,16 +67,6 @@ extension Sync_Group {
         }
     }
 
-    mutating func update(notificationSoundIsMuted: Bool?) {
-        if let notificationSoundIsMuted {
-            notificationSoundPolicyOverride
-                .override = notificationSoundIsMuted ? .policy(.muted) : .default(Common_Unit())
-        }
-        else if hasNotificationSoundPolicyOverride {
-            clearNotificationSoundPolicyOverride()
-        }
-    }
-
     mutating func update(
         notificationTriggerType: PushSetting.PushSettingType?,
         notificationTriggerExpiresAt: Date?,
@@ -88,13 +78,13 @@ extension Sync_Group {
                 notificationTriggerPolicyOverride.override = .default(Common_Unit())
             case .offPeriod:
                 if let notificationTriggerExpiresAt {
-                    var triggerPolicy = Sync_Group.NotificationTriggerPolicyOverride.Policy()
+                    var triggerPolicy = D2dSync_Group.NotificationTriggerPolicyOverride.Policy()
                     triggerPolicy.expiresAt = notificationTriggerExpiresAt.millisecondsSince1970.littleEndian
                     triggerPolicy.policy = notificationTriggerMentioned ? .mentioned : .never
                     notificationTriggerPolicyOverride.override = .policy(triggerPolicy)
                 }
             case .off:
-                var triggerPolicy = Sync_Group.NotificationTriggerPolicyOverride.Policy()
+                var triggerPolicy = D2dSync_Group.NotificationTriggerPolicyOverride.Policy()
                 triggerPolicy.clearExpiresAt()
                 triggerPolicy.policy = notificationTriggerMentioned ? .mentioned : .never
                 notificationTriggerPolicyOverride.override = .policy(triggerPolicy)

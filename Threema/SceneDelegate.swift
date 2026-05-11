@@ -1,10 +1,40 @@
 import SwiftUI
+import ThreemaFramework
 import UIKit
 
 final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
-
+    
+    private(set) weak static var current: SceneDelegate?
+    
+    static var isAppInBackground: Bool {
+        if Thread.isMainThread {
+            UIApplication.shared.applicationState == .background
+        }
+        else {
+            DispatchQueue.main.sync {
+                UIApplication.shared.applicationState == .background
+            }
+        }
+    }
+    
+    var currentTopViewController: UIViewController? {
+        var topViewController = window?.rootViewController
+        while let presentedViewController = topViewController?.presentedViewController {
+            topViewController = presentedViewController
+        }
+        return topViewController
+    }
+    
     var window: UIWindow?
-    private var rootCoordinator: RootCoordinator?
+    private(set) var rootCoordinator: RootCoordinator?
+    
+    override init() {
+        AppLaunchManager.preLaunchSetup()
+        super.init()
+        startSentryIfNeeded()
+        
+        Self.current = self
+    }
 
     func scene(
         _ scene: UIScene,
@@ -52,11 +82,25 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     func sceneWillEnterForeground(_ scene: UIScene) {
         // Called as the scene transitions from the background to the foreground.
         // Use this method to undo the changes made on entering the background.
+        TypingIndicatorManager.sharedInstance.startObserving()
     }
 
     func sceneDidEnterBackground(_ scene: UIScene) {
         // Called as the scene transitions from the foreground to the background.
         // Use this method to save data, release shared resources, and store enough scene-specific state information
         // to restore the scene back to its current state.
+        TypingIndicatorManager.sharedInstance.stopObserving()
+    }
+    
+    // MARK: - Helpers
+    
+    private func startSentryIfNeeded() {
+        #if !DISABLE_SENTRY
+            guard !ProcessInfoHelper.isRunningForScreenshots else {
+                return
+            }
+            let sentry = SentryClient()
+            sentry.start()
+        #endif
     }
 }

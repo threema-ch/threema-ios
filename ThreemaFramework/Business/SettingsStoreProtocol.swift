@@ -62,6 +62,6 @@ public protocol SettingsStoreProtocol {
 }
 
 protocol SettingsStoreInternalProtocol {
-    func updateSettingsStore(with syncSettings: Sync_Settings)
+    func updateSettingsStore(with syncSettings: D2dSync_Settings)
     func syncSettingCalls()
 }

@@ -1,6 +1,6 @@
 #import <Foundation/Foundation.h>
 
-@interface LicenseStore : NSObject
+@protocol LicenseStoreProtocol <NSObject>
 
 @property (readonly, nullable) NSString *errorMessage;
 @property (readonly, nullable) NSError *error;
@@ -9,9 +9,6 @@
 @property (nullable, readwrite) NSString *licensePassword;
 @property (nonnull, readwrite) NSString *licenseDeviceID;
 @property (nullable, readwrite) NSString *onPremConfigUrl NS_SWIFT_NAME(onPremConfigURL);
-
-+ (nonnull instancetype)sharedLicenseStore;
-- (nonnull instancetype) __unavailable init;
 
 - (BOOL)validCustomOnPremConfigUrlWithPredefinedUrl:(NSString *)onPremConfigUrl;
 
@@ -34,5 +31,12 @@
 - (void)performUpdateWorkInfo;
 
 - (void)deleteLicense;
+
+@end
+
+@interface LicenseStore : NSObject <LicenseStoreProtocol>
+
++ (nonnull instancetype)sharedLicenseStore;
+- (nonnull instancetype) __unavailable init;
 
 @end

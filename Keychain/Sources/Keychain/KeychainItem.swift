@@ -3,7 +3,7 @@ import ThreemaEssentials
 
 enum KeychainItem: CaseIterable {
     case remoteSecret(_ version: KeychainVersion = .v1)
-    case identity(_ version: KeychainVersion = .v1)
+    case identity(_ version: KeychainVersion = .v1, thisDeviceOnly: Bool = true)
     case identityBackup(_ version: KeychainVersion = .v1)
     case deviceCookie(_ version: KeychainVersion = .v1)
     case multiDeviceGroupKey(_ version: KeychainVersion = .v1)
@@ -79,6 +79,8 @@ enum KeychainItem: CaseIterable {
             kSecAttrAccessibleAfterFirstUnlock
         case .identityBackup:
             kSecAttrAccessibleWhenUnlocked
+        case let .identity(_, thisDeviceOnly):
+            thisDeviceOnly ? kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly : kSecAttrAccessibleAfterFirstUnlock
         default:
             kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
         }

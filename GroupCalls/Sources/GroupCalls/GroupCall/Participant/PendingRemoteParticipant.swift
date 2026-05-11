@@ -42,7 +42,7 @@ final class PendingRemoteParticipant: RemoteParticipant {
     private var nonceCounter = SequenceNumber<UInt64>()
     private var nonceCounterRemote = SequenceNumber<UInt64>()
     
-    private var mediaKeys: [Groupcall_ParticipantToParticipant.MediaKey]?
+    private var mediaKeys: [GroupCall_ParticipantToParticipant.MediaKey]?
     
     // MARK: - Lifecycle
 
@@ -74,7 +74,7 @@ final class PendingRemoteParticipant: RemoteParticipant {
     }
 
     func handle(
-        message: ThreemaProtocols.Groupcall_ParticipantToParticipant.OuterEnvelope,
+        message: ThreemaProtocols.GroupCall_ParticipantToParticipant.OuterEnvelope,
         groupID: GroupIdentity,
         localParticipant: LocalParticipant
     ) throws -> MessageResponseAction {
@@ -187,14 +187,14 @@ final class PendingRemoteParticipant: RemoteParticipant {
     func handshakeHelloMessage(for localIdentity: ThreemaIdentity, localNickname: String) throws -> Data {
         DDLogNotice("[GroupCall] Create HandshakeHelloMessage for PendingRemoteParticipant \(participantID)")
 
-        let helloMessage = Groupcall_ParticipantToParticipant.Handshake.Hello.with {
+        let helloMessage = GroupCall_ParticipantToParticipant.Handshake.Hello.with {
             $0.identity = localIdentity.rawValue
             $0.nickname = localNickname
             $0.pck = keyPair.publicKey
             $0.pcck = pcck
         }
         
-        let envelope = Groupcall_ParticipantToParticipant.Handshake.HelloEnvelope.with {
+        let envelope = GroupCall_ParticipantToParticipant.Handshake.HelloEnvelope.with {
             $0.padding = dependencies.groupCallCrypto.padding()
             $0.hello = helloMessage
         }
@@ -216,7 +216,7 @@ final class PendingRemoteParticipant: RemoteParticipant {
     
     // MARK: - Private functions
     
-    private func handshakeAuthMessage(with mediaKeys: [Groupcall_ParticipantToParticipant.MediaKey]) throws -> Data {
+    private func handshakeAuthMessage(with mediaKeys: [GroupCall_ParticipantToParticipant.MediaKey]) throws -> Data {
         DDLogNotice(
             "[GroupCall] Create HandshakeAuthMessage for PendingRemoteParticipant with id \(participantID)"
         )
@@ -233,13 +233,13 @@ final class PendingRemoteParticipant: RemoteParticipant {
             throw GroupCallError.badParticipantState
         }
         
-        let handshakeAuth = Groupcall_ParticipantToParticipant.Handshake.Auth.with {
+        let handshakeAuth = GroupCall_ParticipantToParticipant.Handshake.Auth.with {
             $0.pck = pckRemote
             $0.pcck = pcckRemote
             $0.mediaKeys = mediaKeys
         }
         
-        let handshakeAuthEnvelope = Groupcall_ParticipantToParticipant.Handshake.AuthEnvelope.with {
+        let handshakeAuthEnvelope = GroupCall_ParticipantToParticipant.Handshake.AuthEnvelope.with {
             $0.padding = dependencies.groupCallCrypto.padding()
             $0.auth = handshakeAuth
         }
@@ -306,7 +306,7 @@ final class PendingRemoteParticipant: RemoteParticipant {
         return outerData
     }
     
-    private func handleHandshakeHello(message: Groupcall_ParticipantToParticipant.OuterEnvelope) throws {
+    private func handleHandshakeHello(message: GroupCall_ParticipantToParticipant.OuterEnvelope) throws {
         DDLogNotice("[GroupCall] Handle HandshakeHelloMessage for PendingRemoteParticipant \(participantID)")
 
         let data = message.encryptedData
@@ -318,13 +318,13 @@ final class PendingRemoteParticipant: RemoteParticipant {
             throw GroupCallError.decryptionFailure
         }
         
-        guard let helloEnvelope = try? Groupcall_ParticipantToParticipant.Handshake.HelloEnvelope(
+        guard let helloEnvelope = try? GroupCall_ParticipantToParticipant.Handshake.HelloEnvelope(
             serializedData: decrypted
         ) else {
             throw GroupCallError.decryptionFailure
         }
         
-        let helloMessage: Groupcall_ParticipantToParticipant.Handshake.Hello
+        let helloMessage: GroupCall_ParticipantToParticipant.Handshake.Hello
         switch helloEnvelope.content {
         case let .hello(message):
             helloMessage = message
@@ -340,7 +340,7 @@ final class PendingRemoteParticipant: RemoteParticipant {
         nickname = helloMessage.nickname != "" ? helloMessage.nickname : helloMessage.identity
     }
     
-    private func handleAuth(message: Groupcall_ParticipantToParticipant.OuterEnvelope) throws {
+    private func handleAuth(message: GroupCall_ParticipantToParticipant.OuterEnvelope) throws {
         DDLogNotice("[GroupCall] Handle HandshakeAuthMessage for PendingRemoteParticipant \(participantID)")
 
         let data = message.encryptedData
@@ -388,13 +388,13 @@ final class PendingRemoteParticipant: RemoteParticipant {
             throw GroupCallError.decryptionFailure
         }
         
-        guard let authEnvelope = try? Groupcall_ParticipantToParticipant.Handshake.AuthEnvelope(
+        guard let authEnvelope = try? GroupCall_ParticipantToParticipant.Handshake.AuthEnvelope(
             serializedData: decrypted
         ) else {
             throw GroupCallError.decryptionFailure
         }
         
-        let authMessage: Groupcall_ParticipantToParticipant.Handshake.Auth
+        let authMessage: GroupCall_ParticipantToParticipant.Handshake.Auth
         switch authEnvelope.content {
         case let .auth(auth):
             authMessage = auth

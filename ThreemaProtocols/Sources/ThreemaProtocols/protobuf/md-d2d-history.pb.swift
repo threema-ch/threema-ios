@@ -50,14 +50,14 @@
 //
 // #### Connection Setup
 //
-// RID creates an `rendezvous.RendezvousInit` by following the Connection
-// Rendezvous Protocol. It encrypts the created `rendezvous.RendezvousInit`
-// with `DGHEK`, wraps it in a `url.HistoryExchangeRequestOrOffer` and offers
-// it in form of a URL or a QR code.
+// RID creates an `d2d_rendezvous.RendezvousInit` by following the Connection
+// Rendezvous Protocol. It encrypts the created `d2d_rendezvous.RendezvousInit`
+// with `DGHEK`, wraps it in a `url.HistoryExchangeRequestOrOffer` and offers it
+// in form of a URL or a QR code.
 //
-// RRD scans the QR code and parses the `url.HistoryExchangeRequestOrOffer`.
-// It will then decrypt the contained `rendezvous.RendezvousInit`. Once
-// decrypted, the enclosed `rendezvous.RendezvousInit` must be handled
+// RRD scans the QR code and parses the `url.HistoryExchangeRequestOrOffer`. It
+// will then decrypt the contained `d2d_rendezvous.RendezvousInit`. Once
+// decrypted, the enclosed `d2d_rendezvous.RendezvousInit` must be handled
 // according to the Connection Rendezvous Protocol.
 //
 // Once the Connection Rendezvous Protocol has established at least one
@@ -112,7 +112,7 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
 }
 
 /// Media type to transfer
-public enum History_MediaType: SwiftProtobuf.Enum, Swift.CaseIterable {
+public enum D2dHistory_MediaType: SwiftProtobuf.Enum, Swift.CaseIterable {
   public typealias RawValue = Int
 
   /// All media should be transferred
@@ -138,7 +138,7 @@ public enum History_MediaType: SwiftProtobuf.Enum, Swift.CaseIterable {
   }
 
   // The compiler won't synthesize support with the UNRECOGNIZED case.
-  public static let allCases: [History_MediaType] = [
+  public static let allCases: [D2dHistory_MediaType] = [
     .all,
   ]
 
@@ -146,26 +146,26 @@ public enum History_MediaType: SwiftProtobuf.Enum, Swift.CaseIterable {
 
 /// Root message envelope for messages from the destination device (DD) to the
 /// source device (SD).
-public struct History_DdToSd: Sendable {
+public struct D2dHistory_DdToSd: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   /// The enveloped message
-  public var content: History_DdToSd.OneOf_Content? = nil
+  public var content: D2dHistory_DdToSd.OneOf_Content? = nil
 
-  public var getSummary: History_GetSummary {
+  public var getSummary: D2dHistory_GetSummary {
     get {
       if case .getSummary(let v)? = content {return v}
-      return History_GetSummary()
+      return D2dHistory_GetSummary()
     }
     set {content = .getSummary(newValue)}
   }
 
-  public var beginTransfer: History_BeginTransfer {
+  public var beginTransfer: D2dHistory_BeginTransfer {
     get {
       if case .beginTransfer(let v)? = content {return v}
-      return History_BeginTransfer()
+      return D2dHistory_BeginTransfer()
     }
     set {content = .beginTransfer(newValue)}
   }
@@ -174,8 +174,8 @@ public struct History_DdToSd: Sendable {
 
   /// The enveloped message
   public enum OneOf_Content: Equatable, Sendable {
-    case getSummary(History_GetSummary)
-    case beginTransfer(History_BeginTransfer)
+    case getSummary(D2dHistory_GetSummary)
+    case beginTransfer(D2dHistory_BeginTransfer)
 
   }
 
@@ -184,18 +184,18 @@ public struct History_DdToSd: Sendable {
 
 /// Root message envelope for messages from the source device (SD) to the
 /// destination device (DD).
-public struct History_SdToDd: Sendable {
+public struct D2dHistory_SdToDd: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   /// The enveloped message
-  public var content: History_SdToDd.OneOf_Content? = nil
+  public var content: D2dHistory_SdToDd.OneOf_Content? = nil
 
-  public var summary: History_Summary {
+  public var summary: D2dHistory_Summary {
     get {
       if case .summary(let v)? = content {return v}
-      return History_Summary()
+      return D2dHistory_Summary()
     }
     set {content = .summary(newValue)}
   }
@@ -208,10 +208,10 @@ public struct History_SdToDd: Sendable {
     set {content = .blobData(newValue)}
   }
 
-  public var data: History_Data {
+  public var data: D2dHistory_Data {
     get {
       if case .data(let v)? = content {return v}
-      return History_Data()
+      return D2dHistory_Data()
     }
     set {content = .data(newValue)}
   }
@@ -220,9 +220,9 @@ public struct History_SdToDd: Sendable {
 
   /// The enveloped message
   public enum OneOf_Content: Equatable, Sendable {
-    case summary(History_Summary)
+    case summary(D2dHistory_Summary)
     case blobData(Common_BlobData)
-    case data(History_Data)
+    case data(D2dHistory_Data)
 
   }
 
@@ -248,7 +248,7 @@ public struct History_SdToDd: Sendable {
 ///    message with the same `id` back to DD. For outgoing messages, the
 ///    timespan refers to the time the message was created. For incoming
 ///    messages, the timespan refers to the time the message was received.
-public struct History_GetSummary: Sendable {
+public struct D2dHistory_GetSummary: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -258,16 +258,16 @@ public struct History_GetSummary: Sendable {
 
   /// Timespan to get a summary for
   public var timespan: Common_Timespan {
-    get {return _timespan ?? Common_Timespan()}
+    get {_timespan ?? Common_Timespan()}
     set {_timespan = newValue}
   }
   /// Returns true if `timespan` has been explicitly set.
-  public var hasTimespan: Bool {return self._timespan != nil}
+  public var hasTimespan: Bool {self._timespan != nil}
   /// Clears the value of `timespan`. Subsequent reads from it will return its default value.
   public mutating func clearTimespan() {self._timespan = nil}
 
   /// Which types of media should be included
-  public var media: [History_MediaType] = []
+  public var media: [D2dHistory_MediaType] = []
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
@@ -287,7 +287,7 @@ public struct History_GetSummary: Sendable {
 ///    properties (timespan, media types, etc.) which will trigger another
 ///    `GetSummary` message. When the user commits to the currently selected
 ///    properties, it sends a `BeginTransfer` message.
-public struct History_Summary: Sendable {
+public struct D2dHistory_Summary: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -329,7 +329,7 @@ public struct History_Summary: Sendable {
 /// 6. If there are remaining messages, restart these steps from the beginning.
 /// 7. Wait until all buffered data on the connection has been written. Then,
 ///    close the connection.
-public struct History_BeginTransfer: Sendable {
+public struct D2dHistory_BeginTransfer: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -360,13 +360,13 @@ public struct History_BeginTransfer: Sendable {
 /// 3. Log a warning for each remaining Blob in `blobs` and discard them.
 /// 4. If `remaining` is `0`, close the connection and consider the
 ///    conversation history transfer successfully completed.
-public struct History_Data: Sendable {
+public struct D2dHistory_Data: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   /// Past messages
-  public var messages: [History_PastMessage] = []
+  public var messages: [D2dHistory_PastMessage] = []
 
   /// Amount of messages remaining to be transferred **after** this message
   public var remaining: UInt64 = 0
@@ -377,25 +377,25 @@ public struct History_Data: Sendable {
 }
 
 /// Contains a past incoming or outgoing message.
-public struct History_PastMessage: Sendable {
+public struct D2dHistory_PastMessage: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var message: History_PastMessage.OneOf_Message? = nil
+  public var message: D2dHistory_PastMessage.OneOf_Message? = nil
 
-  public var incoming: History_PastIncomingMessage {
+  public var incoming: D2dHistory_PastIncomingMessage {
     get {
       if case .incoming(let v)? = message {return v}
-      return History_PastIncomingMessage()
+      return D2dHistory_PastIncomingMessage()
     }
     set {message = .incoming(newValue)}
   }
 
-  public var outgoing: History_PastOutgoingMessage {
+  public var outgoing: D2dHistory_PastOutgoingMessage {
     get {
       if case .outgoing(let v)? = message {return v}
-      return History_PastOutgoingMessage()
+      return D2dHistory_PastOutgoingMessage()
     }
     set {message = .outgoing(newValue)}
   }
@@ -403,8 +403,8 @@ public struct History_PastMessage: Sendable {
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
   public enum OneOf_Message: Equatable, Sendable {
-    case incoming(History_PastIncomingMessage)
-    case outgoing(History_PastOutgoingMessage)
+    case incoming(D2dHistory_PastIncomingMessage)
+    case outgoing(D2dHistory_PastOutgoingMessage)
 
   }
 
@@ -412,7 +412,7 @@ public struct History_PastMessage: Sendable {
 }
 
 /// A reaction to a message
-public struct History_Reaction: Sendable {
+public struct D2dHistory_Reaction: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -420,7 +420,7 @@ public struct History_Reaction: Sendable {
   /// Unix-ish timestamp in milliseconds when the reaction happened.
   public var at: UInt64 = 0
 
-  public var type: History_Reaction.TypeEnum = .acknowledge
+  public var type: D2dHistory_Reaction.TypeEnum = .acknowledge
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
@@ -456,7 +456,7 @@ public struct History_Reaction: Sendable {
     }
 
     // The compiler won't synthesize support with the UNRECOGNIZED case.
-    public static let allCases: [History_Reaction.TypeEnum] = [
+    public static let allCases: [D2dHistory_Reaction.TypeEnum] = [
       .acknowledge,
       .decline,
     ]
@@ -467,18 +467,18 @@ public struct History_Reaction: Sendable {
 }
 
 /// A past outgoing message
-public struct History_PastOutgoingMessage: Sendable {
+public struct D2dHistory_PastOutgoingMessage: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   /// Enclosed outgoing message
   public var message: D2d_OutgoingMessage {
-    get {return _message ?? D2d_OutgoingMessage()}
+    get {_message ?? D2d_OutgoingMessage()}
     set {_message = newValue}
   }
   /// Returns true if `message` has been explicitly set.
-  public var hasMessage: Bool {return self._message != nil}
+  public var hasMessage: Bool {self._message != nil}
   /// Clears the value of `message`. Subsequent reads from it will return its default value.
   public mutating func clearMessage() {self._message = nil}
 
@@ -488,21 +488,21 @@ public struct History_PastOutgoingMessage: Sendable {
   /// Optional Unix-ish timestamp in milliseconds for when the message has been
   /// marked as read
   public var readAt: UInt64 {
-    get {return _readAt ?? 0}
+    get {_readAt ?? 0}
     set {_readAt = newValue}
   }
   /// Returns true if `readAt` has been explicitly set.
-  public var hasReadAt: Bool {return self._readAt != nil}
+  public var hasReadAt: Bool {self._readAt != nil}
   /// Clears the value of `readAt`. Subsequent reads from it will return its default value.
   public mutating func clearReadAt() {self._readAt = nil}
 
   /// Optional last reaction to the message
-  public var lastReactionAt: History_Reaction {
-    get {return _lastReactionAt ?? History_Reaction()}
+  public var lastReactionAt: D2dHistory_Reaction {
+    get {_lastReactionAt ?? D2dHistory_Reaction()}
     set {_lastReactionAt = newValue}
   }
   /// Returns true if `lastReactionAt` has been explicitly set.
-  public var hasLastReactionAt: Bool {return self._lastReactionAt != nil}
+  public var hasLastReactionAt: Bool {self._lastReactionAt != nil}
   /// Clears the value of `lastReactionAt`. Subsequent reads from it will return its default value.
   public mutating func clearLastReactionAt() {self._lastReactionAt = nil}
 
@@ -512,22 +512,22 @@ public struct History_PastOutgoingMessage: Sendable {
 
   fileprivate var _message: D2d_OutgoingMessage? = nil
   fileprivate var _readAt: UInt64? = nil
-  fileprivate var _lastReactionAt: History_Reaction? = nil
+  fileprivate var _lastReactionAt: D2dHistory_Reaction? = nil
 }
 
 /// A past incoming message
-public struct History_PastIncomingMessage: Sendable {
+public struct D2dHistory_PastIncomingMessage: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   /// Enclosed incoming message
   public var message: D2d_IncomingMessage {
-    get {return _message ?? D2d_IncomingMessage()}
+    get {_message ?? D2d_IncomingMessage()}
     set {_message = newValue}
   }
   /// Returns true if `message` has been explicitly set.
-  public var hasMessage: Bool {return self._message != nil}
+  public var hasMessage: Bool {self._message != nil}
   /// Clears the value of `message`. Subsequent reads from it will return its default value.
   public mutating func clearMessage() {self._message = nil}
 
@@ -537,21 +537,21 @@ public struct History_PastIncomingMessage: Sendable {
   /// Optional Unix-ish timestamp in milliseconds for when the message has been
   /// marked as read
   public var readAt: UInt64 {
-    get {return _readAt ?? 0}
+    get {_readAt ?? 0}
     set {_readAt = newValue}
   }
   /// Returns true if `readAt` has been explicitly set.
-  public var hasReadAt: Bool {return self._readAt != nil}
+  public var hasReadAt: Bool {self._readAt != nil}
   /// Clears the value of `readAt`. Subsequent reads from it will return its default value.
   public mutating func clearReadAt() {self._readAt = nil}
 
   /// Optional last reaction to the message
-  public var lastReactionAt: History_Reaction {
-    get {return _lastReactionAt ?? History_Reaction()}
+  public var lastReactionAt: D2dHistory_Reaction {
+    get {_lastReactionAt ?? D2dHistory_Reaction()}
     set {_lastReactionAt = newValue}
   }
   /// Returns true if `lastReactionAt` has been explicitly set.
-  public var hasLastReactionAt: Bool {return self._lastReactionAt != nil}
+  public var hasLastReactionAt: Bool {self._lastReactionAt != nil}
   /// Clears the value of `lastReactionAt`. Subsequent reads from it will return its default value.
   public mutating func clearLastReactionAt() {self._lastReactionAt = nil}
 
@@ -561,18 +561,18 @@ public struct History_PastIncomingMessage: Sendable {
 
   fileprivate var _message: D2d_IncomingMessage? = nil
   fileprivate var _readAt: UInt64? = nil
-  fileprivate var _lastReactionAt: History_Reaction? = nil
+  fileprivate var _lastReactionAt: D2dHistory_Reaction? = nil
 }
 
 // MARK: - Code below here is support for the SwiftProtobuf runtime.
 
-fileprivate let _protobuf_package = "history"
+fileprivate let _protobuf_package = "d2d_history"
 
-extension History_MediaType: SwiftProtobuf._ProtoNameProviding {
+extension D2dHistory_MediaType: SwiftProtobuf._ProtoNameProviding {
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0ALL\0")
 }
 
-extension History_DdToSd: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+extension D2dHistory_DdToSd: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".DdToSd"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}get_summary\0\u{3}begin_transfer\0")
 
@@ -583,7 +583,7 @@ extension History_DdToSd: SwiftProtobuf.Message, SwiftProtobuf._MessageImplement
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
       case 1: try {
-        var v: History_GetSummary?
+        var v: D2dHistory_GetSummary?
         var hadOneofValue = false
         if let current = self.content {
           hadOneofValue = true
@@ -596,7 +596,7 @@ extension History_DdToSd: SwiftProtobuf.Message, SwiftProtobuf._MessageImplement
         }
       }()
       case 2: try {
-        var v: History_BeginTransfer?
+        var v: D2dHistory_BeginTransfer?
         var hadOneofValue = false
         if let current = self.content {
           hadOneofValue = true
@@ -632,14 +632,14 @@ extension History_DdToSd: SwiftProtobuf.Message, SwiftProtobuf._MessageImplement
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: History_DdToSd, rhs: History_DdToSd) -> Bool {
+  public static func ==(lhs: D2dHistory_DdToSd, rhs: D2dHistory_DdToSd) -> Bool {
     if lhs.content != rhs.content {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
 }
 
-extension History_SdToDd: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+extension D2dHistory_SdToDd: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".SdToDd"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}summary\0\u{3}blob_data\0\u{1}data\0")
 
@@ -650,7 +650,7 @@ extension History_SdToDd: SwiftProtobuf.Message, SwiftProtobuf._MessageImplement
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
       case 1: try {
-        var v: History_Summary?
+        var v: D2dHistory_Summary?
         var hadOneofValue = false
         if let current = self.content {
           hadOneofValue = true
@@ -676,7 +676,7 @@ extension History_SdToDd: SwiftProtobuf.Message, SwiftProtobuf._MessageImplement
         }
       }()
       case 3: try {
-        var v: History_Data?
+        var v: D2dHistory_Data?
         var hadOneofValue = false
         if let current = self.content {
           hadOneofValue = true
@@ -716,14 +716,14 @@ extension History_SdToDd: SwiftProtobuf.Message, SwiftProtobuf._MessageImplement
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: History_SdToDd, rhs: History_SdToDd) -> Bool {
+  public static func ==(lhs: D2dHistory_SdToDd, rhs: D2dHistory_SdToDd) -> Bool {
     if lhs.content != rhs.content {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
 }
 
-extension History_GetSummary: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+extension D2dHistory_GetSummary: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".GetSummary"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}id\0\u{1}timespan\0\u{1}media\0")
 
@@ -758,7 +758,7 @@ extension History_GetSummary: SwiftProtobuf.Message, SwiftProtobuf._MessageImple
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: History_GetSummary, rhs: History_GetSummary) -> Bool {
+  public static func ==(lhs: D2dHistory_GetSummary, rhs: D2dHistory_GetSummary) -> Bool {
     if lhs.id != rhs.id {return false}
     if lhs._timespan != rhs._timespan {return false}
     if lhs.media != rhs.media {return false}
@@ -767,7 +767,7 @@ extension History_GetSummary: SwiftProtobuf.Message, SwiftProtobuf._MessageImple
   }
 }
 
-extension History_Summary: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+extension D2dHistory_Summary: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".Summary"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}id\0\u{1}messages\0\u{1}size\0")
 
@@ -798,7 +798,7 @@ extension History_Summary: SwiftProtobuf.Message, SwiftProtobuf._MessageImplemen
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: History_Summary, rhs: History_Summary) -> Bool {
+  public static func ==(lhs: D2dHistory_Summary, rhs: D2dHistory_Summary) -> Bool {
     if lhs.id != rhs.id {return false}
     if lhs.messages != rhs.messages {return false}
     if lhs.size != rhs.size {return false}
@@ -807,7 +807,7 @@ extension History_Summary: SwiftProtobuf.Message, SwiftProtobuf._MessageImplemen
   }
 }
 
-extension History_BeginTransfer: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+extension D2dHistory_BeginTransfer: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".BeginTransfer"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}id\0")
 
@@ -830,14 +830,14 @@ extension History_BeginTransfer: SwiftProtobuf.Message, SwiftProtobuf._MessageIm
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: History_BeginTransfer, rhs: History_BeginTransfer) -> Bool {
+  public static func ==(lhs: D2dHistory_BeginTransfer, rhs: D2dHistory_BeginTransfer) -> Bool {
     if lhs.id != rhs.id {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
 }
 
-extension History_Data: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+extension D2dHistory_Data: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".Data"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}messages\0\u{1}remaining\0")
 
@@ -864,7 +864,7 @@ extension History_Data: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementat
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: History_Data, rhs: History_Data) -> Bool {
+  public static func ==(lhs: D2dHistory_Data, rhs: D2dHistory_Data) -> Bool {
     if lhs.messages != rhs.messages {return false}
     if lhs.remaining != rhs.remaining {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
@@ -872,7 +872,7 @@ extension History_Data: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementat
   }
 }
 
-extension History_PastMessage: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+extension D2dHistory_PastMessage: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".PastMessage"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}incoming\0\u{1}outgoing\0")
 
@@ -883,7 +883,7 @@ extension History_PastMessage: SwiftProtobuf.Message, SwiftProtobuf._MessageImpl
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
       case 1: try {
-        var v: History_PastIncomingMessage?
+        var v: D2dHistory_PastIncomingMessage?
         var hadOneofValue = false
         if let current = self.message {
           hadOneofValue = true
@@ -896,7 +896,7 @@ extension History_PastMessage: SwiftProtobuf.Message, SwiftProtobuf._MessageImpl
         }
       }()
       case 2: try {
-        var v: History_PastOutgoingMessage?
+        var v: D2dHistory_PastOutgoingMessage?
         var hadOneofValue = false
         if let current = self.message {
           hadOneofValue = true
@@ -932,14 +932,14 @@ extension History_PastMessage: SwiftProtobuf.Message, SwiftProtobuf._MessageImpl
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: History_PastMessage, rhs: History_PastMessage) -> Bool {
+  public static func ==(lhs: D2dHistory_PastMessage, rhs: D2dHistory_PastMessage) -> Bool {
     if lhs.message != rhs.message {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
 }
 
-extension History_Reaction: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+extension D2dHistory_Reaction: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".Reaction"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}at\0\u{1}type\0")
 
@@ -966,7 +966,7 @@ extension History_Reaction: SwiftProtobuf.Message, SwiftProtobuf._MessageImpleme
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: History_Reaction, rhs: History_Reaction) -> Bool {
+  public static func ==(lhs: D2dHistory_Reaction, rhs: D2dHistory_Reaction) -> Bool {
     if lhs.at != rhs.at {return false}
     if lhs.type != rhs.type {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
@@ -974,11 +974,11 @@ extension History_Reaction: SwiftProtobuf.Message, SwiftProtobuf._MessageImpleme
   }
 }
 
-extension History_Reaction.TypeEnum: SwiftProtobuf._ProtoNameProviding {
+extension D2dHistory_Reaction.TypeEnum: SwiftProtobuf._ProtoNameProviding {
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0ACKNOWLEDGE\0\u{1}DECLINE\0")
 }
 
-extension History_PastOutgoingMessage: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+extension D2dHistory_PastOutgoingMessage: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".PastOutgoingMessage"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}message\0\u{3}sent_at\0\u{3}read_at\0\u{3}last_reaction_at\0")
 
@@ -1017,7 +1017,7 @@ extension History_PastOutgoingMessage: SwiftProtobuf.Message, SwiftProtobuf._Mes
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: History_PastOutgoingMessage, rhs: History_PastOutgoingMessage) -> Bool {
+  public static func ==(lhs: D2dHistory_PastOutgoingMessage, rhs: D2dHistory_PastOutgoingMessage) -> Bool {
     if lhs._message != rhs._message {return false}
     if lhs.sentAt != rhs.sentAt {return false}
     if lhs._readAt != rhs._readAt {return false}
@@ -1027,7 +1027,7 @@ extension History_PastOutgoingMessage: SwiftProtobuf.Message, SwiftProtobuf._Mes
   }
 }
 
-extension History_PastIncomingMessage: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+extension D2dHistory_PastIncomingMessage: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".PastIncomingMessage"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}message\0\u{3}received_at\0\u{3}read_at\0\u{3}last_reaction_at\0")
 
@@ -1066,7 +1066,7 @@ extension History_PastIncomingMessage: SwiftProtobuf.Message, SwiftProtobuf._Mes
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: History_PastIncomingMessage, rhs: History_PastIncomingMessage) -> Bool {
+  public static func ==(lhs: D2dHistory_PastIncomingMessage, rhs: D2dHistory_PastIncomingMessage) -> Bool {
     if lhs._message != rhs._message {return false}
     if lhs.receivedAt != rhs.receivedAt {return false}
     if lhs._readAt != rhs._readAt {return false}

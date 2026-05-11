@@ -47,7 +47,6 @@ actor MediatorSyncableGroup {
         update(identity: identity, name: group.name)
 
         var pushSetting = pushSettingManager.find(forGroup: identity)
-        updateNotificationSound(identity: identity, isMuted: pushSetting.muted)
         updateNotificationTrigger(
             identity: identity,
             type: pushSetting.type,
@@ -130,16 +129,6 @@ actor MediatorSyncableGroup {
         setSyncGroup(sGroup)
     }
 
-    func updateNotificationSound(identity: GroupIdentity, isMuted: Bool?) {
-        guard userSettings.enableMultiDevice else {
-            return
-        }
-
-        var sGroup = getSyncGroup(identity)
-        sGroup.update(notificationSoundIsMuted: isMuted)
-        setSyncGroup(sGroup)
-    }
-
     func updateNotificationTrigger(
         identity: GroupIdentity,
         type: PushSetting.PushSettingType?,
@@ -179,20 +168,20 @@ actor MediatorSyncableGroup {
 
     // MARK: Private functions
 
-    private func getSyncGroup(_ identity: GroupIdentity) -> Sync_Group {
+    private func getSyncGroup(_ identity: GroupIdentity) -> D2dSync_Group {
         if let task,
            task.syncGroup.groupIdentity.groupID == identity.id.paddedLittleEndian(),
            task.syncGroup.groupIdentity.creatorIdentity == identity.creator.rawValue {
             return task.syncGroup
         }
         else {
-            var sGroup = Sync_Group()
+            var sGroup = D2dSync_Group()
             sGroup.groupIdentity = Common_GroupIdentity.from(identity)
             return sGroup
         }
     }
 
-    private func setSyncGroup(_ syncGroup: Sync_Group) {
+    private func setSyncGroup(_ syncGroup: D2dSync_Group) {
         if task == nil {
             task = TaskDefinitionGroupSync(syncGroup: syncGroup, syncAction: .update)
         }

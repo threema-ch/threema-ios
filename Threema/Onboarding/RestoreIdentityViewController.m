@@ -258,9 +258,10 @@
 
 - (void)updateTextViewWithBackupCode {
     if (_backupTextView.text.length == 0) {
-        if ([AppDelegate sharedAppDelegate].urlRestoreData != nil) {
+        NSString *urlRestoreData = [RestoreDataURLProvider urlString];
+        if (urlRestoreData != nil) {
             /* put the dashes back in */
-            _backupTextView.text = [[MyIdentityStore sharedMyIdentityStore] addBackupGroupDashes:[AppDelegate sharedAppDelegate].urlRestoreData];
+            _backupTextView.text = [[MyIdentityStore sharedMyIdentityStore] addBackupGroupDashes:urlRestoreData];
             
             _backupLabel.hidden = YES;
             [_passwordTextField becomeFirstResponder];

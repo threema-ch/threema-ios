@@ -27,7 +27,7 @@
 // - `ETK`: Ephemeral Transport Key
 // - `STK`: Shared Transport Key
 // - `PID`: Path ID
-// - `RPH`: Rendevous Path Hash
+// - `RPH`: Rendezvous Path Hash
 // - `RIDAK`: RID's Authentication Key
 // - `RRDAK`: RRD's Authentication Key
 // - `RIDTK`: RID's Transport Key
@@ -102,7 +102,7 @@
 //
 // ### Protocol Flow
 //
-// Connection paths are formed by transmitting a `rendezvous.RendezvousInit`
+// Connection paths are formed by transmitting a `d2d_rendezvous.RendezvousInit`
 // from RID to RRD as defined in the description of that message.
 //
 // The connections are then simultaneously established in the background and
@@ -194,7 +194,11 @@
 //
 // A PID must be unique and not be re-used for a specific AK.
 
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 import SwiftProtobuf
 
 // If the compiler emits an error on this type, it is because this file
@@ -250,31 +254,31 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
 /// 5. On each successful direct or relayed connection made in the background,
 ///    forward an event to the upper-layer protocol in order for it to select one
 ///    of the paths for nomination.
-public struct Rendezvous_RendezvousInit: Sendable {
+public struct D2dRendezvous_RendezvousInit: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  public var version: Rendezvous_RendezvousInit.Version = .v10
+  public var version: D2dRendezvous_RendezvousInit.Version = .v10
 
   /// 32 byte ephemeral secret Authentication Key (AK).
   public var ak: Data = Data()
 
-  public var relayedWebSocket: Rendezvous_RendezvousInit.RelayedWebSocket {
-    get {return _relayedWebSocket ?? Rendezvous_RendezvousInit.RelayedWebSocket()}
+  public var relayedWebSocket: D2dRendezvous_RendezvousInit.RelayedWebSocket {
+    get {_relayedWebSocket ?? D2dRendezvous_RendezvousInit.RelayedWebSocket()}
     set {_relayedWebSocket = newValue}
   }
   /// Returns true if `relayedWebSocket` has been explicitly set.
-  public var hasRelayedWebSocket: Bool {return self._relayedWebSocket != nil}
+  public var hasRelayedWebSocket: Bool {self._relayedWebSocket != nil}
   /// Clears the value of `relayedWebSocket`. Subsequent reads from it will return its default value.
   public mutating func clearRelayedWebSocket() {self._relayedWebSocket = nil}
 
-  public var directTcpServer: Rendezvous_RendezvousInit.DirectTcpServer {
-    get {return _directTcpServer ?? Rendezvous_RendezvousInit.DirectTcpServer()}
+  public var directTcpServer: D2dRendezvous_RendezvousInit.DirectTcpServer {
+    get {_directTcpServer ?? D2dRendezvous_RendezvousInit.DirectTcpServer()}
     set {_directTcpServer = newValue}
   }
   /// Returns true if `directTcpServer` has been explicitly set.
-  public var hasDirectTcpServer: Bool {return self._directTcpServer != nil}
+  public var hasDirectTcpServer: Bool {self._directTcpServer != nil}
   /// Clears the value of `directTcpServer`. Subsequent reads from it will return its default value.
   public mutating func clearDirectTcpServer() {self._directTcpServer = nil}
 
@@ -306,7 +310,7 @@ public struct Rendezvous_RendezvousInit: Sendable {
     }
 
     // The compiler won't synthesize support with the UNRECOGNIZED case.
-    public static let allCases: [Rendezvous_RendezvousInit.Version] = [
+    public static let allCases: [D2dRendezvous_RendezvousInit.Version] = [
       .v10,
     ]
 
@@ -349,7 +353,7 @@ public struct Rendezvous_RendezvousInit: Sendable {
     }
 
     // The compiler won't synthesize support with the UNRECOGNIZED case.
-    public static let allCases: [Rendezvous_RendezvousInit.NetworkCost] = [
+    public static let allCases: [D2dRendezvous_RendezvousInit.NetworkCost] = [
       .unknown,
       .unmetered,
       .metered,
@@ -367,7 +371,7 @@ public struct Rendezvous_RendezvousInit: Sendable {
     public var pathID: UInt32 = 0
 
     /// Network cost
-    public var networkCost: Rendezvous_RendezvousInit.NetworkCost = .unknown
+    public var networkCost: D2dRendezvous_RendezvousInit.NetworkCost = .unknown
 
     /// Full URL to the WebSocket server with a random 32 byte hex-encoded
     /// rendezvous path. Must begin with `wss://`.
@@ -388,7 +392,7 @@ public struct Rendezvous_RendezvousInit: Sendable {
     public var port: UInt32 = 0
 
     /// List of associated IP addresses. Each IP address creates its own path.
-    public var ipAddresses: [Rendezvous_RendezvousInit.DirectTcpServer.IpAddress] = []
+    public var ipAddresses: [D2dRendezvous_RendezvousInit.DirectTcpServer.IpAddress] = []
 
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
@@ -402,7 +406,7 @@ public struct Rendezvous_RendezvousInit: Sendable {
       public var pathID: UInt32 = 0
 
       /// Network cost
-      public var networkCost: Rendezvous_RendezvousInit.NetworkCost = .unknown
+      public var networkCost: D2dRendezvous_RendezvousInit.NetworkCost = .unknown
 
       /// IPv4 or IPv6 address
       public var ip: String = String()
@@ -417,12 +421,12 @@ public struct Rendezvous_RendezvousInit: Sendable {
 
   public init() {}
 
-  fileprivate var _relayedWebSocket: Rendezvous_RendezvousInit.RelayedWebSocket? = nil
-  fileprivate var _directTcpServer: Rendezvous_RendezvousInit.DirectTcpServer? = nil
+  fileprivate var _relayedWebSocket: D2dRendezvous_RendezvousInit.RelayedWebSocket? = nil
+  fileprivate var _directTcpServer: D2dRendezvous_RendezvousInit.DirectTcpServer? = nil
 }
 
 /// Messages required for the initial lock-step handshake between RRD and RID.
-public struct Rendezvous_Handshake: Sendable {
+public struct D2dRendezvous_Handshake: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -533,7 +537,7 @@ public struct Rendezvous_Handshake: Sendable {
 ///
 /// ¹: Closing other paths is only triggered by the receiver as it may otherwise
 ///    lead to a race between nomination and close detection.
-public struct Rendezvous_Nominate: Sendable {
+public struct D2dRendezvous_Nominate: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -545,9 +549,9 @@ public struct Rendezvous_Nominate: Sendable {
 
 // MARK: - Code below here is support for the SwiftProtobuf runtime.
 
-fileprivate let _protobuf_package = "rendezvous"
+fileprivate let _protobuf_package = "d2d_rendezvous"
 
-extension Rendezvous_RendezvousInit: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+extension D2dRendezvous_RendezvousInit: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".RendezvousInit"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}version\0\u{1}ak\0\u{3}relayed_web_socket\0\u{3}direct_tcp_server\0")
 
@@ -586,7 +590,7 @@ extension Rendezvous_RendezvousInit: SwiftProtobuf.Message, SwiftProtobuf._Messa
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: Rendezvous_RendezvousInit, rhs: Rendezvous_RendezvousInit) -> Bool {
+  public static func ==(lhs: D2dRendezvous_RendezvousInit, rhs: D2dRendezvous_RendezvousInit) -> Bool {
     if lhs.version != rhs.version {return false}
     if lhs.ak != rhs.ak {return false}
     if lhs._relayedWebSocket != rhs._relayedWebSocket {return false}
@@ -596,16 +600,16 @@ extension Rendezvous_RendezvousInit: SwiftProtobuf.Message, SwiftProtobuf._Messa
   }
 }
 
-extension Rendezvous_RendezvousInit.Version: SwiftProtobuf._ProtoNameProviding {
+extension D2dRendezvous_RendezvousInit.Version: SwiftProtobuf._ProtoNameProviding {
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0V1_0\0")
 }
 
-extension Rendezvous_RendezvousInit.NetworkCost: SwiftProtobuf._ProtoNameProviding {
+extension D2dRendezvous_RendezvousInit.NetworkCost: SwiftProtobuf._ProtoNameProviding {
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0UNKNOWN\0\u{1}UNMETERED\0\u{1}METERED\0")
 }
 
-extension Rendezvous_RendezvousInit.RelayedWebSocket: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = Rendezvous_RendezvousInit.protoMessageName + ".RelayedWebSocket"
+extension D2dRendezvous_RendezvousInit.RelayedWebSocket: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = D2dRendezvous_RendezvousInit.protoMessageName + ".RelayedWebSocket"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}path_id\0\u{3}network_cost\0\u{1}url\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -635,7 +639,7 @@ extension Rendezvous_RendezvousInit.RelayedWebSocket: SwiftProtobuf.Message, Swi
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: Rendezvous_RendezvousInit.RelayedWebSocket, rhs: Rendezvous_RendezvousInit.RelayedWebSocket) -> Bool {
+  public static func ==(lhs: D2dRendezvous_RendezvousInit.RelayedWebSocket, rhs: D2dRendezvous_RendezvousInit.RelayedWebSocket) -> Bool {
     if lhs.pathID != rhs.pathID {return false}
     if lhs.networkCost != rhs.networkCost {return false}
     if lhs.url != rhs.url {return false}
@@ -644,8 +648,8 @@ extension Rendezvous_RendezvousInit.RelayedWebSocket: SwiftProtobuf.Message, Swi
   }
 }
 
-extension Rendezvous_RendezvousInit.DirectTcpServer: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = Rendezvous_RendezvousInit.protoMessageName + ".DirectTcpServer"
+extension D2dRendezvous_RendezvousInit.DirectTcpServer: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = D2dRendezvous_RendezvousInit.protoMessageName + ".DirectTcpServer"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}port\0\u{3}ip_addresses\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -671,7 +675,7 @@ extension Rendezvous_RendezvousInit.DirectTcpServer: SwiftProtobuf.Message, Swif
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: Rendezvous_RendezvousInit.DirectTcpServer, rhs: Rendezvous_RendezvousInit.DirectTcpServer) -> Bool {
+  public static func ==(lhs: D2dRendezvous_RendezvousInit.DirectTcpServer, rhs: D2dRendezvous_RendezvousInit.DirectTcpServer) -> Bool {
     if lhs.port != rhs.port {return false}
     if lhs.ipAddresses != rhs.ipAddresses {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
@@ -679,8 +683,8 @@ extension Rendezvous_RendezvousInit.DirectTcpServer: SwiftProtobuf.Message, Swif
   }
 }
 
-extension Rendezvous_RendezvousInit.DirectTcpServer.IpAddress: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = Rendezvous_RendezvousInit.DirectTcpServer.protoMessageName + ".IpAddress"
+extension D2dRendezvous_RendezvousInit.DirectTcpServer.IpAddress: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = D2dRendezvous_RendezvousInit.DirectTcpServer.protoMessageName + ".IpAddress"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}path_id\0\u{3}network_cost\0\u{1}ip\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -710,7 +714,7 @@ extension Rendezvous_RendezvousInit.DirectTcpServer.IpAddress: SwiftProtobuf.Mes
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: Rendezvous_RendezvousInit.DirectTcpServer.IpAddress, rhs: Rendezvous_RendezvousInit.DirectTcpServer.IpAddress) -> Bool {
+  public static func ==(lhs: D2dRendezvous_RendezvousInit.DirectTcpServer.IpAddress, rhs: D2dRendezvous_RendezvousInit.DirectTcpServer.IpAddress) -> Bool {
     if lhs.pathID != rhs.pathID {return false}
     if lhs.networkCost != rhs.networkCost {return false}
     if lhs.ip != rhs.ip {return false}
@@ -719,7 +723,7 @@ extension Rendezvous_RendezvousInit.DirectTcpServer.IpAddress: SwiftProtobuf.Mes
   }
 }
 
-extension Rendezvous_Handshake: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+extension D2dRendezvous_Handshake: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".Handshake"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap()
 
@@ -732,14 +736,14 @@ extension Rendezvous_Handshake: SwiftProtobuf.Message, SwiftProtobuf._MessageImp
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: Rendezvous_Handshake, rhs: Rendezvous_Handshake) -> Bool {
+  public static func ==(lhs: D2dRendezvous_Handshake, rhs: D2dRendezvous_Handshake) -> Bool {
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
 }
 
-extension Rendezvous_Handshake.RrdToRid: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = Rendezvous_Handshake.protoMessageName + ".RrdToRid"
+extension D2dRendezvous_Handshake.RrdToRid: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = D2dRendezvous_Handshake.protoMessageName + ".RrdToRid"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap()
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -751,14 +755,14 @@ extension Rendezvous_Handshake.RrdToRid: SwiftProtobuf.Message, SwiftProtobuf._M
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: Rendezvous_Handshake.RrdToRid, rhs: Rendezvous_Handshake.RrdToRid) -> Bool {
+  public static func ==(lhs: D2dRendezvous_Handshake.RrdToRid, rhs: D2dRendezvous_Handshake.RrdToRid) -> Bool {
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
 }
 
-extension Rendezvous_Handshake.RrdToRid.Hello: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = Rendezvous_Handshake.RrdToRid.protoMessageName + ".Hello"
+extension D2dRendezvous_Handshake.RrdToRid.Hello: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = D2dRendezvous_Handshake.RrdToRid.protoMessageName + ".Hello"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}challenge\0\u{1}etk\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -784,7 +788,7 @@ extension Rendezvous_Handshake.RrdToRid.Hello: SwiftProtobuf.Message, SwiftProto
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: Rendezvous_Handshake.RrdToRid.Hello, rhs: Rendezvous_Handshake.RrdToRid.Hello) -> Bool {
+  public static func ==(lhs: D2dRendezvous_Handshake.RrdToRid.Hello, rhs: D2dRendezvous_Handshake.RrdToRid.Hello) -> Bool {
     if lhs.challenge != rhs.challenge {return false}
     if lhs.etk != rhs.etk {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
@@ -792,8 +796,8 @@ extension Rendezvous_Handshake.RrdToRid.Hello: SwiftProtobuf.Message, SwiftProto
   }
 }
 
-extension Rendezvous_Handshake.RrdToRid.Auth: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = Rendezvous_Handshake.RrdToRid.protoMessageName + ".Auth"
+extension D2dRendezvous_Handshake.RrdToRid.Auth: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = D2dRendezvous_Handshake.RrdToRid.protoMessageName + ".Auth"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}response\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -815,15 +819,15 @@ extension Rendezvous_Handshake.RrdToRid.Auth: SwiftProtobuf.Message, SwiftProtob
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: Rendezvous_Handshake.RrdToRid.Auth, rhs: Rendezvous_Handshake.RrdToRid.Auth) -> Bool {
+  public static func ==(lhs: D2dRendezvous_Handshake.RrdToRid.Auth, rhs: D2dRendezvous_Handshake.RrdToRid.Auth) -> Bool {
     if lhs.response != rhs.response {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
 }
 
-extension Rendezvous_Handshake.RidToRrd: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = Rendezvous_Handshake.protoMessageName + ".RidToRrd"
+extension D2dRendezvous_Handshake.RidToRrd: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = D2dRendezvous_Handshake.protoMessageName + ".RidToRrd"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap()
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -835,14 +839,14 @@ extension Rendezvous_Handshake.RidToRrd: SwiftProtobuf.Message, SwiftProtobuf._M
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: Rendezvous_Handshake.RidToRrd, rhs: Rendezvous_Handshake.RidToRrd) -> Bool {
+  public static func ==(lhs: D2dRendezvous_Handshake.RidToRrd, rhs: D2dRendezvous_Handshake.RidToRrd) -> Bool {
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
 }
 
-extension Rendezvous_Handshake.RidToRrd.AuthHello: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = Rendezvous_Handshake.RidToRrd.protoMessageName + ".AuthHello"
+extension D2dRendezvous_Handshake.RidToRrd.AuthHello: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = D2dRendezvous_Handshake.RidToRrd.protoMessageName + ".AuthHello"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}response\0\u{1}challenge\0\u{1}etk\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -872,7 +876,7 @@ extension Rendezvous_Handshake.RidToRrd.AuthHello: SwiftProtobuf.Message, SwiftP
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: Rendezvous_Handshake.RidToRrd.AuthHello, rhs: Rendezvous_Handshake.RidToRrd.AuthHello) -> Bool {
+  public static func ==(lhs: D2dRendezvous_Handshake.RidToRrd.AuthHello, rhs: D2dRendezvous_Handshake.RidToRrd.AuthHello) -> Bool {
     if lhs.response != rhs.response {return false}
     if lhs.challenge != rhs.challenge {return false}
     if lhs.etk != rhs.etk {return false}
@@ -881,7 +885,7 @@ extension Rendezvous_Handshake.RidToRrd.AuthHello: SwiftProtobuf.Message, SwiftP
   }
 }
 
-extension Rendezvous_Nominate: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+extension D2dRendezvous_Nominate: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".Nominate"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap()
 
@@ -894,7 +898,7 @@ extension Rendezvous_Nominate: SwiftProtobuf.Message, SwiftProtobuf._MessageImpl
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: Rendezvous_Nominate, rhs: Rendezvous_Nominate) -> Bool {
+  public static func ==(lhs: D2dRendezvous_Nominate, rhs: D2dRendezvous_Nominate) -> Bool {
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

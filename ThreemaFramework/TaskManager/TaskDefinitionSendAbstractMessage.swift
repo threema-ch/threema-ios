@@ -1,7 +1,7 @@
 import CocoaLumberjackSwift
 import Foundation
 
-@objc final class TaskDefinitionSendAbstractMessage: TaskDefinition, TaskDefinitionSendMessageNonceProtocol,
+final class TaskDefinitionSendAbstractMessage: TaskDefinition, TaskDefinitionSendMessageNonceProtocol,
     TaskDefinitionSendMessageProtocol {
     override func create(
         frameworkInjector: FrameworkInjectorProtocol,

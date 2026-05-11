@@ -2,7 +2,7 @@ import Foundation
 import ThreemaFramework
 import ThreemaMacros
 
-@objc final class WorkContactListViewController: ContactListBaseViewController {
+final class WorkContactListViewController: ContactListBaseViewController {
     // MARK: - Properties
     
     private lazy var provider = WorkContactListProvider()

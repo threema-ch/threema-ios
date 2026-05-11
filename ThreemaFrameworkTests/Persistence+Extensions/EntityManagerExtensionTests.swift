@@ -450,6 +450,101 @@ final class EntityManagerExtensionTests: XCTestCase {
         }
     }
 
+    // MARK: - repairDatabaseIntegrity
+
+    func testRepairDatabaseIntegrityValidLastMessageNotModified() {
+        let preparer = testDatabase.preparer
+        let conversation = preparer.save {
+            let contact = preparer.createContact(identity: "AAAAAAAA")
+            let conversation = preparer.createConversation(contactEntity: contact)
+            let message = preparer.createTextMessage(
+                conversation: conversation,
+                isOwn: false,
+                sender: contact,
+                remoteSentDate: Date()
+            )
+            conversation.lastMessage = message
+            return conversation
+        }
+
+        testDatabase.entityManager.repairDatabaseIntegrity()
+
+        testDatabase.entityManager.performAndWait {
+            XCTAssertNotNil(conversation.lastMessage, "Valid lastMessage pointing to own message must not be cleared")
+        }
+    }
+
+    func testRepairDatabaseIntegrityBrokenLastMessageIsNilledOut() {
+        let preparer = testDatabase.preparer
+        let (convA, _) = preparer.save {
+            let contactA = preparer.createContact(identity: "AAAAAAAA")
+            let convA = preparer.createConversation(contactEntity: contactA)
+
+            let contactB = preparer.createContact(identity: "BBBBBBBB")
+            let convB = preparer.createConversation(contactEntity: contactB)
+            // message belongs to convB; setting it as lastMessage of convA is the broken state
+            let message = preparer.createTextMessage(
+                conversation: convB,
+                isOwn: false,
+                sender: contactB,
+                remoteSentDate: Date()
+            )
+            convA.lastMessage = message
+            return (convA, convB)
+        }
+
+        testDatabase.entityManager.repairDatabaseIntegrity()
+
+        testDatabase.entityManager.performAndWait {
+            XCTAssertNil(convA.lastMessage, "lastMessage from a different conversation must be nil'd out")
+        }
+    }
+
+    func testRepairDatabaseIntegrityMixedConversationsOnlyBrokenFixed() {
+        let preparer = testDatabase.preparer
+        let (convHealthy, convBroken, convNil) = preparer.save {
+            // Healthy: lastMessage belongs to this conversation
+            let contactA = preparer.createContact(identity: "AAAAAAAA")
+            let convHealthy = preparer.createConversation(contactEntity: contactA)
+            let ownMessage = preparer.createTextMessage(
+                conversation: convHealthy,
+                isOwn: true,
+                sender: nil,
+                remoteSentDate: nil
+            )
+            convHealthy.lastMessage = ownMessage
+
+            // Broken: lastMessage points to a message from a different conversation
+            let contactB = preparer.createContact(identity: "BBBBBBBB")
+            let convBroken = preparer.createConversation(contactEntity: contactB)
+            let contactC = preparer.createContact(identity: "CCCCCCCC")
+            let convOther = preparer.createConversation(contactEntity: contactC)
+            let foreignMessage = preparer.createTextMessage(
+                conversation: convOther,
+                isOwn: false,
+                sender: contactC,
+                remoteSentDate: Date()
+            )
+            convBroken.lastMessage = foreignMessage
+
+            // nil: no lastMessage set
+            let contactD = preparer.createContact(identity: "DDDDDDDD")
+            let convNil = preparer.createConversation(contactEntity: contactD)
+
+            return (convHealthy, convBroken, convNil)
+        }
+
+        testDatabase.entityManager.repairDatabaseIntegrity()
+
+        testDatabase.entityManager.performAndWait {
+            XCTAssertNotNil(convHealthy.lastMessage, "Valid lastMessage must not be cleared")
+            XCTAssertNil(convBroken.lastMessage, "Broken lastMessage must be nil'd out")
+            XCTAssertNil(convNil.lastMessage, "Already nil lastMessage must remain nil")
+        }
+    }
+
+    // MARK: - editMessage
+
     func testEditMessage() throws {
         let testCases = [
             (sender: "ECHOECHO", isThrowingError: false),

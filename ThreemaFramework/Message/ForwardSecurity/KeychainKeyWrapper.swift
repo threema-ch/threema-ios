@@ -3,7 +3,7 @@ import Foundation
 import Keychain
 
 /// Encrypt Forward Security keys with a keychain key that cannot be restored on a different device.
-class KeychainKeyWrapper: KeyWrapperProtocol {
+final class KeychainKeyWrapper: KeyWrapperProtocol {
     public static let unwrappedKeyLength = 32
     
     private var cachedWrappingKey: Data?
@@ -58,7 +58,7 @@ class KeychainKeyWrapper: KeyWrapperProtocol {
             return wrappingKey
         }
 
-        let keychainManager = KeychainManager(remoteSecretManager: AppLaunchManager.remoteSecretManager)
+        let keychainManager = KeychainManager(remoteSecretManager: RemoteSecretProvider.remoteSecretManager)
 
         // Check if we already have a wrapping key in the keychain
         if let wrappingKey = try keychainManager.loadForwardSecurityWrappingKey() {

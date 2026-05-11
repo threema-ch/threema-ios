@@ -334,7 +334,8 @@ final class NotificationResponse {
                 safeConfigManager: safeConfig,
                 serverApiConnector: ServerAPIConnector(),
                 groupManager: businessInjector.groupManager,
-                myIdentityStore: businessInjector.myIdentityStore
+                myIdentityStore: businessInjector.myIdentityStore,
+                phoneNumberNormalizer: PhoneNumberNormalizer()
             ),
             safeAPIService: SafeApiService()
         )

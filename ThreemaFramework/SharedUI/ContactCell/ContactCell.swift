@@ -4,18 +4,14 @@ import ThreemaMacros
 import UIKit
 
 /// Cell to represent any contact shown in a list
-public final class ContactCell: ThemedCodeTableViewCell {
-    
+public final class ContactCell: ThemedCodeTableViewCell, Reusable {
+
     public enum Content {
         case me
         case contact(_: Contact)
         case unknownContact
     }
-    
-    // MARK: - Private configuration
-    
-    private lazy var configuration = CellConfiguration(size: size)
-    
+
     // MARK: - Public properties
     
     override public func setSelected(_ selected: Bool, animated: Bool) {
@@ -35,6 +31,7 @@ public final class ContactCell: ThemedCodeTableViewCell {
             
             configuration = CellConfiguration(size: size)
             sizeDidChange()
+            updateContentForPreferredContentSizeCategory()
         }
     }
     
@@ -50,13 +47,13 @@ public final class ContactCell: ThemedCodeTableViewCell {
             configureContent()
         }
     }
-    
+
     /// Only use with Obj-C. It's here for backward compatibility and should be removed if no more Obj-C code uses this
     /// cell.
     /// Use `content` from Swift.
-    @objc var _contact: ContactEntity? {
+    @objc var _contactEntity: ContactEntity? {
         didSet {
-            guard let contact = _contact else {
+            guard let contact = _contactEntity else {
                 return
             }
             
@@ -64,37 +61,41 @@ public final class ContactCell: ThemedCodeTableViewCell {
         }
     }
 
-    private var anyCancellables: Set<AnyCancellable> = []
+    // MARK: - Private properties
 
-    // MARK: - Subviews
-    
+    private let businessInjector = BusinessInjector.ui
+    private var anyCancellables: Set<AnyCancellable> = []
+    private var contact: Contact?
     private var profilePictureSizeConstraint: NSLayoutConstraint!
-    
+
+    private lazy var configuration = CellConfiguration(size: size)
+    private lazy var entityFetcher = entityManager.entityFetcher
+    private lazy var entityManager = businessInjector.entityManager
+    private lazy var settingsStore = businessInjector.settingsStore as? SettingsStore
+
     private lazy var profilePictureView: ProfilePictureImageView = {
         let imageView = ProfilePictureImageView()
         // Always use max height as possible and set the width with aspect ratio 1:1
         profilePictureSizeConstraint = imageView.heightAnchor
             .constraint(lessThanOrEqualToConstant: configuration.maxProfilePictureSize)
         profilePictureSizeConstraint.isActive = true
-        
-        if traitCollection.preferredContentSizeCategory.isAccessibilityCategory {
-            imageView.isHidden = true
-        }
-        
         return imageView
     }()
     
-    private lazy var otherThreemaTypeIcon = OtherThreemaTypeImageView()
-    
-    private lazy var nameLabel: ContactNameLabel = {
-        let label = ContactNameLabel()
-            
+    private lazy var otherThreemaTypeIcon: UIView = {
+        let icon = OtherThreemaTypeImageView()
+
+        icon.translatesAutoresizingMaskIntoConstraints = false
+
+        return icon
+    }()
+
+    private lazy var nameLabel: UILabel = {
+        let label = UILabel()
+
+        label.adjustsFontForContentSizeCategory = true
         label.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
-        
-        if traitCollection.preferredContentSizeCategory.isAccessibilityCategory {
-            label.numberOfLines = 2
-        }
-        
+
         return label
     }()
     
@@ -108,10 +109,10 @@ public final class ContactCell: ThemedCodeTableViewCell {
     
     private lazy var metadataLabel: UILabel = {
         let label = UILabel()
-        
+
+        label.adjustsFontForContentSizeCategory = true
         label.font = .preferredFont(forTextStyle: .footnote)
         label.textColor = .secondaryLabel
-        
         label.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         
         return label
@@ -136,8 +137,6 @@ public final class ContactCell: ThemedCodeTableViewCell {
         return view
     }()
     
-    // MARK: Layout stacks
-    
     private lazy var firstLineStack: UIStackView = {
         let stackView = UIStackView(arrangedSubviews: [nameLabel, verificationLevelImageView])
         
@@ -145,17 +144,7 @@ public final class ContactCell: ThemedCodeTableViewCell {
         stackView.alignment = .center
         stackView.spacing = 8
         stackView.distribution = .equalSpacing
-        
-        // As view cells are recreated for each content size change we can just set it here
-        if traitCollection.preferredContentSizeCategory.isAccessibilityCategory {
-            stackView.axis = .vertical
-            stackView.alignment = .leading
-            
-            // Replace verification level by verification level and type icon stack
-            stackView.removeArrangedSubview(verificationLevelImageView)
-            stackView.addArrangedSubview(accessibilityContentSizeStack)
-        }
-        
+
         return stackView
     }()
     
@@ -176,13 +165,7 @@ public final class ContactCell: ThemedCodeTableViewCell {
         stackView.alignment = .firstBaseline
         stackView.spacing = 8
         stackView.distribution = .equalSpacing
-        
-        // As view cells are recreated for each content size change we can just set it here
-        if traitCollection.preferredContentSizeCategory.isAccessibilityCategory {
-            stackView.axis = .vertical
-            stackView.alignment = .leading
-        }
-        
+
         return stackView
     }()
     
@@ -207,11 +190,11 @@ public final class ContactCell: ThemedCodeTableViewCell {
         return stackView
     }()
     
-    // MARK: - Lifecycle
+    // MARK: - Super class overrides
 
     override public init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
-        if let cancellable = (BusinessInjector.ui.settingsStore as? SettingsStore)?.$blacklist.sink(
+        if let cancellable = settingsStore?.$blacklist.sink(
             receiveValue: { [weak self] _ in
                 self?.configureContent()
             }
@@ -224,20 +207,8 @@ public final class ContactCell: ThemedCodeTableViewCell {
         super.configureCell()
             
         sizeDidChange()
-        
-        // Type icon configuration
-        
-        otherThreemaTypeIcon.translatesAutoresizingMaskIntoConstraints = false
-        
-        if traitCollection.preferredContentSizeCategory.isAccessibilityCategory {
-            // Approximation for a similar size to verification level image
-            // Setting the size to the size of the verification level image view didn't work.
-            otherThreemaTypeIcon.widthAnchor.constraint(equalToConstant: 20).isActive = true
-        }
-        else {
-            otherThreemaTypeIcon.isHidden = true
-        }
-        
+        updateContentForPreferredContentSizeCategory()
+
         // Container configuration
         contentView.addSubview(containerStack)
         containerStack.translatesAutoresizingMaskIntoConstraints = false
@@ -251,29 +222,42 @@ public final class ContactCell: ThemedCodeTableViewCell {
         ])
     }
     
-    // MARK: - Reuse configuration
-
-    private func configureContent() {
-        guard let content else {
-            return
+    override public var accessibilityLabel: String? {
+        get {
+            nameLabel.accessibilityLabel
         }
-
-        switch content {
-        case .me:
-            configureMeCell()
-        case let .contact(contact):
-            configureContactCell(for: contact)
-        case .unknownContact:
-            configureUnknownContactCell()
-        }
+        set { }
     }
+
+    override public var accessibilityValue: String? {
+        get {
+            var otherThreemaTypeIconAccessibilityLabel: String?
+            if !otherThreemaTypeIcon.isHidden {
+                otherThreemaTypeIconAccessibilityLabel = otherThreemaTypeIcon.accessibilityLabel
+            }
+
+            return [
+                metadataLabel.text,
+                identityLabel.text,
+                otherThreemaTypeIconAccessibilityLabel,
+                verificationLevelImageView.accessibilityLabel,
+            ]
+            .compactMap { $0 }
+            .filter { !$0.isEmpty }
+            .joined(separator: ". ")
+        }
+        set { }
+    }
+
+    // MARK: - Private methods
 
     private func configureMeCell() {
         let profile = ProfileStore().profile
 
         profilePictureView.info = .me
         otherThreemaTypeIcon.isHidden = true
-        nameLabel.contactObject = nil // #localize("me")
+        nameLabel.text = #localize("me")
+        nameLabel.textColor = .label
         verificationLevelImageView.image = nil
         verificationLevelImageView.accessibilityLabel = nil
         
@@ -288,13 +272,105 @@ public final class ContactCell: ThemedCodeTableViewCell {
             contentView.alpha = 1
         }
     }
-    
+
+    private func configureNameLabel(for contactEntity: ContactEntity) {
+        func append(_ text: String, _ attrs: [NSAttributedString.Key: Any]) {
+            result.append(NSAttributedString(string: text, attributes: attrs))
+        }
+
+        let isSortOrderFirstName = settingsStore?.sortOrderFirstName ?? false
+        let isDisplayOrderFirstName = settingsStore?.displayOrderFirstName ?? true
+        let isBlacklisted = settingsStore?.blacklist.contains(contactEntity.identity) ?? false
+
+        let result = NSMutableAttributedString()
+
+        let size = UIFontDescriptor.preferredFontDescriptor(withTextStyle: .headline).pointSize
+        let textColor: UIColor = contactEntity.isActive ? .label : .secondaryLabel
+
+        var regular: [NSAttributedString.Key: Any] = [
+            .font: UIFont.systemFont(ofSize: size),
+            .foregroundColor: textColor,
+        ]
+
+        var bold: [NSAttributedString.Key: Any] = [
+            .font: UIFont.preferredFont(forTextStyle: .headline),
+            .foregroundColor: textColor,
+        ]
+
+        if contactEntity.contactState == .invalid {
+            regular[.strikethroughStyle] = NSUnderlineStyle.thick.rawValue
+            bold[.strikethroughStyle] = NSUnderlineStyle.thick.rawValue
+        }
+
+        if isBlacklisted {
+            append("🚫 ", regular)
+        }
+
+        let firstAttributes = isSortOrderFirstName ? bold : regular
+        let lastAttributes = isSortOrderFirstName ? regular : bold
+
+        var nameParts: [(String, [NSAttributedString.Key: Any])] = []
+
+        if let first = contactEntity.firstName, !first.isEmpty {
+            nameParts.append((first, firstAttributes))
+        }
+
+        if let last = contactEntity.lastName, !last.isEmpty {
+            nameParts.append((last, lastAttributes))
+        }
+
+        if !isDisplayOrderFirstName {
+            nameParts.reverse()
+        }
+
+        if !nameParts.isEmpty {
+            for (index, part) in nameParts.enumerated() {
+                if index > 0 {
+                    append(" ", part.1)
+                }
+                append(part.0, part.1)
+            }
+        }
+        else {
+            if let publicNickname = contactEntity.publicNickname,
+               !publicNickname.isEmpty,
+               publicNickname != contactEntity.identity {
+                append("~\(publicNickname)", bold)
+            }
+            else {
+                append(contactEntity.identity, bold)
+            }
+        }
+
+        nameLabel.attributedText = result
+        let label = nameLabel.text ?? "" // Gets the plain string content. All attributes are ignored.
+
+        var appendix =
+            if isBlacklisted {
+                #localize("blocked")
+            }
+            else if contactEntity.contactState != .active {
+                #localize("inactive")
+            }
+            else {
+                ""
+            }
+        
+        if let status: WorkAvailabilityStatus = Contact(contactEntity: contactEntity).workAvailabilityStatus,
+           let label = status.accessibilityLabelWithoutText {
+            appendix += "\(label); "
+        }
+        
+        nameLabel.accessibilityLabel = "\(label). \(appendix)"
+    }
+
     private func configureContactCell(for contact: Contact) {
-        let em = BusinessInjector.ui.entityManager
-        em.performAndWait {
-            if let contactEntity = em.entityFetcher.contactEntity(for: contact.identity.rawValue) {
+        self.contact = contact
+
+        entityManager.performAndWait {
+            if let contactEntity = self.entityFetcher.contactEntity(for: contact.identity.rawValue) {
                 self.profilePictureView.info = .contact(contact)
-                self.nameLabel.contactObject = contactEntity
+                self.configureNameLabel(for: contactEntity)
                 self.otherThreemaTypeIcon.isHidden = !contactEntity.showOtherThreemaTypeIcon
             }
             else {
@@ -302,14 +378,10 @@ public final class ContactCell: ThemedCodeTableViewCell {
                     "Can't find contact entity to set the profile picture, type icon and name. It will show 'me' as contact name"
                 )
                 self.otherThreemaTypeIcon.isHidden = true
-                self.nameLabel.contactObject = nil
+                self.configureMeCell()
             }
         }
 
-        verificationLevelImageView.image = contact.verificationLevelImageSmall
-        if traitCollection.preferredContentSizeCategory.isAccessibilityCategory {
-            verificationLevelImageView.image = contact.verificationLevelImage
-        }
         verificationLevelImageView.accessibilityLabel = contact.verificationLevelAccessibilityLabel
         
         var nickname = ""
@@ -378,9 +450,24 @@ public final class ContactCell: ThemedCodeTableViewCell {
             contentView.alpha = 1
         }
     }
-    
-    // MARK: - Updates
-    
+
+    private func configureContent() {
+        guard let content else {
+            return
+        }
+
+        switch content {
+        case .me:
+            configureMeCell()
+        case let .contact(contact):
+            configureContactCell(for: contact)
+        case .unknownContact:
+            configureUnknownContactCell()
+        }
+
+        updateContentForPreferredContentSizeCategory()
+    }
+
     private func sizeDidChange() {
         nameLabel.font = configuration.nameLabelFont
         containerStack.spacing = configuration.horizontalSpacing
@@ -388,50 +475,51 @@ public final class ContactCell: ThemedCodeTableViewCell {
         // Note: We don't reload the profile picture here. So if the `content` is assigned before the `size`
         // we might have a blurry profile picture.
         profilePictureSizeConstraint.constant = configuration.maxProfilePictureSize
-        
-        updateSeparatorInset()
     }
-    
-    private func updateSeparatorInset() {
-        guard !traitCollection.preferredContentSizeCategory.isAccessibilityCategory else {
-            separatorInset = .zero
-            return
+
+    private func updateContentForPreferredContentSizeCategory() {
+        if traitCollection.preferredContentSizeCategory.isAccessibilityCategory {
+            nameLabel.numberOfLines = 3
+            profilePictureView.isHidden = true
+
+            firstLineStack.axis = .vertical
+            firstLineStack.alignment = .leading
+            firstLineStack.removeArrangedSubview(verificationLevelImageView)
+            firstLineStack.addArrangedSubview(accessibilityContentSizeStack)
+
+            secondLineStack.axis = .vertical
+            secondLineStack.alignment = .leading
+
+            otherThreemaTypeIcon.widthAnchor.constraint(equalToConstant: 20).isActive = true
+
+            contact.map { verificationLevelImageView.image = $0.verificationLevelImage }
+
+            separatorInset = UIEdgeInsets(
+                top: 0,
+                left: configuration.maxProfilePictureSize + configuration.horizontalSpacing,
+                bottom: 0,
+                right: 0
+            )
         }
-        
-        let leftSeparatorInset = configuration.maxProfilePictureSize + configuration.horizontalSpacing
-        separatorInset = UIEdgeInsets(top: 0, left: leftSeparatorInset, bottom: 0, right: 0)
-    }
-    
-    // MARK: - Accessibility
-    
-    override public var accessibilityLabel: String? {
-        get {
-            nameLabel.accessibilityLabel
-        }
-        set { }
-    }
-    
-    override public var accessibilityValue: String? {
-        get {
-            var otherThreemaTypeIconAccessibilityLabel: String?
-            if !otherThreemaTypeIcon.isHidden {
-                otherThreemaTypeIconAccessibilityLabel = otherThreemaTypeIcon.accessibilityLabel
+        else {
+            nameLabel.numberOfLines = 1
+            profilePictureView.isHidden = false
+
+            firstLineStack.axis = .horizontal
+            firstLineStack.alignment = .center
+            firstLineStack.removeArrangedSubview(accessibilityContentSizeStack)
+            firstLineStack.addArrangedSubview(verificationLevelImageView)
+
+            secondLineStack.axis = .horizontal
+            secondLineStack.alignment = .firstBaseline
+
+            for constraint in otherThreemaTypeIcon.constraints where constraint.firstAttribute == .width {
+                constraint.isActive = false
             }
-            
-            return [
-                metadataLabel.text,
-                identityLabel.text,
-                otherThreemaTypeIconAccessibilityLabel,
-                verificationLevelImageView.accessibilityLabel,
-            ]
-            .compactMap { $0 }
-            .filter { !$0.isEmpty }
-            .joined(separator: ". ")
+
+            contact.map { verificationLevelImageView.image = $0.verificationLevelImageSmall }
+
+            separatorInset = .zero
         }
-        set { }
     }
 }
-
-// MARK: - Reusable
-
-extension ContactCell: Reusable { }

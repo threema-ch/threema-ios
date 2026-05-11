@@ -23,7 +23,7 @@ final class CallsignalingProtocolTests: XCTestCase {
         }
         
         // Deserialize
-        guard let envelop: Callsignaling_Envelope = try? Callsignaling_Envelope(serializedData: bytes) else {
+        guard let envelop: O2oCall_Envelope = try? O2oCall_Envelope(serializedData: bytes) else {
             XCTFail("envelope is nil")
             return
         }
@@ -37,7 +37,7 @@ final class CallsignalingProtocolTests: XCTestCase {
         
         let profile = envelop.videoQualityProfile
         XCTAssertTrue(profile.hasMaxResolution)
-        XCTAssertEqual(Callsignaling_VideoQualityProfile.QualityProfile.high, profile.profile)
+        XCTAssertEqual(O2oCall_VideoQualityProfile.QualityProfile.high, profile.profile)
         XCTAssertEqual(2000, profile.maxBitrateKbps)
         XCTAssertEqual(25, profile.maxFps)
         XCTAssertEqual(1280, profile.maxResolution.width)

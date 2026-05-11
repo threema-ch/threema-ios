@@ -23,12 +23,12 @@ extension EntityFetcher {
         
         var predicates: [NSPredicate] = []
         
-        if let state {
-            predicates.append(ballotStatePredicate(state: state))
-        }
-        
         if let conversation {
             predicates.append(ballotConversationEntityPredicate(conversationEntity: conversation))
+        }
+        
+        if let state {
+            predicates.append(ballotStatePredicate(state: state))
         }
 
         if !predicates.isEmpty {

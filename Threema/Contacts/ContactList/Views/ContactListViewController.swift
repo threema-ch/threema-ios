@@ -3,7 +3,7 @@ import Foundation
 import ThreemaFramework
 import ThreemaMacros
 
-@objc final class ContactListViewController: ContactListBaseViewController {
+final class ContactListViewController: ContactListBaseViewController {
     
     // MARK: - Properties
     

@@ -64,7 +64,11 @@ class AppLaunchTasks: NSObject {
 
                 // Delete all files and directories from temporary app directory
                 FileUtility.shared.removeItemsInDirectory(directoryURL: FileUtility.shared.appTemporaryDirectory)
-
+                
+                if ThreemaEnvironment.allowEasyDeviceSwitch {
+                    backgroundBusinessInjector.multiDeviceManager.resetEnableMultiDeviceIfNeeded()
+                }
+                
                 if AppLaunchTasks.lastLaunchedVersionChanged {
                     Task {
                         do {
@@ -79,7 +83,7 @@ class AppLaunchTasks: NSObject {
                 }
             case .willEnterForeground:
                 // Validate RS if needed (& existing)
-                AppLaunchManager.remoteSecretManager?.checkValidity()
+                RemoteSecretProvider.remoteSecretManager.checkValidity()
             }
 
             // All other tasks runs in a background thread

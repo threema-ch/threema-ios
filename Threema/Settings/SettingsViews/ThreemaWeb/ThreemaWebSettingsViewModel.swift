@@ -422,7 +422,7 @@ final class ThreemaWebSettingsViewModel: NSObject, ObservableObject {
     }
 }
 
-// MARK: - NSFetchedResultsControllerDelegate
+// MARK: - @preconcurrency NSFetchedResultsControllerDelegate
 
 extension ThreemaWebSettingsViewModel: @preconcurrency NSFetchedResultsControllerDelegate {
     func controller(

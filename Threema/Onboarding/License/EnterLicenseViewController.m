@@ -5,7 +5,7 @@
 #import "UIDefines.h"
 #import "ServerAPIRequest.h"
 #import "MDMSetup.h"
-#import "WorkDataFetcher.h"
+
 #import "Threema-Swift.h"
 
 @interface EnterLicenseViewController () <UITextFieldDelegate>
@@ -288,13 +288,17 @@
                     [self confirmLicenseCheck];
                 }
                 else {
-                    [WorkDataFetcher checkUpdateThreemaMDM:^{
-                        [self confirmLicenseCheck];
-                    } onError:^(NSError *error) {
-                        dispatch_async(dispatch_get_main_queue(), ^{
-                            [self showErrorMessage:[NSString stringWithFormat:[BundleUtil localizedStringForKey:@"work_data_fetch_failed_message"], TargetManagerObjC.appName]];
-                            _confirmButton.hidden = false;
-                        });
+                    WorkDataThreemaMDMFetcherObjCBridge* fetcher = [[WorkDataThreemaMDMFetcherObjCBridge alloc] initWithLicenseStore:[LicenseStore sharedLicenseStore]];
+                    [fetcher checkUpdateThreemaMDMWithCompletionHandler:^(NSError * _Nullable error){
+                        if (error == nil) {
+                            [self confirmLicenseCheck];
+                        }
+                        else {
+                            dispatch_async(dispatch_get_main_queue(), ^{
+                                [self showErrorMessage:[NSString stringWithFormat:[BundleUtil localizedStringForKey:@"work_data_fetch_failed_message"], TargetManagerObjC.appName]];
+                                _confirmButton.hidden = false;
+                            });
+                        }
                     }];
                 }
                 // We try to safe if we get a success

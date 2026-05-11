@@ -19,11 +19,11 @@ final class LocalParticipant: ViewModelParticipant, Sendable {
     private var mediaKeys: MediaKeys
     private var pendingMediaKeys: MediaKeys?
     private var pendingMediaKeysIsStale = false // TODO: (IOS-4070) Maybe make this part of `MediaKeys`
-    var protocolMediaKeys: Groupcall_ParticipantToParticipant.MediaKey {
+    var protocolMediaKeys: GroupCall_ParticipantToParticipant.MediaKey {
         mediaKeys.protocolMediaKey
     }
 
-    var pendingProtocolMediaKeys: Groupcall_ParticipantToParticipant.MediaKey? {
+    var pendingProtocolMediaKeys: GroupCall_ParticipantToParticipant.MediaKey? {
         pendingMediaKeys?.protocolMediaKey
     }
     

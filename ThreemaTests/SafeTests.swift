@@ -99,7 +99,8 @@ final class SafeTests: XCTestCase {
             safeConfigManager: SafeConfigManager(),
             serverApiConnector: ServerAPIConnector(),
             groupManager: GroupManagerMock(),
-            myIdentityStore: MyIdentityStoreMock()
+            myIdentityStore: MyIdentityStoreMock(),
+            phoneNumberNormalizer: PhoneNumberNormalizerMock()
         )
         let key = SafeStore.createKey(identity: "ECHOECHO", safePassword: "shootdeathstar")
         let encryptedData = try! store.encryptBackupData(key: key!, data: parser.getJsonAsBytes(from: dataIn)!)
@@ -191,7 +192,8 @@ final class SafeTests: XCTestCase {
             safeConfigManager: SafeConfigManagerMock(server: nil),
             serverApiConnector: ServerAPIConnector(),
             groupManager: GroupManagerMock(),
-            myIdentityStore: MyIdentityStoreMock()
+            myIdentityStore: MyIdentityStoreMock(),
+            phoneNumberNormalizer: PhoneNumberNormalizerMock()
         )
 
         let result = store.getSafeServerToDisplay()
@@ -204,7 +206,8 @@ final class SafeTests: XCTestCase {
             safeConfigManager: SafeConfigManagerMock(server: nil),
             serverApiConnector: ServerAPIConnector(),
             groupManager: GroupManagerMock(),
-            myIdentityStore: MyIdentityStoreMock()
+            myIdentityStore: MyIdentityStoreMock(),
+            phoneNumberNormalizer: PhoneNumberNormalizerMock()
         )
         
         let key = SafeStore.createKey(identity: "ECHOECHO", safePassword: "shootdeathstar")!
@@ -233,7 +236,8 @@ final class SafeTests: XCTestCase {
             safeConfigManager: SafeConfigManagerMock(server: "http://test.com"),
             serverApiConnector: ServerAPIConnector(),
             groupManager: GroupManagerMock(),
-            myIdentityStore: MyIdentityStoreMock()
+            myIdentityStore: MyIdentityStoreMock(),
+            phoneNumberNormalizer: PhoneNumberNormalizerMock()
         )
         
         let key = SafeStore.createKey(identity: "ECHOECHO", safePassword: "shootdeathstar")!

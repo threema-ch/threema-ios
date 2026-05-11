@@ -13,7 +13,7 @@ protocol EncryptedRendezvousConnectionCreator {
     /// - Returns: A new encrypted rendezvous connection and a related rendezvous crypto instance
     /// - Throws: `EncryptedRendezvousConnectionCreatorError`
     func create(
-        from rendezvousInit: Rendezvous_RendezvousInit
+        from rendezvousInit: D2dRendezvous_RendezvousInit
     ) throws -> (EncryptedRendezvousConnection, RendezvousCrypto)
 }
 

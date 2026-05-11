@@ -10,6 +10,11 @@ public final class CompanyDirectoryContact: NSObject, Sendable {
     public let department: String?
     public let cat: [String]?
     public let org: String?
+    public let availability: String?
+
+    public var workAvailabilityStatus: WorkAvailabilityStatus? {
+        WorkAvailabilityStatus.fromEncodedString(availability)
+    }
     
     public init(dictionary: [AnyHashable: Any?]) {
         self.id = dictionary["id"] as! String
@@ -55,6 +60,8 @@ public final class CompanyDirectoryContact: NSObject, Sendable {
         else {
             self.org = ""
         }
+        
+        self.availability = dictionary["availability"] as? String
     }
     
     public func fullName() -> String {

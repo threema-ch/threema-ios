@@ -91,6 +91,17 @@ pub mod setup {
             /// The hash derived from the `remote_secret` (32 bytes).
             pub remote_secret_hash: ByteBuf,
         }
+        impl From<create::RemoteSecretCreateResult> for RemoteSecretCreateResult {
+            fn from(result: create::RemoteSecretCreateResult) -> Self {
+                Self {
+                    remote_secret: ByteBuf::from(result.remote_secret.0.to_vec()),
+                    remote_secret_authentication_token: ByteBuf::from(
+                        result.remote_secret_authentication_token.0.to_vec(),
+                    ),
+                    remote_secret_hash: ByteBuf::from(result.remote_secret.derive_hash().0.to_vec()),
+                }
+            }
+        }
 
         /// Binding version of [`create::RemoteSecretCreateLoop`].
         #[derive(Tsify, Serialize)]
@@ -116,13 +127,35 @@ pub mod setup {
                         request,
                     }) => Self::Instruction(request.into()),
 
-                    create::RemoteSecretCreateLoop::Done(result) => Self::Done(RemoteSecretCreateResult {
-                        remote_secret: ByteBuf::from(result.remote_secret.0.to_vec()),
-                        remote_secret_authentication_token: ByteBuf::from(
-                            result.remote_secret_authentication_token.0.to_vec(),
-                        ),
-                        remote_secret_hash: ByteBuf::from(result.remote_secret.derive_hash().0.to_vec()),
-                    }),
+                    create::RemoteSecretCreateLoop::Done(result) => Self::Done(result.into()),
+                }
+            }
+        }
+
+        /// Binding version of a [`RemoteSecretCreateTask::poll`] result.
+        #[derive(Tsify, Serialize)]
+        #[serde(
+            tag = "type",
+            content = "value",
+            rename_all = "kebab-case",
+            rename_all_fields = "camelCase"
+        )]
+        #[tsify(into_wasm_abi)]
+        pub enum RemoteSecretCreatePollResult {
+            #[expect(missing_docs, reason = "Binding version")]
+            CreateLoop(RemoteSecretCreateLoop),
+
+            #[expect(missing_docs, reason = "Binding version")]
+            Error(setup::RemoteSecretSetupError),
+        }
+
+        impl From<Result<create::RemoteSecretCreateLoop, setup::RemoteSecretSetupError>>
+            for RemoteSecretCreatePollResult
+        {
+            fn from(result: Result<create::RemoteSecretCreateLoop, setup::RemoteSecretSetupError>) -> Self {
+                match result {
+                    Ok(create_loop) => Self::CreateLoop(create_loop.into()),
+                    Err(error) => Self::Error(error),
                 }
             }
         }
@@ -143,20 +176,13 @@ pub mod setup {
             }
 
             /// Binding version of [`create::RemoteSecretCreateTask::poll`].
-            #[allow(clippy::missing_errors_doc, reason = "Binding version")]
-            pub fn poll(&mut self) -> Result<RemoteSecretCreateLoop, Error> {
-                self.0
-                    .poll()
-                    .map(RemoteSecretCreateLoop::from)
-                    .map_err(|error| Error::new(&error.to_string()))
+            pub fn poll(&mut self) -> RemoteSecretCreatePollResult {
+                self.0.poll().into()
             }
 
             /// Binding version of [`create::RemoteSecretCreateTask::response`].
-            #[allow(clippy::missing_errors_doc, reason = "Binding version")]
-            pub fn response(&mut self, response: HttpsResult) -> Result<(), Error> {
-                self.0
-                    .response(response.into())
-                    .map_err(|error| Error::new(&error.to_string()))
+            pub fn response(&mut self, response: HttpsResult) -> Option<setup::RemoteSecretSetupError> {
+                self.0.response(response.into()).err()
             }
         }
     }
@@ -202,6 +228,34 @@ pub mod setup {
             }
         }
 
+        /// Binding version of a [`RemoteSecretDeleteTask::poll`] result.
+        #[derive(Tsify, Serialize)]
+        #[serde(
+            tag = "type",
+            content = "value",
+            rename_all = "kebab-case",
+            rename_all_fields = "camelCase"
+        )]
+        #[tsify(into_wasm_abi)]
+        pub enum RemoteSecretDeletePollResult {
+            #[expect(missing_docs, reason = "Binding version")]
+            DeleteLoop(RemoteSecretDeleteLoop),
+
+            #[expect(missing_docs, reason = "Binding version")]
+            Error(setup::RemoteSecretSetupError),
+        }
+
+        impl From<Result<delete::RemoteSecretDeleteLoop, setup::RemoteSecretSetupError>>
+            for RemoteSecretDeletePollResult
+        {
+            fn from(result: Result<delete::RemoteSecretDeleteLoop, setup::RemoteSecretSetupError>) -> Self {
+                match result {
+                    Ok(delete_loop) => Self::DeleteLoop(delete_loop.into()),
+                    Err(error) => Self::Error(error),
+                }
+            }
+        }
+
         /// Binding version of [`delete::RemoteSecretDeleteTask`].
         #[wasm_bindgen]
         pub struct RemoteSecretDeleteTask(delete::RemoteSecretDeleteTask);
@@ -230,20 +284,13 @@ pub mod setup {
             }
 
             /// Binding version of [`delete::RemoteSecretDeleteTask::poll`].
-            #[allow(clippy::missing_errors_doc, reason = "Binding version")]
-            pub fn poll(&mut self) -> Result<RemoteSecretDeleteLoop, Error> {
-                self.0
-                    .poll()
-                    .map(RemoteSecretDeleteLoop::from)
-                    .map_err(|error| Error::new(&error.to_string()))
+            pub fn poll(&mut self) -> RemoteSecretDeletePollResult {
+                self.0.poll().into()
             }
 
             /// Binding version of [`delete::RemoteSecretDeleteTask::response`].
-            #[allow(clippy::missing_errors_doc, reason = "Binding version")]
-            pub fn response(&mut self, response: HttpsResult) -> Result<(), Error> {
-                self.0
-                    .response(response.into())
-                    .map_err(|error| Error::new(&error.to_string()))
+            pub fn response(&mut self, response: HttpsResult) -> Option<setup::RemoteSecretSetupError> {
+                self.0.response(response.into()).err()
             }
         }
     }
@@ -307,6 +354,35 @@ pub mod monitor {
         }
     }
 
+    /// Binding version of a [`RemoteSecretMonitorProtocol::poll`] result.
+    #[derive(tsify::Tsify, Serialize)]
+    #[serde(
+        tag = "type",
+        content = "result",
+        rename_all = "kebab-case",
+        rename_all_fields = "camelCase"
+    )]
+    #[tsify(into_wasm_abi)]
+    pub enum RemoteSecretMonitorResult {
+        #[expect(missing_docs, reason = "Binding version")]
+        Instruction(RemoteSecretMonitorInstruction),
+
+        #[expect(missing_docs, reason = "Binding version")]
+        Error(monitor::RemoteSecretMonitorError),
+    }
+    impl From<Result<monitor::RemoteSecretMonitorInstruction, monitor::RemoteSecretMonitorError>>
+        for RemoteSecretMonitorResult
+    {
+        fn from(
+            result: Result<monitor::RemoteSecretMonitorInstruction, monitor::RemoteSecretMonitorError>,
+        ) -> Self {
+            match result {
+                Ok(instruction) => Self::Instruction(instruction.into()),
+                Err(error) => Self::Error(error),
+            }
+        }
+    }
+
     /// Binding version of [`monitor::RemoteSecretMonitorProtocol`].
     #[wasm_bindgen]
     pub struct RemoteSecretMonitorProtocol(monitor::RemoteSecretMonitorProtocol);
@@ -353,20 +429,13 @@ pub mod monitor {
         }
 
         /// Binding version of [`monitor::RemoteSecretMonitorProtocol::poll`].
-        #[allow(clippy::missing_errors_doc, reason = "Binding version")]
-        pub fn poll(&mut self) -> Result<RemoteSecretMonitorInstruction, Error> {
-            self.0
-                .poll()
-                .map(RemoteSecretMonitorInstruction::from)
-                .map_err(|error| Error::new(&error.to_string()))
+        pub fn poll(&mut self) -> RemoteSecretMonitorResult {
+            self.0.poll().into()
         }
 
         /// Binding version of [`monitor::RemoteSecretMonitorProtocol::response`].
-        #[allow(clippy::missing_errors_doc, reason = "Binding version")]
-        pub fn response(&mut self, response: HttpsResult) -> Result<(), Error> {
-            self.0
-                .response(response.into())
-                .map_err(|error| Error::new(&error.to_string()))
+        pub fn response(&mut self, response: HttpsResult) -> Option<monitor::RemoteSecretMonitorError> {
+            self.0.response(response.into()).err()
         }
     }
 }

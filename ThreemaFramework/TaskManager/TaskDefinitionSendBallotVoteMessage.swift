@@ -1,6 +1,6 @@
 import Foundation
 
-@objc final class TaskDefinitionSendBallotVoteMessage: TaskDefinitionSendMessage {
+final class TaskDefinitionSendBallotVoteMessage: TaskDefinitionSendMessage {
     override func create(
         frameworkInjector: FrameworkInjectorProtocol,
         taskContext: TaskContextProtocol

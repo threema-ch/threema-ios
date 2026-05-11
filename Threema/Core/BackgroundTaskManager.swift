@@ -1,7 +1,7 @@
 import CocoaLumberjackSwift
 import Foundation
 
-@objc final class BackgroundTaskManager: NSObject {
+final class BackgroundTaskManager: NSObject {
     
     @objc static let shared = BackgroundTaskManager()
     
@@ -74,7 +74,7 @@ import Foundation
             return
         }
         
-        if AppDelegate.shared().isAppInBackground() {
+        if SceneDelegate.isAppInBackground {
             if internalKey.hasPrefix(kAppClosedByUserBackgroundTask) {
                 ServerConnector.shared().disconnect(initiator: .app)
             }

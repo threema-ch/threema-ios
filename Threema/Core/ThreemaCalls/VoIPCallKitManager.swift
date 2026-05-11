@@ -9,6 +9,7 @@ protocol VoIPCallKitManagerDelegate: AnyObject {
     func currentCallPartnerIdentity() -> String
     func currentCallID() -> VoIPCallID
     func setRTCAudio(_ audioSession: AVAudioSession)
+    func deactivateRTCAudio(_ audioSession: AVAudioSession)
 }
 
 final class VoIPCallKitManager: NSObject {
@@ -20,7 +21,11 @@ final class VoIPCallKitManager: NSObject {
     private let callIDService: CallIDService
 
     private var answerAction: CXAnswerCallAction?
-    
+
+    /// When true, the hold/unhold cycle is being used to force CallKit to reactivate the audio
+    /// session after an interruption. The CXSetHeldCallAction handler skips mute/unmute logic.
+    private(set) var isRestoringAudioSession = false
+
     /// The call will be set to true if a call fails, ends, or is rejected by the application. If CallKit triggers one
     /// of these actions, we will have a loop to wait until all information is loaded. This value will bypass the loop
     /// to close CallKit directly.
@@ -81,12 +86,14 @@ extension VoIPCallKitManager {
     ///   - callPartnerIdentity: Caller identity
     ///   - callPartnerName: Caller name
     ///   - ringtoneSound: Filename of ringtone to be used
+    ///   - fromPush: Whether we report from the NSE
     ///   - completion: Completion handler returns error or nil
     func reportIncomingCall(
         with callID: VoIPCallID,
         callPartnerIdentity: String,
         callPartnerName: String?,
         ringtoneSound: String,
+        fromPush: Bool = false,
         completion: @escaping (Error?) -> Void
     ) {
         guard ThreemaEnvironment.supportsCallKit() else {
@@ -118,6 +125,21 @@ extension VoIPCallKitManager {
                 }
                 RTCAudioSession.sharedInstance().useManualAudio = true
                 completion(error)
+            }
+        }
+        else if fromPush {
+            // This is a safeguard to report the call anyways when we are reporting it via the NSE.
+            DDLogNotice(
+                "VoipCallService: [cid=\(callID.callID)]: Push arrived after server connection, re-reporting call (callUUID=\(uuid))"
+            )
+            provider.reportNewIncomingCall(with: uuid, update: update) { error in
+                if let error {
+                    DDLogWarn(
+                        "CallKitManager: [cid=\(callID.callID)]: Re-report for push returned expected error (callUUID=\(uuid)): \(error)"
+                    )
+                }
+                RTCAudioSession.sharedInstance().useManualAudio = true
+                completion(nil)
             }
         }
         else {
@@ -264,6 +286,75 @@ extension VoIPCallKitManager {
 
         // Prevent ringing
         provider.reportCall(with: uuid, endedAt: .now, reason: .failed)
+    }
+
+    /// Force CallKit to go through a didDeactivate → didActivate cycle by requesting a
+    /// hold/unhold transaction. This is the only way to restore the audio session input route
+    /// after a system alarm interruption, since CallKit owns the audio session activation.
+    func requestAudioSessionReactivation(for callID: VoIPCallID) {
+        guard !isRestoringAudioSession else {
+            return
+        }
+
+        let (uuid, _) = callIDService.uuid(for: callID)
+
+        DDLogNotice(
+            "CallKitManager: [cid=\(callID.callID)]: Requesting audio session reactivation via hold/unhold"
+        )
+
+        // Temporarily enable holding so the hold action is accepted
+        let holdUpdate = CXCallUpdate()
+        holdUpdate.supportsHolding = true
+        provider.reportCall(with: uuid, updated: holdUpdate)
+
+        isRestoringAudioSession = true
+
+        // Request hold → triggers didDeactivate
+        let holdAction = CXSetHeldCallAction(call: uuid, onHold: true)
+        let holdTransaction = CXTransaction(action: holdAction)
+        callController.request(holdTransaction) { [weak self] error in
+            guard let self else {
+                return
+            }
+            if let error {
+                DDLogError(
+                    "CallKitManager: [cid=\(callID.callID)]: Hold action for audio restoration failed: \(error)"
+                )
+                isRestoringAudioSession = false
+                return
+            }
+
+            // Minimal delay to let CallKit process the hold before we unhold.
+            // didDeactivate fires within ~100ms of hold fulfillment.
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                let unholdAction = CXSetHeldCallAction(call: uuid, onHold: false)
+                let unholdTransaction = CXTransaction(action: unholdAction)
+                self.callController.request(unholdTransaction) { [weak self] error in
+                    guard let self else {
+                        return
+                    }
+                    // Don't reset isRestoringAudioSession here — the CXSetHeldCallAction
+                    // delegate handler fires AFTER this completion and needs the flag to
+                    // still be true. Reset it after a short delay instead.
+                    if let error {
+                        DDLogError(
+                            "CallKitManager: [cid=\(callID.callID)]: Unhold action for audio restoration failed: \(error)"
+                        )
+                        isRestoringAudioSession = false
+                    }
+                    else {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                            self.isRestoringAudioSession = false
+                        }
+                    }
+
+                    // Disable holding again
+                    let restoreUpdate = CXCallUpdate()
+                    restoreUpdate.supportsHolding = false
+                    provider.reportCall(with: uuid, updated: restoreUpdate)
+                }
+            }
+        }
     }
 
     // MARK: - Private functions
@@ -568,6 +659,14 @@ extension VoIPCallKitManager: CXProviderDelegate {
             "CallKitManager: [cid=\(String(describing: callID?.callID))]: Held call action, is on hold: \(action.isOnHold)"
         )
 
+        // When restoring audio after an interruption, the hold/unhold cycle is only used
+        // to trigger CallKit's didDeactivate/didActivate. Skip mute/unmute to avoid
+        // side effects (e.g. sending a mute signal to the remote peer).
+        if isRestoringAudioSession {
+            action.fulfill()
+            return
+        }
+
         guard let callID = delegate?.currentCallID(),
               let callPartnerIdentity = delegate?.currentCallPartnerIdentity() else {
             DDLogError(
@@ -644,5 +743,11 @@ extension VoIPCallKitManager: CXProviderDelegate {
         let callID = delegate?.currentCallID()
         DDLogNotice("CallKitManager: [cid=\(String(describing: callID?.callID))]: Did activate audio session")
         delegate?.setRTCAudio(audioSession)
+    }
+
+    func provider(_ provider: CXProvider, didDeactivate audioSession: AVAudioSession) {
+        let callID = delegate?.currentCallID()
+        DDLogNotice("CallKitManager: [cid=\(String(describing: callID?.callID))]: Did deactivate audio session")
+        delegate?.deactivateRTCAudio(audioSession)
     }
 }

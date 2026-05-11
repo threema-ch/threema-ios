@@ -28,6 +28,10 @@ final class ServerInfoProviderMock: ServerInfoProvider {
     func workServer(ipv6: Bool, completionHandler: @escaping (WorkServerInfo?, Error?) -> Void) {
         completionHandler(nil, nil)
     }
+    
+    func workBaseServer(completionHandler: @escaping (ThreemaFramework.WorkServerInfo?, (any Error)?) -> Void) {
+        completionHandler(nil, nil)
+    }
 
     func avatarServer(ipv6: Bool, completionHandler: @escaping (AvatarServerInfo?, Error?) -> Void) {
         completionHandler(nil, nil)

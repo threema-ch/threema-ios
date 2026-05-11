@@ -14,6 +14,7 @@ final class ProfileCoordinator: NSObject, Coordinator, CurrentDestinationHolderP
         case scanQRCode
         case qrCode
         case shareID(sourceView: UIView)
+        case workAvailabilityStatus
         case backups
         case revocationPassword
         case linkPhone
@@ -64,48 +65,6 @@ final class ProfileCoordinator: NSObject, Coordinator, CurrentDestinationHolderP
     }
 
     private lazy var dataSource: ProfileCollectionViewDataSource = {
-        let cellProvider: ProfileCollectionViewDataSource.CellProvider =
-            { [weak self] collectionView, indexPath, item in
-
-                if item == .header {
-                    let cell: ProfileCollectionViewHeaderCell = collectionView.dequeueCell(for: indexPath)
-                    cell.backgroundConfiguration = .clear()
-                    cell.coordinator = self
-                    cell.updateContent()
-                    return cell
-                }
-                else {
-                    guard let cell: UICollectionViewListCell = collectionView.dequeueReusableCell(
-                        withReuseIdentifier: "Default",
-                        for: indexPath
-                    ) as? UICollectionViewListCell else {
-                        return nil
-                    }
-
-                    var content = cell.defaultContentConfiguration()
-                    content.text = item.title
-                    
-                    if item.isDestructive {
-                        content.textProperties.color = .systemRed
-                    }
-                    
-                    if item.isInteractionDisabled {
-                        content.textProperties.color = .secondaryLabel
-                    }
-                    
-                    if let accessibilityIdentifier = item.accessibilityIdentifier {
-                        cell.accessibilityIdentifier = accessibilityIdentifier
-                    }
-                    
-                    cell.contentConfiguration = content
-                    cell.accessories = [.disclosureIndicator()]
-                    if let text = item.accessoryText {
-                        cell.accessories.append(.label(text: text))
-                    }
-                    cell.isUserInteractionEnabled = !item.isInteractionDisabled
-                    return cell
-                }
-            }
 
         let dataSource = ProfileCollectionViewDataSource(
             collectionView: collectionView,
@@ -120,6 +79,75 @@ final class ProfileCoordinator: NSObject, Coordinator, CurrentDestinationHolderP
 
         return dataSource
     }()
+
+    private lazy var cellProvider: ProfileCollectionViewDataSource.CellProvider = {
+        [weak self] collectionView, indexPath, item in
+        
+        guard let self else {
+            return nil
+        }
+        
+        if item == .header {
+            let cell: ProfileCollectionViewHeaderCell = collectionView.dequeueCell(for: indexPath)
+            cell.backgroundConfiguration = .clear()
+            cell.coordinator = self
+            cell.updateContent()
+            return cell
+        }
+        else {
+            guard let cell: UICollectionViewListCell = collectionView.dequeueReusableCell(
+                withReuseIdentifier: "Default",
+                for: indexPath
+            ) as? UICollectionViewListCell else {
+                return nil
+            }
+            
+            var content = UIListContentConfiguration.valueCell()
+            content.text = item.title
+            
+            if item.isDestructive {
+                content.textProperties.color = .systemRed
+            }
+            
+            if item.isInteractionDisabled {
+                content.textProperties.color = .secondaryLabel
+            }
+            let indicator = UICellAccessory.disclosureIndicator()
+            cell.accessories = [indicator]
+            
+            if let text = item.accessoryText {
+                content.secondaryText = text
+            }
+            
+            if let accessibilityIdentifier = item.accessibilityIdentifier {
+                cell.accessibilityIdentifier = accessibilityIdentifier
+            }
+            
+            if item == .workAvailabilityStatus {
+                let manager = businessInjector.workAvailabilityStatusManager
+                let category = manager.ownStatus().category
+                
+                // Only show label for status other than `.none`
+                if category != .none {
+                    let attachment = NSTextAttachment()
+                    let font = UIFont.preferredFont(forTextStyle: .body)
+
+                    attachment.image = UIImage(systemName: "circle.fill")!
+                        .withTintColor(category.color)
+                    attachment.bounds = CGRect(x: 0, y: 0, width: font.capHeight, height: font.capHeight)
+
+                    let attributedText = NSMutableAttributedString(attachment: attachment)
+                    attributedText.append(NSAttributedString(string: " \(category.localizedDescription)"))
+                    
+                    content.secondaryAttributedText = attributedText
+                }
+            }
+            cell.contentConfiguration = content
+
+            cell.isUserInteractionEnabled = !item.isInteractionDisabled
+            return cell
+        }
+    }
 
     private lazy var profileViewController: ProfileViewController = {
         let viewController = ProfileViewController(
@@ -146,7 +174,8 @@ final class ProfileCoordinator: NSObject, Coordinator, CurrentDestinationHolderP
         safeConfigManager: safeConfigManager,
         serverApiConnector: serverApiConnector,
         groupManager: businessInjector.groupManager,
-        myIdentityStore: businessInjector.myIdentityStore
+        myIdentityStore: businessInjector.myIdentityStore,
+        phoneNumberNormalizer: PhoneNumberNormalizer()
     )
 
     private lazy var safeManager = SafeManager(
@@ -206,6 +235,9 @@ final class ProfileCoordinator: NSObject, Coordinator, CurrentDestinationHolderP
 
         case let .shareID(sourceView):
             shareID(sourceView: sourceView)
+            
+        case .workAvailabilityStatus:
+            showWorkAvailabilityStatus()
 
         case .backups:
             showBackups()
@@ -228,8 +260,10 @@ final class ProfileCoordinator: NSObject, Coordinator, CurrentDestinationHolderP
 
         // We do not update the current destination for modals
         switch destination {
-        case .editProfile, .scanQRCode, .qrCode, .shareID, .revocationPassword, .publicKey, .revokeDelete:
+        case .editProfile, .scanQRCode, .qrCode, .shareID, .workAvailabilityStatus, .revocationPassword, .publicKey,
+             .revokeDelete:
             break
+            
         case .backups, .linkPhone, .linkMail:
             currentDestination = destination
         }
@@ -368,6 +402,16 @@ final class ProfileCoordinator: NSObject, Coordinator, CurrentDestinationHolderP
         )
     }
 
+    private func showWorkAvailabilityStatus() {
+        let model = WorkAvailabilityStatusViewModel(profileStore: businessInjector.profileStore) { [weak self] in
+            self?.dismiss()
+        }
+
+        let rootView = WorkAvailabilityStatusView(model: model)
+        let vc = UIHostingController(rootView: rootView)
+        modalRouter.present(vc)
+    }
+    
     private func showBackups(_ additionalRoute: BackupsViewModel.Route? = nil) {
         MainActor.assumeIsolated { [weak self] in
             self?.passcodeRouter.requireAuthenticationIfNeeded { [weak self] in
@@ -563,6 +607,8 @@ extension ProfileCollectionViewDataSource.Row {
         case .header:
             assertionFailure("Should not be possible to select.")
             return nil
+        case .workAvailabilityStatus:
+            return .workAvailabilityStatus
         case .backups:
             return .backups
         case .revocationPassword:

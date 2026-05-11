@@ -860,6 +860,24 @@
             msg = groupReactionMessage;
             break;
         }
+        case MSGTYPE_WEB_SESSION_RESUME: {
+            msg = [[WebSessionResumeMessage alloc] init];
+            break;
+        }
+        case MSGTYPE_WORK_SYNC_DELTA: {
+            WorkSyncDeltaMessage *workSyncDeltaMessage = [[WorkSyncDeltaMessage alloc] init];
+            NSError *protobufError = nil;
+            
+            [workSyncDeltaMessage fromRawProtoBufMessageWithRawProtobufMessage:[NSData dataWithBytes:body.bytes length:[body length]] error:&protobufError];
+            
+            if(protobufError != nil) {
+                DDLogWarn(@"Cannot decode work sync Message: %@", protobufError);
+                break;
+            }
+            
+            msg = workSyncDeltaMessage;
+            break;
+        }
         default: {
             DDLogWarn(@"Unsupported message type %d", type);
             msg = [[UnknownTypeMessage alloc] init];

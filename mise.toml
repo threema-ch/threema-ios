@@ -1,0 +1,159 @@
+#-- Tools --#
+
+[tools."github:nicklockwood/SwiftFormat"]
+version = "0.61.0"
+rename_exe = "swiftformat"
+no_app = true  # Skip SwiftFormat.for.Xcode.app.zip, use swiftformat.zip instead
+
+#-- Settings --#
+[settings]
+lockfile = true
+
+#-- Variables --#
+
+[vars]
+
+#- Rust -#
+# We only support Apple Silicon Macs
+# Darwin target is needed to run tests on macOS
+rust_targets = "aarch64-apple-darwin aarch64-apple-ios aarch64-apple-ios-sim"
+
+#- libthreema -#
+libthreema_path = "libthreema"
+libthreema_swift_path = "libthreemaSwift"
+libthreema_xcframework_file = "{{vars.libthreema_swift_path}}/libthreema.xcframework"
+libthreema_generated_swift_file = "{{vars.libthreema_swift_path}}/Sources/libthreemaSwift/Generated/libthreema.swift"
+
+#- SaltyRTC -#
+saltyrtc_path = "saltyrtc-task-relayed-data-rs/ffi/"
+saltyrtc_ffi_target = "saltyrtc-task-relayed-data-ffi"
+
+#-- General tasks --#
+
+[tasks.all]
+description = "Build all dependencies"
+depends = ["dependencies"]
+run = "echo 'All dependencies built.'"
+
+[tasks.clean]
+description = "Clean all dependencies"
+depends = ["dependencies-clean"]
+run = "echo 'All dependencies cleaned.'"
+
+[tasks.libthreema-hash]
+description = "Write libthreema submodule hash to .libthreema-version"
+run = "echo $(git submodule status libthreema) | cut -d ' ' -f1 > .libthreema-version"
+
+[tasks.saltyrtc-hash]
+description = "Write SaltyRTC submodule hash to .saltyrtc-version"
+run = "echo $(git submodule status saltyrtc-task-relayed-data-rs) | cut -d ' ' -f1 > .saltyrtc-version"
+
+#- Setup -#
+
+[tasks.setup]
+description = "Install protobuf and upgrade rustup via brew"
+run = [
+    "brew install --quiet protobuf",
+    "brew upgrade --quiet rustup",
+]
+
+[tasks.setup-rust]
+description = "Install and initialize rustup"
+run = [
+    "brew install --quiet rustup",
+    "rustup-init",
+]
+
+#- Dependencies -#
+
+[tasks.dependencies]
+description = "Build all dependencies (submodules, WebRTC, SaltyRTC, libthreema)"
+depends = ["update-submodules", "webrtc", "saltyrtc", "libthreema-all"]
+run = "echo 'Dependencies ready.'"
+
+[tasks.dependencies-clean]
+description = "Clean all dependencies"
+depends = ["webrtc-clean", "saltyrtc-clean", "libthreema-clean"]
+run = "echo 'Dependencies cleaned.'"
+
+#- Submodules -#
+
+[tasks.update-submodules]
+description = "Init and update git submodules"
+run = "git submodule update --init --recursive || true"
+
+#- Format -#
+
+[tasks.format]
+description = "Run SwiftFormat on project"
+run = "mise exec -- swiftformat . --config .swiftformat --swift-version $(cat .swift-version)"
+
+#-- WebRTC --#
+
+[tasks.webrtc]
+description = "Build WebRTC dependencies"
+run = "./scripts/build.sh --dependencies ."
+
+[tasks.webrtc-clean]
+description = "Clean WebRTC framework"
+run = "rm -rf WebRTC.xcframework"
+
+#-- Rust --#
+
+[tasks.libthreema-all]
+description = """
+Setup Rust toolchain and build libthreema.
+If you are offline this might not work. Use `libthreema` instead.
+"""
+depends = ["libthreema-rust", "libthreema"]
+run = "echo 'libthreema ready.'"
+
+# Notes:
+# - If we would set a build folder inside a Swift Package used in Xcode it will reload multiple times during a build
+# - The UniFFI generator formats the Swift file by default. Our scripts disables this because we also change the APIs
+#   with our formattter (e.g. Id -> ID) and this might break our bindings in the future. If official support is added
+#   to fix Swift capitalization conventions in the future we should consider to enable them
+#   (https://github.com/mozilla/uniffi-rs/issues/2276)
+[tasks.libthreema]
+description = "Build libthreema xcframework and generate Swift bindings"
+run = """
+xcrun --sdk macosx ./scripts/BuildRustLibrary/Sources/BuildRustLibraryScript/main.swift \
+    libthreema \
+    --library-path {{vars.libthreema_path}} \
+    --framework-out-file-path {{vars.libthreema_xcframework_file}} \
+    --swift-out-file-path {{vars.libthreema_generated_swift_file}} \
+    --targets {{vars.rust_targets}}
+mise run libthreema-hash
+"""
+
+[tasks.libthreema-rust]
+description = """
+Install correct Rust toolchain and targets for libthreema.
+This picks up the `libthreema/rust-toolchain.toml` file to install the correct toolchain version
+"""
+run = [
+    "cd {{vars.libthreema_path}} && rustup toolchain install",
+    "cd {{vars.libthreema_path}} && rustup target add {{vars.rust_targets}}",
+]
+
+[tasks.libthreema-clean]
+description = "Clean libthreema build artifacts"
+run = [
+    "cd {{vars.libthreema_path}} && cargo clean",
+    "rm -rf {{vars.libthreema_path}}/build",
+    "rm -rf {{vars.libthreema_xcframework_file}}",
+    "rm -f {{vars.libthreema_generated_swift_file}}",
+]
+
+#- SaltyRTC -#
+
+[tasks.saltyrtc]
+description = "Build SaltyRTC FFI"
+run = """
+/bin/bash scripts/build-rust.sh {{vars.saltyrtc_path}} {{vars.saltyrtc_ffi_target}}
+mise run saltyrtc-hash
+"""
+
+[tasks.saltyrtc-clean]
+description = "Clean SaltyRTC build"
+run = "cd {{vars.saltyrtc_path}} && cargo clean"

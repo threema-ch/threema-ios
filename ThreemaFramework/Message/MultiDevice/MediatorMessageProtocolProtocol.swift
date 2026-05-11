@@ -40,9 +40,9 @@ protocol MediatorMessageProtocolProtocol {
 
     func decryptByte(data: Data, key: Data) -> Data?
 
-    func getEnvelopeForContactSync(contact: Sync_Contact, syncAction: DeltaSyncContact.SyncAction) -> D2d_Envelope
+    func getEnvelopeForContactSync(contact: D2dSync_Contact, syncAction: DeltaSyncContact.SyncAction) -> D2d_Envelope
 
-    func getEnvelopeForGroupSync(group: Sync_Group, syncAction: D2d_GroupSync.OneOf_Action) -> D2d_Envelope
+    func getEnvelopeForGroupSync(group: D2dSync_Group, syncAction: D2d_GroupSync.OneOf_Action) -> D2d_Envelope
 
     func getEnvelopeForIncomingMessage(
         type: Int32,
@@ -81,11 +81,11 @@ protocol MediatorMessageProtocolProtocol {
     // swiftformat:disable:next all
     func getEnvelopeForOutgoingMessageUpdate(messageID: Data, conversationID: D2d_ConversationId, deviceID: UInt64) -> D2d_Envelope
 
-    func getEnvelopeForProfileUpdate(userProfile: Sync_UserProfile) -> D2d_Envelope
+    func getEnvelopeForProfileUpdate(userProfile: D2dSync_UserProfile) -> D2d_Envelope
 
-    func getEnvelopeForSettingsUpdate(settings: Sync_Settings) -> D2d_Envelope
+    func getEnvelopeForSettingsUpdate(settings: D2dSync_Settings) -> D2d_Envelope
 
-    func getEnvelopeForMdmParametersUpdate(mdmParameters: Sync_MdmParameters) -> D2d_Envelope
+    func getEnvelopeForMdmParametersUpdate(mdmParameters: D2dSync_MdmParameters) -> D2d_Envelope
 
     func decryptEnvelope(data: Data) -> D2d_Envelope?
 

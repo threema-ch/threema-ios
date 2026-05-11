@@ -19,6 +19,7 @@ public final class BusinessInjector: NSObject, FrameworkInjectorProtocol {
         backgroundEntityManager: backgroundEntityManager,
         serverConnector: serverConnector
     )
+    
     // Will be used for none public services, that must be running in the background anyway
     private let backgroundEntityManager: EntityManager
 
@@ -42,7 +43,7 @@ public final class BusinessInjector: NSObject, FrameworkInjectorProtocol {
         }
     }
     
-    /// Legacy initializer for backward compatibility (uses AppLaunchManager.remoteSecretManager).
+    /// Legacy initializer for backward compatibility (uses RemoteSecretProvider.remoteSecretManager).
     @objc convenience init(entityManager: EntityManager) {
         // This `assert` would be nice, than the `BusinessInjector` can only be used when My Identity is present.
         // But in the moment the assert throws if unit tests are running, because e.g.
@@ -53,7 +54,7 @@ public final class BusinessInjector: NSObject, FrameworkInjectorProtocol {
         let persistenceManager = PersistenceManager(
             appGroupID: AppGroup.groupID(),
             userDefaults: AppGroup.userDefaults(),
-            remoteSecretManager: AppLaunchManager.remoteSecretManager
+            remoteSecretManager: RemoteSecretProvider.remoteSecretManager
         )
         
         self.init(entityManager: entityManager, persistenceManager: persistenceManager)
@@ -67,7 +68,7 @@ public final class BusinessInjector: NSObject, FrameworkInjectorProtocol {
         let persistenceManager = PersistenceManager(
             appGroupID: AppGroup.groupID(),
             userDefaults: AppGroup.userDefaults(),
-            remoteSecretManager: AppLaunchManager.remoteSecretManager
+            remoteSecretManager: RemoteSecretProvider.remoteSecretManager
         )
 
         if forBackgroundProcess {
@@ -153,13 +154,13 @@ public final class BusinessInjector: NSObject, FrameworkInjectorProtocol {
         }
     )
     
-    public private(set) lazy var distributionListManager: DistributionListManagerProtocol =
+    public private(set) lazy var distributionListManager: any DistributionListManagerProtocol =
         DistributionListManager(entityManager: entityManager)
 
     // Do not mark as lazy, to prevent blocking thread when calling singleton init
-    public private(set) var licenseStore = LicenseStore.shared()
+    public private(set) var licenseStore: any LicenseStoreProtocol = LicenseStore.shared()
 
-    public private(set) lazy var messageSender: MessageSenderProtocol = MessageSender(
+    public private(set) lazy var messageSender: any MessageSenderProtocol = MessageSender(
         serverConnector: serverConnector,
         myIdentityStore: myIdentityStore,
         userSettings: userSettings,
@@ -184,7 +185,8 @@ public final class BusinessInjector: NSObject, FrameworkInjectorProtocol {
             contactStore: contactStore,
             userSettings: userSettings,
             taskManager: taskManager,
-            entityManager: entityManager
+            entityManager: entityManager,
+            keychainManager: keychainManager
         )
 
     // Do not mark as lazy, to prevent blocking thread when calling singleton init
@@ -201,7 +203,7 @@ public final class BusinessInjector: NSObject, FrameworkInjectorProtocol {
         taskManager: taskManager
     )
 
-    public private(set) lazy var messageRetentionManager: MessageRetentionManagerModelProtocol =
+    public private(set) lazy var messageRetentionManager: any MessageRetentionManagerModelProtocol =
         MessageRetentionManagerModel(
             userSettings: userSettings,
             unreadMessages: unreadMessages,
@@ -210,7 +212,7 @@ public final class BusinessInjector: NSObject, FrameworkInjectorProtocol {
         )
 
     // Do not mark as lazy, to prevent blocking thread when calling singleton init
-    @objc public private(set) var userSettings: UserSettingsProtocol = UserSettings.shared()
+    @objc public private(set) var userSettings: any UserSettingsProtocol = UserSettings.shared()
 
     public private(set) lazy var settingsStore: any SettingsStoreProtocol = SettingsStore(
         serverConnector: serverConnector,
@@ -223,7 +225,7 @@ public final class BusinessInjector: NSObject, FrameworkInjectorProtocol {
     // Do not mark as lazy, to prevent blocking thread when calling singleton init
     public private(set) var serverConnector: ServerConnectorProtocol = ServerConnector.shared()
 
-    public private(set) lazy var pushSettingManager: PushSettingManagerProtocol = PushSettingManager(
+    public private(set) lazy var pushSettingManager: any PushSettingManagerProtocol = PushSettingManager(
         userSettings: userSettings,
         groupManager: groupManager,
         entityManager: entityManager,
@@ -233,7 +235,7 @@ public final class BusinessInjector: NSObject, FrameworkInjectorProtocol {
     )
 
     public private(set) lazy var keychainManager: any KeychainManagerProtocol = KeychainManager(
-        remoteSecretManager: AppLaunchManager.remoteSecretManager
+        remoteSecretManager: RemoteSecretProvider.remoteSecretManager
     )
 
     @available(
@@ -244,6 +246,40 @@ public final class BusinessInjector: NSObject, FrameworkInjectorProtocol {
     )
     @objc public private(set) lazy var keychainManagerObjC: KeychainManager = keychainManager as! KeychainManager
 
+    public private(set) lazy var workAvailabilityStatusManager: any WorkAvailabilityStatusManagerProtocol = {
+        guard TargetManager.isWork else {
+            return WorkAvailabilityStatusManagerNull()
+        }
+        return WorkAvailabilityStatusManager(defaults: AppGroup.userDefaults())
+    }()
+    
+    public private(set) lazy var workDataFetcher: any WorkDataFetcherProtocol = {
+        let apiCaller = WorkDataAPICaller(licenseStore: licenseStore)
+        let mdmSetup = MDMSetup()!
+        let appFlavorService = AppFlavorService()
+        
+        let workDataThreemaMDMFetcher = WorkDataThreemaMDMFetcher(
+            mdmSetup: mdmSetup,
+            licenseStore: licenseStore,
+            appFlavorService: appFlavorService,
+            workDataAPICaller: apiCaller
+        )
+        
+        return WorkDataFetcher(
+            contactStore: ContactStore.shared(),
+            licenseStore: licenseStore,
+            identityStore: myIdentityStore,
+            userSettings: userSettings,
+            userDefaults: AppGroup.userDefaults(),
+            serverInfoProvider: ServerInfoProviderFactory.makeServerInfoProvider(),
+            appFlavorService: appFlavorService,
+            entityManager: entityManager,
+            mdmSetup: mdmSetup,
+            workDataAPICaller: apiCaller,
+            workDataThreemaMDMFetcher: workDataThreemaMDMFetcher
+        )
+    }()
+    
     public func runInBackground<T>(
         _ block: @escaping (BusinessInjectorProtocol) async throws -> T
     ) async rethrows

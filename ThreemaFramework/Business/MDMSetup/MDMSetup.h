@@ -29,6 +29,7 @@ extern NSString * _Nonnull const MDM_KEY_DISABLE_EXPORT;
 extern NSString * _Nonnull const MDM_KEY_DISABLE_BACKUPS;
 extern NSString * _Nonnull const MDM_KEY_DISABLE_ID_EXPORT;
 extern NSString * _Nonnull const MDM_KEY_DISABLE_SYSTEM_BACKUPS;
+extern NSString * _Nonnull const MDM_KEY_DISABLE_IOS_SYSTEM_BACKUPS_ID_KEY_INCLUSION;
 extern NSString * _Nonnull const MDM_KEY_DISABLE_MESSAGE_PREVIEW;
 extern NSString * _Nonnull const MDM_KEY_DISABLE_SEND_PROFILE_PICTURE;
 extern NSString * _Nonnull const MDM_KEY_DISABLE_CALLS;
@@ -85,6 +86,8 @@ typedef enum : int {
 - (BOOL)disableIdExport NS_SWIFT_NAME(disableIDExport());
 
 - (BOOL)disableSystemBackups;
+
+- (BOOL)disableIOSSystemBackupsIDKeyInclusion;
 
 - (BOOL)readonlyProfile;
 

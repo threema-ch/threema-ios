@@ -32,6 +32,7 @@
 static MyIdentityStore *instance;
 
 + (MyIdentityStore*)sharedMyIdentityStore {
+    // We cannot use `dispatch_once` here, because the instance can be reset (`resetSharedInstance`)
     @synchronized (self) {
         if (!instance)
             instance = [[MyIdentityStore alloc] init];

@@ -40,7 +40,7 @@ protocol MediatorReflectedProcessorProtocol {
     ) -> Promise<Void>
 }
 
-@objc final class MediatorReflectedProcessor: NSObject, MediatorReflectedProcessorProtocol {
+final class MediatorReflectedProcessor: NSObject, MediatorReflectedProcessorProtocol {
     
     private let frameworkInjector: FrameworkInjectorProtocol
     private let messageProcessorDelegate: MessageProcessorDelegate
@@ -161,7 +161,8 @@ protocol MediatorReflectedProcessorProtocol {
             return processor.process(userProfileSync: userProfileSync)
         case let .contactSync(contactSync):
             let processor = MediatorReflectedContactSyncProcessor(
-                frameworkInjector: frameworkInjector
+                frameworkInjector: frameworkInjector,
+                messageProcessorDelegate: messageProcessorDelegate
             )
             return processor.process(contactSync: contactSync)
         case let .settingsSync(settingsSync):

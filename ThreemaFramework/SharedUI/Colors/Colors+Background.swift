@@ -5,15 +5,15 @@ extension Colors {
         .systemBackground
     }
     
-    @objc public class var backgroundGroupedViewController: UIColor {
+    public class var backgroundGroupedViewController: UIColor {
         .systemGroupedBackground
     }
     
-    @objc public class var backgroundNavigationController: UIColor {
+    public class var backgroundNavigationController: UIColor {
         .systemBackground
     }
         
-    @objc public class var backgroundToolbar: UIColor {
+    public class var backgroundToolbar: UIColor {
         switch theme {
         case .light:
             .white
@@ -26,10 +26,6 @@ extension Colors {
         .systemGroupedBackground
     }
     
-    @objc public class var backgroundInverted: UIColor {
-        .systemFill
-    }
-    
     @objc public class var backgroundButton: UIColor {
         switch theme {
         case .light:
@@ -39,11 +35,11 @@ extension Colors {
         }
     }
     
-    @objc public class var backgroundChatBarButton: UIColor {
+    public class var backgroundChatBarButton: UIColor {
         .systemGray
     }
     
-    @objc public class var backgroundChevronCircleButton: UIColor {
+    public class var backgroundChevronCircleButton: UIColor {
         switch theme {
         case .light:
             UIColor(resource: .gray250)
@@ -52,7 +48,7 @@ extension Colors {
         }
     }
     
-    @objc public class var backgroundTintChevronCircleButton: UIColor {
+    public class var backgroundTintChevronCircleButton: UIColor {
         switch theme {
         case .light:
             UIColor(resource: .gray550)
@@ -61,15 +57,11 @@ extension Colors {
         }
     }
     
-    @objc public class var backgroundSafeImageCircle: UIColor {
-        UIColor(resource: .gray250)
-    }
-    
-    @objc public class var backgroundWizard: UIColor {
+    public class var backgroundWizard: UIColor {
         .black
     }
     
-    @objc public class var backgroundNotification: UIColor {
+    public class var backgroundNotification: UIColor {
         switch theme {
         case .light:
             .white

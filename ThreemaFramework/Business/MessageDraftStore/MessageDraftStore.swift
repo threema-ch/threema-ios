@@ -17,7 +17,7 @@ import ThreemaMacros
     }
  
     public func saveDraft(_ draft: Draft, for conversation: ConversationEntity) {
-        guard !AppLaunchManager.isRemoteSecretEnabled else {
+        guard !RemoteSecretProvider.isRemoteSecretEnabled else {
             return
         }
         @MessageDraftCoordinator(conversation: conversation) var oldDraft

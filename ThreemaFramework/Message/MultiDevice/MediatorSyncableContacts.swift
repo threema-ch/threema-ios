@@ -13,15 +13,15 @@ class MediatorSyncableContacts: NSObject {
     private let chunkSize = 100
     private var deltaSyncContacts = [DeltaSyncContact]()
 
-    private let userSettings: UserSettingsProtocol
-    private let pushSettingManager: PushSettingManagerProtocol
-    private let taskManager: TaskManagerProtocol
+    private let userSettings: any UserSettingsProtocol
+    private let pushSettingManager: any PushSettingManagerProtocol
+    private let taskManager: any TaskManagerProtocol
     private let entityManager: EntityManager
     
     init(
-        userSettings: UserSettingsProtocol,
-        pushSettingManager: PushSettingManagerProtocol,
-        taskManager: TaskManagerProtocol,
+        userSettings: any UserSettingsProtocol,
+        pushSettingManager: any PushSettingManagerProtocol,
+        taskManager: any TaskManagerProtocol,
         entityManager: EntityManager
     ) {
         self.userSettings = userSettings
@@ -34,7 +34,7 @@ class MediatorSyncableContacts: NSObject {
         let localEntityManager = PersistenceManager(
             appGroupID: AppGroup.groupID(),
             userDefaults: AppGroup.userDefaults(),
-            remoteSecretManager: AppLaunchManager.remoteSecretManager
+            remoteSecretManager: RemoteSecretProvider.remoteSecretManager
         ).backgroundEntityManager
 
         self.init(
@@ -180,16 +180,19 @@ class MediatorSyncableContacts: NSObject {
         delta.syncContact.update(identityType: isWork ? .work : .regular)
         delta.syncContact.update(verificationLevel: isWork ? .fullyVerified : .unverified)
         delta.syncContact
-            .update(workVerificationLevel: isWork ? .workSubscriptionVerified : Sync_Contact.WorkVerificationLevel.none)
+            .update(
+                workVerificationLevel: isWork ? .workSubscriptionVerified : D2dSync_Contact.WorkVerificationLevel
+                    .none
+            )
         delta.syncContact.update(acquaintanceLevel: .groupOrDeleted)
         delta.syncContact.update(createdAt: .now)
         delta.syncContact.update(syncState: .initial)
         delta.syncContact.update(readReceipt: .default)
         delta.syncContact.update(typingIndicator: .default)
-        delta.syncContact.update(notificationSoundIsMuted: false)
         delta.syncContact.update(notificationTriggerType: .on, notificationTriggerExpiresAt: nil)
         delta.syncContact.update(conversationCategory: .default)
         delta.syncContact.update(conversationVisibility: .normal)
+        delta.syncContact.updateNotificationSound()
         delta.syncAction = .create
         apply(delta)
     }
@@ -208,11 +211,11 @@ class MediatorSyncableContacts: NSObject {
         }
 
         var delta = getDelta(identity)
-        var acquaintanceLevel: Sync_Contact.AcquaintanceLevel?
+        var acquaintanceLevel: D2dSync_Contact.AcquaintanceLevel?
         if let value {
             assert(value.intValue >= 0 && value.intValue <= 1)
 
-            acquaintanceLevel = Sync_Contact.AcquaintanceLevel(rawValue: value.intValue)
+            acquaintanceLevel = D2dSync_Contact.AcquaintanceLevel(rawValue: value.intValue)
         }
         delta.syncContact.update(acquaintanceLevel: acquaintanceLevel)
         apply(delta)
@@ -225,7 +228,7 @@ class MediatorSyncableContacts: NSObject {
 
         var delta = getDelta(identity)
         delta.syncContact
-            .update(conversationCategory: value != nil ? Sync_ConversationCategory(rawValue: value!.rawValue) : nil)
+            .update(conversationCategory: value != nil ? D2dSync_ConversationCategory(rawValue: value!.rawValue) : nil)
         apply(delta)
     }
 
@@ -236,7 +239,10 @@ class MediatorSyncableContacts: NSObject {
 
         var delta = getDelta(identity)
         delta.syncContact
-            .update(conversationVisibility: value != nil ? Sync_ConversationVisibility(rawValue: value!.rawValue) : nil)
+            .update(
+                conversationVisibility: value != nil ? D2dSync_ConversationVisibility(rawValue: value!.rawValue) :
+                    nil
+            )
         apply(delta)
     }
 
@@ -270,11 +276,11 @@ class MediatorSyncableContacts: NSObject {
         }
 
         var delta = getDelta(identity)
-        var identityType: Sync_Contact.IdentityType?
+        var identityType: D2dSync_Contact.IdentityType?
         if let value {
             assert(value.intValue >= 0 && value.intValue <= 1)
 
-            identityType = Sync_Contact.IdentityType(rawValue: value.intValue)
+            identityType = D2dSync_Contact.IdentityType(rawValue: value.intValue)
         }
         delta.syncContact.update(identityType: identityType)
         apply(delta)
@@ -297,16 +303,6 @@ class MediatorSyncableContacts: NSObject {
 
         var delta = getDelta(identity)
         delta.syncContact.update(nickname: value)
-        apply(delta)
-    }
-
-    func updateNotificationSound(identity: String, isMuted: Bool?) {
-        guard userSettings.enableMultiDevice else {
-            return
-        }
-
-        var delta = getDelta(identity)
-        delta.syncContact.update(notificationSoundIsMuted: isMuted)
         apply(delta)
     }
 
@@ -350,17 +346,17 @@ class MediatorSyncableContacts: NSObject {
         }
 
         var delta = getDelta(identity)
-        var activitySate: Sync_Contact.ActivityState?
+        var activitySate: D2dSync_Contact.ActivityState?
         if let value {
             assert(value.intValue >= 0 && value.intValue <= 2)
 
-            activitySate = Sync_Contact.ActivityState(rawValue: value.intValue)
+            activitySate = D2dSync_Contact.ActivityState(rawValue: value.intValue)
         }
         delta.syncContact.update(activityState: activitySate)
         apply(delta)
     }
 
-    @objc func updateTypingIndicator(identity: String, value: ContactEntity.TypingIndicator) {
+    func updateTypingIndicator(identity: String, value: ContactEntity.TypingIndicator) {
         guard userSettings.enableMultiDevice else {
             return
         }
@@ -391,7 +387,10 @@ class MediatorSyncableContacts: NSObject {
 
         var delta = getDelta(identity)
         delta.syncContact
-            .update(verificationLevel: value != nil ? Sync_Contact.VerificationLevel(rawValue: value!.intValue) : nil)
+            .update(
+                verificationLevel: value != nil ? D2dSync_Contact
+                    .VerificationLevel(rawValue: value!.intValue) : nil
+            )
         apply(delta)
     }
 
@@ -406,12 +405,36 @@ class MediatorSyncableContacts: NSObject {
         }
 
         var delta = getDelta(identity)
-        var workVerificationLevel: Sync_Contact.WorkVerificationLevel?
+        var workVerificationLevel: D2dSync_Contact.WorkVerificationLevel?
         if let value {
-            workVerificationLevel = value.boolValue ? .workSubscriptionVerified : Sync_Contact.WorkVerificationLevel
+            workVerificationLevel = value.boolValue ? .workSubscriptionVerified : D2dSync_Contact.WorkVerificationLevel
                 .none
         }
         delta.syncContact.update(workVerificationLevel: workVerificationLevel)
+        apply(delta)
+    }
+    
+    /// Update work availability status.
+    /// - Parameters:
+    ///    - identity: Threema-ID of the work contact
+    ///    - status: WorkAvailabilityStatus of the work contact
+    @objc func updateWorkAvailabilityStatus(identity: String, status: WorkAvailabilityStatus?) {
+        guard userSettings.enableMultiDevice else {
+            return
+        }
+
+        var delta = getDelta(identity)
+        delta.syncContact.update(workAvailabilityStatus: status)
+        apply(delta)
+    }
+
+    func updateWorkLastFullSyncAt(identity: String, workLastFullSyncAt: Date?) {
+        guard userSettings.enableMultiDevice else {
+            return
+        }
+
+        var delta = getDelta(identity)
+        delta.syncContact.update(workLastFullSyncAt: workLastFullSyncAt)
         apply(delta)
     }
 
@@ -581,7 +604,7 @@ class MediatorSyncableContacts: NSObject {
             return delta
         }
         else {
-            var syncContact = Sync_Contact()
+            var syncContact = D2dSync_Contact()
             syncContact.identity = identity
 
             // Default sync action is update, is once changed to create never will change back to update

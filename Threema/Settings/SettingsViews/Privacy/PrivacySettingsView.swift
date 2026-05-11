@@ -8,6 +8,10 @@ struct PrivacySettingsView: View {
 
     @State private var contactsFooterText = #localize("settings_privacy_block_unknown_footer_on")
     
+    @State private var allowIdentityTransfer = false
+    @State private var showAlertAllowIdentityTransfer = false
+    @State private var canChangeAllowIdentityTransfer = false
+
     @State private var lockScreenWrapper = LockScreen(isLockScreenController: true)
     @State private var intermediaryHidePrivate = false
     
@@ -59,9 +63,53 @@ struct PrivacySettingsView: View {
                 updateContactsFooter()
             }
             
+            // MARK: Allow identity transfer
+
+            if ThreemaEnvironment.allowEasyDeviceSwitch {
+                Section {
+                    Toggle(isOn: $allowIdentityTransfer) {
+                        Text(#localize("this_device_decision_toggle_title"))
+                    }
+                    .disabled(
+                        (
+                            mdmSetup?.disableIOSSystemBackupsIDKeyInclusion() ?? false || mdmSetup?
+                                .disableBackups() ?? false || mdmSetup?.disableSystemBackups() ?? false
+                        ) ||
+                            !canChangeAllowIdentityTransfer
+                    )
+                } header: {
+                    Text(#localize("this_device_decision_title"))
+                } footer: {
+                    if !canChangeAllowIdentityTransfer {
+                        Text(#localize("this_device_decision_alert_message"))
+                    }
+                    else {
+                        
+                        if mdmSetup?.disableIOSSystemBackupsIDKeyInclusion() ?? false || mdmSetup?
+                            .disableBackups() ?? false || mdmSetup?.disableSystemBackups() ?? false {
+                            Text(#localize("disabled_by_device_policy"))
+                        }
+                        else {
+                            VStack(alignment: .leading, spacing: 0) {
+                                Text(#localize("this_device_decision_additional_info"))
+                                
+                                Link(
+                                    #localize("learn_more"),
+                                    destination: ThreemaURLProvider.thisDeviceOnlyFAQ
+                                )
+                                .font(.footnote)
+                            }
+                        }
+                    }
+                }
+                .onChange(of: allowIdentityTransfer) {
+                    setIdentityThisDeviceOnly()
+                }
+            }
+            
             // MARK: OS Integration
             
-            if !AppLaunchManager.isRemoteSecretEnabled {
+            if !RemoteSecretProvider.isRemoteSecretEnabled {
                 Section {
                     Toggle(isOn: $settingsVM.allowOutgoingDonations) {
                         Text(#localize("settings_privacy_os_donate"))
@@ -153,6 +201,7 @@ struct PrivacySettingsView: View {
             }
             intermediaryHidePrivate = settingsVM.hidePrivateChats
             updateContactsFooter()
+            updateIdentityThisDeviceOnly()
         }
         .alert(isPresented: $settingsVM.syncFailed, content: {
             Alert(
@@ -165,7 +214,17 @@ struct PrivacySettingsView: View {
                 }
             )
         })
-        
+        .alert(isPresented: $showAlertAllowIdentityTransfer, content: {
+            Alert(
+                title: Text(#localize("this_device_decision_alert_title")),
+                message: Text(#localize("this_device_decision_alert_message")),
+                dismissButton: .default(Text(#localize("cancel"))) {
+                    updateIdentityThisDeviceOnly()
+                    showAlertAllowIdentityTransfer = false
+                }
+            )
+        })
+
         .navigationBarTitle(#localize("settings_list_privacy_title"), displayMode: .inline)
     }
     
@@ -208,6 +267,27 @@ struct PrivacySettingsView: View {
                 object: nil,
                 userInfo: nil
             )
+        }
+    }
+    
+    private func updateIdentityThisDeviceOnly() {
+        do {
+            allowIdentityTransfer = try !(BusinessInjector.ui.keychainManager.isIdentityThisDeviceOnly())
+
+            canChangeAllowIdentityTransfer = true
+        }
+        catch {
+            canChangeAllowIdentityTransfer = false
+        }
+    }
+    
+    private func setIdentityThisDeviceOnly() {
+        do {
+            try BusinessInjector.ui.keychainManager.changeIdentityAccessibility(thisDeviceOnly: !allowIdentityTransfer)
+        }
+        catch {
+            updateIdentityThisDeviceOnly()
+            showAlertAllowIdentityTransfer = true
         }
     }
 }

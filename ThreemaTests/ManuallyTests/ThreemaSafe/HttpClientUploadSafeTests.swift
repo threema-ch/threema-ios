@@ -31,7 +31,8 @@ final class HttpClientUploadSafeTests: XCTestCase {
             safeConfigManager: SafeConfigManager(),
             serverApiConnector: ServerAPIConnector(),
             groupManager: GroupManagerMock(),
-            myIdentityStore: myIdentityStoreMock
+            myIdentityStore: myIdentityStoreMock,
+            phoneNumberNormalizer: PhoneNumberNormalizerMock()
         )
                 
         if let key = SafeStore.createKey(identity: "ECHOECHO", safePassword: "shootdeathstar"),
@@ -75,7 +76,8 @@ final class HttpClientUploadSafeTests: XCTestCase {
             safeConfigManager: SafeConfigManager(),
             serverApiConnector: ServerAPIConnector(),
             groupManager: GroupManagerMock(),
-            myIdentityStore: myIdentityStoreMock
+            myIdentityStore: myIdentityStoreMock,
+            phoneNumberNormalizer: PhoneNumberNormalizerMock()
         )
         
         if let key = SafeStore.createKey(identity: "ECHOECHO", safePassword: "shootdeathstar"),

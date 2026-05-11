@@ -223,10 +223,11 @@ impl From<ValidIdentity> for ContactInit {
             activity_state: entry.activity_state.into(),
             feature_mask: FeatureMask(entry.feature_mask),
             sync_state: protobuf_contact::SyncState::Initial,
+            work_last_full_sync_at: None,
+            work_availability_status: None,
             read_receipt_policy_override: None,
             typing_indicator_policy_override: None,
             notification_trigger_policy_override: None,
-            notification_sound_policy_override: None,
             conversation_category: protobuf::d2d_sync::ConversationCategory::Default,
             conversation_visibility: protobuf::d2d_sync::ConversationVisibility::Normal,
         }
@@ -274,12 +275,15 @@ pub(crate) fn create_identity_authentication_request(
 }
 
 #[derive(Serialize)]
-struct CreateIdentityAuthenticatedRequest {
+struct CreateIdentityAuthenticatedRequest<'creds> {
     #[serde(flatten)]
     request: CreateIdentityRequest,
 
     #[serde(flatten)]
     authentication: AuthenticationChallengeResponse,
+
+    #[serde(flatten)]
+    credentials: Option<WorkCredentials<'creds>>,
 }
 
 /// Create an identity.
@@ -290,6 +294,10 @@ pub(crate) fn create_identity_request(
     authentication: AuthenticationChallengeResponse,
     public_key: PublicKey,
 ) -> HttpsRequest {
+    let credentials = match mode {
+        Flavor::Work(work_context) => Some(WorkCredentials::from(&work_context.credentials)),
+        Flavor::Consumer => None,
+    };
     HttpsRequest {
         timeout: TIMEOUT,
         url: directory_server_url.create_identity_path(),
@@ -300,6 +308,7 @@ pub(crate) fn create_identity_request(
                 public_key: public_key.0.to_bytes(),
             },
             authentication,
+            credentials,
         })
         .expect("Failed to create directory identity creation request body"),
     }
@@ -357,7 +366,7 @@ pub(crate) fn update_work_properties_authentication_request(
             identity,
             version: &client_info.to_semicolon_separated(),
         })
-        .expect("Failed to create update work properties challenge request body"),
+        .expect("Failed to create update work properties (legacy) challenge request body"),
     }
 }
 
@@ -396,7 +405,7 @@ pub(crate) fn update_work_properties_request(
             },
             authentication,
         })
-        .expect("Failed to create update work properties request body"),
+        .expect("Failed to create update work properties (legacy) request body"),
     }
 }
 

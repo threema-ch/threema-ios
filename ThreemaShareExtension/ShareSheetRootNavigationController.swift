@@ -43,7 +43,7 @@ class ShareSheetRootNavigationController: UINavigationController {
         super.viewDidLoad()
         
         PromiseKitConfiguration.configurePromiseKit()
-        FileUtilityObjCSetter.setInitialFileUtility()
+        FileUtilitySetter.setInitialFileUtility()
 
         setAppGroup()
         Colors.resolveTheme()
@@ -286,7 +286,7 @@ class ShareSheetRootNavigationController: UINavigationController {
             fatalError(err)
         }
         picker.delegate = self
-        picker.enableMultiSelection = true
+        picker.enableMultiselection = true
         picker.enableTextInput = false
         picker.enableControlView = false
         picker.rightBarButtonTitle = #localize("next")
@@ -346,7 +346,7 @@ class ShareSheetRootNavigationController: UINavigationController {
             fatalError(err)
         }
         picker.delegate = self
-        picker.enableMultiSelection = true
+        picker.enableMultiselection = true
         picker.enableTextInput = false
         picker.enableControlView = false
         

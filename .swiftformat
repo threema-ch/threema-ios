@@ -16,6 +16,10 @@
 --exclude Vendor/**
 --exclude WebRTC**
 
+## Other files
+--exclude scripts/format/.build/checkouts/SwiftFormat/CommandLineTool/swiftformat
+--exclude scripts/format/.build/checkouts/SwiftFormat/Sources/Info.plist
+
 # Format options
 
 --asynccapturing XCTAssertThrowsAsyncError
@@ -29,12 +33,12 @@
 --marktypes never
 --maxwidth 120
 --ranges no-space
---redundanttype inferred
+--propertytypes inferred
 --self init-only
 --semicolons never
 --stripunusedargs closure-only
 --trimwhitespace nonblank-lines # Waiting for https://github.com/nicklockwood/SwiftFormat/issues/1664
---wraparguments before-first 
+--wraparguments before-first
 --wrapcollections before-first
 --wrapparameters before-first
 
@@ -50,3 +54,59 @@
 --disable blankLinesAtStartOfScope # Waiting for https://github.com/nicklockwood/SwiftFormat/issues/583
 --disable sortTypealiases
 --disable wrapMultilineStatementBraces
+
+# Disabling new defaults from 0.54.1+
+
+## Disabled in order to match current setup
+--disable redundantLet
+--disable redundantSelf
+--disable wrap
+--disable trailingcommas
+--disable trailingClosures
+--disable swiftTestingTestCaseNames
+--disable redundantSwiftTestingSuite
+--disable redundantEmptyView
+--disable redundantType
+--disable blankLinesAroundMark
+--disable redundantNilInit
+--disable redundantVoidReturnType
+
+## New default rules in 0.55.0+
+--disable docCommentsBeforeModifiers
+--disable unusedPrivateDeclarations
+--disable propertyTypes
+
+## New default rules in 0.56.0+
+--disable wrapMultilineFunctionChains
+--disable preferCountWhere
+--disable blankLinesAfterGuardStatements
+--disable privateStateVariables
+
+## New default rules in 0.57.0+
+--disable singlePropertyPerLine
+--disable redundantPublic
+--disable modifiersOnSameLine
+
+## New default rules in 0.58.0+
+--disable preferFinalClasses
+
+## New default rules in 0.59.0+
+--disable blankLinesBetweenImports
+--disable docComments
+--disable emptyExtensions
+--disable environmentEntry
+--disable noForceTryInTests
+--disable noForceUnwrapInTests
+--disable redundantAsync
+--disable redundantEquatable
+--disable redundantMemberwiseInit
+--disable redundantVariable
+--disable redundantViewBuilder
+--disable redundantThrows
+--disable simplifyGenericConstraints
+--disable wrapPropertyBodies
+--disable wrapFunctionBodies
+
+## New default rules in 0.60.0+
+--disable redundantSendable
+--disable preferExplicitFalse

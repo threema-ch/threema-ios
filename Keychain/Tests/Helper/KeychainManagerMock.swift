@@ -68,14 +68,22 @@ public final class KeychainManagerMock: KeychainManagerProtocol, @unchecked Send
         nil
     }
 
-    public func storeIdentity(_ myIdentity: MyIdentity) throws {
+    public func storeIdentity(_ myIdentity: MyIdentity, thisDeviceOnly: Bool) throws {
         // no-op
     }
 
     public func deleteIdentity() throws {
         // no-op
     }
+    
+    public func isIdentityThisDeviceOnly() throws -> Bool {
+        true
+    }
 
+    public func changeIdentityAccessibility(thisDeviceOnly: Bool) throws {
+        // no-op
+    }
+    
     public static func loadIdentityBackup() throws -> String {
         ""
     }

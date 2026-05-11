@@ -45,7 +45,7 @@ public struct Poll: Identifiable, Hashable {
     public let isClosed: Bool
     public let isSummary: Bool
     public let isIntermediate: Bool
-    public let isMultiSelection: Bool
+    public let isMultiselection: Bool
     public let choices: [Choice]
     public let nonRespondents: [PollVoter]
     public let voteCountInfo: VoteCount
@@ -121,7 +121,7 @@ public struct Poll: Identifiable, Hashable {
         self.isClosed = entity.isClosed
         self.isSummary = entity.isSummary
         self.isIntermediate = entity.isIntermediate
-        self.isMultiSelection = entity.isMultipleChoice
+        self.isMultiselection = entity.isMultipleChoice
         self.title = entity.title ?? ""
         self.nonRespondents = participants.filter { nonRespondentIDs.contains($0.identity) }.sorted()
         self.voteCountInfo = VoteCount(

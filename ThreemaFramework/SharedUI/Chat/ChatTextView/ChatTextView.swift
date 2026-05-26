@@ -214,7 +214,11 @@ public final class ChatTextView: UITextView {
                     : CGFloat(ChatBarConfiguration.maxNumberOfLinesPortrait)
             }
 
-        return minHeight * CGFloat(maxLines)
+        let lineBasedMax = (font?.lineHeight ?? minHeight) * maxLines + textContainerInset.top + textContainerInset.bottom
+
+        // Cap at 1/3 of screen height regardless of orientation; landscape is naturally smaller due to swapped
+        // dimensions
+        return min(lineBasedMax, screenHeight * 0.3)
     }
 
     private var prevSingleLineHeight: CGFloat = 0.0
@@ -535,6 +539,13 @@ public final class ChatTextView: UITextView {
             object: nil
         )
 
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(deviceOrientationDidChange),
+            name: UIDevice.orientationDidChangeNotification,
+            object: nil
+        )
+
         let traits: [UITrait] = [UITraitUserInterfaceStyle.self, UITraitPreferredContentSizeCategory.self]
         registerForTraitChanges(traits) { [weak self] (_: Self, previous) in
             guard let self else {
@@ -569,6 +580,12 @@ public final class ChatTextView: UITextView {
         setNeedsLayout()
         superview?.setNeedsLayout()
         superview?.superview?.setNeedsLayout()
+    }
+
+    @objc private func deviceOrientationDidChange() {
+        DispatchQueue.main.async { [weak self] in
+            self?.resizeTextView(forceHeightCheck: true)
+        }
     }
 
     @objc func updateLayoutForKeyboard(notification: NSNotification) {
@@ -752,14 +769,25 @@ extension ChatTextView: UITextViewDelegate {
     ///   - ranges: The ranges of text that should be deleted before replacing
     ///   - text: New text for the chosen range
     /// - Returns: Must always return true otherwise the text needs to be assigned to the textView manually
+    @available(iOS 26, *)
     public func textView(
         _ textView: UITextView,
         shouldChangeTextInRanges ranges: [NSValue],
         replacementText text: String
-    )
-        -> Bool {
-        let nsRanges = ranges.map(\.rangeValue)
-        let anyRangeHasLength = nsRanges.contains { $0.length != 0 }
+    ) -> Bool {
+        shouldChangeText(in: ranges.map(\.rangeValue), replacementText: text)
+    }
+
+    public func textView(
+        _ textView: UITextView,
+        shouldChangeTextIn range: NSRange,
+        replacementText text: String
+    ) -> Bool {
+        shouldChangeText(in: [range], replacementText: text)
+    }
+
+    private func shouldChangeText(in ranges: [NSRange], replacementText text: String) -> Bool {
+        let anyRangeHasLength = ranges.contains { $0.length != 0 }
         let trimmedReplacementText = ThreemaUtility.trimCharacters(in: text)
         let isAllowedInsertion = !trimmedReplacementText.isEmpty || (!isEmpty && trimmedReplacementText.isEmpty)
 
@@ -767,13 +795,13 @@ extension ChatTextView: UITextViewDelegate {
             return false
         }
 
-        if let firstRange = nsRanges.first {
+        if let firstRange = ranges.first {
             handleMentions(with: firstRange, replacementText: text)
         }
 
         return true
     }
-    
+        
     /// Implements textViewDidChange from UITextViewDelegate
     ///
     /// See the documentation for shouldChangeTextIn for more information about why we have this queue and are

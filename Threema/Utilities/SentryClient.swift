@@ -57,6 +57,13 @@ import ThreemaMacros
             // Enable metric kit for sandbox apps
             if TargetManager.isSandbox {
                 options.enableMetricKit = true
+                options.experimental.enableWatchdogTerminationsV2 = true
+            }
+            
+            // We disable hang tracking for AppStore builds
+            if ThreemaEnvironment.env() == .appStore {
+                options.enableAppHangTracking = false
+                options.enableReportNonFullyBlockingAppHangs = false
             }
             
             // Disable breadcrumbs

@@ -71,7 +71,14 @@ public final class SelectedItemsHeaderView: UIView {
         stack.alignment = .fill
         stack.spacing = 8
         stack.backgroundColor = .secondarySystemGroupedBackground
-        stack.layer.cornerRadius = 10
+       
+        if #available(iOS 26.0, *) {
+            stack.layer.cornerRadius = 30
+        }
+        else {
+            stack.layer.cornerRadius = 10
+        }
+        
         stack.layer.masksToBounds = true
         stack.translatesAutoresizingMaskIntoConstraints = false
         stack.isLayoutMarginsRelativeArrangement = true
@@ -92,8 +99,13 @@ public final class SelectedItemsHeaderView: UIView {
         
         backgroundColor = .systemGroupedBackground
         addSubview(stackView)
-
-        directionalLayoutMargins = NSDirectionalEdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 20)
+        
+        if #available(iOS 26.0, *) {
+            directionalLayoutMargins = NSDirectionalEdgeInsets(top: 0, leading: 18, bottom: 0, trailing: 18)
+        }
+        else {
+            directionalLayoutMargins = NSDirectionalEdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 20)
+        }
 
         NSLayoutConstraint.activate([
             stackView.leadingAnchor.constraint(equalTo: layoutMarginsGuide.leadingAnchor),

@@ -70,6 +70,9 @@ final class DetailsHeaderProfileView: UIStackView {
             ) {
                 availabilityStatusExpandImage.isHidden = false
             }
+            else {
+                availabilityStatusExpandImage.isHidden = true
+            }
             
             if #available(iOS 26.0, *) {
                 availabilityStatusView.cornerConfiguration = .uniformCorners(
@@ -186,6 +189,7 @@ final class DetailsHeaderProfileView: UIStackView {
         container.isLayoutMarginsRelativeArrangement = true
         container.layoutMargins = .init(top: 8, left: 24, bottom: 8, right: 24)
         container.layer.masksToBounds = true
+        container.isHidden = true
         container.addGestureRecognizer(
             UITapGestureRecognizer(target: self, action: #selector(handleAvailabilityStatusTap))
         )
@@ -243,10 +247,8 @@ final class DetailsHeaderProfileView: UIStackView {
         // Add default subviews
         addArrangedSubview(profilePictureView)
 
-        if isAvailabilityStatusVisible {
-            addArrangedSubview(availabilityStatusView)
-            availabilityStatusView.widthAnchor.constraint(equalTo: widthAnchor, multiplier: 1.0).isActive = true
-        }
+        addArrangedSubview(availabilityStatusView)
+        availabilityStatusView.widthAnchor.constraint(equalTo: widthAnchor, multiplier: 1.0).isActive = true
 
         addArrangedSubview(nameLabel)
 
@@ -291,7 +293,13 @@ final class DetailsHeaderProfileView: UIStackView {
     
     private func updateContent() {
         profilePictureView.info = contentConfiguration.profilePictureInfo
-        availabilityStatusLabel.text = contentConfiguration.availabilityStatus?.text ?? contentConfiguration.availabilityStatus?.category.localizedDescription
+        if let availabilityStatus = contentConfiguration.availabilityStatus, isAvailabilityStatusVisible {
+            availabilityStatusLabel.text = availabilityStatus.text ?? availabilityStatus.category.localizedDescription
+            availabilityStatusView.isHidden = false
+        }
+        else {
+            availabilityStatusView.isHidden = true
+        }
         
         if contentConfiguration.isSelfMember {
             nameLabel.attributedText = nil

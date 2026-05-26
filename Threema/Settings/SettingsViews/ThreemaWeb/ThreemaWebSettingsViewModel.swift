@@ -230,7 +230,14 @@ final class ThreemaWebSettingsViewModel: NSObject, ObservableObject {
         userSettings.desktopInfoBannerShown = true
         showDesktopInfoBanner = false
     }
-
+ 
+    func showDesktop() {
+        let settingsStore = BusinessInjector.ui.settingsStore as! SettingsStore
+        let rootView = LinkedDevicesView().environmentObject(settingsStore)
+        let viewController = UIHostingController(rootView: rootView)
+        topViewController.show(viewController, sender: self)
+    }
+    
     // MARK: - Private Types
 
     private enum QRCodeScanResult {

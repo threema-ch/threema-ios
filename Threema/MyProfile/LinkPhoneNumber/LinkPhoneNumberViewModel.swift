@@ -67,7 +67,7 @@ final class LinkPhoneNumberViewModel: ObservableObject {
         }
         
         if let number = identityStore.linkedMobileNo {
-            formatPhoneNumber(number)
+            formatPhoneNumber("+\(number)")
         }
     }
     

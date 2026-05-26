@@ -25,7 +25,13 @@ final class CreateEditGroupDistributionNameCell: UICollectionViewCell {
         
         contentView.addSubview(nameInputView)
         contentView.backgroundColor = .secondarySystemGroupedBackground
-        contentView.layer.cornerRadius = 10
+        if #available(iOS 26.0, *) {
+            contentView.layer.cornerRadius = 28
+            contentView.layer.cornerCurve = .continuous
+        }
+        else {
+            contentView.layer.cornerRadius = 10
+        }
         contentView.layer.masksToBounds = true
         
         nameInputView.translatesAutoresizingMaskIntoConstraints = false

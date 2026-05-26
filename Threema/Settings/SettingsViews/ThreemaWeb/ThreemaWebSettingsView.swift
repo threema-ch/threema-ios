@@ -68,7 +68,7 @@ struct ThreemaWebSettingsView: View {
     var header: some View {
         if viewModel.showDesktopInfoBanner {
             ThreemaWebDesktopInfoBannerView {
-                NotificationCenter.default.post(name: .showDesktopSettings, object: nil)
+                viewModel.showDesktop()
             } dismissAction: {
                 viewModel.dismissBanner()
             }

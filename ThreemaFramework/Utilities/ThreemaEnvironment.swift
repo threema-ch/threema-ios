@@ -144,10 +144,7 @@ public final class ThreemaEnvironment: NSObject {
         }
         
         switch env() {
-        case .appStore:
-            return false
-            
-        case .testFlight:
+        case .appStore, .testFlight:
             return !TargetManager.isBusinessApp
             
         case .xcode:

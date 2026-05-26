@@ -140,25 +140,11 @@ final class SelectContactListViewController: ThemedViewController {
     // MARK: - Configuration
     
     private func updateNextButton() {
-        
         if #available(iOS 26.0, *) {
-            let item =
-                if contactSelectionMode.isEdit {
-                    UIBarButtonItem(
-                        barButtonSystemItem: .add,
-                        target: self,
-                        action: #selector(nextTapped)
-                    )
-                }
-                else {
-                    UIBarButtonItem(
-                        image: UIImage(systemName: "arrow.forward"),
-                        style: .plain,
-                        target: self,
-                        action: #selector(nextTapped)
-                    )
-                }
-            navigationItem.rightBarButtonItem = item
+            navigationItem.rightBarButtonItem = UIBarButtonItem.nextButton(
+                target: self,
+                selector: #selector(nextTapped)
+            )
         }
         else {
             let title =

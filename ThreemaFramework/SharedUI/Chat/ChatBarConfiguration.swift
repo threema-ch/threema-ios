@@ -35,11 +35,11 @@ public enum ChatBarConfiguration {
         }
 
     /// The maximum number of lines before the textInputView start to scroll
-    public static let maxNumberOfLinesPortrait = 7
+    public static let maxNumberOfLinesPortrait = 10
     /// The maximum number of lines before the textInputView start to scroll for small devices
     public static let maxNumberOfLinesPortraitSmallScreen = 5
     /// The maximum number of lines before the textInputView start to scroll
-    public static let maxNumberOfLinesLandscape = 3
+    public static let maxNumberOfLinesLandscape = 2
     /// The maximum number of lines before the textInputView start to scroll for small devices
     public static let maxNumberOfLinesLandscapeSmallScreen = 1.5
     /// The default value for the height of a single line

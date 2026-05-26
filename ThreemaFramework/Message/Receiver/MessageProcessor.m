@@ -171,7 +171,7 @@
 
             amsg.receivedAfterInitialQueueSend = receivedAfterInitialQueueSend;
 
-            [self processIncomingAbstractMessage:amsg onCompletion:^(AbstractMessage *processedMsg, id fsMessageInfo) {
+            [self processIncomingAbstractMessage:amsg senderPublicKey:publicKey onCompletion:^(AbstractMessage *processedMsg, id fsMessageInfo) {
                 // Message successfully processed
                 onCompletion(processedMsg, fsMessageInfo);
             } onError:^(NSError * _Nullable error,  id _Nullable fsMessageInfo) {
@@ -190,8 +190,8 @@
     }];
 }
 
-- (void)processIncomingAbstractMessage:(AbstractMessage*)amsg onCompletion:(void(^)(AbstractMessage * _Nullable message, id _Nullable fsMessageInfo))onCompletion onError:(void(^)(NSError * _Nullable error, id _Nullable fsMessageInfo))onError {
-    
+- (void)processIncomingAbstractMessage:(AbstractMessage* _Nonnull)amsg senderPublicKey:(NSData* _Nonnull)senderPublicKey onCompletion:(void(^)(AbstractMessage * _Nullable message, id _Nullable fsMessageInfo))onCompletion onError:(void(^)(NSError * _Nullable error, id _Nullable fsMessageInfo))onError {
+
     if ([amsg isContentValid] == NO) {
         DDLogInfo(@"Ignore invalid content, message %@ from %@", amsg.loggingDescription, amsg.fromIdentity);
         onCompletion(nil, nil);
@@ -204,27 +204,6 @@
         return;
     }
     
-    /* Find contact for message */
-    __block NSData *senderPublicKey;
-    __block NSError *fetchContactError;
-    [entityManager performAndWait:^{
-        ContactEntity *contact = [entityManager.entityFetcher contactEntityFor: amsg.fromIdentity];
-        if (contact) {
-            senderPublicKey = contact.publicKey;
-        }
-        else {
-            /* This should never happen, as without an entry in the contacts database, we wouldn't have
-             been able to decrypt this message in the first place (no sender public key) */
-            DDLogWarn(@"Identity %@ not in local contacts database - cannot process message %@", amsg.fromIdentity, amsg.loggingDescription);
-            fetchContactError = [ThreemaError threemaError:[NSString stringWithFormat:@"Identity %@ not in local contacts database - cannot process message", amsg.fromIdentity]];
-        }
-    }];
-
-    if (fetchContactError) {
-        onError(fetchContactError, nil);
-        return;
-    }
-
     // Note: This is an variable holding a block called after the PFS envelope is removed if there is any
     void(^processAbstractMessageBlock)(AbstractMessage *, id) = ^void(AbstractMessage *amsg, id fsMessageInfo) {
         [messageProcessorDelegate incomingMessageStarted:amsg];
@@ -341,30 +320,35 @@ Process incoming message.
 
     ContactEntity *sender;
     ContactEntity *receiver;
-    __block ConversationEntity *conversation = [entityManager existingConversationSenderReceiverFor:amsg sender:&sender receiver:&receiver myIdentity:[[MyIdentityStore sharedMyIdentityStore] identity]];
+    __block ConversationEntity *conversation;
 
-    if (sender == nil) {
-        onError([ThreemaError threemaError:@"Sender not found as contact"], nil);
-        return;
-    }
+    // Get and validate sender, receiver and conversation for the incoming message, if is not a special contact
+    if (![PredefinedContactsObjC isSpecialContactWithIdentity:amsg.fromIdentity]) {
+        conversation = [entityManager existingConversationSenderReceiverFor:amsg sender:&sender receiver:&receiver myIdentity:[[MyIdentityStore sharedMyIdentityStore] identity]];
 
-    if (conversation == nil) {
-        [entityManager performAndWaitSave:^{
-            conversation = [entityManager conversationForContact:sender createIfNotExisting:[amsg canCreateConversation]];
-        }];
-    }
-    
-    // Set the contact to active if we received a message
-    // Automatic sync is only once a day
-    [entityManager performAndWait:^{
-        if (sender.contactState == ContactStateInactive) {
-            [[ContactStore sharedContactStore] updateStateToActiveFor:sender entityManager:entityManager];
+        if (sender == nil) {
+            onError([ThreemaError threemaError:@"Sender not found as contact"], nil);
+            return;
         }
-    }];
 
-    if ([amsg needsConversation] && conversation == nil) {
-        onCompletion(nil);
-        return;
+        if (conversation == nil) {
+            [entityManager performAndWaitSave:^{
+                conversation = [entityManager conversationForContact:sender createIfNotExisting:[amsg canCreateConversation]];
+            }];
+        }
+
+        // Set the contact to active if we received a message
+        // Automatic sync is only once a day
+        [entityManager performAndWait:^{
+            if (sender.contactState == ContactStateInactive) {
+                [[ContactStore sharedContactStore] updateStateToActiveFor:sender entityManager:entityManager];
+            }
+        }];
+
+        if ([amsg needsConversation] && conversation == nil) {
+            onCompletion(nil);
+            return;
+        }
     }
 
     if ([amsg isKindOfClass:[BoxTextMessage class]]) {

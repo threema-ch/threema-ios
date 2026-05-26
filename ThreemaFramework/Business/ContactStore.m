@@ -1374,6 +1374,7 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
         ContactEntity *contact = [entityManager.entityFetcher contactEntityFor:identity];
         if (contact) {
             contact.profilePictureSent = NO;
+            contact.profilePictureBlobID = nil;
         }
     }];
 }

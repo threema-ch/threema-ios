@@ -17,7 +17,9 @@ final class SelectContactListDataSource: UITableViewDiffableDataSource<
             snapshot().itemIdentifiers.isEmpty ? contentUnavailable?.show() : contentUnavailable?.hide()
         }
     }
-    
+
+    var onSnapshotApplied: (() -> Void)?
+
     private weak var coordinator: ContactListCoordinator?
     private weak var tableView: UITableView?
     private var snapshotSubscription: Cancellable?
@@ -93,6 +95,7 @@ final class SelectContactListDataSource: UITableViewDiffableDataSource<
             }
             apply(snapshot)
             didUpdate(snapshot: snapshot)
+            onSnapshotApplied?()
         }
     }
 

@@ -446,6 +446,7 @@ class ShareSheetRootNavigationController: UINavigationController {
             
             lockViewController.lockScreenMode = .extension
             lockViewController.delegate = self
+            lockViewController.isModalInPresentation = true
             
             let navigationController = UINavigationController(rootViewController: lockViewController)
             navigationController.setNavigationBarHidden(true, animated: false)

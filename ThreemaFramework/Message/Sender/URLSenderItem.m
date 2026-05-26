@@ -94,6 +94,11 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     if ([mimeType isEqualToString:@"application/octet-stream"] && _url != nil) {
         NSString *uti = [UTIConverter utiForFileURL:_url];
         mimeType = [UTIConverter mimeTypeFromUTI:uti];
+        
+        // Hack for com.apple.pkpass or com.apple.pkpass-data files
+        if (mimeType == nil && ([_type isEqualToString:@"com.apple.pkpass-data"] || [_type isEqualToString:@"com.apple.pkpass"])) {
+               mimeType = @"application/vnd.apple.pkpass";
+        }
     }
     
     // Hack for m4a files shared via UIDocumentInteractionController

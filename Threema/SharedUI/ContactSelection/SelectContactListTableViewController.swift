@@ -66,6 +66,9 @@ final class SelectContactListTableViewController: ThemedTableViewController {
         tableView.delegate = self
         tableView.dataSource = dataSource
         tableView.allowsMultipleSelection = true
+        dataSource.onSnapshotApplied = { [weak self] in
+            self?.updateSelection()
+        }
     }
     
     override func viewWillAppear(_ animated: Bool) {

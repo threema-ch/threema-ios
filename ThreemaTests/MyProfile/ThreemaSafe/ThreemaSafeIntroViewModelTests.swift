@@ -9,7 +9,7 @@ struct ThreemaSafeIntroViewModelTests {
     func resources() {
         let sut = ThreemaSafeIntroViewModel(appFlavor: .mock, userSettings: .mock)
 
-        #expect(sut.title == "Introducing Threema Safe")
+        #expect(sut.title == "Threema Safe")
         #expect(sut.description == "Never lose your Threema ID, contacts, groups, and settings again!")
         #expect(
             sut.explain == """

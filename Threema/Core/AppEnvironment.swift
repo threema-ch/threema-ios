@@ -6,10 +6,7 @@ public struct AppEnvironment {
     
     @NotificationPublisher(Notification.Name(kShowNotificationSettings))
     var showNotificationSettings
-    
-    @NotificationPublisher(.showDesktopSettings)
-    var showDesktopSettings
-    
+        
     @NotificationPublisher(Notification.Name(kNotificationSettingStoreSynchronization))
     var mdmChanged
     

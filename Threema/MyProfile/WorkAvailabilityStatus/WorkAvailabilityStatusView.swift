@@ -33,15 +33,15 @@ struct WorkAvailabilityStatusView: View {
 
             if model.selectedStatus != .none {
                 Section {
-                    TextField(
-                        "",
-                        text: $model.statusText,
-                        prompt: Text(model.textFieldPlaceholder),
-                        axis: .vertical
-                    )
-                    .padding(.trailing, 20)
-                    .focused($isTextFieldFocused)
-                    .overlay(alignment: .trailing) {
+                    HStack(alignment: .center) {
+                        TextField(
+                            "",
+                            text: $model.statusText,
+                            prompt: Text(model.textFieldPlaceholder),
+                            axis: .vertical
+                        )
+                        .focused($isTextFieldFocused)
+
                         if !model.statusText.isEmpty {
                             Button {
                                 model.statusText = ""
@@ -49,7 +49,7 @@ struct WorkAvailabilityStatusView: View {
                                 Image(systemName: "xmark.circle.fill")
                             }
                             .foregroundStyle(.secondary)
-                            .padding(.trailing, 4)
+                            .buttonStyle(.plain)
                         }
                     }
                     .listRowBackground(

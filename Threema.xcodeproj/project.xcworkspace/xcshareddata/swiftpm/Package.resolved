@@ -1,5 +1,5 @@
 {
-  "originHash" : "a656b8f83f4a5b9c263be7e8ac76e7818db784a79e25f7853e2b5e2c8bb417b1",
+  "originHash" : "e33b5ebbdadceab2ee5e282b9b71abc7078bee2f47930a79a2622dbabfce9f74",
   "pins" : [
     {
       "identity" : "chunked-dc-swift",
@@ -164,7 +164,7 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/threema-ch/sentry-cocoa",
       "state" : {
-        "revision" : "49728433c3b111e4e721cbeb7c28fbd5e165d36a"
+        "revision" : "de4e8dc11b2f3c34d3ce8a976c4b10e30748fd22"
       }
     },
     {

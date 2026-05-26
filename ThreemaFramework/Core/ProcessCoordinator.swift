@@ -66,6 +66,7 @@ final class ProcessCoordinator: NSObject {
     private var notificationsToObserve: [DarwinNotificationName] = []
 
     private var debugLastIncomingState: AccessState?
+    private var debugPostNotificationName: DarwinNotificationName?
 
     required init(
         myAppType: AppGroupType,
@@ -179,7 +180,9 @@ final class ProcessCoordinator: NSObject {
                 self.receivedMessageAfterRequest = true
 
                 let newState = self.process(state: state, from: appType)
-                self.update(newState: newState)
+
+                // Enforce posting on `request`, otherwise the sender will be connect after a defined timeout
+                self.update(newState: newState, enforcePosting: state == .requested)
 
                 self.pollingQueue.sync {
                     self.pollingStopped = true
@@ -211,6 +214,11 @@ final class ProcessCoordinator: NSObject {
     private func pollingRequested() {
         func pollingRequestedRecursive() {
             updateStateQueue.sync {
+                guard self.state != .using else {
+                    self.pollingStopped = true
+                    return
+                }
+
                 self.update(newState: .requested, enforcePosting: true)
             }
         }
@@ -229,6 +237,10 @@ final class ProcessCoordinator: NSObject {
             }
     }
 
+    /// Update state with new state and post if it has changed or if the state is `using`.
+    /// - Parameters:
+    ///   - newState: The new state to update
+    ///   - enforcePosting: Enforce posting of the actual state
     private func update(newState: AccessState, enforcePosting: Bool = false) {
         var doPost = false
         if state != newState {
@@ -244,7 +256,12 @@ final class ProcessCoordinator: NSObject {
                 secret: secretPrefix,
                 state: state
             )
-            DDLogInfo("[Darwin] Post \(name)")
+
+            if self.debugPostNotificationName != name {
+                self.debugPostNotificationName = name
+                DDLogInfo("[Darwin] Post \(name)")
+            }
+
             notificationCenter.post(name)
         }
     }

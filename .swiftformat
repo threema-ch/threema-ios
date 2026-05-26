@@ -15,6 +15,7 @@
 --exclude **/DerivedData
 --exclude Vendor/**
 --exclude WebRTC**
+--exclude export/**
 
 ## Other files
 --exclude scripts/format/.build/checkouts/SwiftFormat/CommandLineTool/swiftformat

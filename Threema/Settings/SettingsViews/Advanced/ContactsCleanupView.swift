@@ -123,7 +123,8 @@ struct ContactsCleanupView: View {
     /// Returns true if stats were logged.
     private func logContactStats() -> Bool {
         let ISOFormatter = ISO8601DateFormatter()
-        let entityManager = BusinessInjector.ui.entityManager
+        let businessInjector = BusinessInjector.ui
+        let entityManager = businessInjector.entityManager
 
         guard settingsStore.validationLogging else {
             contactsCleanupAlert = .logDisabled
@@ -131,7 +132,11 @@ struct ContactsCleanupView: View {
         }
 
         return entityManager.performAndWait {
-            guard let duplicates = entityManager.entityFetcher.duplicateContactIdentities() else {
+            let duplicates = entityManager.entityFetcher.duplicateContactIdentities()
+            let ownContact = entityManager.entityFetcher.ownIdentityContactEntity(
+                myIdentity: businessInjector.myIdentityStore.identity
+            )
+            guard duplicates != nil || ownContact != nil else {
                 contactsCleanupAlert = .noDuplicatesFound
                 DDLogNotice("No duplicate contacts found")
                 return false

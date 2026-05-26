@@ -1166,30 +1166,33 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 }
 
 - (void)completeAuthentication {
-    [self presentApplicationUI];
-    
     [self runWhenBusinessReadyWithTask:^{
-        URLHandler *urlHandler = [URLHandler new];
-        if (pendingUrl) {
-            [urlHandler handle:pendingUrl hideAppChooser:NO];
-            pendingUrl = nil;
-        } else if (pendingShortCutItem) {
-            (void)[urlHandler handleWithItem:pendingShortCutItem];
-            pendingShortCutItem = nil;
-        }
-        
-        if (evaluatedPolicyDomainState != nil) {
-            [[UserSettings sharedUserSettings] setEvaluatedPolicyDomainStateApp:evaluatedPolicyDomainState];
-            evaluatedPolicyDomainState = nil;
-        }
-        
-        if (rootToNotificationSettings) {
-            [UIApplication.sharedApplication.windows.firstObject.rootViewController dismissViewControllerAnimated:false completion:nil];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self presentApplicationUI];
             
-            [_appCoordinator showNotificationSettings];
+            if (pendingUrl) {
+                URLHandler *urlHandler = [URLHandler new];
+                [urlHandler handle:pendingUrl hideAppChooser:NO];
+                pendingUrl = nil;
+            } else if (pendingShortCutItem) {
+                URLHandler *urlHandler = [URLHandler new];
+                (void)[urlHandler handleWithItem:pendingShortCutItem];
+                pendingShortCutItem = nil;
+            }
             
-            rootToNotificationSettings = nil;
-        }
+            if (evaluatedPolicyDomainState != nil) {
+                [[UserSettings sharedUserSettings] setEvaluatedPolicyDomainStateApp:evaluatedPolicyDomainState];
+                evaluatedPolicyDomainState = nil;
+            }
+            
+            if (rootToNotificationSettings) {
+                [UIApplication.sharedApplication.windows.firstObject.rootViewController dismissViewControllerAnimated:false completion:nil];
+                
+                [_appCoordinator showNotificationSettings];
+                
+                rootToNotificationSettings = nil;
+            }
+        });
     }];
 }
 

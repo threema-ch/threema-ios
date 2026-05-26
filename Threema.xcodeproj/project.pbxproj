@@ -12528,8 +12528,10 @@
 			repositoryURL = "https://github.com/threema-ch/sentry-cocoa";
 			requirement = {
 				kind = revision;
-				revision = 49728433c3b111e4e721cbeb7c28fbd5e165d36a;
+				revision = de4e8dc11b2f3c34d3ce8a976c4b10e30748fd22;
 			};
+			traits = (
+			);
 		};
 		8DBF271D271096070008045E /* XCRemoteSwiftPackageReference "TrustKit" */ = {
 			isa = XCRemoteSwiftPackageReference;

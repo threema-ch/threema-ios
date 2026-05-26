@@ -18,7 +18,7 @@ final class SingleDetailsViewController: ThemedCodeModernGroupedTableViewControl
         }
 
         return DetailsHeaderView(
-            with: contactEntity.contentConfiguration,
+            with: contact.contentConfiguration,
             profilePictureTapped: { [weak self] in
                 guard let self else {
                     return
@@ -202,6 +202,12 @@ final class SingleDetailsViewController: ThemedCodeModernGroupedTableViewControl
             self?.updateHeader(animated: false)
         }
         
+        if TargetManager.isWork {
+            observeContact(\.workAvailabilityStatus) { [weak self] in
+                self?.updateHeader(animated: false)
+            }
+        }
+        
         observeContact(\.publicNickname) { [weak self] in
             self?.dataSource.reload(sections: [.contactInfo])
         }
@@ -296,7 +302,7 @@ final class SingleDetailsViewController: ThemedCodeModernGroupedTableViewControl
                 updateHeaderLayout()
             }
             if previous.userInterfaceStyle != traitCollection.userInterfaceStyle {
-                headerView.profileContentConfiguration = contactEntity.contentConfiguration
+                headerView.profileContentConfiguration = contact.contentConfiguration
                 dataSource.refresh(sections: [.contactInfo])
             }
         }
@@ -305,7 +311,7 @@ final class SingleDetailsViewController: ThemedCodeModernGroupedTableViewControl
     // MARK: - Updates
     
     private func updateHeader(animated: Bool = true) {
-        headerView.profileContentConfiguration = contactEntity.contentConfiguration
+        headerView.profileContentConfiguration = contact.contentConfiguration
         updateHeaderLayout(animated: animated)
     }
     
@@ -395,7 +401,7 @@ extension SingleDetailsViewController {
     
     private func configureHeaderView() {
         // Initial header configuration
-        headerView.profileContentConfiguration = contactEntity.contentConfiguration
+        headerView.profileContentConfiguration = contact.contentConfiguration
         
         tableView.tableHeaderView = headerView
         
@@ -641,16 +647,15 @@ extension SingleDetailsViewController: UITableViewDelegate {
 
 // MARK: - Peak & pop actions support
 
-extension ContactEntity {
+extension Contact {
     /// Get a content configuration base on this `Contact`
     fileprivate var contentConfiguration: DetailsHeaderProfileView.ContentConfiguration {
-        let contact = Contact(contactEntity: self)
-        return DetailsHeaderProfileView.ContentConfiguration(
-            profilePictureInfo: .contact(contact),
+        DetailsHeaderProfileView.ContentConfiguration(
+            profilePictureInfo: .contact(self),
             name: displayName,
-            verificationLevelImage: contact.verificationLevelImage,
-            verificationLevelAccessibilityLabel: contact.verificationLevelAccessibilityLabel,
-            availabilityStatus: contact.workAvailabilityStatus
+            verificationLevelImage: verificationLevelImage,
+            verificationLevelAccessibilityLabel: verificationLevelAccessibilityLabel,
+            availabilityStatus: workAvailabilityStatus
         )
     }
 }

@@ -80,7 +80,11 @@ final class WorkAvailabilityStatusViewModel {
 
     private func save() async throws {
         let trimmed = statusText.trimmingCharacters(in: .whitespacesAndNewlines)
-        let text: String? = trimmed.isEmpty ? nil : statusText
+        var text: String? = nil
+        if selectedStatus != .none {
+            text = trimmed.isEmpty ? nil : statusText
+        }
+        
         let status = WorkAvailabilityStatus(category: selectedStatus, text: text)
         try await profileStore.syncAndSave(workAvailabilityStatus: status)
     }

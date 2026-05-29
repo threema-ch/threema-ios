@@ -119,8 +119,13 @@ Before starting, if you don't have [homebrew](https://brew.sh), check out their 
       ```sh
       mise run setup
       ```
+4. Build the complete feature set of libthreema once by running
+  
+  ```sh
+  mise run libthreema-all
+  ```
 
-4. Download, install and build all dependencies (you want to rerun this if you update the repository)
+6. Download, install and build all dependencies (you want to rerun this if you update the repository)
 
    ```sh
    mise run dependencies

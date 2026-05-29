@@ -1067,7 +1067,7 @@ struct WorkDataFetcherTests {
 
         let response: [String: Any] = [
             "directory": [
-                "enabled": true,
+                "enabled": false,
                 // No 'cat' field
             ],
         ]

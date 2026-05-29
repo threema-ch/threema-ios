@@ -19,6 +19,24 @@ struct WorkDataResponse: Decodable {
     struct WorkDirectory: Decodable {
         let enabled: Bool
         let cat: [String: String]?
+        
+        enum CodingKeys: String, CodingKey {
+            case enabled, cat
+        }
+
+        // We need a special decoder, because the fetch2 endpoint once sent an array instead of a dictionary, when
+        // directory was disabled.
+        init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            enabled = try container.decode(Bool.self, forKey: .enabled)
+
+            if enabled {
+                cat = try container.decode([String: String].self, forKey: .cat)
+            }
+            else {
+                cat = nil
+            }
+        }
     }
     
     // MARK: - WorkOrganization

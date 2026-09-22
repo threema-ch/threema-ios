@@ -3,16 +3,20 @@ import ThreemaEssentials
 import WebRTC
 @testable import GroupCalls
 
-final class MockDataChannelContext: DataChannelContextProtocol {
+final class MockDataChannelContext: DataChannelContextProtocol, @unchecked Sendable {
     let messageStream: AsyncStream<GroupCalls.PeerConnectionMessage>
     let cont: AsyncStream<PeerConnectionMessage>.Continuation
-    
+
     private var sentMessages = 0
-    
+    private var sentData = [Data]()
+    private var closed = false
+
     let lock = NSLock()
-    
-    var isClosed = false
-    
+
+    var isClosed: Bool {
+        lock.withLock { closed }
+    }
+
     init() {
         (self.messageStream, self.cont) = AsyncStream.makeStream(of: PeerConnectionMessage.self)
     }
@@ -20,6 +24,7 @@ final class MockDataChannelContext: DataChannelContextProtocol {
     func sendData(_ buffer: RTCDataBuffer) {
         lock.withLock {
             sentMessages += 1
+            sentData.append(buffer.data)
         }
     }
     
@@ -32,13 +37,20 @@ final class MockDataChannelContext: DataChannelContextProtocol {
     }
     
     func close() {
-        // Noop
-        isClosed = true
+        lock.withLock {
+            closed = true
+        }
     }
     
     func getNumberOfSentMessages() -> Int {
         lock.withLock {
             self.sentMessages
+        }
+    }
+
+    func getSentData() -> [Data] {
+        lock.withLock {
+            self.sentData
         }
     }
 }

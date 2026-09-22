@@ -1,6 +1,7 @@
 import UIKit
 
 enum WindowLevel {
-    static let privacy: UIWindow.Level = .alert + 2
-    static let passcode: UIWindow.Level = .alert + 1
+    static let call: UIWindow.Level = .normal + 3
+    static let privacy: UIWindow.Level = .normal + 2
+    static let passcode: UIWindow.Level = .normal + 1
 }

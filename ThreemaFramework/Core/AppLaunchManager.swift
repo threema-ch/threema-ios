@@ -59,7 +59,7 @@ public final class AppLaunchManager: NSObject {
         }
     }
 
-    @objc public static var isRemoteSecretEnabled: Bool {
+    public static var isRemoteSecretEnabled: Bool {
         RemoteSecretProvider.isRemoteSecretEnabled
     }
     
@@ -67,6 +67,9 @@ public final class AppLaunchManager: NSObject {
         AppGroup.setGroupID(BundleUtil.threemaAppGroupIdentifier())
         BundleUtil.mainBundle()?.bundleIdentifier.map(AppGroup.setAppID(_:))
         FileUtilitySetter.setInitialFileUtility()
+        
+        // Configure PromiseKit
+        PromiseKitConfiguration.configurePromiseKit()
         
         let isDebug: Bool
         
@@ -78,7 +81,9 @@ public final class AppLaunchManager: NSObject {
         
         LogManager.initializeGlobalLogger(debug: isDebug)
                 
-        /// Log app version for debugging
+        /// Log app version for debugging.
+        /// Also triggers the side effect of initializing `ThreemaUtility.clientVersion`,
+        /// which sets `MyIdentityStore.lastWorkInfoLanguage` and `lastWorkInfoMdmDescription`.
         DebugLog.logAppVersion()
         
         /// Checking database file exists as early as possible
@@ -187,6 +192,36 @@ public final class AppLaunchManager: NSObject {
         )
     }
     
+    /// Creates a `BusinessInjector` in a process that was launched without any UI, e.g. by a VoIP
+    /// push or a background task, where the launch sequence never runs.
+    @MainActor
+    public func businessForBackgroundLaunch() async throws -> BusinessInjector {
+        // Skipped when the process was launched before, or when another background entry point got
+        // here first — then all of this already happened
+        if !RemoteSecretProvider.isRemoteSecretManagerSet {
+            let remoteSecretManager = try await initializeRemoteSecret(
+                navigationController: nil,
+                onDelete: nil,
+                onCancel: nil
+            )
+
+            let keychainManager = KeychainManager(remoteSecretManager: remoteSecretManager)
+
+            if let identity = try? keychainManager.loadIdentity() {
+                MyIdentityStore.shared().setupIdentity(identity)
+            }
+
+            if let license = try? keychainManager.loadLicense() {
+                LicenseStore.shared().licenseUsername = license.user
+                LicenseStore.shared().licensePassword = license.password
+                LicenseStore.shared().licenseDeviceID = license.deviceID ?? ""
+                LicenseStore.shared().onPremConfigURL = license.onPremServer
+            }
+        }
+
+        return try business(forBackgroundProcess: true)
+    }
+
     #if DEBUG
         // Use only for testing
         func setRemoteSecretManager(_ remoteSecretManager: RemoteSecretManagerProtocol) {

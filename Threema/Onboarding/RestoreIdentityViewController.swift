@@ -20,7 +20,7 @@ extension RestoreIdentityViewController {
     @MainActor @objc func showScannerViewController() {
         let model = QRCodeScannerViewModel(
             mode: .identityBackup,
-            audioSessionManager: .null, // BusinessInjector is not available
+            audioSessionManager: nil, // BusinessInjector is not available
             systemFeedbackManager: .null, // BusinessInjector is not available
             systemPermissionsManager: SystemPermissionsManager()
         )

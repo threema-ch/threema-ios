@@ -13,7 +13,7 @@ final class QuickLookPreviewViewModel: ObservableObject {
         tempFileURL != nil
     }
     
-    private(set) var doneButtonTitle = #localize("Done")
+    private(set) var doneButtonTitle = #localize("done")
     
     let fileUtility: FileUtilityProtocol
     

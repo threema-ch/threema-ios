@@ -96,6 +96,10 @@ public final class FileUtilityRemoteSecretDecorator: FileUtilityProtocol {
         wrapped.fileExists(atPath: path)
     }
     
+    public func createEmptyFile(atURL url: URL) throws {
+        try wrapped.createEmptyFile(atURL: url)
+    }
+
     public func createFile(
         atPath path: String,
         contents data: Data?,
@@ -107,7 +111,19 @@ public final class FileUtilityRemoteSecretDecorator: FileUtilityProtocol {
             attributes: attr
         )
     }
-    
+
+    public func createFileHandle(forReadingFromURL url: URL) throws -> FileHandle {
+        try wrapped.createFileHandle(forReadingFromURL: url)
+    }
+
+    public func createFileHandle(forWritingToURL url: URL) throws -> FileHandle {
+        try wrapped.createFileHandle(forWritingToURL: url)
+    }
+
+    public func closeFileHandle(_ fileHandle: FileHandle) throws {
+        try wrapped.closeFileHandle(fileHandle)
+    }
+
     public func mkDir(
         at url: URL,
         withIntermediateDirectories createIntermediates: Bool,
@@ -216,16 +232,38 @@ public final class FileUtilityRemoteSecretDecorator: FileUtilityProtocol {
         let decryptedData = remoteSecretManager.decryptDataIfNeeded(fileData)
         return decryptedData
     }
-    
+
+    public func read(offset: UInt64?, length: UInt64?, from fileHandle: FileHandle, fileURL: URL) throws -> Data {
+        let fileData = try wrapped.read(offset: offset, length: length, from: fileHandle, fileURL: fileURL)
+
+        guard shouldAllowEncryption(fileURL) else {
+            return fileData
+        }
+
+        let decryptedData = remoteSecretManager.decryptDataIfNeeded(fileData)
+        return decryptedData
+    }
+
     public func write(contents: Data?, to fileURL: URL?) -> Bool {
         guard shouldAllowEncryption(fileURL) else {
             return wrapped.write(contents: contents, to: fileURL)
         }
-        
+
         let fileData = remoteSecretManager.encryptDataIfNeeded(contents)
         return wrapped.write(contents: fileData, to: fileURL)
     }
-    
+
+    public func write(contents: Data, offset: UInt64?, to fileHandle: FileHandle, fileURL: URL) throws {
+        guard shouldAllowEncryption(fileURL) else {
+            try wrapped.write(contents: contents, offset: offset, to: fileHandle, fileURL: fileURL)
+            return
+        }
+
+        let encryptedContents = remoteSecretManager.encryptDataIfNeeded(contents)
+
+        try wrapped.write(contents: encryptedContents, offset: offset, to: fileHandle, fileURL: fileURL)
+    }
+
     public func logDirectoriesAndFiles(pathURL: URL) {
         wrapped.logDirectoriesAndFiles(pathURL: pathURL)
     }

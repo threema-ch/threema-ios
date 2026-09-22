@@ -11,6 +11,12 @@ public protocol GroupCallManagerSingletonDelegate: AnyObject {
     /// Used to provide `GroupCallBannerButtonUpdate`s to the UI-elements
     /// - Parameter groupCallBannerButtonUpdate: `GroupCallBannerButtonUpdate` containing the update info
     nonisolated func updateGroupCallButtonsAndBanners(groupCallBannerButtonUpdate: GroupCallBannerButtonUpdate)
+
+    /// Called when the local user is no longer participating in a group call of the given group
+    ///
+    /// This is independent of whether the call itself is still running with other participants.
+    /// - Parameter groupIdentity: Identity of the group whose call the local user left
+    nonisolated func localUserLeftGroupCall(in groupIdentity: GroupIdentity)
     
     func sendStartCallMessage(_ wrappedMessage: WrappedGroupCallStartMessage) async throws
     

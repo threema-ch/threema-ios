@@ -1,20 +1,18 @@
 //! High-level crypto bindings.
 use duplicate::duplicate_item;
 use js_sys::Error;
+use libthreema_dependencies::crypto::{argon2, blake2b, chacha20, deprecated::scrypt, salsa20, sha2, x25519};
 use serde::{Deserialize, Serialize};
 use tsify::Tsify;
 use wasm_bindgen::prelude::*;
 
-use crate::{
-    common::Nonce,
-    crypto::{argon2, blake2b, chacha20, chunked, salsa20, sha2, x25519},
-};
+use crate::{common::Nonce, crypto::chunked};
 
 /// Compute the SHA-256 hash of the provided data.
 #[must_use]
 #[wasm_bindgen(js_name = sha256)]
 pub fn sha256(data: &[u8]) -> Vec<u8> {
-    use crate::crypto::digest::{Digest as _, FixedOutput as _};
+    use libthreema_dependencies::crypto::digest::{Digest as _, FixedOutput as _};
 
     sha2::Sha256::new().chain_update(data).finalize_fixed().to_vec()
 }
@@ -24,7 +22,7 @@ pub fn sha256(data: &[u8]) -> Vec<u8> {
 #[must_use]
 #[wasm_bindgen(js_name = hmacSha256)]
 pub fn hmac_sha256(key: &[u8], data: &[u8]) -> Vec<u8> {
-    use crate::crypto::digest::{FixedOutput as _, Mac as _};
+    use libthreema_dependencies::crypto::digest::{FixedOutput as _, Mac as _};
 
     sha2::HmacSha256::new_from_slice(key)
         .expect("HMAC can take key of any size")
@@ -50,7 +48,7 @@ pub fn blake2b_mac_256(
     salt: &[u8],
     data: &[u8],
 ) -> Result<Vec<u8>, Error> {
-    use crate::crypto::digest::{FixedOutput as _, Mac as _};
+    use libthreema_dependencies::crypto::digest::{FixedOutput as _, Mac as _};
 
     Ok(
         blake2b::Blake2bMac256::new_with_salt_and_personal(key.as_deref(), salt, personal)
@@ -83,7 +81,7 @@ pub fn blake2b_mac_512(
     salt: &[u8],
     data: &[u8],
 ) -> Result<Vec<u8>, Error> {
-    use crate::crypto::digest::{FixedOutput as _, Mac as _};
+    use libthreema_dependencies::crypto::digest::{FixedOutput as _, Mac as _};
     Ok(
         blake2b::Blake2bMac512::new_with_salt_and_personal(key.as_deref(), salt, personal)
             .map_err(|_| {
@@ -124,7 +122,7 @@ impl TryFrom<Argon2idParameters> for argon2::Params {
         }
 
         // Other parameters are implicitly within this constructor
-        argon2::Params::new(
+        Self::new(
             parameters.memory_cost,
             parameters.time_cost,
             parameters.parallelism,
@@ -174,7 +172,7 @@ impl TryFrom<ScryptParameters> for scrypt::Params {
     type Error = Error;
 
     fn try_from(parameters: ScryptParameters) -> Result<Self, Self::Error> {
-        scrypt::Params::new(
+        Self::new(
             parameters.log_memory_cost,
             parameters.block_size,
             parameters.parallelism,
@@ -220,7 +218,8 @@ pub fn x25519_derive_public_key(secret_key: &[u8]) -> Result<Vec<u8>, Error> {
 ///
 /// # Errors
 ///
-/// Returns an error if `public_key` or `secret_key` is not exactly 32 bytes.
+/// Returns an error if `public_key` or `secret_key` is not exactly 32 bytes
+/// or `public_key` is non-contributory.
 #[wasm_bindgen(js_name = x25519HSalsa20DeriveSharedSecret)]
 pub fn x25519_hsalsa20_derive_shared_secret(public_key: &[u8], secret_key: &[u8]) -> Result<Vec<u8>, Error> {
     let public_key = x25519::PublicKey::from(
@@ -229,8 +228,12 @@ pub fn x25519_hsalsa20_derive_shared_secret(public_key: &[u8], secret_key: &[u8]
     let secret_key = x25519::StaticSecret::from(
         <[u8; 32]>::try_from(secret_key).map_err(|_| Error::new("'secret_key' must be 32 bytes"))?,
     );
-    let shared_secret = x25519::SharedSecretHSalsa20::from(secret_key.diffie_hellman(&public_key));
-    Ok(shared_secret.as_bytes().to_vec())
+
+    Ok(secret_key
+        .diffie_hellman_hsalsa20(&public_key)
+        .ok_or_else(|| Error::new("'public_key' is non-contributory"))?
+        .as_bytes()
+        .to_vec())
 }
 
 /// Encrypt the provided data using XChaCha20 and append a Poly1305 MAC.
@@ -246,7 +249,7 @@ pub fn xchacha20_poly1305_encrypt(
     mut data: Vec<u8>,
     associated_data: &[u8],
 ) -> Result<Vec<u8>, Error> {
-    use crate::crypto::{aead::AeadInPlace as _, cipher::KeyInit as _};
+    use libthreema_dependencies::crypto::{aead::AeadInPlace as _, cipher::KeyInit as _};
 
     let cipher =
         chacha20::XChaCha20Poly1305::new_from_slice(key).map_err(|_| Error::new("'key' must be 32 bytes"))?;
@@ -272,7 +275,7 @@ pub fn xchacha20_poly1305_decrypt(
     mut data: Vec<u8>,
     associated_data: &[u8],
 ) -> Result<Vec<u8>, Error> {
-    use crate::crypto::{aead::AeadInPlace as _, cipher::KeyInit as _};
+    use libthreema_dependencies::crypto::{aead::AeadInPlace as _, cipher::KeyInit as _};
 
     let cipher =
         chacha20::XChaCha20Poly1305::new_from_slice(key).map_err(|_| Error::new("'key' must be 32 bytes"))?;
@@ -293,7 +296,7 @@ pub fn xchacha20_poly1305_decrypt(
 /// encryption failed.
 #[wasm_bindgen(js_name = xSalsa20Poly1305Encrypt)]
 pub fn xsalsa20_poly1305_encrypt(key: &[u8], nonce: &[u8], mut data: Vec<u8>) -> Result<Vec<u8>, Error> {
-    use crate::crypto::{aead::AeadInPlace as _, cipher::KeyInit as _};
+    use libthreema_dependencies::crypto::{aead::AeadInPlace as _, cipher::KeyInit as _};
 
     let cipher =
         salsa20::XSalsa20Poly1305::new_from_slice(key).map_err(|_| Error::new("'key' must be 32 bytes"))?;
@@ -314,7 +317,7 @@ pub fn xsalsa20_poly1305_encrypt(key: &[u8], nonce: &[u8], mut data: Vec<u8>) ->
 /// decryption failed.
 #[wasm_bindgen(js_name = xSalsa20Poly1305Decrypt)]
 pub fn xsalsa20_poly1305_decrypt(key: &[u8], nonce: &[u8], mut data: Vec<u8>) -> Result<Vec<u8>, Error> {
-    use crate::crypto::{aead::AeadInPlace as _, cipher::KeyInit as _};
+    use libthreema_dependencies::crypto::{aead::AeadInPlace as _, cipher::KeyInit as _};
 
     let cipher =
         salsa20::XSalsa20Poly1305::new_from_slice(key).map_err(|_| Error::new("'key' must be 32 bytes"))?;

@@ -5,7 +5,7 @@ import Foundation
 /// hangup messages and hangup messages for actually missed calls.
 /// Actually missed calls can be identified by never having received or sent a call offer message for the CallID
 /// associated with the call.
-@objc public final class CallHistoryManager: NSObject {
+public final class CallHistoryManager {
     private let identity: String
     private let businessInjector: BusinessInjectorProtocol
     
@@ -14,7 +14,7 @@ import Foundation
         self.businessInjector = businessInjector
     }
     
-    public func store(callID: UInt32, date: Date) async {
+    public func store(callID: VoIPCallID, date: Date) async {
         DDLogNotice(
             "VoipCallService: [cid=\(callID)]: Start removeCallsOlderThanChatServerTimeout"
         )
@@ -29,14 +29,14 @@ import Foundation
                     .contactEntity(for: self.identity)
                 else {
                     DDLogNotice(
-                        "[VoipCallService] [cid=\(callID)]: Contact not found, resuming."
+                        "VoipCallService: [cid=\(callID)]: Contact not found, resuming."
                     )
                     continuation.resume()
                     return
                 }
                 
                 let call = self.businessInjector.entityManager.entityCreator.callEntity(contactEntity: contactEntity)
-                call.callID = NSNumber(value: callID)
+                call.callID = NSNumber(value: callID.callID)
                 call.date = date
                 
                 DDLogNotice(
@@ -47,18 +47,18 @@ import Foundation
         }
     }
     
-    public func isMissedCall(from identity: String, callID: UInt32) async -> Bool {
+    public func isMissedCall(from identity: String, callID: VoIPCallID) async -> Bool {
         await CallHistoryManager.removeCallsOlderThanChatServerTimeout(businessInjector: businessInjector)
         
         let callList = await fetchCallList(identity: identity, callID: callID)
         return callList.isEmpty
     }
     
-    private func fetchCallList(identity: String, callID: UInt32) async -> [CallEntity] {
+    private func fetchCallList(identity: String, callID: VoIPCallID) async -> [CallEntity] {
         await withCheckedContinuation { continuation in
             businessInjector.entityManager.perform {
                 guard let calls = self.businessInjector.entityManager.entityFetcher
-                    .callEntities(with: identity, and: callID) else {
+                    .callEntities(with: identity, and: callID.callID) else {
                     DDLogError("Could not fetch calls.")
                     continuation.resume(returning: [CallEntity]())
                     return
@@ -70,10 +70,6 @@ import Foundation
 }
 
 extension CallHistoryManager {
-    @objc public static func removeCallsOlderThanChatServerTimeout() {
-        removeCallsOlderThanChatServerTimeout(businessInjector: BusinessInjector(forBackgroundProcess: true))
-    }
-    
     public static func removeCallsOlderThanChatServerTimeout(businessInjector: BusinessInjectorProtocol) {
         businessInjector.entityManager.performSave {
             businessInjector.entityManager.entityDestroyer.deleteMissedCallsCacheOlderThanTwoWeeks()

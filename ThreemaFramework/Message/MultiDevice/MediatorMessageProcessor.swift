@@ -3,7 +3,7 @@ import Foundation
 import SwiftProtobuf
 import ThreemaProtocols
 
-class MediatorMessageProcessor: NSObject {
+final class MediatorMessageProcessor: NSObject {
     
     enum MediatorMessageError: Error {
         case noMediatorMessage

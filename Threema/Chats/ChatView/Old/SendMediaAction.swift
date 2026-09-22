@@ -614,7 +614,7 @@ final class SendMediaAction: NSObject {
         }
     }
     
-    @objc func checkVideoDone() {
+    @objc private func checkVideoDone() {
         var done = true
         for exportSession in videoEncoders {
             done = exportSession.progress == 1.0
@@ -896,7 +896,7 @@ extension SendMediaAction {
         )
     }
     
-    @objc func progressHUDCancelPressed() {
+    @objc private func progressHUDCancelPressed() {
         for exportSession in videoEncoders {
             exportSession.cancelExport()
         }

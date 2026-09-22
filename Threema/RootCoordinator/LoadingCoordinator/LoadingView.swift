@@ -17,7 +17,7 @@ struct LoadingView: View {
                 
                 Spacer()
             }
-            .padding(.horizontal, 16)
+            .padding(.horizontal, 24)
         }
     }
     
@@ -34,6 +34,9 @@ struct LoadingView: View {
             
         case let .error(error):
             errorContent(error: error)
+            
+        case .locked:
+            lockedContent()
         }
     }
     
@@ -62,47 +65,75 @@ struct LoadingView: View {
     @ViewBuilder
     private func errorContent(error: LoadingViewModel.Error) -> some View {
         VStack(spacing: 24) {
+            Spacer()
+            
             Image(systemName: "exclamationmark.triangle.fill")
                 .font(.system(size: 48))
                 .foregroundStyle(.yellow)
             
-            Text(error.message)
-                .font(.body)
-                .foregroundStyle(.foreground.opacity(0.85))
-                .multilineTextAlignment(.center)
+            textSection(title: error.title, message: error.message)
             
-            if error.isRetryable {
-                Button(action: {
-                    viewModel.retry()
-                }, label: {
-                    Text(#localize("retry"))
-                        .font(.headline)
-                        .foregroundStyle(Color(.systemBackground))
-                        .frame(minWidth: 140)
-                        .padding(.vertical, 14)
-                        .padding(.horizontal, 28)
-                        .background(
-                            Color.accentColor,
-                            in: RoundedRectangle(cornerRadius: 10)
-                        )
-                })
-                .buttonStyle(AdaptiveButtonStyle())
+            Spacer()
+            
+            if let onRetry = error.onRetry {
+                ThreemaButton(
+                    title: viewModel.retryButtonTitle,
+                    style: .borderedProminent,
+                    size: .fullWidth
+                ) {
+                    onRetry()
+                }
+            }
+            
+            if let onRemove = error.onRemove {
+                ThreemaButton(
+                    title: viewModel.removeButtonTitle,
+                    role: .destructive,
+                    style: .bordered,
+                    size: .fullWidth
+                ) {
+                    viewModel.showRemoveConfirmation = true
+                }
+                .confirmationDialog(
+                    viewModel.removeConfirmationTitle,
+                    isPresented: $viewModel.showRemoveConfirmation,
+                    titleVisibility: .visible
+                ) {
+                    Button(viewModel.removeConfirmationRemoveButtonTitle, role: .destructive, action: onRemove)
+                    
+                    Button(viewModel.removeConfirmationCancelButtonTitle, role: .cancel) {
+                        // no-op
+                    }
+                }
             }
         }
         .frame(minHeight: 80)
     }
-}
-
-private struct AdaptiveButtonStyle: PrimitiveButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        if #available(iOS 26, *) {
-            Button(configuration)
-                .buttonStyle(.glassProminent)
+    
+    // MARK: - Locked Content
+    
+    @ViewBuilder
+    private func lockedContent() -> some View {
+        textSection(
+            title: #localize("rs_view_locked_title"),
+            message: #localize("rs_view_locked_description")
+        )
+    }
+    
+    // MARK: - Text section
+    
+    @ViewBuilder
+    private func textSection(title: String?, message: String) -> some View {
+        VStack {
+            if let title {
+                Text(title)
+                    .font(.title)
+                    .bold()
+                    .padding(.bottom, 2)
+            }
+            Text(message)
         }
-        else {
-            Button(configuration)
-                .buttonStyle(.plain)
-        }
+        .multilineTextAlignment(.center)
     }
 }
 
@@ -138,7 +169,9 @@ private struct AdaptiveButtonStyle: PrimitiveButtonStyle {
             let viewModel = LoadingViewModel()
             viewModel.setError(
                 message: "Failed to connect to server. Please check your internet connection.",
-                isRetryable: true
+                onRetry: {
+                    // no-op
+                }
             )
             return viewModel
         }()
@@ -151,9 +184,53 @@ private struct AdaptiveButtonStyle: PrimitiveButtonStyle {
             let viewModel = LoadingViewModel()
             viewModel.setError(
                 message: "Database migration failed. Please reinstall the app.",
-                isRetryable: false
             )
             return viewModel
         }()
     )
+}
+
+#Preview("Error - Retryable and Removable") {
+    LoadingView(
+        viewModel: {
+            let viewModel = LoadingViewModel()
+            viewModel.setError(
+                message: "Failed to connect to server. Please check your internet connection.",
+                onRetry: {
+                    // no-op
+                },
+                onRemove: {
+                    // no-op
+                }
+            )
+            return viewModel
+        }()
+    )
+}
+
+#Preview("Error - Retryable, Removable and Title") {
+    LoadingView(
+        viewModel: {
+            let viewModel = LoadingViewModel()
+            viewModel.setError(
+                title: "Failed to Connect to Server",
+                message: "Please check your internet connection",
+                onRetry: {
+                    // no-op
+                },
+                onRemove: {
+                    // no-op
+                }
+            )
+            return viewModel
+        }()
+    )
+}
+
+#Preview("Locked") {
+    LoadingView(viewModel: {
+        let viewModel = LoadingViewModel()
+        viewModel.setLocked()
+        return viewModel
+    }())
 }

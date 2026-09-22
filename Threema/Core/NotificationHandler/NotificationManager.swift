@@ -5,14 +5,14 @@ import ThreemaFramework
 import ThreemaMacros
 import UserNotifications
 
-public protocol NotificationManagerProtocol {
+protocol NotificationManagerProtocol {
     func updateUnreadMessagesCount()
     func updateUnreadMessagesCount(baseMessage: BaseMessageEntity?)
 }
 
-final class NotificationManager: NSObject, NotificationManagerProtocol {
+final class NotificationManager: NotificationManagerProtocol {
     
-    @objc var firstPushHandled = false
+    var firstPushHandled = false
     
     private static var receivedMessageSound: SystemSoundID = 0
     private static var lastReceivedMessageSound = CFTimeInterval(0)
@@ -38,12 +38,6 @@ final class NotificationManager: NSObject, NotificationManagerProtocol {
         AudioServicesCreateSystemSoundID(baseURL, &NotificationManager.receivedMessageSound)
     }
     
-    @objc override convenience init() {
-        self.init(
-            businessInjector: BusinessInjector.ui
-        )
-    }
-    
     final func updateTabBarBadge(badgeTotalCount: Int) {
         Task { @MainActor in
             if let mainTabBar = SharedAppProvider.tabBarController,
@@ -61,13 +55,13 @@ final class NotificationManager: NSObject, NotificationManagerProtocol {
     }
 
     /// Update badge with unread messages count.
-    @objc final func updateUnreadMessagesCount() {
+    final func updateUnreadMessagesCount() {
         updateUnreadMessagesCount(baseMessage: nil)
     }
 
     /// Update badge with unread messages count.
     /// - Parameter baseMessage: Recalculate unread messages count for underlying conversation
-    @objc final func updateUnreadMessagesCount(baseMessage: BaseMessageEntity?) {
+    final func updateUnreadMessagesCount(baseMessage: BaseMessageEntity?) {
         // Calc and update unread messages badge in background
         Task {
             await businessInjector.runInBackground { backgroundBusinessInjector in
@@ -102,7 +96,7 @@ final class NotificationManager: NSObject, NotificationManagerProtocol {
     }
 
     // This does not necessarily operate on the original push payload from the server (nor its decrypted version)
-    @objc func handleThreemaNotification(
+    func handleThreemaNotification(
         payload: [AnyHashable: Any],
         receivedWhileRunning: Bool,
         notification: UNNotification? = nil,
@@ -185,7 +179,7 @@ final class NotificationManager: NSObject, NotificationManagerProtocol {
                 }
                 else if let cmd = threemaPayload["cmd"] as? String,
                         cmd == "microphonePermissionError" {
-                    AVAudioApplication.requestRecordPermission { granted in
+                    RecordPermission.requestPermission { granted in
                         if !granted {
                             DispatchQueue.main.async {
                                 // No access to microphone, stop call
@@ -222,7 +216,7 @@ final class NotificationManager: NSObject, NotificationManagerProtocol {
                     let currentTopViewController = MainActor.assumeIsolated({
                         SharedAppProvider.currentTopViewController
                     }) {
-                UIAlertTemplate.showAlert(
+                UIAlertTemplate.showOKAlert(
                     owner: currentTopViewController,
                     title: notification.request.content.title,
                     message: notification.request.content.body,
@@ -266,7 +260,7 @@ final class NotificationManager: NSObject, NotificationManagerProtocol {
 }
 
 extension NotificationManager {
-    @objc final class func showNoAccessToDatabaseNotification(completionHandler: @escaping () -> Void) {
+    final class func showNoAccessToDatabaseNotification(completionHandler: @escaping () -> Void) {
         let title = #localize("new_message_no_access_title")
         let message = String.localizedStringWithFormat(
             #localize("new_message_no_access_message"),
@@ -297,7 +291,7 @@ extension NotificationManager {
             if let currentTopViewController = MainActor.assumeIsolated({
                 SharedAppProvider.currentTopViewController
             }) {
-                UIAlertTemplate.showAlert(
+                UIAlertTemplate.showOKAlert(
                     owner: currentTopViewController,
                     title: title,
                     message: body,

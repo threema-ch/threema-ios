@@ -1,6 +1,6 @@
 import ThreemaFramework
 
-public struct AppEnvironment {
+struct AppEnvironment {
     @NotificationPublisher(Notification.Name(kNotificationColorThemeChanged))
     var colorChanged
     

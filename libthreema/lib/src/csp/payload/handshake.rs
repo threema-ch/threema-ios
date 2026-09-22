@@ -2,11 +2,11 @@
 use core::time::Duration;
 
 use educe::Educe;
+use libthreema_dependencies::crypto::{digest, salsa20, x25519};
 use libthreema_macros::{Name, concat_fixed_bytes};
 
 use crate::{
     common::{ClientInfo, CspDeviceId, DeviceCookie, ThreemaId, keys::PublicKey},
-    crypto::{digest::MAC_256_LENGTH, salsa20, x25519},
     csp::{
         ClientCookie, Cookie, CspProtocolContext, CspProtocolError, CspProtocolInternalErrorCause,
         ServerCookie, TemporaryServerKey,
@@ -153,7 +153,7 @@ impl Extension {
     /// Encode this extension into the provided `writer`.
     fn encode_into(&self, writer: &mut impl ByteWriter) -> Result<(), CspProtocolError> {
         match self {
-            Extension::ClientInfo(client_info) => {
+            Self::ClientInfo(client_info) => {
                 let client_info = client_info.to_semicolon_separated();
                 let client_info = client_info.as_bytes();
                 Self::encode_header(
@@ -171,7 +171,7 @@ impl Extension {
                     })?;
                 Ok(())
             },
-            Extension::CspDeviceId(device_id) => {
+            Self::CspDeviceId(device_id) => {
                 Self::encode_header(writer, ExtensionType::CspDeviceId as u8, 8)?;
                 writer.write_u64_le(device_id.0).map_err(|error| {
                     CspProtocolInternalErrorCause::EncodingFailed {
@@ -181,7 +181,7 @@ impl Extension {
                 })?;
                 Ok(())
             },
-            Extension::SupportedFeatures(features) => {
+            Self::SupportedFeatures(features) => {
                 Self::encode_header(writer, ExtensionType::SupportedFeatures as u8, 1)?;
                 writer.write_u8(features.0).map_err(|error| {
                     CspProtocolInternalErrorCause::EncodingFailed {
@@ -191,7 +191,7 @@ impl Extension {
                 })?;
                 Ok(())
             },
-            Extension::DeviceCookie(device_cookie) => {
+            Self::DeviceCookie(device_cookie) => {
                 Self::encode_header(
                     writer,
                     ExtensionType::DeviceCookie as u8,
@@ -289,7 +289,7 @@ pub(crate) struct LoginData {
 
     /// Session voucher.
     #[educe(Debug(method(debug_slice_length)))]
-    pub(crate) vouch: [u8; MAC_256_LENGTH],
+    pub(crate) vouch: [u8; digest::MAC_256_LENGTH],
 }
 impl LoginData {
     const EXTENSION_INDICATOR_LENGTH: usize = 32;
@@ -299,7 +299,7 @@ impl LoginData {
         + Self::EXTENSION_INDICATOR_LENGTH
         + Cookie::LENGTH
         + Self::RESERVED_1_LENGTH
-        + MAC_256_LENGTH
+        + digest::MAC_256_LENGTH
         + Self::RESERVED_2_LENGTH;
     const RESERVED_1_LENGTH: usize = 24;
     const RESERVED_2_LENGTH: usize = 16;

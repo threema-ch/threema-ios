@@ -8,6 +8,8 @@ public final class EntityManager: NSObject {
     
     let dbContext: DatabaseContextProtocol
     static let getOrCreateContactQueue = DispatchQueue(label: "ch.threema.EntityManager.getOrCreateContactQueue")
+    static let getOrCreateConversationQueue =
+        DispatchQueue(label: "ch.threema.EntityManager.getOrCreateConversationQueue")
     static let getOrCreateMessageQueue = DispatchQueue(label: "ch.threema.EntityManager.getOrCreateMessageQueue")
 
     @objc public let entityCreator: EntityCreator
@@ -97,10 +99,18 @@ public final class EntityManager: NSObject {
         }
     }
 
+    // Save the current context it has changes and
+    // the main context is the current context a child context.
+    public func save() throws {
+        try internalSave()
+    }
+
+    // Rollback the current DB context
     public func rollback() {
         dbContext.current.rollback()
     }
     
+    // Rollback the current and the main DB context
     public func fullRollback() {
         dbContext.current.rollback()
         dbContext.main.rollback()

@@ -54,10 +54,15 @@ final class WorkPropertiesUpdateManager {
                 .busy
             }
         
-        let availabilityStatus = libthreemaSwift.WorkAvailabilityStatus(
-            category: category,
-            description: workAvailabilityStatus.text
-        )
+        let availabilityStatus: libthreemaSwift.WorkAvailabilityStatus =
+            switch workAvailabilityStatus.category {
+            case .none: .none
+            case .unavailable:
+                .unavailable(workAvailabilityStatus.text ?? String.empty)
+            case .busy:
+                .busy(workAvailabilityStatus.text ?? String.empty)
+            }
+
         let properties = WorkProperties(availabilityStatus: availabilityStatus)
         
         let context = try await createWorkPropertiesUpdateContext()

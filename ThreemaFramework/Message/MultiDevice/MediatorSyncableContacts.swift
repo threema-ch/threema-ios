@@ -9,7 +9,7 @@ import ThreemaProtocols
     case updated
 }
 
-class MediatorSyncableContacts: NSObject {
+final class MediatorSyncableContacts: NSObject {
     private let chunkSize = 100
     private var deltaSyncContacts = [DeltaSyncContact]()
 
@@ -92,7 +92,7 @@ class MediatorSyncableContacts: NSObject {
     ///   - identity: Contact identity to sync
     ///   - added: True contact has added otherwise has updated
     ///   - withoutProfileImage: True profile picture will not be synced
-    @objc func updateAll(identity: String, added: Bool, withoutProfileImage: Bool) {
+    func updateAll(identity: String, added: Bool, withoutProfileImage: Bool) {
         guard userSettings.enableMultiDevice else {
             return
         }

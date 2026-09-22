@@ -1,3 +1,4 @@
+import AudioSessionManager
 import CocoaLumberjackSwift
 import FileUtility
 import Foundation
@@ -55,62 +56,104 @@ final class ChatViewTableViewVoiceMessageCellDelegate: NSObject, ChatViewTableVi
     private var playTimer: DispatchSourceTimer?
     
     private var progressDictionary = [NSManagedObjectID: CGFloat]()
-    
-    private var previousAudioSessionCategory: AVAudioSession.Category?
-    
+
+    private let audioSessionManager: any AudioSessionManagerProtocol
+
+    /// Held for as long as a message is playing, and released on pause or stop.
+    private var audioSessionClaim: AudioSessionClaim?
+
+    private var proximityObserver: (any NSObjectProtocol)?
+
     // MARK: - Lifecycle
-    
-    init(chatViewController: ChatViewController) {
+
+    init(
+        chatViewController: ChatViewController,
+        audioSessionManager: any AudioSessionManagerProtocol = BusinessInjector.ui.audioSessionManager
+    ) {
         self.chatViewController = chatViewController
-        
+        self.audioSessionManager = audioSessionManager
+
         super.init()
-        
+
         configure()
     }
-    
+
     deinit {
         stopPlayingAndDoCleanup()
+
+        if let proximityObserver {
+            NotificationCenter.default.removeObserver(proximityObserver)
+        }
+        
         NotificationCenter.default.removeObserver(self)
     }
-    
+
     private func configure() {
         setupProximityMonitoring()
     }
-    
+
     // MARK: - Private functions
-    
+
     private func setupProximityMonitoring() {
-        NotificationCenter.default.addObserver(
+        proximityObserver = NotificationCenter.default.addObserver(
             forName: UIDevice.proximityStateDidChangeNotification,
             object: nil,
-            queue: nil
+            queue: .main
         ) { [weak self] _ in
-            guard let strongSelf = self else {
+            guard let self else {
                 return
             }
-            strongSelf.previousAudioSessionCategory = AudioSessionInputOutputAdapter.currentAudioSession()
-            
-            AudioSessionInputOutputAdapter.proximityStateChanged(for: strongSelf.audioPlayer) { error in
-                strongSelf.showAlert(for: error)
+
+            Task { @MainActor in
+                await self.updateAudioSessionOutput()
             }
         }
     }
-    
-    private func showAlert(for error: NSError) {
-        guard let chatViewController else {
-            DDLogError(
-                "Could not get chatViewController to display error message on. Error \(error.code) \(error.localizedDescription)"
-            )
+
+    // MARK: - Audio session claim
+
+    @MainActor
+    private func acquireAudioSessionClaim() async {
+        guard audioSessionClaim == nil else {
+            await updateAudioSessionOutput()
             return
         }
 
-        UIAlertTemplate.showAlert(
-            owner: chatViewController,
-            title: error.localizedDescription,
-            message: error.localizedFailureReason
-        )
+        do {
+            // The route is named at acquire time, so a message started with the phone already at the ear
+            // configures the session once rather than applying `.playback` and then promoting it.
+            let output = await ProximityAudioRouting.currentOutput(audioSessionManager)
+            audioSessionClaim = try await audioSessionManager.acquire(.playback, output: output)
+        }
+        catch {
+            NotificationPresenterWrapper.shared.present(type: .playbackFailed)
+            DDLogError("Could not acquire the audio session for voice message playback: \(error)")
+        }
     }
     
+    private func releaseAudioSessionClaim() {
+        guard let claim = audioSessionClaim else {
+            return
+        }
+        audioSessionClaim = nil
+
+        let manager = audioSessionManager
+        Task {
+            await manager.release(claim)
+        }
+    }
+
+    /// Follow the proximity sensor, which is what moves playback to the earpiece.
+    @MainActor
+    private func updateAudioSessionOutput() async {
+        guard let audioSessionClaim else {
+            return
+        }
+
+        let output = await ProximityAudioRouting.currentOutput(audioSessionManager)
+        await audioSessionManager.update(audioSessionClaim, output: output)
+    }
+
     // MARK: - Playback Handling
 
     private func initializeAudioPlayerIfNeeded(url: URL) {
@@ -202,7 +245,7 @@ final class ChatViewTableViewVoiceMessageCellDelegate: NSObject, ChatViewTableVi
         // Start playback with new URL or continue to use the existing audio player
         initializeAudioPlayerIfNeeded(url: url)
         
-        guard let audioPlayer else {
+        guard audioPlayer != nil else {
             let msg = "Couldn't create audioPlayer from audio message"
             assertionFailure(msg)
             DDLogError("\(msg)")
@@ -212,24 +255,38 @@ final class ChatViewTableViewVoiceMessageCellDelegate: NSObject, ChatViewTableVi
         self.finishedCallback = finishedCallback
         self.progressCallback = progressCallback
         self.pauseCallback = pauseCallback
-        
-        AudioSessionInputOutputAdapter.adaptToProximityState()
-        
-        // Start Playing
+
         currentlyPlaying = message
         currentlyPlayingURL = url
-        
+
+        // Before the claim, so the first route decision can already see the phone at the ear. Reading
+        // `proximityState` with monitoring off always answers "far".
+        UIDevice.current.isProximityMonitoringEnabled = true
+
+        // Playback starts after the claim, not alongside it: the claim decides the category the player
+        // runs in, and acquiring suspends.
+        Task { @MainActor in
+            await acquireAudioSessionClaim()
+            beginPlayback(of: message, rate: rate)
+        }
+    }
+
+    @MainActor
+    private func beginPlayback(of message: VoiceMessage, rate: CGFloat) {
+        guard let audioPlayer else {
+            return
+        }
+
         audioPlayer.rate = Float(rate)
-        
+
         if let progress = progressDictionary[message.objectID] {
             audioPlayer.currentTime = audioPlayer.duration * progress
         }
-        
-        UIDevice.current.isProximityMonitoringEnabled = true
-        
+
         audioPlayer.play()
+        // Again after `play()`, which resets it.
         audioPlayer.rate = Float(rate)
-        
+
         createPlaybackProgressTimer()
     }
     
@@ -275,11 +332,10 @@ final class ChatViewTableViewVoiceMessageCellDelegate: NSObject, ChatViewTableVi
         audioPlayer?.pause()
         
         pauseCallback?()
-        
-        if !NavigationBarPromptHandler.isCallActiveInBackground || VoIPCallStateManager.shared
-            .currentCallState() == .idle, !NavigationBarPromptHandler.isGroupCallActive {
-            AudioSessionInputOutputAdapter.resetAudioSession(to: previousAudioSessionCategory)
-        }
+
+        // No call guard any more: a playback claim taken during a call was subordinate and never
+        // configured anything, so releasing it cannot disturb the call.
+        releaseAudioSessionClaim()
     }
     
     func getProgress(for voiceMessage: VoiceMessage) -> CGFloat {
@@ -361,8 +417,8 @@ final class ChatViewTableViewVoiceMessageCellDelegate: NSObject, ChatViewTableVi
         audioPlayer?.stop()
         audioPlayer = nil
         
-        AudioSessionInputOutputAdapter.resetAudioSession(to: previousAudioSessionCategory)
-        
+        releaseAudioSessionClaim()
+
         cleanupTemporaryFiles()
     }
 }

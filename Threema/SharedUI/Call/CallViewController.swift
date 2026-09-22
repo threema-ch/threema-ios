@@ -1,3 +1,4 @@
+import AudioSessionManager
 import CocoaLumberjackSwift
 import Foundation
 import ThreemaFramework
@@ -6,6 +7,9 @@ import WebRTC
 
 protocol CallViewControllerDelegate: AnyObject {
     func currentCallID() -> VoIPCallID
+
+    /// The route as it is *now*.
+    func currentAudioRoute() async -> AudioSessionRouteSnapshot
     func isCallMuted() -> Bool
     func isSpeakerActive() -> Bool
     func startCaptureLocalVideo(
@@ -22,7 +26,7 @@ protocol CallViewControllerDelegate: AnyObject {
     func networkIsRelayed() -> Bool
 }
 
-class CallViewController: UIViewController {
+final class CallViewController: UIViewController {
     @IBOutlet private var contentView: UIView!
     @IBOutlet private var contactLabel: UILabel!
     @IBOutlet private var verificationLevel: UIImageView!
@@ -128,7 +132,8 @@ class CallViewController: UIViewController {
     
     private var audioPlayer: AVAudioPlayer?
     
-    private var audioRouteChangeObserver: NSObjectProtocol?
+    /// The route last reported by the call's claim, via `VoIPCallService`.
+    private var currentAudioRoute: AudioSessionRouteSnapshot?
     private var enterForegroundObserver: NSObjectProtocol?
     weak var delegate: CallViewControllerDelegate?
 
@@ -137,15 +142,121 @@ class CallViewController: UIViewController {
     }
     
     deinit {
-        if let audioObserver = audioRouteChangeObserver {
-            NotificationCenter.default.removeObserver(audioObserver)
-        }
         
         if let foregroundObserver = enterForegroundObserver {
             NotificationCenter.default.removeObserver(foregroundObserver)
         }
     }
     
+    // MARK: - Audio route
+
+    func audioRouteChanged(to route: AudioSessionRouteSnapshot) {
+        currentAudioRoute = route
+        updateSpeakerButtonImage()
+        checkAndHandleAvailableBluetoothDevices()
+    }
+
+    /// Draw the speaker button for the route we were last told about.
+    private func updateSpeakerButtonImage() {
+        guard let route = currentAudioRoute else {
+            return
+        }
+
+        for output in route.outputs {
+            if output == AVAudioSession.Port.builtInSpeaker {
+                let speakerImage = UIImage(systemName: "speaker.wave.2.circle.fill")?
+                    .applying(
+                        pointSize: 36.0,
+                        symbolWeight: .thin,
+                        symbolScale: .large,
+                        paletteColors: [.black, .black, .white]
+                    )
+                speakerButton.setImage(
+                    speakerImage,
+                    for: .normal
+                )
+                speakerButton.setImage(
+                    speakerImage,
+                    for: .highlighted
+                )
+                speakerButton.setImage(
+                    speakerImage,
+                    for: .selected
+                )
+                speakerButton.tag = 1
+            }
+            else if output == AVAudioSession.Port.headphones {
+                let headphonesImage = UIImage(systemName: "headphones.circle.fill")?
+                    .applying(
+                        pointSize: 36.0,
+                        symbolWeight: .thin,
+                        symbolScale: .large,
+                        paletteColors: [.black, .black, .white]
+                    )
+                speakerButton.setImage(
+                    headphonesImage,
+                    for: .normal
+                )
+                speakerButton.setImage(
+                    headphonesImage,
+                    for: .highlighted
+                )
+                speakerButton.setImage(
+                    headphonesImage,
+                    for: .selected
+                )
+                speakerButton.tag = 2
+            }
+            else if [.bluetoothA2DP, .bluetoothHFP, .bluetoothLE].contains(output) {
+                let bluetoothImage = UIImage(resource: .threemaBluetoothCircleFill)
+                    .applying(
+                        pointSize: 36.0,
+                        symbolWeight: .thin,
+                        symbolScale: .large,
+                        paletteColors: [.black, .black, .white]
+                    )
+                speakerButton.setImage(
+                    bluetoothImage,
+                    for: .normal
+                )
+                speakerButton.setImage(
+                    bluetoothImage,
+                    for: .highlighted
+                )
+                speakerButton.setImage(
+                    bluetoothImage,
+                    for: .selected
+                )
+
+                speakerButton.tag = 3
+            }
+            else {
+                let earpeaceImage = UIImage(systemName: "speaker.wave.2.circle")?
+                    .applying(
+                        pointSize: 36.0,
+                        symbolWeight: .thin,
+                        symbolScale: .large,
+                        paletteColors: [.white, .white, .white]
+                    )
+                speakerButton.setImage(
+                    earpeaceImage,
+                    for: .normal
+                )
+                speakerButton.setImage(
+                    earpeaceImage,
+                    for: .highlighted
+                )
+                speakerButton.setImage(
+                    earpeaceImage,
+                    for: .selected
+                )
+                speakerButton.tag = 0
+            }
+        }
+
+        updateAccessibilityLabels()
+    }
+
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -156,123 +267,12 @@ class CallViewController: UIViewController {
         
         cellularWarningButton.isHidden = true
         
-        audioRouteChangeObserver = NotificationCenter.default.addObserver(
-            forName: AVAudioSession.routeChangeNotification,
-            object: nil,
-            queue: .main
-        ) { [weak self] n in
-            guard let self else {
+        Task { @MainActor [weak self] in
+            guard let self, let route = await delegate?.currentAudioRoute() else {
                 return
             }
-            let currentRoute = AVAudioSession.sharedInstance().currentRoute
-            
-            for output in currentRoute.outputs {
-                if output.portType == AVAudioSession.Port.builtInSpeaker {
-                    let speakerImage = UIImage(systemName: "speaker.wave.2.circle.fill")?
-                        .applying(
-                            pointSize: 36.0,
-                            symbolWeight: .thin,
-                            symbolScale: .large,
-                            paletteColors: [.black, .black, .white]
-                        )
-                    speakerButton.setImage(
-                        speakerImage,
-                        for: .normal
-                    )
-                    speakerButton.setImage(
-                        speakerImage,
-                        for: .highlighted
-                    )
-                    speakerButton.setImage(
-                        speakerImage,
-                        for: .selected
-                    )
-                    speakerButton.tag = 1
-                }
-                else if output.portType == AVAudioSession.Port.headphones {
-                    let headphonesImage = UIImage(systemName: "headphones.circle.fill")?
-                        .applying(
-                            pointSize: 36.0,
-                            symbolWeight: .thin,
-                            symbolScale: .large,
-                            paletteColors: [.black, .black, .white]
-                        )
-                    speakerButton.setImage(
-                        headphonesImage,
-                        for: .normal
-                    )
-                    speakerButton.setImage(
-                        headphonesImage,
-                        for: .highlighted
-                    )
-                    speakerButton.setImage(
-                        headphonesImage,
-                        for: .selected
-                    )
-                    speakerButton.tag = 2
-                }
-                else if output.portType == AVAudioSession.Port.bluetoothA2DP || output.portType == AVAudioSession.Port
-                    .bluetoothHFP || output.portType == AVAudioSession.Port.bluetoothLE {
-                    let bluetoothImage = UIImage(resource: .threemaBluetoothCircleFill)
-                        .applying(
-                            pointSize: 36.0,
-                            symbolWeight: .thin,
-                            symbolScale: .large,
-                            paletteColors: [.black, .black, .white]
-                        )
-                    speakerButton.setImage(
-                        bluetoothImage,
-                        for: .normal
-                    )
-                    speakerButton.setImage(
-                        bluetoothImage,
-                        for: .highlighted
-                    )
-                    speakerButton.setImage(
-                        bluetoothImage,
-                        for: .selected
-                    )
 
-                    speakerButton.tag = 3
-                }
-                else {
-                    let earpeaceImage = UIImage(systemName: "speaker.wave.2.circle")?
-                        .applying(
-                            pointSize: 36.0,
-                            symbolWeight: .thin,
-                            symbolScale: .large,
-                            paletteColors: [.white, .white, .white]
-                        )
-                    speakerButton.setImage(
-                        earpeaceImage,
-                        for: .normal
-                    )
-                    speakerButton.setImage(
-                        earpeaceImage,
-                        for: .highlighted
-                    )
-                    speakerButton.setImage(
-                        earpeaceImage,
-                        for: .selected
-                    )
-                    speakerButton.tag = 0
-                }
-                updateAccessibilityLabels()
-                
-                guard let info = n.userInfo,
-                      let value = info[AVAudioSessionRouteChangeReasonKey] as? UInt,
-                      let reason = AVAudioSession.RouteChangeReason(rawValue: value) else {
-                    return
-                }
-                
-                switch reason {
-                case .newDeviceAvailable, .oldDeviceUnavailable:
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                        self.checkAndHandleAvailableBluetoothDevices()
-                    }
-                default: break
-                }
-            }
+            audioRouteChanged(to: route)
         }
         
         contentView.insertSubview(profilePictureView, at: 0)
@@ -342,12 +342,12 @@ class CallViewController: UIViewController {
         }
         
         switch VoIPCallStateManager.shared.currentCallState() {
-        case .ended, .remoteEnded, .rejected, .rejectedBusy, .rejectedTimeout, .rejectedDisabled, .rejectedOffHours,
-             .rejectedUnknown, .microphoneDisabled:
+        case .ended, .remoteEnded, .rejected, .rejectedTimeout, .rejectedUnknown, .microphoneDisabled:
             DispatchQueue.main.async {
                 self.removeAllSubviewsFromVideoViews()
             }
-        default:
+            
+        case .idle, .sendOffer, .receivedOffer, .outgoingRinging, .incomingRinging, .sendAnswer, .receivedAnswer, .initializing, .calling, .reconnecting:
             break
         }
     }
@@ -421,22 +421,14 @@ extension CallViewController {
             timerString = #localize("call_end")
         case .rejected:
             timerString = #localize("call_rejected")
-        case .rejectedBusy:
-            timerString = #localize("call_rejected_busy")
         case .rejectedTimeout:
             timerString = #localize("call_rejected_timeout")
-        case .rejectedOffHours:
-            timerString = #localize("call_rejected")
         case .rejectedUnknown:
             timerString = #localize("call_rejected")
-        case .rejectedDisabled:
-            timerString = String.localizedStringWithFormat(
-                #localize("call_rejected_disabled"),
-                TargetManager.localizedAppName
-            )
         case .microphoneDisabled:
             timerString = #localize("call_mic_access")
         }
+        
         DispatchQueue.main.async {
             self.timerLabel?.text = timerString
             self.muteButton?.isEnabled = state == .calling || state == .reconnecting
@@ -459,45 +451,45 @@ extension CallViewController {
         }
 
         // Hold the connection weakly: once the call is torn down the connection is released and
-        // the timer stops requesting stats (avoids a teardown race in WebRTC stats delivery)
-        weak var weakConnection = connection
+        // the timer stops requesting stats
+        weak let weakConnection = connection
         statsTimer?.invalidate()
         statsTimer = nil
         DispatchQueue.main.async {
             var previousState: VoIPStatsState?
-            self.statsTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true, block: { _ in
-                if let connection = weakConnection {
-                    connection.statistics { report in
-                        let options = VoIPStatsOptions()
-                        options.selectedCandidatePair = true
-                        options.transport = true
-                        options.crypto = true
-                        options.inboundRtp = true
-                        options.outboundRtp = true
-                        options.tracks = true
-                        options.candidatePairsFlag = .OVERVIEW
-                        let stats = VoIPStats(
-                            report: report,
-                            options: options,
-                            transceivers: connection.transceivers,
-                            previousState: previousState
-                        )
-                        previousState = stats.buildVoIPStatsState()
-                        DispatchQueue.main.async {
-                            if self.debugLabel != nil {
-                                if self.debugLabel.isHidden == false {
-                                    var statsString = stats.getShortRepresentation()
-                                    if self.threemaVideoCallAvailable {
-                                        statsString +=
-                                            "\n\n\(CallsignalingProtocol.printDebugQualityProfiles(remoteProfile: self.delegate?.remoteVideoQualityProfile(), networkIsRelayed: self.delegate?.networkIsRelayed() ?? false))"
-                                    }
-                                    self.debugLabel.text = statsString
-                                }
+            self.statsTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
+                guard let connection = weakConnection else {
+                    return
+                }
+                
+                connection.statistics { report in
+                    let options = VoIPStatsOptions()
+                    options.selectedCandidatePair = true
+                    options.transport = true
+                    options.crypto = true
+                    options.inboundRtp = true
+                    options.outboundRtp = true
+                    options.tracks = true
+                    options.candidatePairsFlag = .OVERVIEW
+                    let stats = VoIPStats(
+                        report: report,
+                        options: options,
+                        transceivers: connection.transceivers,
+                        previousState: previousState
+                    )
+                    previousState = stats.buildVoIPStatsState()
+                    DispatchQueue.main.async {
+                        if self.debugLabel != nil, self.debugLabel.isHidden == false {
+                            var statsString = stats.getShortRepresentation()
+                            if self.threemaVideoCallAvailable {
+                                statsString +=
+                                    "\n\n\(CallsignalingProtocol.printDebugQualityProfiles(remoteProfile: self.delegate?.remoteVideoQualityProfile(), networkIsRelayed: self.delegate?.networkIsRelayed() ?? false))"
                             }
+                            self.debugLabel.text = statsString
                         }
                     }
                 }
-            })
+            }
         }
     }
     
@@ -1217,10 +1209,8 @@ extension CallViewController {
             return
         }
         
-        let currentRoute = AVAudioSession.sharedInstance().currentRoute
-        
-        for output in currentRoute.outputs {
-            if output.portType == AVAudioSession.Port.builtInReceiver {
+        for output in currentAudioRoute?.outputs ?? [] {
+            if output == AVAudioSession.Port.builtInReceiver {
                 let action = VoIPCallUserAction(
                     action: .speakerOn,
                     contactIdentity: contactIdentity!,
@@ -1374,15 +1364,7 @@ extension CallViewController {
     }
     
     private func checkAndHandleAvailableBluetoothDevices() {
-        var bluetoothAvailable = false
-        if let inputs = AVAudioSession.sharedInstance().availableInputs {
-            for input in inputs {
-                if input.portType == AVAudioSession.Port.bluetoothA2DP || input.portType == AVAudioSession.Port
-                    .bluetoothHFP || input.portType == AVAudioSession.Port.bluetoothLE {
-                    bluetoothAvailable = true
-                }
-            }
-        }
+        let bluetoothAvailable = currentAudioRoute?.hasBluetoothInput ?? false
         
         if bluetoothAvailable {
             if myVolumeView == nil {
@@ -1486,12 +1468,7 @@ extension CallViewController {
     /// It will play the problem sound
     private func playCellularCallWarningSound() {
         audioPlayer?.stop()
-        let audioSession = AVAudioSession.sharedInstance()
         do {
-            try audioSession.setCategory(.playAndRecord, mode: .voiceChat, options: .threemaCategoryOptions)
-            try audioSession.overrideOutputAudioPort((delegate?.isSpeakerActive() ?? false) ? .speaker : .none)
-            try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
-            
             let soundFilePath = BundleUtil.path(forResource: "threema_problem", ofType: "mp3")
             let soundURL = URL(fileURLWithPath: soundFilePath!)
             let player = try AVAudioPlayer(contentsOf: soundURL, fileTypeHint: AVFileType.mp3.rawValue)
@@ -1535,6 +1512,7 @@ extension CallViewController {
             )
             
             dismiss(animated: true) {
+                VoIPCallStateManager.shared.onCallViewHidden?()
                 if SharedAppProvider.isAppLocked {
                     SharedAppProvider.presentPasscodeView()
                 }
@@ -1567,8 +1545,9 @@ extension CallViewController {
                 return
             }
             
+            // User tapped end call. We send the reject message, so the other devices stop ringing.
             let action = VoIPCallUserAction(
-                action: .reject,
+                action: .reject(sendMessage: true),
                 contactIdentity: contactIdentity!,
                 callID: callID,
                 completion: nil
@@ -1584,7 +1563,7 @@ extension CallViewController {
         }
         
         DDLogNotice(
-            "VoipCallService: [cid=\(callID.callID)]: User pressed the hangup button"
+            "VoipCallService: [cid=\(callID)]: User pressed the hangup button"
         )
 
         let action = VoIPCallUserAction(
@@ -1621,9 +1600,8 @@ extension CallViewController {
         
         checkAndHandleAvailableBluetoothDevices()
         
-        let audioSession = AVAudioSession.sharedInstance()
-        for output in audioSession.currentRoute.outputs {
-            switch output.portType {
+        for output in currentAudioRoute?.outputs ?? [] {
+            switch output {
             case .builtInReceiver:
                 let action = VoIPCallUserAction(
                     action: .speakerOn,
@@ -1685,14 +1663,14 @@ extension CallViewController {
     }
     
     @IBAction func showCellularWarningAction() {
-        UIAlertTemplate.showAlert(
+        UIAlertTemplate.showOKAlert(
             owner: self,
             title: #localize("call_threema_cellular_instead_of_wifi_title"),
             message: #localize("call_threema_cellular_instead_of_wifi_text")
         )
     }
         
-    @objc func switchVideoViews(gesture: UITapGestureRecognizer) {
+    @objc private func switchVideoViews(gesture: UITapGestureRecognizer) {
         DispatchQueue.main.async {
             if self.isLocalRendererInLocalView(), self.isRemoteRendererInRemoteView() {
                 self.removeAllSubviewsFromVideoViews()
@@ -1709,11 +1687,11 @@ extension CallViewController {
         }
     }
         
-    @objc func showHideNavigation(gesture: UITapGestureRecognizer) {
+    @objc private func showHideNavigation(gesture: UITapGestureRecognizer) {
         moveLocalVideoViewToCorrectPosition(moveNavigation: true)
     }
         
-    @objc func didPan(gesture: UIPanGestureRecognizer) {
+    @objc private func didPan(gesture: UIPanGestureRecognizer) {
         guard let dragView = gesture.view else {
             return
         }

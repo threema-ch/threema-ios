@@ -1,3 +1,4 @@
+import AudioSessionManager
 import CocoaLumberjackSwift
 import Foundation
 import ThreemaProtocols
@@ -47,36 +48,9 @@ final class ConnectionContext<
     
     // MARK: - Internal Variables
     
-    let rtcAudioSession: RTCAudioSession = {
-        let sharedInstance = RTCAudioSession.sharedInstance()
-        sharedInstance.useManualAudio = true
-        sharedInstance.isAudioEnabled = true
-        
-        let audioConfiguration = RTCAudioSessionConfiguration()
-        audioConfiguration.category = AVAudioSession.Category.playAndRecord.rawValue
-        audioConfiguration.mode = AVAudioSession.Mode.voiceChat.rawValue
-        audioConfiguration.categoryOptions = .threemaCategoryOptions
-        do {
-            sharedInstance.lockForConfiguration()
-            defer { sharedInstance.unlockForConfiguration() }
-            RTCAudioSessionConfiguration.setWebRTC(audioConfiguration)
-            if shouldActivateSpeaker() == true {
-                try sharedInstance.overrideOutputAudioPort(.speaker)
-            }
-            try sharedInstance.setActive(true)
-        }
-        catch let error as NSError {
-            DDLogError(
-                "[GroupCall] Failed to set the audio session category, mode and override output audio port: \(error)"
-            )
-        }
-        
-        return sharedInstance
-    }()
-    
-    // TODO: (IOS-4161) Unused, see 1:1 calls
-    let audioQueue = DispatchQueue(label: "VoIPCallAudioQueue")
-        
+    /// The call's claim on the audio session, held from `startAudio()` to `teardown()`.
+    private var audioSessionClaim: AudioSessionClaim?
+
     var messageStream: AsyncStream<PeerConnectionMessage> {
         webRTCConnectionContext.messageStream
     }
@@ -138,7 +112,7 @@ final class ConnectionContext<
         self.videoCapturer = RTCCameraVideoCapturer(delegate: videoSource)
     }
     
-    // MARK: Update Functions
+    // MARK: - Update Functions
     
     func attachToLocalContext(kind: SdpKind, transceiver: RTCRtpTransceiverImpl) async {
         guard let transceiver = transceiver as? RTCRtpTransceiver else {
@@ -292,23 +266,31 @@ extension ConnectionContext {
     ///
     /// Note that the implementation in the android app is much more sophisticated. Instead of replicating
     /// the solution from android we did a teardown similar to the one done for 1:1 calls in our app.
+    /// Take the session for this call.
+    func startAudio() async {
+        guard audioSessionClaim == nil else {
+            return
+        }
+
+        do {
+            audioSessionClaim = try await dependencies.audioSessionManager.acquire(
+                .groupCall,
+                output: shouldActivateSpeaker() ? .speaker : .system
+            )
+        }
+        catch {
+            DDLogError("[GroupCall] Could not acquire the audio session: \(error)")
+        }
+    }
+
     func teardown() async {
         DDLogNotice("[GroupCall] Teardown: ConnectionContext")
         audioTrack?.isEnabled = false
         videoTrack?.isEnabled = false
 
-        // Stop WebRTC's audio unit before closing the peer connection. `isAudioEnabled` must be set
-        // to false to match the `isAudioEnabled = true` set during initialization, otherwise the
-        // audio unit remains running and leaves WebRTC in an inconsistent state for subsequent calls.
-        rtcAudioSession.isAudioEnabled = false
-
-        do {
-            rtcAudioSession.lockForConfiguration()
-            defer { rtcAudioSession.unlockForConfiguration() }
-            try rtcAudioSession.setActive(false)
-        }
-        catch {
-            DDLogError("[GroupCall] An error occurred when resetting the shared audio session: \(error)")
+        if let claim = audioSessionClaim {
+            audioSessionClaim = nil
+            await dependencies.audioSessionManager.release(claim)
         }
 
         await videoCapturer.stopCapture()
@@ -341,12 +323,13 @@ extension ConnectionContext {
         }
     }
         
-    private static func shouldActivateSpeaker() -> Bool {
-        let currentRoute = AVAudioSession.sharedInstance().currentRoute
+    /// Whether this call should start on the speaker.
+    private func shouldActivateSpeaker() async -> Bool {
+        let outputs = await dependencies.audioSessionManager.currentRoute().outputs
         var activateSpeaker = true
-        
-        for output in currentRoute.outputs {
-            switch output.portType {
+
+        for output in outputs {
+            switch output {
             case .builtInReceiver:
                 activateSpeaker = true
             case .builtInSpeaker:

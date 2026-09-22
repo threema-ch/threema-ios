@@ -30,6 +30,15 @@ extension UIWindow {
     // MARK: - Public methods
 
     @objc public func makeSecure() {
+        makeSecure(showsPreventionView: true)
+    }
+
+    /// Excludes this window's content from screenshots and recordings.
+    ///
+    /// - Parameter showsPreventionView: Whether to show the "screen capture disabled" message in captures. Pass
+    ///   `false` when stacked over a secured window, its message covers us and ours would show through where our
+    ///   content is transparent.
+    public func makeSecure(showsPreventionView: Bool) {
         guard TargetManager.isBusinessApp, MDMSetup().disableScreenshots(), !isSecure else {
             return
         }
@@ -39,11 +48,14 @@ extension UIWindow {
         let field = SecureTextField()
         field.isSecureTextEntry = true
 
-        let hostingController = UIHostingController(rootView: ScreenshotPreventionView())
-        hostingController.view.backgroundColor = .clear
+        if showsPreventionView {
+            let hostingController = UIHostingController(rootView: ScreenshotPreventionView())
+            hostingController.view.backgroundColor = .clear
 
-        field.leftView = hostingController.view
-        field.leftViewMode = .always
+            field.leftView = hostingController.view
+            field.leftViewMode = .always
+        }
+
         field.semanticContentAttribute = .forceLeftToRight
 
         addSubview(field)

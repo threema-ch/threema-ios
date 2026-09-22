@@ -38,7 +38,7 @@ public final class DistributionListCell: ThemedCodeTableViewCell {
     }
 
     /// Distribution list to show
-    @objc public var distributionList: DistributionList? {
+    public var distributionList: DistributionList? {
         didSet {
             guard let distributionList, let name = distributionList.displayName else {
                 return

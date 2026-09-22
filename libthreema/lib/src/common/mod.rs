@@ -3,23 +3,27 @@ use core::{
     array::TryFromSliceError,
     fmt,
     num::ParseIntError,
-    ops::Deref,
     str::{self, FromStr},
 };
 use std::env;
 
 #[cfg(test)]
 use anyhow;
-use data_encoding::HEXLOWER_PERMISSIVE;
-use libthreema_macros::Name;
-use rand::{self, Rng as _};
+use libthreema_dependencies::{
+    crypto::{
+        consts,
+        digest::{FixedOutput as _, Mac as _},
+        generic_array, sha2,
+    },
+    data_encoding::HEXLOWER_PERMISSIVE,
+    rand::{self, Rng as _},
+};
+use libthreema_macros::{Name, UniffiNewType, VariantNames};
 use serde::{Deserialize, Serialize};
-use tracing::warn;
 
 use crate::{
-    crypto::{consts::U24, generic_array::GenericArray},
     protobuf,
-    utils::{apply::Apply, debug::Name as _, protobuf::PaddedMessage as _, time::utc_now_ms},
+    utils::{debug::Name as _, protobuf::PaddedMessage as _, time::utc_now_ms},
 };
 
 pub mod config;
@@ -104,10 +108,10 @@ impl ClientInfo {
     #[must_use]
     pub fn to_user_agent(&self) -> String {
         match self {
-            ClientInfo::Android { version, .. } => format!("Threema Android/{version}"),
-            ClientInfo::Ios { version, .. } => format!("Threema iOS/{version}"),
-            ClientInfo::Desktop { version, .. } => format!("Threema Desktop/{version}"),
-            ClientInfo::Libthreema => format!("libthreema/{version}", version = env!("CARGO_PKG_VERSION")),
+            Self::Android { version, .. } => format!("Threema Android/{version}"),
+            Self::Ios { version, .. } => format!("Threema iOS/{version}"),
+            Self::Desktop { version, .. } => format!("Threema Desktop/{version}"),
+            Self::Libthreema => format!("libthreema/{version}", version = env!("CARGO_PKG_VERSION")),
         }
     }
 
@@ -115,7 +119,7 @@ impl ClientInfo {
     #[must_use]
     pub fn to_semicolon_separated(&self) -> String {
         match self {
-            ClientInfo::Android {
+            Self::Android {
                 version,
                 locale,
                 device_model,
@@ -130,7 +134,7 @@ impl ClientInfo {
                 )
             },
 
-            ClientInfo::Ios {
+            Self::Ios {
                 version,
                 locale,
                 device_model,
@@ -145,7 +149,7 @@ impl ClientInfo {
                 )
             },
 
-            ClientInfo::Desktop {
+            Self::Desktop {
                 version,
                 locale,
                 renderer_name,
@@ -164,7 +168,7 @@ impl ClientInfo {
                 )
             },
 
-            ClientInfo::Libthreema => {
+            Self::Libthreema => {
                 format!(
                     "{version};L;en/CH;{os_name};{os_architecture}",
                     version = env!("CARGO_PKG_VERSION"),
@@ -178,9 +182,9 @@ impl ClientInfo {
     /// Construct a [`protobuf::d2d::DeviceInfo`] from a device label and the [`ClientInfo`].
     ///
     /// The device label (e.g. "PC at Work") is recommended to not exceed 64 grapheme clusters.
-    pub(crate) fn to_device_info(&self, label: Option<String>) -> protobuf::d2d::DeviceInfo {
+    pub(crate) fn to_device_info(&self, label: String) -> protobuf::d2d::DeviceInfo {
         let (platform, platform_details, app_version) = match self {
-            ClientInfo::Android {
+            Self::Android {
                 version,
                 device_model,
                 ..
@@ -190,7 +194,7 @@ impl ClientInfo {
                 version.clone(),
             ),
 
-            ClientInfo::Ios {
+            Self::Ios {
                 version,
                 device_model,
                 ..
@@ -200,7 +204,7 @@ impl ClientInfo {
                 version.clone(),
             ),
 
-            ClientInfo::Desktop {
+            Self::Desktop {
                 version,
                 renderer_name,
                 renderer_version,
@@ -212,7 +216,7 @@ impl ClientInfo {
                 version.clone(),
             ),
 
-            ClientInfo::Libthreema => (
+            Self::Libthreema => (
                 protobuf::d2d::device_info::Platform::Unspecified,
                 format!("libthreema ({os_name})", os_name = env::consts::OS),
                 env!("CARGO_PKG_VERSION").to_owned(),
@@ -224,13 +228,13 @@ impl ClientInfo {
             platform: platform as i32,
             platform_details,
             app_version,
-            label: label.unwrap_or_default(),
+            label,
         }
     }
 }
 
 /// Invalid [`ThreemaId`].
-#[derive(Debug, thiserror::Error)]
+#[derive(Clone, Debug, thiserror::Error)]
 pub enum ThreemaIdError {
     /// Invalid length (must be exactly 8 bytes).
     #[error("Threema ID must be exactly 8 bytes")]
@@ -240,6 +244,15 @@ pub enum ThreemaIdError {
     #[error("Threema ID contains invalid symbols")]
     InvalidSymbols,
 }
+#[cfg(feature = "uniffi")]
+impl From<ThreemaIdError> for crate::bindings::uniffi::ConversionError {
+    fn from(error: ThreemaIdError) -> Self {
+        Self::ContractViolation {
+            name: ThreemaId::NAME.to_owned(),
+            reason: error.to_string(),
+        }
+    }
+}
 
 /// A valid Threema ID.
 #[expect(
@@ -247,7 +260,7 @@ pub enum ThreemaIdError {
     reason = "False positive triggered by the unsafe block in as_str, \
     see https://github.com/rust-lang/rust-clippy/issues/10349"
 )]
-#[derive(Clone, Copy, Eq, Hash, PartialEq, Serialize, Deserialize, Name)]
+#[derive(Clone, Copy, Eq, Hash, PartialEq, PartialOrd, Ord, Serialize, Deserialize, Name)]
 #[serde(try_from = "&str", into = "String")]
 pub struct ThreemaId([u8; Self::LENGTH]);
 impl ThreemaId {
@@ -257,9 +270,8 @@ impl ThreemaId {
     /// Construct a predefined Threema ID.
     ///
     /// IMPORTANT: This skips the validation, so `identity` must be known to be valid!
-    #[must_use]
-    pub const fn predefined(identity: [u8; Self::LENGTH]) -> Self {
-        ThreemaId(identity)
+    pub(crate) const fn predefined(identity: [u8; Self::LENGTH]) -> Self {
+        Self(identity)
     }
 
     /// Byte representation of the Threema ID.
@@ -299,120 +311,321 @@ impl fmt::Debug for ThreemaId {
     }
 }
 impl From<ThreemaId> for String {
-    fn from(id: ThreemaId) -> Self {
-        id.as_str().to_owned()
+    fn from(identity: ThreemaId) -> Self {
+        identity.as_str().to_owned()
     }
 }
 impl TryFrom<&[u8]> for ThreemaId {
     type Error = ThreemaIdError;
 
-    fn try_from(id: &[u8]) -> Result<Self, Self::Error> {
-        let id = <[u8; Self::LENGTH]>::try_from(id).map_err(|_| ThreemaIdError::InvalidLength)?;
+    fn try_from(identity: &[u8]) -> Result<Self, Self::Error> {
+        let identity = <[u8; Self::LENGTH]>::try_from(identity).map_err(|_| ThreemaIdError::InvalidLength)?;
         if ![b'*'..=b'*', b'0'..=b'9', b'A'..=b'Z']
             .iter()
-            .any(|range| range.contains(id.first().expect("id must be >= 8 bytes")))
+            .any(|range| range.contains(identity.first().expect("identity must be exactly 8 bytes")))
         {
             return Err(ThreemaIdError::InvalidSymbols);
         }
-        if !id.get(1..8).expect("id must be >= 8 bytes").iter().all(|byte| {
-            [b'0'..=b'9', b'A'..=b'Z']
-                .iter()
-                .any(|range| range.contains(byte))
-        }) {
+        if !identity
+            .get(1..8)
+            .expect("identity must be exactly 8 bytes")
+            .iter()
+            .all(|byte| {
+                [b'0'..=b'9', b'A'..=b'Z']
+                    .iter()
+                    .any(|range| range.contains(byte))
+            })
+        {
             return Err(ThreemaIdError::InvalidSymbols);
         }
-        Ok(ThreemaId(id))
+        Ok(Self(identity))
     }
 }
 impl TryFrom<&str> for ThreemaId {
     type Error = ThreemaIdError;
 
-    fn try_from(id: &str) -> Result<Self, Self::Error> {
-        Self::try_from(id.as_bytes())
+    fn try_from(identity: &str) -> Result<Self, Self::Error> {
+        Self::try_from(identity.as_bytes())
     }
 }
 impl FromStr for ThreemaId {
     type Err = ThreemaIdError;
 
-    fn from_str(id: &str) -> Result<Self, Self::Err> {
-        Self::try_from(id)
+    fn from_str(identity: &str) -> Result<Self, Self::Err> {
+        Self::try_from(identity)
     }
 }
 
 #[cfg(test)]
 mod threema_id_tests {
     use assert_matches::assert_matches;
+    use rstest::rstest;
 
     use super::{ThreemaId, ThreemaIdError};
 
-    #[test]
-    fn valid() {
-        assert!(ThreemaId::try_from("ECHOECHO").is_ok());
-        assert!(ThreemaId::try_from([0x45, 0x43, 0x48, 0x4f, 0x45, 0x43, 0x48, 0x4f].as_slice()).is_ok());
-        assert!(ThreemaId::try_from("*RICHTIG").is_ok());
-        assert!(ThreemaId::try_from([0x2a, 0x52, 0x49, 0x43, 0x48, 0x54, 0x49, 0x47].as_slice()).is_ok());
+    #[rstest]
+    #[case(&[0x45, 0x43, 0x48, 0x4f, 0x45, 0x43, 0x48, 0x4f])]
+    #[case(&[0x2a, 0x52, 0x49, 0x43, 0x48, 0x54, 0x49, 0x47])]
+    fn valid_bytes(#[case] identity: &[u8]) {
+        assert!(ThreemaId::try_from(identity).is_ok());
     }
 
-    #[test]
-    fn invalid() {
-        assert_matches!(ThreemaId::try_from(""), Err(ThreemaIdError::InvalidLength));
-        assert_matches!(ThreemaId::try_from("ZUWENIG"), Err(ThreemaIdError::InvalidLength));
-        assert_matches!(
-            ThreemaId::try_from("*NEINNEIN"),
-            Err(ThreemaIdError::InvalidLength)
-        );
-        assert_matches!(
-            ThreemaId::try_from("ECHÜECHÜ"),
-            Err(ThreemaIdError::InvalidLength)
-        );
-        assert_matches!(
-            ThreemaId::try_from([0x00, 0x9f, 0x92, 0x96, 0x00, 0x00, 0x00, 0x00].as_slice()),
-            Err(ThreemaIdError::InvalidSymbols)
-        );
-        assert_matches!(
-            ThreemaId::try_from([0_u8; 8].as_slice()),
-            Err(ThreemaIdError::InvalidSymbols)
-        );
-        assert_matches!(
-            ThreemaId::try_from("ECH_ECH_"),
-            Err(ThreemaIdError::InvalidSymbols)
-        );
-        assert_matches!(
-            ThreemaId::try_from("********"),
-            Err(ThreemaIdError::InvalidSymbols)
-        );
+    #[rstest]
+    #[case("ECHOECHO")]
+    #[case("*RICHTIG")]
+    fn valid_str(#[case] identity: &str) {
+        assert!(ThreemaId::try_from(identity).is_ok());
+    }
+
+    #[rstest]
+    #[case("")]
+    #[case("ZUWENIG")]
+    #[case("*NEINNEIN")]
+    #[case("ECHÜECHÜ")]
+    fn invalid_length(#[case] identity: &str) {
+        assert_matches!(ThreemaId::try_from(identity), Err(ThreemaIdError::InvalidLength));
+    }
+
+    #[rstest]
+    #[case(&[0x00, 0x9f, 0x92, 0x96, 0x00, 0x00, 0x00, 0x00])]
+    #[case(&[0_u8; 8])]
+    fn invalid_symbols_bytes(#[case] identity: &[u8]) {
+        assert_matches!(ThreemaId::try_from(identity), Err(ThreemaIdError::InvalidSymbols));
+    }
+
+    #[rstest]
+    #[case("ECH_ECH_")]
+    #[case("********")]
+    fn invalid_symbols_str(#[case] identity: &str) {
+        assert_matches!(ThreemaId::try_from(identity), Err(ThreemaIdError::InvalidSymbols));
     }
 }
 
-/// A CSP server group.
-#[derive(Clone, Copy, Eq, Hash, PartialEq, Deserialize, Name)]
-#[serde(try_from = "&str")]
-pub struct ChatServerGroup(pub u8);
-impl TryFrom<&str> for ChatServerGroup {
-    type Error = ParseIntError;
+/// A unique distribution list identity.
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
+#[cfg_attr(feature = "uniffi", derive(UniffiNewType))]
+pub struct DistributionListId(pub u64);
+impl fmt::Display for DistributionListId {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter.write_str(&HEXLOWER_PERMISSIVE.encode(&self.0.to_le_bytes()))
+    }
+}
 
-    fn try_from(string: &str) -> Result<Self, Self::Error> {
-        Ok(Self(u8::from_str_radix(string, 16)?))
+/// A unique group identity.
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq, PartialOrd, Ord, Name)]
+pub struct GroupIdentity {
+    /// Group ID as chosen by the group's creator.
+    pub group_id: u64,
+
+    /// Threema ID of the group's creator.
+    pub creator_identity: ThreemaId,
+}
+impl TryFrom<&protobuf::common::GroupIdentity> for GroupIdentity {
+    type Error = ThreemaIdError;
+
+    fn try_from(group_identity: &protobuf::common::GroupIdentity) -> Result<Self, Self::Error> {
+        Ok(Self {
+            group_id: group_identity.group_id,
+            creator_identity: ThreemaId::try_from(group_identity.creator_identity.as_str())?,
+        })
+    }
+}
+impl From<&GroupIdentity> for protobuf::common::GroupIdentity {
+    fn from(group_identity: &GroupIdentity) -> Self {
+        Self {
+            group_id: group_identity.group_id,
+            creator_identity: group_identity.creator_identity.into(),
+        }
+    }
+}
+impl fmt::Display for GroupIdentity {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            formatter,
+            "{}.{}",
+            self.creator_identity,
+            HEXLOWER_PERMISSIVE.encode(&self.group_id.to_le_bytes()),
+        )
+    }
+}
+
+/// A conversation type.
+#[derive(Clone, Copy, Debug, PartialEq)]
+#[cfg_attr(feature = "uniffi", derive(uniffi::Enum))]
+pub enum ConversationType {
+    /// A 1:1 conversation.
+    Contact,
+
+    /// A distribution list conversation.
+    DistributionList,
+
+    /// A group conversation.
+    Group,
+}
+
+/// A specific conversation (aka _receiver_).
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Hash, Name, PartialOrd, Ord, VariantNames)]
+pub enum ConversationId {
+    /// A specific 1:1 contact.
+    Contact(ThreemaId),
+
+    /// A specific distribution list.
+    DistributionList(DistributionListId),
+
+    /// A specific group.
+    Group(GroupIdentity),
+}
+impl ConversationId {
+    #[inline]
+    pub(crate) const fn conversation_type(&self) -> ConversationType {
+        match self {
+            Self::Contact(_) => ConversationType::Contact,
+            Self::DistributionList(_) => ConversationType::DistributionList,
+            Self::Group(_) => ConversationType::Group,
+        }
+    }
+}
+impl TryFrom<&protobuf::d2d::conversation_id::Id> for ConversationId {
+    type Error = ThreemaIdError;
+
+    fn try_from(conversation: &protobuf::d2d::conversation_id::Id) -> Result<Self, Self::Error> {
+        Ok(match conversation {
+            protobuf::d2d::conversation_id::Id::Contact(contact_identity) => {
+                Self::Contact(ThreemaId::try_from(contact_identity.as_str())?)
+            },
+            protobuf::d2d::conversation_id::Id::DistributionList(distribution_list_id) => {
+                Self::DistributionList(DistributionListId(*distribution_list_id))
+            },
+            protobuf::d2d::conversation_id::Id::Group(group_identity) => {
+                Self::Group(GroupIdentity::try_from(group_identity)?)
+            },
+        })
+    }
+}
+impl From<&ConversationId> for protobuf::d2d::ConversationId {
+    fn from(conversation: &ConversationId) -> Self {
+        let id = match conversation {
+            ConversationId::Contact(contact_identity) => {
+                protobuf::d2d::conversation_id::Id::Contact(contact_identity.as_str().to_owned())
+            },
+            ConversationId::DistributionList(distribution_list_id) => {
+                protobuf::d2d::conversation_id::Id::DistributionList(distribution_list_id.0)
+            },
+            ConversationId::Group(group_identity) => {
+                protobuf::d2d::conversation_id::Id::Group(group_identity.into())
+            },
+        };
+        Self { id: Some(id) }
+    }
+}
+impl fmt::Display for ConversationId {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let inner: &dyn fmt::Display = match self {
+            Self::Contact(id) => id,
+            Self::DistributionList(id) => id,
+            Self::Group(id) => id,
+        };
+        write!(formatter, "{}({inner})", self.variant_name())
+    }
+}
+
+/// Invalid [`ChatServerGroup`].
+#[derive(Clone, Debug, thiserror::Error)]
+pub enum ChatServerGroupError {
+    /// Invalid length (must be at least one byte).
+    #[error("Chat server group must be at least one byte")]
+    InvalidLength,
+
+    /// Invalid symbols provided.
+    #[error("Chat server group contains invalid symbols")]
+    InvalidSymbols,
+}
+#[cfg(feature = "uniffi")]
+impl From<ChatServerGroupError> for crate::bindings::uniffi::ConversionError {
+    fn from(error: ChatServerGroupError) -> Self {
+        Self::ContractViolation {
+            name: ChatServerGroup::NAME.to_owned(),
+            reason: error.to_string(),
+        }
+    }
+}
+
+/// A valid CSP server group (i.e., matching matching `[a-zA-Z0-9\-]+`).
+#[derive(Clone, Debug, Eq, Hash, PartialEq, Deserialize, Name)]
+#[serde(try_from = "&str")]
+pub struct ChatServerGroup(String);
+impl ChatServerGroup {
+    /// Extracts a string slice containing the entire Chat Server Group.
+    #[must_use]
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
+}
+impl TryFrom<&str> for ChatServerGroup {
+    type Error = ChatServerGroupError;
+
+    fn try_from(chat_server_group: &str) -> Result<Self, Self::Error> {
+        if chat_server_group.is_empty() {
+            return Err(ChatServerGroupError::InvalidLength);
+        }
+        if !chat_server_group
+            .chars()
+            .all(|symbol| symbol.is_ascii_alphanumeric() || symbol == '-')
+        {
+            return Err(ChatServerGroupError::InvalidSymbols);
+        }
+        Ok(Self(chat_server_group.to_owned()))
     }
 }
 impl FromStr for ChatServerGroup {
-    type Err = ParseIntError;
+    type Err = ChatServerGroupError;
 
-    fn from_str(id: &str) -> Result<Self, Self::Err> {
-        Self::try_from(id)
+    fn from_str(chat_server_group: &str) -> Result<Self, Self::Err> {
+        Self::try_from(chat_server_group)
     }
 }
-impl fmt::Display for ChatServerGroup {
-    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(formatter, "{:02x}", self.0)
+impl From<ChatServerGroup> for String {
+    fn from(chat_server_group: ChatServerGroup) -> Self {
+        chat_server_group.0
     }
 }
-impl fmt::Debug for ChatServerGroup {
-    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        formatter
-            .debug_tuple(Self::NAME)
-            .field(&self.to_string())
-            .finish()
+
+#[cfg(test)]
+mod chat_server_group_tests {
+    use assert_matches::assert_matches;
+    use rstest::rstest;
+
+    use super::{ChatServerGroup, ChatServerGroupError};
+
+    #[rstest]
+    #[case("a")]
+    #[case("0")]
+    #[case("-")]
+    #[case("ds")]
+    #[case("aAzZ09")]
+    #[case("some-group-42")]
+    fn valid(#[case] chat_server_group: &str) {
+        assert!(ChatServerGroup::try_from(chat_server_group).is_ok());
+    }
+
+    #[test]
+    fn invalid_length() {
+        assert_matches!(
+            ChatServerGroup::try_from(""),
+            Err(ChatServerGroupError::InvalidLength)
+        );
+    }
+
+    #[rstest]
+    #[case("group with spaces")]
+    #[case("under_score")]
+    #[case("café")]
+    #[case("dot.dot")]
+    fn invalid_symbols(#[case] chat_server_group: &str) {
+        assert_matches!(
+            ChatServerGroup::try_from(chat_server_group),
+            Err(ChatServerGroupError::InvalidSymbols)
+        );
     }
 }
 
@@ -436,6 +649,13 @@ impl FromStr for DeviceCookie {
 
     fn from_str(device_cookie: &str) -> Result<Self, Self::Err> {
         Self::from_hex(device_cookie)
+    }
+}
+impl TryFrom<&[u8]> for DeviceCookie {
+    type Error = TryFromSliceError;
+
+    fn try_from(device_cookie: &[u8]) -> Result<Self, Self::Error> {
+        Ok(Self(<[u8; Self::LENGTH]>::try_from(device_cookie)?))
     }
 }
 impl fmt::Display for DeviceCookie {
@@ -518,74 +738,24 @@ impl fmt::Debug for CspDeviceId {
     }
 }
 
-/// A unique group identity.
-#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
-pub struct GroupIdentity {
-    /// Group ID as chosen by the group's creator.
-    pub group_id: u64,
-    /// Threema ID of the group's creator.
-    pub creator_identity: ThreemaId,
+/// A blob ID.
+#[derive(Clone, Copy, Eq, PartialEq, Name)]
+pub struct BlobId(pub [u8; Self::LENGTH]);
+impl BlobId {
+    /// Byte length of a blob ID.
+    pub const LENGTH: usize = 16;
 }
-impl TryFrom<&protobuf::common::GroupIdentity> for GroupIdentity {
-    type Error = ThreemaIdError;
-
-    fn try_from(group_identity: &protobuf::common::GroupIdentity) -> Result<Self, Self::Error> {
-        Ok(GroupIdentity {
-            group_id: group_identity.group_id,
-            creator_identity: ThreemaId::try_from(group_identity.creator_identity.as_str())?,
-        })
+impl fmt::Debug for BlobId {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter
+            .debug_tuple(Self::NAME)
+            .field(&self.to_string())
+            .finish()
     }
 }
-impl From<&GroupIdentity> for protobuf::common::GroupIdentity {
-    fn from(group_identity: &GroupIdentity) -> Self {
-        protobuf::common::GroupIdentity {
-            group_id: group_identity.group_id,
-            creator_identity: group_identity.creator_identity.into(),
-        }
-    }
-}
-
-/// A specific conversation (aka _receiver_).
-#[derive(Clone, Copy, Debug, Eq, PartialEq, Hash)]
-pub enum ConversationId {
-    /// A specific 1:1 contact.
-    Contact(ThreemaId),
-    /// A specific distribution list.
-    DistributionList(u64),
-    /// A specific group.
-    Group(GroupIdentity),
-}
-impl TryFrom<&protobuf::d2d::conversation_id::Id> for ConversationId {
-    type Error = ThreemaIdError;
-
-    fn try_from(conversation: &protobuf::d2d::conversation_id::Id) -> Result<Self, Self::Error> {
-        Ok(match conversation {
-            protobuf::d2d::conversation_id::Id::Contact(contact_identity) => {
-                Self::Contact(ThreemaId::try_from(contact_identity.as_str())?)
-            },
-            protobuf::d2d::conversation_id::Id::DistributionList(distribution_list_id) => {
-                Self::DistributionList(*distribution_list_id)
-            },
-            protobuf::d2d::conversation_id::Id::Group(group_identity) => {
-                Self::Group(GroupIdentity::try_from(group_identity)?)
-            },
-        })
-    }
-}
-impl From<&ConversationId> for protobuf::d2d::ConversationId {
-    fn from(conversation: &ConversationId) -> Self {
-        let id = match conversation {
-            ConversationId::Contact(contact_identity) => {
-                protobuf::d2d::conversation_id::Id::Contact(contact_identity.as_str().to_owned())
-            },
-            ConversationId::DistributionList(distribution_list_id) => {
-                protobuf::d2d::conversation_id::Id::DistributionList(*distribution_list_id)
-            },
-            ConversationId::Group(group_identity) => {
-                protobuf::d2d::conversation_id::Id::Group(group_identity.into())
-            },
-        };
-        protobuf::d2d::ConversationId { id: Some(id) }
+impl fmt::Display for BlobId {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter.write_str(&HEXLOWER_PERMISSIVE.encode(&self.0))
     }
 }
 
@@ -595,29 +765,40 @@ impl From<&ConversationId> for protobuf::d2d::ConversationId {
 /// whether the settings allow for it. For example, group calls may be supported
 /// but ignored if disabled in the settings.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "uniffi", derive(UniffiNewType))]
 pub struct FeatureMask(pub u64);
 #[rustfmt::skip]
 impl FeatureMask {
     /// No features available.
     pub const NONE: u64 =                     0b_0000_0000_0000_0000;
+
     /// Supports voice messages.
     pub const VOICE_MESSAGE_SUPPORT: u64 =    0b_0000_0000_0000_0001;
+
     /// Supports groups.
     pub const GROUP_SUPPORT: u64 =            0b_0000_0000_0000_0010;
+
     /// Supports polls.
     pub const POLL_SUPPORT: u64 =             0b_0000_0000_0000_0100;
+
     /// Supports file messages.
     pub const FILE_MESSAGE_SUPPORT: u64 =     0b_0000_0000_0000_1000;
+
     /// Supports 1:1 audio calls.
     pub const O2O_AUDIO_CALL_SUPPORT: u64 =   0b_0000_0000_0001_0000;
+
     /// Supports 1:1 video calls.
     pub const O2O_VIDEO_CALL_SUPPORT: u64 =   0b_0000_0000_0010_0000;
+
     /// Supports forward security.
     pub const FORWARD_SECURITY_SUPPORT: u64 = 0b_0000_0000_0100_0000;
+
     /// Supports group calls.
     pub const GROUP_CALL_SUPPORT: u64 =       0b_0000_0000_1000_0000;
+
     /// Supports editing messages.
     pub const EDIT_MESSAGE_SUPPORT: u64 =     0b_0000_0001_0000_0000;
+
     /// Supports deleting messages.
     pub const DELETE_MESSAGE_SUPPORT: u64 =   0b_0000_0010_0000_0000;
 }
@@ -643,19 +824,31 @@ impl Nonce {
         let bytes: [u8; Self::LENGTH] = bytes.as_slice().try_into()?;
         Ok(Self(bytes))
     }
+
+    /// Hash the Nonce with HMAC-SHA256 using the user's identity as key.
+    #[must_use]
+    pub(crate) fn hash_with(&self, user_identity: ThreemaId) -> HashedNonce {
+        HashedNonce(
+            sha2::HmacSha256::new_from_slice(&user_identity.to_bytes())
+                .expect("HMAC can take Threema Id as key input")
+                .chain_update(self.0)
+                .finalize_fixed()
+                .into(),
+        )
+    }
 }
 impl From<[u8; Self::LENGTH]> for Nonce {
     fn from(nonce: [u8; Self::LENGTH]) -> Self {
         Self(nonce)
     }
 }
-impl<'array, 'nonce: 'array> From<&'nonce Nonce> for &'array GenericArray<u8, U24> {
+impl<'array, 'nonce: 'array> From<&'nonce Nonce> for &'array generic_array::GenericArray<u8, consts::U24> {
     fn from(nonce: &'nonce Nonce) -> Self {
         Self::from(&nonce.0)
     }
 }
-impl From<GenericArray<u8, U24>> for Nonce {
-    fn from(nonce: GenericArray<u8, U24>) -> Self {
+impl From<generic_array::GenericArray<u8, consts::U24>> for Nonce {
+    fn from(nonce: generic_array::GenericArray<u8, consts::U24>) -> Self {
         Self(nonce.into())
     }
 }
@@ -663,7 +856,7 @@ impl TryFrom<&[u8]> for Nonce {
     type Error = TryFromSliceError;
 
     fn try_from(nonce: &[u8]) -> Result<Self, Self::Error> {
-        Ok(Nonce::from(<[u8; Self::LENGTH]>::try_from(nonce)?))
+        Ok(Self::from(<[u8; Self::LENGTH]>::try_from(nonce)?))
     }
 }
 impl fmt::Display for Nonce {
@@ -680,10 +873,31 @@ impl fmt::Debug for Nonce {
     }
 }
 
+/// A nonce hashed with HMAC-SHA256 using the identity as key.
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Name)]
+pub struct HashedNonce(pub [u8; Self::LENGTH]);
+impl HashedNonce {
+    /// Byte length of a hashed nonce.
+    pub const LENGTH: usize = 32;
+}
+impl From<[u8; Self::LENGTH]> for HashedNonce {
+    fn from(hashed_nonce: [u8; Self::LENGTH]) -> Self {
+        Self(hashed_nonce)
+    }
+}
+impl TryFrom<&[u8]> for HashedNonce {
+    type Error = TryFromSliceError;
+
+    fn try_from(nonce: &[u8]) -> Result<Self, Self::Error> {
+        Ok(Self::from(<[u8; Self::LENGTH]>::try_from(nonce)?))
+    }
+}
+
 /// A message ID.
 ///
 /// May or may not be unique, depending on the context it is used for.
-#[derive(Clone, Copy, Eq, Hash, PartialEq, Name)]
+#[derive(Clone, Copy, Eq, Hash, PartialEq, PartialOrd, Ord, Name)]
+#[cfg_attr(feature = "uniffi", derive(UniffiNewType))]
 pub struct MessageId(pub u64);
 impl MessageId {
     /// Byte length of a message ID.
@@ -789,15 +1003,19 @@ impl fmt::Debug for MessageFlags {
 pub struct MessageMetadata {
     /// Unique message ID. Must match the message ID of the outer struct.
     pub message_id: MessageId,
+
     /// Unix-ish timestamp in milliseconds for when the message has been created.
     pub created_at: u64,
+
     /// Nickname of the sender at the time the message had been created.
-    pub nickname: Delta<String>,
+    ///
+    /// Note: If not present, this indicates that the nickname **did not change**.
+    pub nickname: Option<String>,
 }
 impl MessageMetadata {
     /// Create for a new outgoing message.
     #[must_use]
-    pub fn new_outgoing(nickname: Delta<String>, message_id: MessageId) -> Self {
+    pub fn new_outgoing(message_id: MessageId, nickname: Option<String>) -> Self {
         Self {
             message_id,
             created_at: utc_now_ms(),
@@ -807,10 +1025,10 @@ impl MessageMetadata {
 }
 impl From<protobuf::csp_e2e::MessageMetadata> for MessageMetadata {
     fn from(metadata: protobuf::csp_e2e::MessageMetadata) -> Self {
-        MessageMetadata {
+        Self {
             message_id: MessageId(metadata.message_id),
             created_at: metadata.created_at,
-            nickname: Delta::from_non_empty(metadata.nickname.map(|nickname| nickname.trim().to_owned())),
+            nickname: metadata.nickname.map(|nickname| nickname.trim().to_owned()),
         }
     }
 }
@@ -821,128 +1039,8 @@ impl From<MessageMetadata> for Vec<u8> {
             padding: vec![],
             message_id: metadata.message_id.0,
             created_at: metadata.created_at,
-            nickname: metadata.nickname.into_non_empty(),
+            nickname: metadata.nickname,
         };
         metadata.encode_to_vec_padded()
-    }
-}
-
-/// A blob ID.
-#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
-pub struct BlobId(pub [u8; Self::LENGTH]);
-impl BlobId {
-    /// Byte length of a blob ID.
-    pub const LENGTH: usize = 16;
-}
-
-/// A delta update, where some value can be unchanged, updated or removed.
-#[derive(Debug, Clone, PartialEq)]
-pub enum Delta<T> {
-    /// Value remains unchanged.
-    Unchanged,
-    /// Value updated to inner `T`.
-    Update(T),
-    /// Value removed.
-    Remove,
-}
-impl<T> Delta<T> {
-    /// Maps a `Delta<T>` to `Delta<U>` by applying a function to a contained value (if `Update`) or returns
-    /// `Unchanged` or `Remove` respectively.
-    pub(crate) fn map<U, F: FnOnce(T) -> U>(self, transform_fn: F) -> Delta<U> {
-        match self {
-            Delta::Unchanged => Delta::Unchanged,
-            Delta::Update(value) => Delta::Update(transform_fn(value)),
-            Delta::Remove => Delta::Remove,
-        }
-    }
-
-    /// Converts from [`&Delta<T>`](`Delta<T>`) to [`Delta<&T>`].
-    #[inline]
-    pub(crate) const fn as_ref(&self) -> Delta<&T> {
-        match &self {
-            Self::Unchanged => Delta::Unchanged,
-            Self::Update(value) => Delta::Update(value),
-            Self::Remove => Delta::Remove,
-        }
-    }
-
-    /// Converts from [`Delta<T>`] (or [`&Delta<T>`](`Delta<T>`)) to `Delta<&T::Target>`.
-    #[expect(dead_code, reason = "May use later")]
-    #[inline]
-    pub(crate) fn as_deref(&self) -> Delta<&T::Target>
-    where
-        T: Deref,
-    {
-        self.as_ref().map(Deref::deref)
-    }
-}
-impl<T> Apply<Delta<T>> for Option<T> {
-    /// Apply the delta update to self.
-    ///
-    /// - [`Delta::Unchanged`] does nothing,
-    /// - [`Delta::Update`] replaces any value in self with `Some(T)`,
-    /// - [`Delta::Remove`] replaces any value in self with `None`.
-    #[inline]
-    fn apply(&mut self, value: Delta<T>) {
-        match value {
-            Delta::Unchanged => {},
-            Delta::Update(value) => {
-                let _ = self.insert(value);
-            },
-            Delta::Remove => {
-                let _ = self.take();
-            },
-        }
-    }
-}
-impl<T: Eq> Delta<T> {
-    /// Re-evaluate the delta update against a `current` value, ensuring that it reflects actual
-    /// changes and otherwise reports [`Delta::Unchanged`] if there is no change.
-    pub(crate) fn changes(self, current: Option<&T>) -> Delta<T> {
-        match (self, current) {
-            (Self::Update(update), None) => Delta::Update(update),
-            (Self::Update(update), Some(current)) => {
-                if current == &update {
-                    Delta::Unchanged
-                } else {
-                    Delta::Update(update)
-                }
-            },
-            (Self::Remove, None) | (Self::Unchanged, _) => Delta::Unchanged,
-            (Self::Remove, Some(_)) => Delta::Remove,
-        }
-    }
-}
-impl<T: Default + Eq> Delta<T> {
-    /// Creates a [`Delta<T>`] from a source where the `T::Default` is semantically equivalent to
-    /// [`Delta::Remove`].
-    pub(crate) fn from_non_empty(update: Option<T>) -> Self {
-        match update {
-            Some(update) => {
-                if update == T::default() {
-                    Self::Remove
-                } else {
-                    Self::Update(update)
-                }
-            },
-            None => Self::Unchanged,
-        }
-    }
-
-    /// Creates a [`Option<T>`] from the delta update where [`Delta::Remove`] is converted into `T::Default`.
-    ///
-    /// WARNING: A [`Delta::Update`] should never contain a `T::Default`, since the resulting [`Option<T>`] is
-    /// recognized as a [`Delta::Remove`] when converted back via [`Delta<T>::from_non_empty`].
-    pub(crate) fn into_non_empty(self) -> Option<T> {
-        match self {
-            Self::Unchanged => None,
-            Self::Update(value) => {
-                if value == T::default() {
-                    warn!("Delta::Update contained T::Default");
-                }
-                Some(value)
-            },
-            Self::Remove => Some(T::default()),
-        }
     }
 }

@@ -1128,7 +1128,7 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
     /// Sync tasks are guaranteed to be enqueued when this function returns, except of a potential set photo message
     ///
     /// - Parameter group: Group conversation to sync
-    @objc public func periodicSyncIfNeeded(for group: Group) {
+    public func periodicSyncIfNeeded(for group: Group) {
         // Check if we are the creator
         guard group.isOwnGroup else {
             return
@@ -1307,7 +1307,7 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
     ///   - groupID: ID 8 Bytes
     ///   - creator: Creator of group
     /// - Returns: Members of the group
-    @objc func getGroupMembersForClone(_ groupID: Data, creator: String) -> Set<ContactEntity>? {
+    func getGroupMembersForClone(_ groupID: Data, creator: String) -> Set<ContactEntity>? {
         guard let conversation =
             getConversation(for: GroupIdentity(id: groupID, creator: ThreemaIdentity(creator))) else {
             DDLogError("Group conversation not found")
@@ -1536,7 +1536,7 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
     }
     
     /// Caution: Use this only for testing!
-    @objc public func deleteAllSyncRequestRecords() {
+    public func deleteAllSyncRequestRecords() {
         if let entities = entityManager.entityFetcher.lastGroupSyncRequestEntities() {
             for entity in entities {
                 entityManager.entityDestroyer.delete(lastGroupSyncRequestEntity: entity)

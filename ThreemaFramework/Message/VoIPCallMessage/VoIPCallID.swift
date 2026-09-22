@@ -1,8 +1,12 @@
 import CocoaLumberjackSwift
 import Foundation
 
-@objc public final class VoIPCallID: NSObject {
+public final class VoIPCallID: NSObject, Sendable {
     public let callID: UInt32
+    
+    override public var description: String {
+        "\(callID)"
+    }
     
     public init(callID: UInt32) {
         self.callID = callID

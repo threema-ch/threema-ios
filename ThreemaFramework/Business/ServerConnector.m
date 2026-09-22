@@ -75,7 +75,6 @@ static const int MAX_BYTES_TO_DECRYPT_NOTIFICATION_EXTENSION = 500000;
     BOOL mediatorServerInInitialQueueSend;
     BOOL doUnblockIncomingMessages;
     BOOL isWaitingForReconnect;
-    BOOL isRolePromotedToLeader;
 
     dispatch_queue_t queueConnectionStateDelegate;
     NSMutableSet *clientConnectionStateDelegates;
@@ -96,6 +95,7 @@ static const int MAX_BYTES_TO_DECRYPT_NOTIFICATION_EXTENSION = 500000;
 @synthesize deviceID;
 @synthesize maximumNumberOfDeviceSlots;
 @synthesize isAppInBackground;
+@synthesize isRolePromotedToLeader;
 
 #pragma pack(push, 1)
 #pragma pack(1)
@@ -351,7 +351,6 @@ struct pktExtension {
                     break;
                 case AccessStateUsing:
                     DDLogNotice(@"[Darwin] Resource is using, connecting to server");
-                    [AppGroup setMeActive];
 
                     [self _connectWithConnectionInitiator:initiator];
                     if (onCompletion) {
@@ -437,7 +436,6 @@ struct pktExtension {
                     break;
                 case AccessStateUsing:
                     DDLogNotice(@"[Darwin] Resource is using, connecting to server");
-                    [AppGroup setMeActive];
 
                     [self _connectWaitWithConnectionInitiator:initiator];
                     break;
@@ -538,32 +536,37 @@ struct pktExtension {
     }
 
     if (self.connectionState == ConnectionStateDisconnecting) {
-        DDLogNotice(@"Connect: State was disconnecting.");
-        // Set to the connection state `disconnected`, only if MD is activated.
-        // Because 'Starscream' (WebSocket Library) does not allways fire the `cancelled`
-        // event on disconnect and than the connection state wrongly remains on `disconnecting`.
-        if ([[UserSettings sharedUserSettings] enableMultiDevice] && reconnectAttempts >= 3) {
-            [serverConnectorConnectionState disconnected];
+        // The socket does not always report its disconnect and the state then remains on `disconnecting` forever.
+        // Assume the callback is lost when the state is expired and connect anyway.
+        if ([serverConnectorConnectionState isStateExpired]) {
+            DDLogWarn(@"Connect: No disconnect reported, assume the socket is disconnected");
         }
+        else {
+            DDLogNotice(@"Connect: State was disconnecting.");
 
-        if ([AppGroup getCurrentType] != AppGroupTypeNotificationExtension) {
-            // The socketDidDisconnect callback has not been called yet; ensure that we reconnect
-            // as soon as the previous disconnect has finished.
-            autoReconnect = YES;
-            [self reconnectAfterDelay];
-            return;
+            if ([AppGroup getCurrentType] != AppGroupTypeNotificationExtension) {
+                // The socketDidDisconnect callback has not been called yet; ensure that we reconnect
+                // as soon as the previous disconnect has finished.
+                autoReconnect = YES;
+                [self reconnectAfterDelay];
+                return;
+            }
         }
     } else if (self.connectionState != ConnectionStateDisconnected) {
-        if (self.connectionState == ConnectionStateConnecting
-            || self.connectionState == ConnectionStateConnected
-            || self.connectionState == ConnectionStateLoggedIn)
-        {
+        if (![serverConnectorConnectionState isStateExpired]) {
             DDLogNotice(@"Abort connect, because connection state is %@", [self nameForConnectionState:self.connectionState]);
             return;
         }
 
-        DDLogNotice(@"Cannot connect, because connection state is %@", [self nameForConnectionState:self.connectionState]);
+        DDLogWarn(@"Connection state is %@ for too long, force disconnect", [self nameForConnectionState:self.connectionState]);
+
+        // The state `disconnected` is set after the successful disconnect, otherwise another process will connect
+        // too early and it could end in a duplicate connection.
+        [serverConnectorConnectionState disconnecting];
+        [socket disconnect];
+
         if ([AppGroup getCurrentType] != AppGroupTypeNotificationExtension) {
+            // Reconnect as soon as the disconnect has finished
             autoReconnect = YES;
             [self reconnectAfterDelay];
             return;
@@ -812,10 +815,9 @@ struct pktExtension {
 
 - (void)disconnect:(ConnectionInitiator)initiator force:(BOOL)force {
     dispatch_async(socketQueue, ^{
-        if ([self isOthersConnectedDisconnectBy:initiator] == NO || force == YES) {
+        if ([self isConnectionStillRequestedAfterDisconnectBy:initiator] == NO || force == YES) {
             [self _disconnect];
         }
-        [self disconnectedBy:initiator];
     });
 }
 
@@ -823,11 +825,10 @@ struct pktExtension {
     __block BOOL isDisconnected = NO;
 
     dispatch_sync(socketQueue, ^{
-        if ([self isOthersConnectedDisconnectBy:initiator] == NO) {
+        if ([self isConnectionStillRequestedAfterDisconnectBy:initiator] == NO) {
             [self _disconnect];
             isDisconnected = YES;
         }
-        [self disconnectedBy:initiator];
     });
 
     if (isDisconnected) {
@@ -858,40 +859,36 @@ struct pktExtension {
 #pragma mark - Chat (Mediator) Server connection initiator handling
 
 - (void)connectBy:(ConnectionInitiator)initiator {
-    DDLogNotice(@"Connect initiated by (%@)", [self nameForConnectionInitiator:initiator]);
     if (![connectionInitiators containsObject:[NSNumber numberWithInteger:initiator]]) {
-        DDLogNotice(@"Add initiator to connectInitiators.");
         [connectionInitiators addObject:[NSNumber numberWithInteger:initiator]];
     }
+
+    DDLogNotice(@"[ConnectionInitiator] Connect requested by %@, connection is requested by: %@", [self nameForConnectionInitiator:initiator], [self namesForConnectionInitiators]);
 }
 
--(void)disconnectedBy:(ConnectionInitiator)initiator {
-    DDLogNotice(@"Disconnected initiated by (%@)", [self nameForConnectionInitiator:initiator]);
-    if (![connectionInitiators containsObject:[NSNumber numberWithInteger:initiator]]) {
-        DDLogNotice(@"Remove initiator from connectInitiators.");
-        [connectionInitiators removeObject:[NSNumber numberWithInteger:initiator]];
-    }
-}
-
-- (BOOL)isOthersConnectedDisconnectBy:(ConnectionInitiator)initiator {
-    DDLogNotice(@"Disconnect initiated by (%@)", [self nameForConnectionInitiator:initiator]);
+- (BOOL)isConnectionStillRequestedAfterDisconnectBy:(ConnectionInitiator)initiator {
     [connectionInitiators removeObject:[NSNumber numberWithInteger:initiator]];
-    if ([connectionInitiators count] != 0) {
-        NSMutableString *initiators = [NSMutableString new];
 
-        for (int i = 0; i < [connectionInitiators count]; i++) {
-            ConnectionInitiator initiatorItem = (ConnectionInitiator)[(NSNumber *)[connectionInitiators objectAtIndex:i] intValue];
-            if ([initiators length] > 0) {
-                [initiators appendString:@", "];
-            }
-            [initiators appendString:[self nameForConnectionInitiator:initiatorItem]];
-        }
-        DDLogNotice(@"Do not disconnect because maybe others are still connected (%@)", initiators);
+    if ([connectionInitiators count] != 0) {
+        DDLogNotice(@"[ConnectionInitiator] Disconnect requested by %@, but connection is still requested by: %@", [self nameForConnectionInitiator:initiator], [self namesForConnectionInitiators]);
         return YES;
     }
-    else {
-        return NO;
+
+    DDLogNotice(@"[ConnectionInitiator] Disconnect requested by %@, connection is requested by nobody anymore, disconnect now", [self nameForConnectionInitiator:initiator]);
+    return NO;
+}
+
+- (NSString *)namesForConnectionInitiators {
+    NSMutableString *names = [NSMutableString new];
+
+    for (NSNumber *item in connectionInitiators) {
+        if ([names length] > 0) {
+            [names appendString:@", "];
+        }
+        [names appendString:[self nameForConnectionInitiator:(ConnectionInitiator)[item intValue]]];
     }
+
+    return names;
 }
 
 - (NSString *)nameForConnectionInitiator:(ConnectionInitiator)initiator {
@@ -1818,8 +1815,13 @@ struct pktExtension {
 #pragma mark - ConnectionStateDelegate
 
 - (void)connectionStateChanged:(ConnectionState)state {
-    if (UserSettings.sharedUserSettings.ipcCommunicationEnabled && state == ConnectionStateDisconnected) {
-        [AppGroup setMeInactive];
+    if (UserSettings.sharedUserSettings.ipcCommunicationEnabled) {
+        if (state == ConnectionStateDisconnected) {
+            [AppGroup setMeInactive];
+        }
+        else if (![AppGroup amIActive]) {
+                [AppGroup setMeActive];
+        }
     }
 
     dispatch_sync(queueConnectionStateDelegate, ^{
@@ -1924,7 +1926,7 @@ struct pktExtension {
     });
 }
 
-- (void)processVoIPCall:(NSObject *)message identity:(NSString *)identity onCompletion:(void (^_Nonnull)(id<MessageProcessorDelegate> _Nonnull))onCompletion onError:(void(^ _Nonnull)(NSError * _Nonnull, id<MessageProcessorDelegate> _Nonnull))onError {
+- (void)processVoIPCall:(NSObject * _Nonnull)message identity:(NSString * _Nonnull)identity onCompletion:(void (^_Nonnull)(id<MessageProcessorDelegate> _Nonnull))onCompletion onError:(void(^ _Nonnull)(NSError * _Nonnull, id<MessageProcessorDelegate> _Nonnull))onError {
     dispatch_sync(queueMessageProcessorDelegate, ^{
         [clientMessageProcessorDelegate processVoIPCall:message identity:identity onCompletion:onCompletion onError:onError];
     });

@@ -3,12 +3,10 @@ import Foundation
 import PromiseKit
 import ThreemaEssentials
 
-public protocol UnreadMessagesProtocol: UnreadMessagesProtocolObjc {
+public protocol UnreadMessagesProtocol {
     func read(for conversation: ConversationEntity, isAppInBackground: Bool) -> Int
     func read(for messages: [BaseMessageEntity], in conversation: ConversationEntity, isAppInBackground: Bool) -> Int
-}
-
-@objc public protocol UnreadMessagesProtocolObjc {
+    
     @discardableResult
     func count(for conversation: ConversationEntity, withPerformBlockAndWait: Bool) -> Int
     @discardableResult
@@ -17,7 +15,7 @@ public protocol UnreadMessagesProtocol: UnreadMessagesProtocolObjc {
     func totalCount(doCalcUnreadMessagesCountOf: Set<ConversationEntity>, withPerformBlockAndWait: Bool) -> Int
 }
 
-extension UnreadMessagesProtocolObjc {
+extension UnreadMessagesProtocol {
     @discardableResult
     public func count(for conversation: ConversationEntity, withPerformBlockAndWait: Bool = true) -> Int {
         count(for: conversation, withPerformBlockAndWait: withPerformBlockAndWait)
@@ -35,7 +33,7 @@ extension UnreadMessagesProtocolObjc {
     }
 }
 
-@objc public final class UnreadMessages: NSObject, UnreadMessagesProtocol {
+public final class UnreadMessages: UnreadMessagesProtocol {
     private let messageSender: MessageSenderProtocol
     private let entityManager: EntityManager
     

@@ -524,11 +524,11 @@ extension SingleDetailsDataSource {
                 ) { [weak self, weak viewController] unsupportedContacts in
                     if let strongSelf = self, unsupportedContacts.isEmpty == true {
                         // Happy path: Start call
-                        VoIPCallStateManager.shared.startCall(callee: strongSelf.contact.identity)
+                        CallProvider.shared.startOutgoingCall(with: strongSelf.contact.identity)
                     }
                     else if let viewController {
                         // Calls not supported for this contact
-                        UIAlertTemplate.showAlert(
+                        UIAlertTemplate.showOKAlert(
                             owner: viewController,
                             title: String.localizedStringWithFormat(
                                 #localize("call_voip_not_supported_title"),
@@ -556,7 +556,7 @@ extension SingleDetailsDataSource {
     private func scanIdentityQuickAction(in viewController: UIViewController) -> [QuickAction] {
         // If not fully verified and camera is available: show scan quick action
         guard
-            deviceCapabilitiesManager.supportsRecordingVideo,
+            deviceCapabilitiesManager.hasVideoCaptureDevice,
             contact.contactVerificationLevel != .fullyVerified
         else {
             return []
@@ -573,7 +573,7 @@ extension SingleDetailsDataSource {
 
             let model = QRCodeScannerViewModel(
                 mode: .identity,
-                audioSessionManager: AudioSessionManager(),
+                audioSessionManager: BusinessInjector.ui.audioSessionManager,
                 systemFeedbackManager: SystemFeedbackManager(
                     deviceCapabilitiesManager: DeviceCapabilitiesManager(),
                     settingsStore: BusinessInjector.ui.settingsStore

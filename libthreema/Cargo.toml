@@ -1,7 +1,12 @@
 [workspace]
 resolver = "2"
-members = ["lib", "macros", "tools/uniffi-bindgen"]
-default-members = ["lib", "macros"]
+members = ["dependencies", "lib", "macros", "tools/uniffi-bindgen"]
+default-members = ["dependencies", "lib", "macros"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+license = "AGPL-3.0-only"
 
 # Commented lints are in a newer Clippy version or tied to unstable and we want
 # to try them ASAP.
@@ -97,6 +102,9 @@ verbose_file_reads = { level = "warn", priority = 1 }
 # Cargo
 cargo = "warn"
 cargo_common_metadata = { level = "allow", priority = 1 }
+
+# Nursery
+use_self = { level = "warn", priority = 1 }
 
 [workspace.lints.rust]
 deprecated_safe = "warn"

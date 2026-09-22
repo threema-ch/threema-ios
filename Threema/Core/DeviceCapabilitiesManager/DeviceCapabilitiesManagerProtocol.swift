@@ -8,4 +8,6 @@ protocol DeviceCapabilitiesManagerProtocol: Sendable {
     var supportsCaptureImage: Bool { get }
 
     var supportsRecordingVideo: Bool { get }
+
+    var hasVideoCaptureDevice: Bool { get }
 }

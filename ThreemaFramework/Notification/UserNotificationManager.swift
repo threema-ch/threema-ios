@@ -171,7 +171,7 @@ public final class UserNotificationManager: UserNotificationManagerProtocol {
             .pushGroupSound : userSettings.pushSound
         
         if from.isGroupCallStartMessage() {
-            pushSound = "threema_best"
+            pushSound = "threema_gc"
         }
         
         to.title = from.title ?? ""
@@ -429,9 +429,11 @@ public final class UserNotificationManager: UserNotificationManagerProtocol {
                 if abstractMessage is GroupCallStartMessage {
                     switch settingsStore.notificationType {
                     case .restrictive, .balanced:
+                        let date = DateFormatter.shortStyleTimeNoDate(abstractMessage.date)
                         return String.localizedStringWithFormat(
                             #localize("group_call_notification_body_preview"),
-                            fromName
+                            fromName,
+                            date
                         )
                     case .complete:
                         return abstractMessage.pushNotificationBody()

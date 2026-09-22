@@ -12,81 +12,10 @@ final class GroupCallContextTests: XCTestCase {
     fileprivate lazy var sfuBaseURL = URL(string: "sfu.threema.test")!
 
     @GlobalGroupCallActor
-    func testBasicInit() throws {
-        let certificate = RTCCertificate(privateKey: "helloWorld", certificate: "helloWorld", fingerprint: "helloWorld")
-        let sessionParameters = SessionParameters(
-            participantID: ParticipantID(id: 0),
-            iceParameters: IceParameters(usernameFragment: "", password: ""),
-            dtlsParameters: DtlsParameters(fingerprint: []),
-            rtpHeaderExtensionIDs: RTPHeaderExtensionIDs()
-        )
-        
-        let dependencies = MockDependencies().create()
-        
-        let mockPeerConnection = MockRTCPeerConnection()
-        
-        let mockDataChannelCtx = MockDataChannelContext()
-                
-        let mockPeerConnectionCtx = MockPeerConnectionContext(
-            peerConnection: mockPeerConnection,
-            dataChannelContext: mockDataChannelCtx
-        )
-        let mockCryptoAdapter = MockGroupCallFrameCryptoAdapter()
-        
-        let localParticipant = try LocalParticipant(
-            participantID: ParticipantID(id: 0),
-            localContactModel: localContactModel,
-            dependencies: dependencies
-        )
-        
-        let gck = Data(repeating: 0x01, count: 32)
-        let groupIdentity = GroupIdentity(id: Data(repeating: 0x00, count: 8), creator: ThreemaIdentity("ECHOECHO"))
-
-        let groupCallDescription = try! GroupCallBaseState(
-            group: GroupCallThreemaGroupModel(
-                groupIdentity: groupIdentity,
-                groupName: "ECHOECHO"
-            ),
-            startedAt: Date(),
-            dependencies: dependencies,
-            groupCallStartData: GroupCallStartData(protocolVersion: 0, gck: gck, sfuBaseURL: sfuBaseURL)
-        )
-        
-        mockPeerConnectionCtx.transceivers = [MockRTCRtpTransceiver]()
-        let newMockTransceiver1 = MockRTCRtpTransceiver(mid: "!", mediaType: .audio, direction: .sendOnly)
-        let newMockTransceiver2 = MockRTCRtpTransceiver(mid: "#", mediaType: .video, direction: .sendOnly)
-        //        let newMockTransceiver3 = MockRTCRtpTransceiver(mid: "$", mediaType: .data, direction: .recvOnly)
-        
-        mockPeerConnectionCtx.transceivers.append(newMockTransceiver1)
-        mockPeerConnectionCtx.transceivers.append(newMockTransceiver2)
-        //        mockPeerConnectionCtx.transceivers.append(newMockTransceiver3)
-        
-        let connectionCtx = ConnectionContext<MockPeerConnectionContext, MockRTCRtpTransceiver>(
-            certificate: certificate,
-            cryptoContext: mockCryptoAdapter,
-            sessionParameters: sessionParameters,
-            dependencies: dependencies,
-            peerConnectionContext: mockPeerConnectionCtx
-        )
-        
-        _ = try GroupCallContext<MockPeerConnectionContext, MockRTCRtpTransceiver>(
-            connectionContext: connectionCtx,
-            localParticipant: localParticipant,
-            dependencies: dependencies,
-            groupCallDescription: groupCallDescription
-        )
-    }
-    
-    @GlobalGroupCallActor
     func testSendCallStateUpdateToSFU() async throws {
-        let certificate = RTCCertificate(privateKey: "helloWorld", certificate: "helloWorld", fingerprint: "helloWorld")
-        let sessionParameters = SessionParameters(
-            participantID: ParticipantID(id: 0),
-            iceParameters: IceParameters(usernameFragment: "", password: ""),
-            dtlsParameters: DtlsParameters(fingerprint: []),
-            rtpHeaderExtensionIDs: RTPHeaderExtensionIDs()
-        )
-        
+        let certificate = TestDataProvider.certificate()
+        let sessionParameters = TestDataProvider.sessionParameters()
+
         let dependencies = MockDependencies().create()
         
         let mockPeerConnection = MockRTCPeerConnection()
@@ -108,18 +37,13 @@ final class GroupCallContextTests: XCTestCase {
         )
         
         let groupIdentity = GroupIdentity(id: Data(repeating: 0x00, count: 8), creator: ThreemaIdentity("ECHOECHO"))
-        let groupCallDescription = try! GroupCallBaseState(
+        let groupCallDescription = try TestDataProvider.groupCallBaseState(
             group: GroupCallThreemaGroupModel(
                 groupIdentity: groupIdentity,
                 groupName: "ECHOECHO"
             ),
-            startedAt: Date(),
             dependencies: dependencies,
-            groupCallStartData: GroupCallStartData(
-                protocolVersion: 0,
-                gck: Data(repeating: 0x01, count: 32),
-                sfuBaseURL: sfuBaseURL
-            )
+            sfuBaseURL: sfuBaseURL
         )
         
         let mockCryptoAdapter = MockGroupCallFrameCryptoAdapter()
@@ -158,8 +82,29 @@ final class GroupCallContextTests: XCTestCase {
         while mockDataChannelCtx.getNumberOfSentMessages() != 1 {
             await Task.yield()
         }
-        
+
         XCTAssertEqual(mockDataChannelCtx.getNumberOfSentMessages(), 1)
+
+        /// **Protocol Step: CallState (Creating 2.)** `state_created_at` is a UNIX-ish timestamp in milliseconds
+        let sentData = try XCTUnwrap(mockDataChannelCtx.getSentData().first)
+        let sentEnvelope = try GroupCall_ParticipantToSfu.Envelope(serializedBytes: sentData)
+
+        let encryptedCallState = sentEnvelope.updateCallState.encryptedCallState
+
+        // The crypto mock ignores the requested length and always returns 32 bytes, thus we ask it for the nonce
+        // length it actually produced instead of assuming `symmetricNonceLength`
+        let nonceLength = dependencies.groupCallCrypto.randomBytes(of: 24).count
+        XCTAssertGreaterThan(encryptedCallState.count, nonceLength)
+
+        let nonce = encryptedCallState[0..<nonceLength]
+        let cipherText = encryptedCallState.advanced(by: nonceLength)
+
+        let decrypted = try XCTUnwrap(groupCallDescription.symmetricDecryptByGSCK(cipherText, nonce: nonce))
+        let callState = try GroupCall_CallState(serializedBytes: decrypted)
+
+        let nowInMilliseconds = Date().timeIntervalSince1970 * 1000
+        XCTAssertEqual(Double(callState.stateCreatedAt), nowInMilliseconds, accuracy: 5000)
+        XCTAssertEqual(callState.stateCreatedBy, localParticipant.participantID.id)
     }
     
     //    @ActualGlobalActor
@@ -167,18 +112,9 @@ final class GroupCallContextTests: XCTestCase {
         func testHandoverMessageToCorrectParticipant() async throws {
             let expectation = XCTestExpectation(description: "Outer Expectation")
             Task.detached {
-                let certificate = RTCCertificate(
-                    privateKey: "helloWorld",
-                    certificate: "helloWorld",
-                    fingerprint: "helloWorld"
-                )
-                let sessionParameters = SessionParameters(
-                    participantID: ParticipantID(id: 0),
-                    iceParameters: IceParameters(usernameFragment: "", password: ""),
-                    dtlsParameters: DtlsParameters(fingerprint: []),
-                    rtpHeaderExtensionIDs: RTPHeaderExtensionIDs()
-                )
-            
+                let certificate = TestDataProvider.certificate()
+                let sessionParameters = TestDataProvider.sessionParameters()
+
                 let dependencies = MockDependencies().create()
             
                 let mockPeerConnection = MockRTCPeerConnection()
@@ -203,18 +139,13 @@ final class GroupCallContextTests: XCTestCase {
                     id: Data(repeating: 0x00, count: 8),
                     creator: ThreemaIdentity("ECHOECHO")
                 )
-                let groupCallDescription = try! GroupCallBaseState(
+                let groupCallDescription = try TestDataProvider.groupCallBaseState(
                     group: GroupCallThreemaGroupModel(
                         groupIdentity: groupIdentity,
                         groupName: "ECHOECHO"
                     ),
-                    startedAt: Date(),
                     dependencies: dependencies,
-                    groupCallStartData: GroupCallStartData(
-                        protocolVersion: 0,
-                        gck: Data(repeating: 0x01, count: 32),
-                        sfuBaseURL: self.sfuBaseURL
-                    )
+                    sfuBaseURL: self.sfuBaseURL
                 )
                 
                 let mockCryptoAdapter = MockGroupCallFrameCryptoAdapter()

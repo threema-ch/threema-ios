@@ -1,10 +1,9 @@
 //! Byte writer.
-use core::ptr;
-
 use duplicate::duplicate_item;
 
 /// An error occurred while writing bytes.
 #[derive(Clone, Debug, thiserror::Error)]
+#[cfg_attr(test, derive(PartialEq))]
 pub enum ByteWriterError {
     /// Provided relative offset would move the writer offset out of bounds.
     #[error(
@@ -329,7 +328,7 @@ impl ByteWriterContainer<Vec<u8>> {
 )]
 impl ByteWriter for ByteWriterContainer<buffer_type> {
     type RunAtWriter<'run_at> = ByteWriterContainer<run_at_writer_type>;
-    type RunWriter<'run> = ByteWriterContainer<run_writer_type>;
+    type RunWriter<'run> = Self;
 
     #[inline]
     fn offset(&self) -> usize {
@@ -444,51 +443,6 @@ pub(crate) type OwnedVecByteWriter = ByteWriterContainer<Vec<u8>>;
 /// Wraps a [`&mut Vec<u8>`] and is otherwise identical to the [`OwnedVecByteWriter`].
 #[expect(dead_code, reason = "Will use later")]
 pub(crate) type BorrowedVecByteWriter<'buffer> = ByteWriterContainer<&'buffer mut Vec<u8>>;
-
-// TODO(LIB-31): Should be unnecessary
-pub(crate) trait InsertSlice {
-    fn insert_at(&mut self, offset: usize, bytes: &[u8]);
-}
-impl InsertSlice for Vec<u8> {
-    /// Inserts a [`u8`] slice at a specific offset.
-    ///
-    /// This is an *O*(*n*) operation and usually less efficient than concatenating items to a
-    /// [`Vec<u8>`].
-    ///
-    /// Note: This is stolen from [`String::insert_str`].
-    ///
-    /// # Panics
-    ///
-    /// Panics if `offset` is larger than the `Vec<u8>`'s length.
-    #[inline]
-    fn insert_at(&mut self, offset: usize, bytes: &[u8]) {
-        let current_length = self.len();
-        let additional_length = bytes.len();
-
-        // Make room for the additional bytes
-        self.reserve(additional_length);
-
-        #[expect(
-            clippy::arithmetic_side_effects,
-            clippy::multiple_unsafe_ops_per_block,
-            reason = "TODO(LIB-16)"
-        )]
-        // # Safety: The underlying vector MUST contain bytes.
-        unsafe {
-            // Move the existing bytes at the specific offset by the amount of bytes to add
-            ptr::copy(
-                self.as_ptr().add(offset),
-                self.as_mut_ptr().add(offset + additional_length),
-                current_length - offset,
-            );
-
-            // Copy the bytes to the correct offset
-            ptr::copy_nonoverlapping(bytes.as_ptr(), self.as_mut_ptr().add(offset), additional_length);
-
-            self.set_len(current_length + additional_length);
-        }
-    }
-}
 
 #[cfg(test)]
 mod tests {

@@ -4,7 +4,7 @@ import PromiseKit
 import ThreemaEssentials
 import ThreemaProtocols
 
-class MessageStore: MessageStoreProtocol {
+final class MessageStore: MessageStoreProtocol {
 
     private let frameworkInjector: FrameworkInjectorProtocol
     private let messageProcessorDelegate: MessageProcessorDelegate
@@ -1312,6 +1312,10 @@ class MessageStore: MessageStoreProtocol {
                         reflectedAt
                     }
                 
+                // We also need to set the date on the abstract message, otherwise the notification content is not
+                // correct here. This is because the content is derived from an abstract message, not a base message.
+                groupCallStartMessage.date = receiveDate
+                
                 await GlobalGroupCallManagerSingleton.shared.handleMessage(
                     rawMessage: decodedCallStartMessage,
                     from: fromIdentity,
@@ -1506,7 +1510,7 @@ class MessageStore: MessageStoreProtocol {
         var conversationIdentity: String?
         var result = frameworkInjector.entityManager.existingConversationSenderReceiver(
             for: message,
-            myIdentity: frameworkInjector.myIdentityStore.identity
+            myIdentity: frameworkInjector.profileStore.profile.myIdentity.rawValue
         )
         if !isOutgoing {
             guard let sender = result.sender else {

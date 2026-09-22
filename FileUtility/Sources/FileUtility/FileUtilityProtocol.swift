@@ -77,8 +77,21 @@ public protocol FileUtilityProtocol: AnyObject {
     func fileExists(at fileURL: URL?) -> Bool
     
     func fileExists(atPath path: String) -> Bool
-    
+
+    /// Create a new empty file.
+    /// - Parameter url: Path of the new empty file
+    func createEmptyFile(atURL url: URL) throws
+
     func createFile(atPath path: String, contents data: Data?, attributes attr: [FileAttributeKey: Any]?) -> Bool
+
+    /// Create a file handle for reading data from an existing file.
+    /// - Parameter url: Path to the file for the writing file handle
+    func createFileHandle(forReadingFromURL url: URL) throws -> FileHandle
+
+    /// Create a file handle for writing data to a existing file.
+    /// - Parameter url: Path to the file for the writing file handle
+    func createFileHandle(forWritingToURL url: URL) throws -> FileHandle
+    func closeFileHandle(_ fileHandle: FileHandle) throws
 
     /// Create directory, but no intermediate directories.
     /// - Parameter url: The URL at which to create the directory.
@@ -165,6 +178,23 @@ public protocol FileUtilityProtocol: AnyObject {
     /// - Parameter fileURL: The URL of the file to read from.
     /// - Returns: The data read from the file, or nil if an error occurred.
     func read(fileURL: URL?) -> Data?
+
+    /// Reads data from the file handle, the file must be opened for reading.
+    /// - Parameters:
+    ///   - offset: Start reading from this byte offset, or from the current position of the file handle if nil
+    ///   - length: Number of bytes to read, or reads to the end of the file if nil
+    ///   - fileHandle: The file handle to read from
+    ///   - url: URL information for decryption check
+    /// - Returns: The data read from the file handle
+    func read(offset: UInt64?, length: UInt64?, from fileHandle: FileHandle, fileURL: URL) throws -> Data
+
+    /// Writes data to the file handle, the file must opened for writing.
+    /// - Parameters:
+    ///   - contents: The data to write to the file
+    ///   - offset: Start of writing data or appending data if is nil
+    ///   - fileHandle: The file handle to write to
+    ///   - url: URL information for encryption check
+    func write(contents: Data, offset: UInt64?, to fileHandle: FileHandle, fileURL: URL) throws
 
     /// Writes data to the file at the specified URL.
     /// - Parameters:

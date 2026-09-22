@@ -23,11 +23,15 @@ final class FileUtilityNull: FileUtilityProtocol {
     }
 
     func copy(from sourceURL: URL, to destinationURL: URL) throws { /* no-op */ }
+    func createEmptyFile(atURL url: URL) throws { /* no-op */ }
     func createFile(
         atPath path: String,
         contents data: Data?,
         attributes attr: [FileAttributeKey: Any]?
     ) -> Bool { false }
+    func createFileHandle(forReadingFromURL url: URL) throws -> FileHandle { FileHandle.nullDevice }
+    func createFileHandle(forWritingToURL url: URL) throws -> FileHandle { FileHandle.nullDevice }
+    func closeFileHandle(_ fileHandle: FileHandle) throws { /* no-op */ }
     func delete(at sourceURL: URL) throws { /* no-op */ }
     func delete(atPath path: String) throws { /* no-op */ }
     func deleteIfExists(at sourceURL: URL?) { /* no-op */ }
@@ -60,9 +64,11 @@ final class FileUtilityNull: FileUtilityProtocol {
     func move(fromPath srcPath: String, toPath dstPath: String) throws { /* no-op */ }
     func pathSizeInBytes(pathURL: URL, size: inout Int64) { /* no-op */ }
     func read(fileURL: URL?) -> Data? { nil }
+    func read(offset: UInt64?, length: UInt64?, from fileHandle: FileHandle, fileURL: URL) throws -> Data { Data() }
     func removeItemsInAllDirectories(appGroupID: String) { /* no-op */ }
     func removeItemsInDirectory(directoryURL: URL) { /* no-op */ }
     func replaceFile(from sourceURL: URL, to destinationURL: URL) throws { /* no-op */ }
     func updateProtectionFormCompleteToCompleteUntilFirstUserAuthentication(at directoryURL: URL) { /* no-op */ }
     func write(contents: Data?, to fileURL: URL?) -> Bool { false }
+    func write(contents: Data, offset: UInt64?, to fileHandle: FileHandle, fileURL: URL) throws { /* no-op */ }
 }

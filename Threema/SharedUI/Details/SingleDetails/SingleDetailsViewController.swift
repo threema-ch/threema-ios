@@ -44,18 +44,11 @@ final class SingleDetailsViewController: ThemedCodeModernGroupedTableViewControl
     private lazy var linkedContactManager = LinkedContactManager(for: contactEntity)
     private lazy var publicKeyView = PublicKeyView(for: contactEntity)
     
-    private let displayStyle: DetailsDisplayStyle
+    private let displayStyle: Details.DisplayStyle
     
     private var entityManager: EntityManager
     
     private var observers = [NSKeyValueObservation]()
-
-    // Backwards compatibility
-    
-    @available(swift, obsoleted: 1.0, message: "Only use from old Objective-C code to keep it working")
-    @objc var _contact: ContactEntity {
-        contactEntity
-    }
     
     // MARK: - Lifecycle
     
@@ -67,7 +60,7 @@ final class SingleDetailsViewController: ThemedCodeModernGroupedTableViewControl
     ///   - delegate: Details delegate that is called on certain actions
     init(
         for conversation: ConversationEntity,
-        displayStyle: DetailsDisplayStyle = .default,
+        displayStyle: Details.DisplayStyle = .default,
         delegate: DetailsDelegate?
     ) {
         precondition(!conversation.isGroup, "This is not intended for groups")
@@ -93,10 +86,9 @@ final class SingleDetailsViewController: ThemedCodeModernGroupedTableViewControl
     /// - Parameters:
     ///     - contact: Contact to show details for
     ///     - displayStyle: Appearance of the details
-    @objc
     init(
         for contact: Contact,
-        displayStyle: DetailsDisplayStyle = .default
+        displayStyle: Details.DisplayStyle = .default
     ) {
         
         let entityManager = BusinessInjector.ui.entityManager

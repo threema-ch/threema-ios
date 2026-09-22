@@ -3,8 +3,8 @@ import FileUtility
 import Foundation
 import PromiseKit
 
-@objc public final class ItemLoader: NSObject {
-    @objc public enum ItemType: Int {
+public final class ItemLoader {
+    public enum ItemType: Int {
         case TextOnly
         case Media
     }
@@ -25,16 +25,16 @@ import PromiseKit
     private let tmpDirURL: URL
     private let imageSender = ImageURLSenderItemCreator()
 
-    override public convenience init() {
+    public convenience init() {
         self.init(forceLoadFileURLItem: false)
     }
     
-    @objc public init(forceLoadFileURLItem: Bool) {
+    public init(forceLoadFileURLItem: Bool) {
         self.forceLoadFileURLItem = forceLoadFileURLItem
         self.tmpDirURL = ItemLoader.getTemporaryDirectory()
     }
     
-    @objc public func syncLoadContentItems() -> [Any]? {
+    public func syncLoadContentItems() -> [Any]? {
         let sema = DispatchSemaphore(value: 0)
         filterContentItems()
         var finalItems: [Any]?
@@ -86,7 +86,7 @@ import PromiseKit
         return when(fulfilled: items)
     }
     
-    @objc public func checkItemType() -> ItemType {
+    public func checkItemType() -> ItemType {
         for item in itemsToSend {
             if isTextItem(item: item) {
                 return .TextOnly
@@ -180,7 +180,7 @@ import PromiseKit
         return (text, startPosition)
     }
     
-    @objc public func addItem(itemProvider: NSItemProvider, type: String, secondType: String?) {
+    public func addItem(itemProvider: NSItemProvider, type: String, secondType: String?) {
         let item = IntermediateItem(itemProvider: itemProvider, type: type, secondType: secondType, caption: nil)
         itemsToSend.insert(item)
     }
@@ -393,7 +393,7 @@ import PromiseKit
         }
     }
     
-    @objc public static func getBaseUTIType(_ itemProvider: NSItemProvider) -> String {
+    public static func getBaseUTIType(_ itemProvider: NSItemProvider) -> String {
         let typeIdentifiers = NSMutableArray(array: itemProvider.registeredTypeIdentifiers)
         
         if typeIdentifiers.count >= 1 {
@@ -402,7 +402,7 @@ import PromiseKit
         return UTType.fileURL.identifier
     }
     
-    @objc public static func getSecondUTIType(_ itemProvider: NSItemProvider, baseType: String) -> String? {
+    public static func getSecondUTIType(_ itemProvider: NSItemProvider, baseType: String) -> String? {
         let typeIdentifiers = NSMutableArray(array: itemProvider.registeredTypeIdentifiers)
         
         if itemProvider.hasItemConformingToTypeIdentifier(UTType.fileURL.identifier) {

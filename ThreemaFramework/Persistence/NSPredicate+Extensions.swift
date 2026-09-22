@@ -145,7 +145,7 @@ extension NSPredicate {
         )
     }
 
-    static func conversationGroup(identity: String, id: Data, myIdentity: String?) -> NSPredicate {
+    static func conversationGroup(identity: String, id: Data, myIdentity: String) -> NSPredicate {
         if identity != myIdentity {
             .and(
                 legacyConversationWithGroupID(id),
@@ -347,6 +347,13 @@ extension NSPredicate {
         )
     }
 
+    static func contactsWithIdentity(of identities: [String]) -> NSPredicate {
+        NSPredicate(
+            format: "identity IN %@",
+            identities
+        )
+    }
+
     static func predicate(from words: [String], for predicateFormat: PredicateFormat) -> [NSPredicate] {
         guard words.isEmpty == false else {
             return []
@@ -373,5 +380,13 @@ extension NSPredicate {
     static func contactWithNullFeatureMask(encrypted: Bool) -> NSPredicate {
         let featureMaskFieldName = ContactEntity.Field.name(for: .featureMask, encrypted: encrypted)
         return NSPredicate(format: "\(featureMaskFieldName) == nil")
+    }
+}
+
+// MARK: - BallotEntity Predicates
+
+extension NSPredicate {
+    static var ballotInContactOrGroupConversation: NSPredicate {
+        NSPredicate(format: "conversation != nil AND conversation.distributionList == nil")
     }
 }

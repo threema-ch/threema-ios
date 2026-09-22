@@ -3,7 +3,7 @@ import Foundation
 import PromiseKit
 import ThreemaEssentials
 
-@objc final class ImageMessageProcessor: NSObject {
+final class ImageMessageProcessor: NSObject {
     
     private let blobDownloader: BlobDownloader
     private let myIdentityStore: MyIdentityStoreProtocol
@@ -149,22 +149,22 @@ import ThreemaEssentials
                             return
                         }
                         conversationCategory = msg.conversation.conversationCategory
-                        msg.image = self.entityManager.entityCreator.imageDataEntity(
+                        let imageEntity = self.entityManager.entityCreator.imageDataEntity(
                             data: imageData,
-                            size: image.size,
-                            message: msg
+                            size: image.size
                         )
 
+                        var thumbnail: ImageDataEntity?
                         if let thumbnailData, let width = thumbnailImage?.size.width,
                            let height = thumbnailImage?.size.height {
-                            let thumbnail = self.entityManager.entityCreator.imageDataEntity(
+                            thumbnail = self.entityManager.entityCreator.imageDataEntity(
                                 data: thumbnailData,
-                                size: CGSize(width: width, height: height),
-                                message: msg
+                                size: CGSize(width: width, height: height)
                             )
-                            
-                            msg.thumbnail = thumbnail
                         }
+
+                        msg.thumbnail = thumbnail
+                        msg.image = imageEntity
                         
                         // Mark blob as done, if is group message and Multi Device is activated then always on `local`
                         // origin

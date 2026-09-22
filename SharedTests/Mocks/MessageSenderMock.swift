@@ -46,7 +46,11 @@ final class MessageSenderMock: NSObject, MessageSenderProtocol {
     func sendBallotVoteMessage(for ballot: BallotEntity) {
         // no-op
     }
-
+    
+    func sendTransactionRequiredCallMessage(abstractMessage: AbstractMessage, callID: VoIPCallID) {
+        // no-op
+    }
+    
     func sendMessage(abstractMessage: AbstractMessage, isPersistent: Bool, completion: (() -> Void)?) {
         sentAbstractMessagesQueue.append(abstractMessage)
     }

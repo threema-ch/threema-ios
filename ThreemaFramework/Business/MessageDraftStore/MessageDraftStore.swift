@@ -3,7 +3,7 @@ import FileUtility
 import Foundation
 import ThreemaMacros
 
-@objcMembers public final class MessageDraftStore: NSObject, MessageDraftStoreProtocol {
+public final class MessageDraftStore: NSObject, MessageDraftStoreProtocol {
     public static let shared = MessageDraftStore()
     
     public func deleteDraft(for conversation: ConversationEntity) {

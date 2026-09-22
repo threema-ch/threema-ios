@@ -16,7 +16,7 @@ struct MultiDeviceWizardTermsView: View {
     
     var body: some View {
         VStack {
-            ScrollView(showsIndicators: false) {
+            ScrollView {
                 VStack(alignment: .leading) {
                     // MARK: - Banner
                     
@@ -116,6 +116,7 @@ struct MultiDeviceWizardTermsView: View {
                 }
                 .padding(.vertical)
             }
+            .scrollIndicators(.hidden)
         }
         
         .alert(#localize("forward_security"), isPresented: $shouldShowAlert, actions: {

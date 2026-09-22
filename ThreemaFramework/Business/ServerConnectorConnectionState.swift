@@ -1,8 +1,9 @@
 import CocoaLumberjackSwift
 import Foundation
+import os
 
 /// Managed connection state chat and mediator server.
-class ServerConnectorConnectionState: NSObject {
+final class ServerConnectorConnectionState: NSObject {
 
     private let userSettings: UserSettingsProtocol
     private let connectionStateDelegate: ConnectionStateDelegate
@@ -16,6 +17,9 @@ class ServerConnectorConnectionState: NSObject {
     private var connectionStateChatServer: ConnectionState
     private var connectionStateMediatorServer: ConnectionState
 
+    /// Own lock, because `disconnectCondition` is held while the delegates are called and they may read this
+    private let lastConnectionStateChange = OSAllocatedUnfairLock(initialState: Date.now)
+
     private let disconnectCondition: NSCondition
 
     @objc init(userSettings: UserSettingsProtocol, connectionStateDelegate: ConnectionStateDelegate) {
@@ -25,6 +29,36 @@ class ServerConnectorConnectionState: NSObject {
         self.connectionStateChatServer = .disconnected
         self.connectionStateMediatorServer = .disconnected
         self.disconnectCondition = NSCondition()
+    }
+
+    /// A `connecting` or `connected` state that is not left within this time is assumed to be stuck
+    private static let stuckConnectionStateTimeout: TimeInterval = 40
+
+    /// Is the current connection state stuck?
+    ///
+    /// The socket does not always report back and the state then stays the same forever. `disconnected` and `loggedIn`
+    /// are final states and never expire (see `ServerConnector._connect`).
+    @objc var isStateExpired: Bool {
+        let timeout: TimeInterval? =
+            switch connectionState {
+            case .disconnecting: TimeInterval(kDisconnectTimeout)
+            case .connecting, .connected: Self.stuckConnectionStateTimeout
+            case .disconnected, .loggedIn: nil
+            }
+
+        guard let timeout else {
+            return false
+        }
+
+        let secondsInState = -lastConnectionStateChange.withLock { $0 }.timeIntervalSinceNow
+        guard secondsInState >= timeout else {
+            return false
+        }
+
+        DDLogWarn(
+            "Connection state is \(nameFor(connectionState: connectionState)) since \(Int(secondsInState)) seconds"
+        )
+        return true
     }
 
     /// Representing connection state for chat and mediator server.
@@ -99,6 +133,8 @@ class ServerConnectorConnectionState: NSObject {
 
     private func changeConnectionState(server: ServerConnection, value: ConnectionState) {
         disconnectCondition.lock()
+
+        lastConnectionStateChange.withLock { $0 = .now }
 
         if server == .any || server == .chat {
             connectionStateChatServer = value

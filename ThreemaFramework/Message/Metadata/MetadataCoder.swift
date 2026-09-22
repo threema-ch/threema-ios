@@ -5,7 +5,7 @@ enum MetadataCoderError: Error {
     case missingPrivateKey
 }
 
-@objc public final class MetadataCoder: NSObject {
+public final class MetadataCoder: NSObject {
     private let myIdentityStore: MyIdentityStoreProtocol
     
     init(_ myIdentityStore: MyIdentityStoreProtocol) {

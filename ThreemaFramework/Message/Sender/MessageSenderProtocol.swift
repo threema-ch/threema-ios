@@ -55,6 +55,8 @@ public enum MessageSenderReceivers {
 
     func sendBallotVoteMessage(for ballot: BallotEntity)
 
+    func sendTransactionRequiredCallMessage(abstractMessage: AbstractMessage, callID: VoIPCallID)
+    
     // MARK: - Generic sending
 
     /// Send abstract message

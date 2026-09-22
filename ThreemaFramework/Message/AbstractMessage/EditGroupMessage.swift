@@ -2,7 +2,7 @@ import CocoaLumberjackSwift
 import Foundation
 import ThreemaProtocols
 
-@objc public final class EditGroupMessage: AbstractGroupMessage {
+public final class EditGroupMessage: AbstractGroupMessage {
     public var decoded: CspE2e_EditMessage?
     
     override public var loggingDescription: String {

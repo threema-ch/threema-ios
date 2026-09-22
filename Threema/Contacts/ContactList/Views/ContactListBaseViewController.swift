@@ -65,7 +65,6 @@ class ContactListBaseViewController: ThemedTableViewController {
         else {
             guard let destination = currentDestinationFetcher(),
                   case let .contact(objectID) = destination,
-                  let objectID,
                   let dataSource = tableView.dataSource as? UITableViewDiffableDataSource<
                       String,
                       NSManagedObjectID
@@ -147,12 +146,11 @@ class ContactListBaseViewController: ThemedTableViewController {
                     #localize("pull_to_sync_429_message_work"),
                     TargetManager.appName
                 )
-                UIAlertTemplate
-                    .showAlert(
-                        owner: self,
-                        title: nil,
-                        message: message
-                    )
+                UIAlertTemplate.showOKAlert(
+                    owner: self,
+                    title: nil,
+                    message: message
+                )
                 self.endPullToRefresh()
             }
             else {
@@ -189,14 +187,13 @@ class ContactListBaseViewController: ThemedTableViewController {
                         #localize("pull_to_sync_429_message_work"),
                         TargetManager.appName
                     )
-                    UIAlertTemplate
-                        .showAlert(
-                            owner: self,
-                            title: nil,
-                            message: message
-                        ) { _ in
-                            NotificationPresenterWrapper.shared.present(type: .updateWorkDataFailed)
-                        }
+                    UIAlertTemplate.showOKAlert(
+                        owner: self,
+                        title: nil,
+                        message: message
+                    ) { _ in
+                        NotificationPresenterWrapper.shared.present(type: .updateWorkDataFailed)
+                    }
                 }
                 else {
                     NotificationPresenterWrapper.shared.present(type: .workSyncFailed)

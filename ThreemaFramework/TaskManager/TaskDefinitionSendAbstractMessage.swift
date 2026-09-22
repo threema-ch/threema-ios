@@ -48,23 +48,30 @@ final class TaskDefinitionSendAbstractMessage: TaskDefinition, TaskDefinitionSen
     }
 
     init(message: AbstractMessage, type: TaskType) {
-        if !(
-            message is BoxBallotVoteMessage || message is GroupBallotVoteMessage ||
-                message is BoxVoIPCallAnswerMessage || message is BoxVoIPCallHangupMessage ||
-                message is BoxVoIPCallIceCandidatesMessage || message is BoxVoIPCallOfferMessage ||
-                message is BoxVoIPCallRingingMessage ||
-                message is ContactDeletePhotoMessage || message is ContactRequestPhotoMessage ||
-                message is ContactSetPhotoMessage ||
-                message is DeliveryReceiptMessage || message is GroupDeliveryReceiptMessage ||
-                message is TypingIndicatorMessage ||
-                message is GroupCallStartMessage ||
-                message is GroupCreateMessage || message is GroupRenameMessage || message is GroupLeaveMessage ||
-                message is GroupSetPhotoMessage || message is GroupDeletePhotoMessage ||
-                message is GroupRequestSyncMessage ||
-                message is ForwardSecurityEnvelopeMessage
+        if !(message is BoxBallotVoteMessage ||
+            message is GroupBallotVoteMessage ||
+            message is BoxVoIPCallHangupMessage ||
+            message is BoxVoIPCallIceCandidatesMessage ||
+            message is BoxVoIPCallRingingMessage ||
+            message is BoxVoIPCallOfferMessage ||
+            message is BoxVoIPCallAnswerMessage ||
+            message is ContactDeletePhotoMessage ||
+            message is ContactRequestPhotoMessage ||
+            message is ContactSetPhotoMessage ||
+            message is DeliveryReceiptMessage ||
+            message is GroupDeliveryReceiptMessage ||
+            message is TypingIndicatorMessage ||
+            message is GroupCallStartMessage ||
+            message is GroupCreateMessage ||
+            message is GroupRenameMessage ||
+            message is GroupLeaveMessage ||
+            message is GroupSetPhotoMessage ||
+            message is GroupDeletePhotoMessage ||
+            message is GroupRequestSyncMessage ||
+            message is ForwardSecurityEnvelopeMessage
         ) {
             DDLogWarn(
-                "Only abstract messages for non-persisted messages should be send using this task (\(message.loggingDescription))"
+                "Only abstract messages (except call offer and answer) for non-persisted messages should be send using this task (\(message.loggingDescription))"
             )
             assertionFailure()
         }

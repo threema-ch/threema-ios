@@ -11,7 +11,14 @@ final class MockHTTPClient: GroupCallHTTPClientAdapterProtocol {
     
     var responses = [CallID: [(PeekResponse?, URLResponse)]]()
     var autoDropResponses = false
-    
+
+    /// Errors thrown from `sendPeek` (FIFO, consumed before `responses` is considered)
+    var scriptedPeekErrors = [CallID: [Error]]()
+    /// Delay applied before `sendPeek` answers, to simulate an unresponsive SFU
+    var peekHangSeconds = [CallID: TimeInterval]()
+    /// Delay applied before a join request answers, to keep a call in the `Joining` state
+    var joinHangSeconds: TimeInterval?
+
     var lock = NSLock()
     
     convenience init(returnCode: Int) {
@@ -48,7 +55,23 @@ final class MockHTTPClient: GroupCallHTTPClientAdapterProtocol {
     }
     
     func sendPeek(authorization: String, url: URL, body: Data) async throws -> (Data, URLResponse) {
-        lock.withLock {
+        if url.pathComponents.contains("join"), let hangSeconds = lock.withLock({ joinHangSeconds }) {
+            try await Task.sleep(nanoseconds: UInt64(hangSeconds * 1_000_000_000))
+        }
+
+        if let callID = url.lastPathComponent.hexadecimal,
+           let hangSeconds = lock.withLock({ peekHangSeconds[callID] }) {
+            try await Task.sleep(nanoseconds: UInt64(hangSeconds * 1_000_000_000))
+        }
+
+        return try lock.withLock {
+            if let callID = url.lastPathComponent.hexadecimal,
+               var errors = scriptedPeekErrors[callID], !errors.isEmpty {
+                let error = errors.removeFirst()
+                scriptedPeekErrors[callID] = errors
+                throw error
+            }
+
             if let callID = url.lastPathComponent.hexadecimal,
                let response = autoDropResponses ? responses[callID]?.removeFirst() : responses[callID]?.first! {
                 print("Returning http code \((response.1 as! HTTPURLResponse).statusCode)")

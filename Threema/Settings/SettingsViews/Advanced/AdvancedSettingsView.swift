@@ -42,10 +42,7 @@ struct AdvancedSettingsView: View {
                 .onChange(of: settingsVM.validationLogging) {
                     if settingsVM.validationLogging {
                         LogManager.addLogger(for: .debugDirectoryLog)
-                        DDLogNotice("Logging started")
-
-                        DebugLog.logAppVersion()
-                        DebugLog.logAppConfiguration()
+                        logFileCreated()
                     }
                     else {
                         DDLogNotice("Logging stopped")
@@ -73,7 +70,7 @@ struct AdvancedSettingsView: View {
                 }
                 .disabled(!hasDebugLog())
 
-                Button {
+                Button(role: .destructive) {
                     showDeleteDebugLogSheet()
                 } label: {
                     Text(#localize("settings_advanced_debug_log_clear_log_title"))
@@ -88,6 +85,9 @@ struct AdvancedSettingsView: View {
                             .destructive(Text(#localize("debug_log_clear"))) {
                                 LogManager.clearLoggerOutput(for: .debugDirectoryLog)
                                 NotificationPresenterWrapper.shared.present(type: .emptyDebugLogSuccess)
+                                if settingsVM.validationLogging {
+                                    logFileCreated()
+                                }
                             },
                             .cancel(),
                         ]
@@ -227,7 +227,7 @@ struct AdvancedSettingsView: View {
                             }
                         }
                         
-                        NotificationManager().updateUnreadMessagesCount()
+                        NotificationManager(businessInjector: BusinessInjector.ui).updateUnreadMessagesCount()
                         NotificationPresenterWrapper.shared.present(type: .resetUnreadCountSuccess)
 
                         let delay = DispatchTime.now() + DispatchTimeInterval.seconds(3)
@@ -326,6 +326,14 @@ struct AdvancedSettingsView: View {
         }
 
         topViewController.present(activityViewController, animated: true)
+    }
+    
+    private func logFileCreated() {
+        DDLogNotice("Logging started")
+
+        DebugLog.logAppVersion()
+        DebugLog.logAppConfiguration()
+        DebugLog.logLocalIdentity()
     }
     
     private func reregisterPushNotifications() {

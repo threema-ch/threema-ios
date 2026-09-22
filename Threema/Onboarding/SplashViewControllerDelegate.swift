@@ -5,7 +5,7 @@ import Foundation
 /// Delegate protocol for SplashViewController to communicate events to OnboardingCoordinator.
 /// This allows the coordinator to control the onboarding flow while SplashViewController
 /// handles UI presentation and navigation animations.
-@objc
+@objc @MainActor
 protocol SplashViewControllerDelegate: AnyObject {
     
     // MARK: - Lifecycle
@@ -57,7 +57,7 @@ protocol SplashViewControllerDelegate: AnyObject {
     func splashViewController(_ viewController: SplashViewController, didSelectRestoreOption option: RestoreOption)
     
     /// Called when restore flow completes successfully.
-    func splashViewControllerDidCompleteRestore(_ viewController: SplashViewController)
+    func splashViewControllerDidCompleteRestoreIdentity(_ viewController: SplashViewController)
     
     /// Called when user cancels from the RestoreOptionData screen.
     func splashViewControllerDidCancelRestore(_ viewController: SplashViewController)
@@ -111,6 +111,8 @@ protocol SplashViewControllerDelegate: AnyObject {
 enum RestoreOption: Int {
     /// Restore from Threema Safe (full restore)
     case safe
+    /// Restore from a full backup (full content restore)
+    case localBackup
     /// Restore identity only from Threema Safe
     case safeIdentityOnly
     /// Restore from ID backup string

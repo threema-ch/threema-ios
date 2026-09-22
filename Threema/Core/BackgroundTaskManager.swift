@@ -1,15 +1,16 @@
 import CocoaLumberjackSwift
 import Foundation
+import ThreemaFramework
 
-final class BackgroundTaskManager: NSObject {
+final class BackgroundTaskManager {
     
-    @objc static let shared = BackgroundTaskManager()
+    static let shared = BackgroundTaskManager()
     
     private var backgroundTasks: [String: UIBackgroundTaskIdentifier]
     private var backgroundTaskIdentifierCounter = AtomicInteger()
     private var backgroundTaskQueue: DispatchQueue
     
-    override private init() {
+    private init() {
         self.backgroundTasks = [String: UIBackgroundTaskIdentifier]()
         self.backgroundTaskQueue = DispatchQueue(label: "ch.threema.backgroundTaskQueue", attributes: [])
     }
@@ -17,7 +18,7 @@ final class BackgroundTaskManager: NSObject {
     // MARK: Public functions
     
     /// Create a new (or renew if exists already) background task. The completion handler is called on the main thread.
-    @objc func newBackgroundTask(key: String, timeout: Int, completionHandler: (() -> Void)?) {
+    func newBackgroundTask(key: String, timeout: Int, completionHandler: (() -> Void)?) {
         DDLogVerbose("Background task new \(key) with timeout of \(timeout) seconds")
         backgroundTaskQueue.async {
             // Remove already existing background task first
@@ -49,7 +50,7 @@ final class BackgroundTaskManager: NSObject {
         }
     }
     
-    @objc func cancelBackgroundTask(key: String) {
+    func cancelBackgroundTask(key: String) {
         DDLogVerbose("Background task cancel \(key)")
         backgroundTaskQueue.async {
             if let item = self.backgroundTasks.first(where: { $0.key.hasPrefix(key) }) {
@@ -59,11 +60,11 @@ final class BackgroundTaskManager: NSObject {
     }
 
     /// Extents key with postffix count.
-    @objc func counter(identifier: String) -> String {
+    func counter(identifier: String) -> String {
         identifier + String(backgroundTaskIdentifierCounter.incrementAndGet())
     }
     
-    @objc func isBackgroundTaskRunning(key: String) -> Bool {
+    func isBackgroundTaskRunning(key: String) -> Bool {
         backgroundTasks.first(where: { $0.key.hasPrefix(key) }) != nil
     }
     
@@ -74,9 +75,14 @@ final class BackgroundTaskManager: NSObject {
             return
         }
         
-        if SceneDelegate.isAppInBackground {
+        if internalKey.hasPrefix(kAppPushReplyBackgroundTask) {
+            // The reply is done, so is its claim. Also in the foreground, where the socket is kept by `.app`,
+            // otherwise a reply handled there keeps the claim for the rest of the process lifetime
+            ServerConnector.shared().disconnect(initiator: .notificationHandler)
+        }
+        else if SceneDelegate.isAppInBackground {
             if internalKey.hasPrefix(kAppClosedByUserBackgroundTask) {
-                ServerConnector.shared().disconnect(initiator: .app)
+                tearDownConnectionForSuspension()
             }
             else if internalKey.hasPrefix(kAppVoIPBackgroundTask) ||
                 internalKey.hasPrefix(kAppVoIPIncomCallBackgroundTask) {
@@ -85,25 +91,46 @@ final class BackgroundTaskManager: NSObject {
                     ServerConnector.shared().disconnect(initiator: .threemaCall)
                 }
             }
-            else if internalKey.hasPrefix(kAppPushReplyBackgroundTask) {
-                ServerConnector.shared().disconnect(initiator: .notificationHandler)
-            }
-            else if internalKey.hasPrefix(kAppWCBackgroundTask) {
-                ServerConnector.shared().disconnect(initiator: .app)
-
-                if WCSessionManager.shared.isRunningWCSession() {
-                    DDLogVerbose("Close WebClient and Server connection")
-                    WCSessionManager.shared.pauseAllRunningSessions()
-                    ServerConnector.shared().disconnect(initiator: .threemaWeb)
-                }
-            }
         }
 
         endBackgroundTask(identifier: identifier, internalKey: internalKey)
     }
 
+    /// Close everything down before the system suspends us.
+    ///
+    /// Last point with execution time, so every claim has to go, otherwise we are suspended with an open socket and
+    /// end up with "Another connection". `.app` is released last, it triggers the actual disconnect.
+    private func tearDownConnectionForSuspension() {
+        // Sessions are resumed on the next foreground, the claim goes in any case
+        if WCSessionManager.shared.isRunningWCSession() {
+            DDLogNotice("Close WebClient and server connection")
+            WCSessionManager.shared.pauseAllRunningSessions()
+        }
+        ServerConnector.shared().disconnect(initiator: .threemaWeb)
+
+        // Safety net, a reply in flight releases the claim itself when its own task ends
+        if !isBackgroundTaskRunning(key: kAppPushReplyBackgroundTask) {
+            ServerConnector.shared().disconnect(initiator: .notificationHandler)
+        }
+
+        ServerConnector.shared().disconnect(initiator: .app)
+
+        // Hand over to the extensions. Not before, without IPC this flag also gates incoming message processing
+        if !UserSettings.shared().ipcCommunicationEnabled {
+            AppGroup.setActive(false, for: AppGroupTypeApp)
+        }
+    }
+
     private func endBackgroundTask(identifier: UIBackgroundTaskIdentifier, internalKey: String) {
         backgroundTasks.removeValue(forKey: internalKey)
+
+        // Ending the last background task allows the system to suspend us right away. Get the log messages of the just
+        // finished background work onto disk before that happens, otherwise they are lost and a write in flight during
+        // suspension risks a `0xdead10cc` termination for holding a lock in the app group container.
+        if backgroundTasks.isEmpty {
+            LogManager.flushLogs()
+        }
+
         UIApplication.shared.endBackgroundTask(identifier)
     }
 }

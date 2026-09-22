@@ -5,7 +5,7 @@ import SwiftProtobuf
 import ThreemaMacros
 import ThreemaProtocols
 
-@objc public final class GroupCallStartMessage: AbstractGroupMessage {
+public final class GroupCallStartMessage: AbstractGroupMessage {
     public var decoded: CspE2e_GroupCallStart?
     
     override public func type() -> UInt8 {
@@ -46,7 +46,10 @@ import ThreemaProtocols
     }
     
     override public func pushNotificationBody() -> String {
-        #localize("group_call_notification_body")
+        String.localizedStringWithFormat(
+            #localize("group_call_notification_body"),
+            DateFormatter.shortStyleTimeNoDate(date)
+        )
     }
     
     override public func isContentValid() -> Bool {

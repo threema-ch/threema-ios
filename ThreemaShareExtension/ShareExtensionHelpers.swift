@@ -2,7 +2,7 @@ import Foundation
 import ThreemaFramework
 import ThreemaMacros
 
-class ShareExtensionHelpers {
+enum ShareExtensionHelpers {
     static func getDescription(for conversations: [ConversationEntity]) -> NSAttributedString {
         let attrString = NSMutableAttributedString(
             string: ShareExtensionHelpers.getRecipientListHeading(for: conversations),

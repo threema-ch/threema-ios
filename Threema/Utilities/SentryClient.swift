@@ -5,45 +5,80 @@ import Sentry
 import ThreemaFramework
 import ThreemaMacros
 
-@objc final class SentryClient: NSObject {
+/// Carries a Sentry `Event` from Sentry's queue to the main actor.
+///
+/// `Event` is a mutable Objective-C class and therefore not `Sendable`. Ownership here is strictly
+/// hand-over: the event is sanitized on Sentry's queue, then only touched on the main actor until the
+/// user answered, and afterwards only by the SDK again.
+private struct EventBox: @unchecked Sendable {
+    let event: Event
+}
+
+/// Mutable state lives in ``SentryConsentLedger``, which is internally locked, so instances are safe to
+/// touch from Sentry's queue and from the main actor.
+final class SentryClient: NSObject, @unchecked Sendable {
+
+    /// Shared instance, kept alive for the whole app lifetime.
+    static let shared = SentryClient()
 
     private static let sentryNotEnabled = "SENTRY_NOT_ENABLED"
     private static var didStart = false
 
-    /// Tracks the active dispatch group used to block Sentry's thread while the crash report
-    /// alert is presented. When the app deactivates (e.g. due to a TestFlight alert), we leave
-    /// the group early to unblock Sentry's thread before willTerminate tries to sync-dispatch
-    /// onto it, which would otherwise cause a deadlock.
-    private var activeDispatchGroup: DispatchGroup?
+    /// Upper bound on crash reports waiting for a decision. Sentry caches only a handful of envelopes,
+    /// so this merely guards against pathological cases.
+    private static let maxPendingReports = 10
 
-    @objc override init() {
+    /// Tracks pending, consented, and deferred-context state across Sentry's queue and the main actor.
+    private let ledger = SentryConsentLedger(maxPendingReports: SentryClient.maxPendingReports)
+
+    /// Strips everything that must never leave the device from an event.
+    private let sanitizer = EventSanitizer()
+
+    /// Identifies an event by the anonymized app device hash instead of by the user.
+    private let enricher = EventEnricher()
+
+    // MARK: - Lifecycle
+
+    override private init() {
         super.init()
     }
-    
+
+    // MARK: - Start
+
     /// Create Sentry and start crash handler.
-    @objc func start() {
-        
+    func start() {
+        #if DISABLE_SENTRY
+            return
+        #endif
+
+        guard !ProcessInfoHelper.isRunningForScreenshots else {
+            return
+        }
+
         guard !SettingsBundleHelper.disableSentry else {
             return
         }
-        
+
         guard SentryClient.isEnabled() else {
             return
         }
-        
+
         guard !SentryClient.didStart else {
             return
         }
-        
-        guard let sentryDsn = BundleUtil.object(forInfoDictionaryKey: "SentryClientDsn") as? String else {
+
+        guard
+            let sentryDsn = BundleUtil.object(forInfoDictionaryKey: "SentryClientDsn") as? String,
+            !sentryDsn.isEmpty
+        else {
             DDLogError("Could not retrieve sentryDsn from bundle. Sentry will not be started.")
             return
         }
-        
+
         SentryClient.didStart = true
-        
+
         SentrySDK.start { options in
-            
+
             // Apply settings
             options.dsn = sentryDsn
             options.environment = ThreemaEnvironment.env().description
@@ -53,210 +88,139 @@ import ThreemaMacros
             options.enableNetworkTracking = false
             options.enableCaptureFailedRequests = false
             options.appHangTimeoutInterval = TimeInterval(10)
-            
-            // Enable metric kit for sandbox apps
-            if TargetManager.isSandbox {
-                options.enableMetricKit = true
-                options.experimental.enableWatchdogTerminationsV2 = true
-            }
-            
+
+            options.enableMetricKit = true
+            options.experimental.enableWatchdogTerminationsV2 = true
+
             // We disable hang tracking since the reports were inconsistent
             options.enableAppHangTracking = false
             options.enableReportNonFullyBlockingAppHangs = false
-            
+
             // Disable breadcrumbs
             options.maxBreadcrumbs = 0
             options.enableAutoBreadcrumbTracking = false
             options.enableNetworkBreadcrumbs = false
-            
+
             // This will be called when an event occurs
             options.beforeSend = { event in
                 self.handle(event: event)
             }
         }
+
+        // `SentryCrash` installs a fatal signal handler for `SIGPIPE`, overwriting the `SIG_IGN`
+        // disposition set at launch. `SIGPIPE` is never a programming error worth crashing on (it
+        // just means a socket peer went away), so restore the ignore.
+        // See `AppLauncher.ignoreSIGPIPE()`.
+        AppLauncher.ignoreSIGPIPE()
     }
-    
+
+    // MARK: - Event handling
+
+    /// Decides whether an event may leave the device.
+    ///
+    /// Nothing is uploaded without the user's consent, and consent cannot be collected from here
+    /// without blocking Sentry's queue on an alert. So an event is seen twice: on the first pass it is
+    /// sanitized, handed to ``SentryCrashConsentPresenter`` and dropped; if the user agrees it is
+    /// re-captured and passed through on the second pass.
     private func handle(event: Event) -> Event? {
-        //  TODO: IOS-3786
-        guard !Thread.isMainThread else {
-            DDLogError(
-                "IOS-3786: Do not process crash on main thread because we would deadlock otherwise."
-            )
+        // swiftformat:disable:next acronyms
+        let eventID = event.eventId.sentryIdString
+
+        switch ledger.consumeConsent(eventID: eventID) {
+        case let .consented(context):
+            // On re-capture the SDK re-enriches the event with the *current* run (contexts, user) before
+            // handing it back here. Restore the crashed run's context and re-strip anything re-added.
+            // Correctness assumes `beforeSend` is the last transform before send; if a future SDK runs
+            // event processors after `beforeSend`, move this restore + prepare into a trailing processor.
+            if let context {
+                event.context = context
+            }
+
+            prepare(event)
+
+            return event
+
+        case .notConsented:
+            prepare(event)
+            askForConsent(about: event, eventID: eventID)
+
             return nil
         }
-        
-        if let appDevice = event.context?["app"]?["device_app_hash"] as? String {
-            // Save anonymous app device, it will be displayed under Settings -> Advanced
-            UserSettings.shared()?.sentryAppDevice = appDevice
-            
-            // Send app device hash to count users per event on sentry ui
-            // swiftformat:disable:next acronyms
-            let user = User(userId: appDevice)
-            event.user = user
-        }
-        
-        // Remove registers
-        event.threads?.forEach { $0.stacktrace?.registers = [:] }
-        event.exceptions?.forEach { $0.stacktrace?.registers = [:] }
-        
-        // Remove possible user info, some info might still be added server-side
-        event.user?.geo = nil
-        event.user?.ipAddress = nil
-        
-        if let value = event.exceptions?.first?.value {
-            event.exceptions?.first?.value = redact(exceptionDescription: value)
-        }
-        
-        var send = false
-
-        // Show alert
-        let dispatch = DispatchGroup()
-        dispatch.enter()
-        activeDispatchGroup = dispatch
-
-        DispatchQueue.main.async {
-            // Observe app deactivation so we can leave the group before Sentry's willTerminate
-            // handler tries to sync-dispatch onto the blocked Sentry queue, preventing a deadlock.
-            NotificationCenter.default.addObserver(
-                self,
-                selector: #selector(self.leaveActiveDispatchGroup),
-                name: UIApplication.willResignActiveNotification,
-                object: nil
-            )
-
-            let confirm = UIAlertController(
-                title: String.localizedStringWithFormat(
-                    #localize("sentry_crash_send_title"),
-                    TargetManager.appName
-                ),
-                message: #localize("sentry_crash_send_description"),
-                preferredStyle: .alert
-            )
-            confirm.addTextField { textField in
-                textField.placeholder = #localize("sentry_crash_comment_placeholder")
-            }
-            confirm.addAction(UIAlertAction(
-                title: #localize("sentry_crash_send_yes"),
-                style: .default,
-                handler: { [weak self] _ in
-                    if let textField = confirm.textFields?.first,
-                       let text = textField.text,
-                       text.isEmpty == false {
-                        let feedback = SentryFeedback(
-                            message: text,
-                            name: nil,
-                            email: nil,
-                            // swiftformat:disable:next acronyms
-                            associatedEventId: event.eventId
-                        )
-                        SentrySDK.capture(feedback: feedback)
-                    }
-                    send = true
-                    self?.leaveActiveDispatchGroup()
-                }
-            ))
-            confirm.addAction(UIAlertAction(
-                title: #localize("sentry_crash_send_no"),
-                style: .cancel,
-                handler: { [weak self] _ in
-                    self?.leaveActiveDispatchGroup()
-                }
-            ))
-
-            Task { @MainActor in
-                if let vc = SharedAppProvider.currentTopViewController {
-                    vc.present(confirm, animated: true, completion: nil)
-                }
-                else {
-                    DDLogError("`SharedAppProvider.currentTopViewController` not available.")
-                    self.leaveActiveDispatchGroup()
-                }
-            }
-        }
-
-        dispatch.wait()
-
-        // Clean up observer
-        DispatchQueue.main.async {
-            NotificationCenter.default.removeObserver(
-                self,
-                name: UIApplication.willResignActiveNotification,
-                object: nil
-            )
-        }
-
-        if send {
-            return event
-        }
-
-        return nil
     }
-    
-    /// Leaves the active dispatch group exactly once. Called from alert action handlers
-    /// and from the willResignActive notification observer to unblock Sentry's thread.
-    @objc private func leaveActiveDispatchGroup() {
-        guard let group = activeDispatchGroup.take() else {
+
+    /// Brings an event into the shape we are willing to upload: identified only by the anonymized app
+    /// device hash and stripped of everything that must never leave the device.
+    ///
+    /// Runs on both passes of a deferred event, because re-capturing re-enriches the event with the
+    /// current run's user.
+    private func prepare(_ event: Event) {
+        enricher.enrich(event)
+        sanitizer.sanitize(event)
+    }
+
+    /// Hands the event to the consent alert and re-captures it if the user agrees.
+    private func askForConsent(about event: Event, eventID: String) {
+        switch ledger.reservePending(eventID: eventID, context: event.context) {
+        case .reserved:
+            break
+
+        case .alreadyPending:
+            DDLogNotice("[Sentry] Crash report \(eventID) is already waiting for a decision.")
+            return
+
+        case .capReached:
+            DDLogWarn(
+                "[Sentry] \(SentryClient.maxPendingReports) crash reports are already waiting for a decision, dropping \(eventID)."
+            )
             return
         }
-        
-        group.leave()
-    }
 
-    private func redact(exceptionDescription: String) -> String {
-        let keys = [
-            "encryptionKey",
-            "k:",
-            "password",
-            "blobId",
-            "blobThumbnailId",
-            "\"k\"",
-            "\\\"k\\\"",
-            "json",
-            "text",
-            // CoreData `Contact`
-            "cnContactId",
-            "firstName",
-            "lastName",
-            "publicNickname",
-            "sortInitial",
-        ]
-        
-        var linesArray = exceptionDescription.linesArray
-        
-        let em = BusinessInjector.ui.entityManager
-        var idList: Set<String> = []
-        
-        em.performAndWait {
-            guard let contacts = em.entityFetcher.contactEntities() else {
-                return
-            }
-            
-            for contact in contacts {
-                idList.insert(contact.identity)
+        let box = EventBox(event: event)
+        Task { @MainActor in
+            SentryCrashConsentPresenter.shared.enqueue(box.event, eventID: eventID) { [weak self] decision in
+                self?.apply(decision, to: box.event, eventID: eventID)
             }
         }
-        
-        for i in 0..<linesArray.count {
-            for k in keys {
-                if linesArray[i].contains(k) {
-                    let range = linesArray[i].range(of: k)!
-                    linesArray[i] = linesArray[i][..<range.lowerBound] + "***redacted***"
-                }
-            }
-            for id in idList {
-                if linesArray[i].contains(id) {
-                    linesArray[i] = linesArray[i].replacingOccurrences(of: id, with: "***redacted***")
-                }
-            }
+    }
+
+    /// Applies the user's answer.
+    @MainActor
+    private func apply(
+        _ decision: SentryCrashConsentPresenter.Decision,
+        to event: Event,
+        eventID: String
+    ) {
+        guard decision.send else {
+            ledger.drop(eventID: eventID)
+
+            DDLogNotice("[Sentry] User declined to send crash report \(eventID).")
+            return
         }
 
-        return linesArray.joined(separator: "\n")
+        ledger.recordConsent(eventID: eventID)
+
+        // Runs through `beforeSend` again, which recognizes the ID and passes the event on.
+        SentrySDK.capture(event: event)
+
+        if let comment = decision.comment {
+            let feedback = SentryFeedback(
+                message: comment,
+                name: nil,
+                email: nil,
+                // swiftformat:disable:next acronyms
+                associatedEventId: event.eventId
+            )
+            SentrySDK.capture(feedback: feedback)
+        }
     }
-    
-    /// Is Sentry enabled or not dependent on is file "SENTRY_NOT_ENABLED" exists in App documents directory. When the
-    /// App crashes on start because of Sentry start handler, can the file adding per iTunes to disable it.
+
+    /// Whether the Sentry crash handler may be started.
     ///
-    /// - Returns: true -> start Sentry crash handler
+    /// The escape hatch for an app that crashes on start *because of* the Sentry start handler: a file
+    /// named ``sentryNotEnabled`` placed in the app's documents directory — reachable over Finder file
+    /// sharing without a working app — keeps Sentry off from the next launch on.
+    ///
+    /// - Returns: `true` to start the Sentry crash handler.
     private static func isEnabled() -> Bool {
         !FileUtility.shared
             .fileExists(at: FileUtility.shared.appDocumentsDirectory?.appendingPathComponent(sentryNotEnabled))

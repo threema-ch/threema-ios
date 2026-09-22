@@ -272,8 +272,6 @@ final class GroupCallParticipantCell: UICollectionViewCell {
                     else {
                         NSLayoutConstraint.activate(profilePictureViewWidthConstraintScreenshots)
                         
-                        participant.threemaIdentity
-                        
                         switch participant.threemaIdentity.rawValue {
                         case "H3BK2FVH":
                             if participant.displayName == "Peter Schreiner" {

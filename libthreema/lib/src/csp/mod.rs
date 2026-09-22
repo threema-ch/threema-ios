@@ -2,10 +2,13 @@
 use core::{fmt, mem};
 
 use const_format::formatcp;
-use data_encoding::HEXLOWER_PERMISSIVE;
 use educe::Educe;
+use libthreema_dependencies::{
+    crypto::x25519,
+    data_encoding::HEXLOWER_PERMISSIVE,
+    rand::{self, Rng as _},
+};
 use libthreema_macros::{ConstantTimeEq, DebugVariantNames, Name, VariantNames};
-use rand::Rng as _;
 use tracing::{debug, error, trace, warn};
 
 use crate::{
@@ -13,7 +16,6 @@ use crate::{
         ClientInfo, CspDeviceId, DeviceCookie, ThreemaId,
         keys::{ClientKey, PublicKey},
     },
-    crypto::x25519,
     csp::{
         cipher::{LoginAckCipher, LoginBoxes, LoginCipher, PayloadCipher, decrypt_server_challenge_response},
         payload::{
@@ -38,6 +40,7 @@ pub mod payload;
 
 /// Cause of an internal error.
 #[derive(Clone, Debug, thiserror::Error)]
+#[cfg_attr(test, derive(PartialEq))]
 pub enum CspProtocolInternalErrorCause {
     /// Exhausted the available sequence numbers to use for sending/receiving payloads. Should never happen.
     ///
@@ -93,6 +96,7 @@ impl<T: Into<String>> From<T> for CspProtocolInternalErrorCause {
     ),
     tsify(into_wasm_abi)
 )]
+#[cfg_attr(test, derive(PartialEq))]
 pub enum CspProtocolError {
     /// Invalid parameter provided by the caller.
     #[error("Invalid parameter: {0}")]
@@ -151,8 +155,8 @@ pub struct CspProtocolContextInit {
     /// fallback secondary keys. Using a secondary key will trigger a warning.
     pub permanent_server_keys: Vec<PublicKey>,
 
-    /// The client's Threema ID.
-    pub identity: ThreemaId,
+    /// The user's Threema ID.
+    pub user_identity: ThreemaId,
 
     /// The client's permanent private key.
     pub client_key: ClientKey,
@@ -175,8 +179,8 @@ pub struct CspProtocolContext {
     /// fallback secondary keys. Using a secondary key will trigger a warning.
     permanent_server_keys: Vec<PublicKey>,
 
-    /// The client's Threema ID.
-    identity: ThreemaId,
+    /// The user's Threema ID.
+    user_identity: ThreemaId,
 
     /// The client's permanent private key.
     client_key: ClientKey,
@@ -201,7 +205,7 @@ impl TryFrom<CspProtocolContextInit> for CspProtocolContext {
         }
         Ok(Self {
             permanent_server_keys: init.permanent_server_keys,
-            identity: init.identity,
+            user_identity: init.user_identity,
             client_key: init.client_key,
             client_info: init.client_info,
             device_cookie: init.device_cookie,
@@ -361,7 +365,7 @@ impl State {
         trace!(decoder = ?state.decoder, "Poll");
         let Some(server_hello) = state
             .decoder
-            .next_and_then(|server_hello| ServerHello::from(server_hello))
+            .next_frame_and_then(|server_hello| ServerHello::from(server_hello))
         else {
             return Ok((Self::AwaitingServerHello(state), None));
         };
@@ -417,17 +421,24 @@ impl State {
                 server_hello.server_cookie,
                 server_sequence_number,
                 server_challenge_response.temporary_server_key,
-            );
+            )
+            .ok_or(CspProtocolError::ServerError(
+                "Non-contributory temporary server key for login cipher",
+            ))?;
 
             // Encode the extensions
             let (extensions, extensions_byte_length) = Extensions::new(context).encode()?;
 
             // Encode the `login-data`
             let login_data = LoginData {
-                identity: context.identity,
+                identity: context.user_identity,
                 extensions_byte_length,
                 repeated_server_cookie: server_hello.server_cookie,
-                vouch: login_cipher.vouch_session(&context.client_key, &selected_permanent_server_key),
+                vouch: login_cipher
+                    .vouch_session(&context.client_key, &selected_permanent_server_key)
+                    .ok_or(CspProtocolError::ServerError(
+                        "Non-contributory permanent server key for vouch session",
+                    ))?,
             };
             trace!(?login_data);
             let login_data = login_data.encode().to_vec();
@@ -462,7 +473,7 @@ impl State {
         };
 
         // Set and return the next state and instruction
-        let state = State::AwaitingLoginAck(AwaitingLoginAckState {
+        let state = Self::AwaitingLoginAck(AwaitingLoginAckState {
             decoder: LoginAckDecoder::new_with_data(state.decoder.dissolve()),
             cipher: LoginAckCipher::new(session_cipher),
         });
@@ -491,7 +502,10 @@ impl State {
     ) -> Result<(Self, Option<CspProtocolInstruction>), CspProtocolError> {
         // Poll the `login-ack`
         trace!(decoder = ?state.decoder, "Poll");
-        let Some(login_ack) = state.decoder.next_and_then(|login_ack| LoginAck::from(login_ack)) else {
+        let Some(login_ack) = state
+            .decoder
+            .next_frame_and_then(|login_ack| LoginAck::from(login_ack))
+        else {
             return Ok((Self::AwaitingLoginAck(state), None));
         };
 
@@ -502,8 +516,8 @@ impl State {
         trace!(?login_ack_data);
 
         // Set and return the next state and instruction
-        let state = State::PostHandshake(PostHandshakeState {
-            decoder: PayloadDecoder::new(state.decoder.dissolve()),
+        let state = Self::PostHandshake(PostHandshakeState {
+            decoder: PayloadDecoder::new_with_data(state.decoder.dissolve()),
             cipher: PayloadCipher::new(state.cipher.dissolve()),
         });
         let instruction = CspProtocolInstruction {
@@ -545,7 +559,7 @@ impl State {
             outgoing_frame: None,
             incoming_payload: Some(payload),
         };
-        Ok((State::PostHandshake(state), Some(instruction)))
+        Ok((Self::PostHandshake(state), Some(instruction)))
     }
 }
 
@@ -606,8 +620,7 @@ impl CspProtocol {
         debug!("Creating CSP protocol");
 
         // Generate the temporary client key (TCK) and the client cookie (CCK)
-        let temporary_client_key =
-            TemporaryClientKey(x25519::StaticSecret::random_from_rng(rand::thread_rng()));
+        let temporary_client_key = TemporaryClientKey(x25519::StaticSecret::random());
         let temporary_client_key_public = PublicKey::from(&temporary_client_key.0);
         let client_cookie = ClientCookie(Cookie::random());
 
@@ -679,10 +692,10 @@ impl CspProtocol {
         trace!("Adding chunks");
         match &mut self.state {
             State::AwaitingServerHello(state) => {
-                state.decoder.add_chunks(chunks);
+                let _ = state.decoder.add_chunks(chunks);
             },
             State::AwaitingLoginAck(state) => {
-                state.decoder.add_chunks(chunks);
+                let _ = state.decoder.add_chunks(chunks);
             },
             State::PostHandshake(state) => {
                 let _ = state.decoder.add_chunks(chunks);
@@ -758,5 +771,37 @@ impl CspProtocol {
             outgoing_frame: Some(outgoing_frame),
             incoming_payload: None,
         })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{
+        common::{ClientInfo, keys::PublicKey},
+        csp::{ClientKey, CspProtocolContext, CspProtocolContextInit, ThreemaId},
+    };
+
+    pub(super) struct ContextBuilder(CspProtocolContextInit);
+    impl ContextBuilder {
+        pub(super) fn build(self) -> CspProtocolContext {
+            CspProtocolContext::try_from(self.0).unwrap()
+        }
+
+        pub(super) fn with_permanent_server_keys(mut self, server_keys: Vec<PublicKey>) -> Self {
+            self.0.permanent_server_keys = server_keys;
+            self
+        }
+    }
+    impl Default for ContextBuilder {
+        fn default() -> Self {
+            Self(CspProtocolContextInit {
+                user_identity: ThreemaId::try_from("12345678").unwrap(),
+                permanent_server_keys: vec![],
+                client_key: ClientKey::from([1; ClientKey::LENGTH]),
+                client_info: ClientInfo::Libthreema,
+                device_cookie: None,
+                csp_device_id: None,
+            })
+        }
     }
 }

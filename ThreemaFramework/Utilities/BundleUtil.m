@@ -51,6 +51,10 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     return [[BundleUtil mainBundle] objectForInfoDictionaryKey:@"TargetManagerKey"];
 }
 
++ (nullable NSString *)oppfAppIdentifier {
+    return [[BundleUtil mainBundle] objectForInfoDictionaryKey:@"OppfAppIdentifier"];
+}
+
 + (id)objectForInfoDictionaryKey:(NSString *)key {
     id value = [[self frameworkBundle] objectForInfoDictionaryKey:key];
     if (value == nil) {

@@ -1,4 +1,5 @@
 //! Directory endpoint.
+use libthreema_dependencies::crypto::digest::Mac as _;
 use serde::{Deserialize, Serialize};
 use serde_repr::Deserialize_repr;
 
@@ -9,14 +10,13 @@ use crate::{
         config::{DirectoryServerBaseUrl, Flavor, WorkContext},
         keys::{ClientKey, PublicKey},
     },
-    crypto::digest::Mac as _,
     https::{HttpsHeadersBuilder, HttpsMethod, HttpsRequest, HttpsResponse, HttpsResult},
     model::contact::ContactInit,
     protobuf::{self, d2d_sync::contact as protobuf_contact},
     utils::{serde::base64, time::utc_now_ms},
 };
 
-#[derive(Debug, Serialize)]
+#[derive(Serialize)]
 struct WorkCredentials<'creds> {
     #[serde(rename = "licenseUsername")]
     username: &'creds str,
@@ -127,6 +127,7 @@ pub(crate) fn handle_authentication_challenge(
         challenge: challenge.challenge.clone(),
         response: client_key
             .derive_directory_authentication_key(&PublicKey::from(challenge.public_key))
+            .ok_or(HttpsEndpointError::InvalidChallenge)?
             .0
             .chain_update(&challenge.challenge)
             .finalize()
@@ -167,8 +168,8 @@ enum IdentityType {
 impl From<IdentityType> for protobuf_contact::IdentityType {
     fn from(r#type: IdentityType) -> Self {
         match r#type {
-            IdentityType::Regular => protobuf_contact::IdentityType::Regular,
-            IdentityType::Work => protobuf_contact::IdentityType::Work,
+            IdentityType::Regular => Self::Regular,
+            IdentityType::Work => Self::Work,
         }
     }
 }
@@ -183,8 +184,8 @@ enum ActivityState {
 impl From<ActivityState> for protobuf_contact::ActivityState {
     fn from(state: ActivityState) -> Self {
         match state {
-            ActivityState::Active => protobuf_contact::ActivityState::Active,
-            ActivityState::Inactive => protobuf_contact::ActivityState::Inactive,
+            ActivityState::Active => Self::Active,
+            ActivityState::Inactive => Self::Inactive,
         }
     }
 }
@@ -213,9 +214,10 @@ impl From<ValidIdentity> for ContactInit {
             identity: entry.identity,
             public_key: PublicKey::from(entry.public_key),
             created_at: utc_now_ms(),
-            first_name: None,
-            last_name: None,
-            nickname: None,
+            last_update_at: None,
+            first_name: String::default(),
+            last_name: String::default(),
+            nickname: String::default(),
             verification_level: protobuf_contact::VerificationLevel::Unverified,
             work_verification_level: protobuf_contact::WorkVerificationLevel::None,
             identity_type: entry.identity_type.into(),
@@ -413,4 +415,33 @@ pub(crate) fn update_work_properties_request(
 pub(crate) fn handle_update_work_properties_result(result: HttpsResult) -> Result<(), HttpsEndpointError> {
     let _ = handle_status_and_awkward_response(result, |_| None)?;
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use assert_matches::assert_matches;
+    use serde_json::json;
+
+    use crate::{
+        common::keys::ClientKey,
+        https::{HttpsResponse, directory::handle_authentication_challenge, endpoint::HttpsEndpointError},
+        utils::test::ResultUnwrapErrorQuiet as _,
+    };
+
+    #[test]
+    fn authentication_challenge_with_non_contributory_public_key() {
+        let error = handle_authentication_challenge(
+            &ClientKey::from([0; ClientKey::LENGTH]),
+            Ok(HttpsResponse {
+                status: 200,
+                body: serde_json::to_vec(&json!({
+                    "tokenRespKeyPub": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+                    "token": "AQID",
+                }))
+                .unwrap(),
+            }),
+        )
+        .unwrap_err_quiet();
+        assert_matches!(error, HttpsEndpointError::InvalidChallenge);
+    }
 }

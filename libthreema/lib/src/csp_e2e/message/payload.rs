@@ -2,15 +2,15 @@
 use core::str::{self, Utf8Error};
 
 use educe::Educe;
+use libthreema_dependencies::crypto::salsa20;
 
 use crate::{
     common::{MessageFlags, MessageId, Nonce, ThreemaId, ThreemaIdError},
-    crypto::salsa20,
     csp::payload::MessageWithMetadataBox,
     utils::{
         bytes::{
-            ByteReader as _, ByteReaderError, ByteWriter, ByteWriterError, EncryptedDataRangeReader as _,
-            OwnedVecByteReader, OwnedVecByteWriter,
+            ByteReader as _, ByteReaderError, ByteWriter, ByteWriterError, EncryptedDataRange,
+            EncryptedDataRangeReader as _, OwnedVecByteReader, OwnedVecByteWriter,
         },
         debug::debug_slice_length,
     },
@@ -56,7 +56,7 @@ pub(crate) struct IncomingMessageWithMetadataBox {
     pub(super) receiver_identity: ThreemaId,
 
     /// The ID of the message.
-    pub(super) id: MessageId,
+    pub(super) message_id: MessageId,
 
     /// (Legacy) UNIX timestamp in seconds for when the message has been created.
     ///
@@ -68,16 +68,16 @@ pub(crate) struct IncomingMessageWithMetadataBox {
     pub(super) flags: MessageFlags,
 
     /// Legacy sender nickname (nickname from metadata should be preferred).
-    pub(super) legacy_sender_nickname: Option<String>,
+    pub(super) legacy_sender_nickname: String,
 
     /// Encrypted metadata.
-    pub(super) metadata: Option<salsa20::EncryptedDataRange>,
+    pub(super) metadata: Option<EncryptedDataRange<{ salsa20::TAG_LENGTH }>>,
 
     /// Nonce for both the contained message and the metadata box.
     pub(super) nonce: Nonce,
 
     /// Encrypted contained message.
-    pub(super) message_container: salsa20::EncryptedDataRange,
+    pub(super) message_container: EncryptedDataRange<{ salsa20::TAG_LENGTH }>,
 }
 impl TryFrom<MessageWithMetadataBox> for IncomingMessageWithMetadataBox {
     type Error = IncomingMessagePayloadError;
@@ -117,9 +117,9 @@ impl TryFrom<MessageWithMetadataBox> for IncomingMessageWithMetadataBox {
                     .expect("calculated legacy sender nickname length must be in bounds");
                 let nickname =
                     str::from_utf8(nickname).map_err(IncomingMessagePayloadError::InvalidNickname)?;
-                Some(nickname.trim().to_owned())
+                nickname.trim().to_owned()
             } else {
-                None
+                String::default()
             }
         };
 
@@ -149,11 +149,11 @@ impl TryFrom<MessageWithMetadataBox> for IncomingMessageWithMetadataBox {
 
         // Done
         let bytes = reader.expect_consumed()?;
-        Ok(IncomingMessageWithMetadataBox {
+        Ok(Self {
             bytes,
             sender_identity: payload.sender_identity,
             receiver_identity,
-            id: payload.id,
+            message_id: payload.message_id,
             legacy_created_at,
             flags: payload.flags,
             legacy_sender_nickname,
@@ -187,7 +187,7 @@ pub(crate) struct OutgoingMessageWithMetadataBox {
     pub(super) receiver_identity: ThreemaId,
 
     /// The ID of the message.
-    pub(super) id: MessageId,
+    pub(super) message_id: MessageId,
 
     /// (Legacy) UNIX timestamp in seconds for when the message has been created.
     ///
@@ -200,12 +200,12 @@ pub(crate) struct OutgoingMessageWithMetadataBox {
 
     /// Legacy sender nickname (nickname from metadata should be preferred).
     ///
-    /// Note 1: The creator of the struct is responsible for omitting this field when sending a message to
-    /// non-Gateway IDs.
+    /// Note 1: The creator of the struct is responsible to set this to an empty string when sending a
+    /// message to non-Gateway IDs.
     ///
     /// Note 2: Only 32 bytes of the UTF-8 string will be encoded, so prior truncation at UTF-8 codepoints is
     /// advised.
-    pub(super) legacy_sender_nickname: Option<String>,
+    pub(super) legacy_sender_nickname: String,
 
     /// Encrypted metadata.
     #[educe(Debug(method(debug_slice_length)))]
@@ -239,7 +239,7 @@ impl OutgoingMessageWithMetadataBox {
         // reserved space
         writer.write(&self.sender_identity.to_bytes())?;
         writer.write(&self.receiver_identity.to_bytes())?;
-        writer.write_u64_le(self.id.0)?;
+        writer.write_u64_le(self.message_id.0)?;
         writer.write_u32_le(self.legacy_created_at)?;
         writer.write_u8(self.flags.0)?;
         writer.write_u8(0)?; // reserved
@@ -254,9 +254,10 @@ impl OutgoingMessageWithMetadataBox {
 
         // Encode zero-padded legacy sender nickname if available (truncate if needed)
         writer.write(&[0_u8; LEGACY_SENDER_NICKNAME_LENGTH as usize])?;
-        if let Some(legacy_sender_nickname) = &self.legacy_sender_nickname
-            && let Some(truncated_legacy_sender_nickname) = legacy_sender_nickname.as_bytes().get(
-                ..legacy_sender_nickname
+        if !self.legacy_sender_nickname.is_empty()
+            && let Some(truncated_legacy_sender_nickname) = self.legacy_sender_nickname.as_bytes().get(
+                ..self
+                    .legacy_sender_nickname
                     .len()
                     .min(LEGACY_SENDER_NICKNAME_LENGTH as usize),
             )
@@ -286,7 +287,7 @@ impl TryFrom<OutgoingMessageWithMetadataBox> for MessageWithMetadataBox {
         message.encode_into(&mut writer)?;
         Ok(Self {
             sender_identity: message.sender_identity,
-            id: message.id,
+            message_id: message.message_id,
             flags: message.flags,
             bytes: writer.into_inner(),
         })
@@ -296,7 +297,7 @@ impl TryFrom<OutgoingMessageWithMetadataBox> for MessageWithMetadataBox {
 #[cfg(test)]
 mod tests {
     use assert_matches::assert_matches;
-    use data_encoding::HEXLOWER_PERMISSIVE;
+    use libthreema_dependencies::data_encoding::HEXLOWER_PERMISSIVE;
 
     use crate::{
         common::{MessageFlags, MessageId, Nonce, ThreemaId},
@@ -325,10 +326,10 @@ mod tests {
         assert_eq!(message.bytes.len(), 393);
         assert_eq!(message.sender_identity, ThreemaId::try_from("0DA5ME76")?);
         assert_eq!(message.receiver_identity, ThreemaId::try_from("0HPT9EWD")?);
-        assert_eq!(message.id, MessageId::from_hex("89aa9a7eaff77d96")?);
+        assert_eq!(message.message_id, MessageId::from_hex("89aa9a7eaff77d96")?);
         assert_eq!(message.legacy_created_at, 1747416011);
         assert_eq!(message.flags, MessageFlags(MessageFlags::SEND_PUSH_NOTIFICATION));
-        assert_eq!(message.legacy_sender_nickname, None);
+        assert_eq!(message.legacy_sender_nickname, "");
         let metadata = assert_matches!(message.metadata, Some(metadata) => metadata);
         assert_eq!(
             metadata.tag,

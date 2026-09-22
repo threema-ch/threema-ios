@@ -39,6 +39,7 @@ public enum LogManager {
     private static let libthreemaLogDispatcher = LibthreemaLogDispatcher()
 
     private static let logZipFileName = "debug_log.zip"
+    private static let logExportStagingDirectoryName = "debug_log_export"
 
     // MARK: - Public methods
 
@@ -88,10 +89,25 @@ public enum LogManager {
         }
     }
 
+    /// Remove the logger writing to `destination`
+    ///
+    /// For directory destinations this is destructive: `DDFileLogger.willRemoveLogger` rolls the log
+    /// file, so the next message starts a new one no matter how little was written to the current
+    /// one.
     public static func removeLogger(for destination: Destination) {
         for logger in findLoggers(url(for: destination)) {
             DDLog.remove(logger)
         }
+    }
+
+    /// Write all pending log messages to disk, blocking until they are on disk
+    ///
+    /// Loggers write asynchronously on their own queues. Call this before the process might get suspended (or
+    /// terminated), otherwise messages queued at that point are lost and a write that is still in flight keeps a file
+    /// handle – and depending on the CocoaLumberjack version an advisory `flock` – open on a file in the app group
+    /// container. RunningBoard terminates processes that are suspended while holding such a lock with `0xdead10cc`.
+    public static func flushLogs() {
+        DDLog.flushLog()
     }
 
     public static func clearLoggerOutput(for destination: Destination) {
@@ -129,31 +145,27 @@ public enum LogManager {
             return nil
         }
 
-        // Remove active debug loggers so file contents don't shift under SSZipArchive. Flush before
-        // removal so pending writes are drained while the loggers are still registered.
-        let activeLoggers = findLoggers(debugLogDir)
-        if !activeLoggers.isEmpty {
-            DDLog.flushLog()
-        }
-        for logger in activeLoggers {
-            DDLog.remove(logger)
-        }
+        // Drain pending writes so the export contains everything logged up to now.
+        DDLog.flushLog()
 
+        let stagingURL = fileUtility.appTemporaryDirectory
+            .appendingPathComponent(logExportStagingDirectoryName, isDirectory: true)
         let zipURL = fileUtility.appTemporaryDirectory.appendingPathComponent(logZipFileName)
 
+        fileUtility.deleteIfExists(at: stagingURL)
         try? fileUtility.delete(at: zipURL)
 
-        let zipSucceeded = SSZipArchive.createZipFile(
-            atPath: zipURL.path,
-            withContentsOfDirectory: debugLogDir.path
-        )
-
-        // Restore debug logger
-        if !activeLoggers.isEmpty {
-            addLogger(for: .debugDirectoryLog)
+        do {
+            try fileUtility.copy(from: debugLogDir, to: stagingURL)
+        }
+        catch {
+            DDLogError("Failed to copy debug log for export: \(error)")
+            return nil
         }
 
-        guard zipSucceeded else {
+        defer { fileUtility.deleteIfExists(at: stagingURL) }
+
+        guard SSZipArchive.createZipFile(atPath: zipURL.path, withContentsOfDirectory: stagingURL.path) else {
             DDLogError("Failed to zip debug log")
             try? fileUtility.delete(at: zipURL)
             return nil
@@ -232,7 +244,10 @@ public enum LogManager {
             throw LogManagerError.fileUtilityUnavailable
         }
 
-        // Total on-disk budget for the debug log (one active file + at most one archive).
+        // On-disk budget for the debug log of *this process*. CocoaLumberjack names log files after
+        // the main bundle's identifier and only ever counts, rolls and deletes files matching its
+        // own name, so app, share extension and notification extension each get this budget
+        // separately.
         let debugLogMaximumFileSize: UInt64 = 10 * 1024 * 1024
         let debugLogMaximumNumberOfFiles: UInt = 2
         let debugLogDiskQuota: UInt64 = 20 * 1024 * 1024

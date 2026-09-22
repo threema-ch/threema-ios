@@ -114,11 +114,11 @@ public final class Group: NSObject {
     }
     
     /// Returns true, if me is group creator and group is active/editable.
-    @objc public var isOwnGroup: Bool {
+    public var isOwnGroup: Bool {
         isSelfCreator && state == .active
     }
     
-    @objc public var attributedDisplayName: NSAttributedString {
+    public var attributedDisplayName: NSAttributedString {
         let attributeString = NSMutableAttributedString(string: conversation.displayName)
         attributeString.addAttribute(
             .foregroundColor,

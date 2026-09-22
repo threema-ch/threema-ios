@@ -45,10 +45,10 @@ fi
 
 # Clean and load dev container
 cd "$(dirname "$0")/.."
-[[ -d ./build/wasm/$_build_dir ]] && rm -r ./build/wasm/$_build_dir
+[[ -d "./build/wasm/${_build_dir}" ]] && rm -r "./build/wasm/${_build_dir}"
 
 if [[ -z ${_no_container+x} ]] ; then
-    source ./.devcontainer/env.sh
+    source ./.devcontainer/env.sh -q
 fi
 
 # Ensure consistent target dir, even if `build.target-dir` config option is set for Cargo
@@ -64,19 +64,20 @@ cargo build \
 
 # Create WASM bindings for Rust code
 wasm-bindgen \
-    --split-linked-modules \
+    --out-dir "./build/wasm/${_build_dir}" \
+    --target "${_target}" \
     --encode-into always \
-    --reference-types \
-    --out-dir ./build/wasm/$_build_dir \
-    --target $_target \
+    --split-linked-modules \
     ./target/wasm32-unknown-unknown/release/libthreema.wasm
 
 # Optimise WASM
+# See: https://github.com/WebAssembly/binaryen/wiki/Optimizer-Cookbook
 wasm-opt \
-    ./build/wasm/$_build_dir/libthreema_bg.wasm \
-    -o ./build/wasm/$_build_dir/libthreema_bg.wasm \
-    -O \
-    --enable-reference-types
+    "./build/wasm/${_build_dir}/libthreema_bg.wasm" \
+    -o "./build/wasm/${_build_dir}/libthreema_bg.wasm" \
+    -O3 \
+    --inline-functions-with-loops \
+    --strip-toolchain-annotations
 
 # Unload dev container if it was started
 if [[ -z ${_no_container+x} ]] ; then

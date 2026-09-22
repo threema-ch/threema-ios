@@ -2,7 +2,7 @@ import CocoaLumberjackSwift
 import Foundation
 import PromiseKit
 
-class ConversationActions {
+final class ConversationActions {
     private let businessInjector: BusinessInjectorProtocol
     private let notificationManagerResolve: (BusinessInjectorProtocol) -> NotificationManagerProtocol
 

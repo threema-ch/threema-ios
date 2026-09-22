@@ -3,7 +3,7 @@ import Foundation
 import PromiseKit
 import ThreemaProtocols
 
-class MediatorReflectedOutgoingMessageProcessor {
+final class MediatorReflectedOutgoingMessageProcessor {
 
     private let frameworkInjector: FrameworkInjectorProtocol
     private let messageStore: MessageStoreProtocol
@@ -380,7 +380,7 @@ class MediatorReflectedOutgoingMessageProcessor {
     ) throws -> Promise<Void> {
         try messageStore.save(
             groupBallotCreateMessage: amsg,
-            senderIdentity: frameworkInjector.myIdentityStore.identity,
+            senderIdentity: frameworkInjector.profileStore.profile.myIdentity.rawValue,
             createdAt: getCreatedAt(for: omsg),
             reflectedAt: reflectedAt,
             isOutgoing: true
@@ -392,7 +392,7 @@ class MediatorReflectedOutgoingMessageProcessor {
         groupBallotVoteMessage amsg: GroupBallotVoteMessage
     ) throws -> Promise<Void> {
         // TODO: Because fromIdentity is missing of reflected messages
-        amsg.fromIdentity = frameworkInjector.myIdentityStore.identity
+        amsg.fromIdentity = frameworkInjector.profileStore.profile.myIdentity.rawValue
 
         try getGroup(for: omsg)
         try messageStore.save(groupBallotVoteMessage: amsg)
@@ -405,7 +405,7 @@ class MediatorReflectedOutgoingMessageProcessor {
     ) throws -> Promise<Void> {
         messageStore.save(
             groupFileMessage: amsg,
-            senderIdentity: frameworkInjector.myIdentityStore.identity,
+            senderIdentity: frameworkInjector.profileStore.profile.myIdentity.rawValue,
             createdAt: getCreatedAt(for: omsg),
             reflectedAt: reflectedAt,
             isOutgoing: true,
@@ -419,7 +419,7 @@ class MediatorReflectedOutgoingMessageProcessor {
     ) throws -> Promise<Void> {
         try messageStore.save(
             groupLocationMessage: amsg,
-            senderIdentity: frameworkInjector.myIdentityStore.identity,
+            senderIdentity: frameworkInjector.profileStore.profile.myIdentity.rawValue,
             createdAt: getCreatedAt(for: omsg),
             reflectedAt: reflectedAt,
             isOutgoing: true
@@ -434,7 +434,7 @@ class MediatorReflectedOutgoingMessageProcessor {
         try getGroup(for: omsg)
         try messageStore.save(
             groupTextMessage: amsg,
-            senderIdentity: frameworkInjector.myIdentityStore.identity,
+            senderIdentity: frameworkInjector.profileStore.profile.myIdentity.rawValue,
             messageID: omsg.messageID.littleEndianData,
             createdAt: getCreatedAt(for: omsg),
             reflectedAt: reflectedAt,
@@ -443,57 +443,69 @@ class MediatorReflectedOutgoingMessageProcessor {
         return Promise()
     }
 
-    // MARK: Process reflected outgoing VoIPCall messages
+    // MARK: - Process reflected outgoing VoIPCall messages
 
     private func process(
         outgoingMessage omsg: D2d_OutgoingMessage,
         voipCallOfferMessage amsg: BoxVoIPCallOfferMessage
     ) throws -> Promise<Void> {
-        let receiverIdentity = try getReceiverIdentity(for: omsg)
-        guard let msg = VoIPCallMessageDecoder.decodeVoIPCallOffer(from: amsg) else {
+        guard let msg = VoIPCallMessageDecoder.decodeVoIPCallOffer(
+            from: amsg,
+            receivedAsReflected: true,
+            isOutgoing: true
+        ) else {
             throw MediatorReflectedProcessorError.messageNotProcessed(message: omsg.loggingDescription)
         }
-        processVoIPCallMessage(
+        
+        let receiverIdentity = try getReceiverIdentity(for: omsg)
+        
+        return processVoIPCallMessage(
             abstractMessage: amsg,
             voipMessage: msg,
-            identity: receiverIdentity,
-            isOutgoing: true
+            identity: receiverIdentity
         )
-        return Promise()
     }
 
     private func process(
         outgoingMessage omsg: D2d_OutgoingMessage,
         voipCallAnswerMessage amsg: BoxVoIPCallAnswerMessage
     ) throws -> Promise<Void> {
-        let receiverIdentity = try getReceiverIdentity(for: omsg)
-        guard let msg = VoIPCallMessageDecoder.decodeVoIPCallAnswer(from: amsg) else {
+        guard let msg = VoIPCallMessageDecoder.decodeVoIPCallAnswer(
+            from: amsg,
+            receivedAsReflected: true,
+            isOutgoing: true
+        ) else {
             throw MediatorReflectedProcessorError.messageNotProcessed(message: omsg.loggingDescription)
         }
-        processVoIPCallMessage(
+        
+        let receiverIdentity = try getReceiverIdentity(for: omsg)
+        
+        return processVoIPCallMessage(
             abstractMessage: amsg,
             voipMessage: msg,
-            identity: receiverIdentity,
-            isOutgoing: true
+            identity: receiverIdentity
         )
-        return Promise()
     }
 
     private func process(
         outgoingMessage omsg: D2d_OutgoingMessage,
         voipCallIceCandidatesMessage amsg: BoxVoIPCallIceCandidatesMessage
     ) throws -> Promise<Void> {
-        let receiverIdentity = try getReceiverIdentity(for: omsg)
-        guard let msg = VoIPCallMessageDecoder.decodeVoIPCallIceCandidates(from: amsg) else {
+        guard let msg = VoIPCallMessageDecoder.decodeVoIPCallIceCandidates(
+            from: amsg,
+            receivedAsReflected: true,
+            isOutgoing: true
+        ) else {
             throw MediatorReflectedProcessorError.messageNotProcessed(message: omsg.loggingDescription)
         }
-        processVoIPCallMessage(
+        
+        let receiverIdentity = try getReceiverIdentity(for: omsg)
+        
+        return processVoIPCallMessage(
             abstractMessage: amsg,
             voipMessage: msg,
-            identity: receiverIdentity,
-            isOutgoing: true
+            identity: receiverIdentity
         )
-        return Promise()
     }
 
     private func process(
@@ -501,25 +513,12 @@ class MediatorReflectedOutgoingMessageProcessor {
         voipCallHangupMessage amsg: BoxVoIPCallHangupMessage
     ) throws -> Promise<Void> {
         let receiverIdentity = try getReceiverIdentity(for: omsg)
-        guard let msg = VoIPCallMessageDecoder.decodeVoIPCallHangup(from: amsg, contactIdentity: receiverIdentity)
-        else {
-            throw MediatorReflectedProcessorError.messageNotProcessed(message: omsg.loggingDescription)
-        }
-        processVoIPCallMessage(
-            abstractMessage: amsg,
-            voipMessage: msg,
-            identity: receiverIdentity,
+        guard let msg = VoIPCallMessageDecoder.decodeVoIPCallHangup(
+            from: amsg,
+            contactIdentity: receiverIdentity,
+            receivedAsReflected: true,
             isOutgoing: true
         )
-        return Promise()
-    }
-
-    private func process(
-        outgoingMessage omsg: D2d_OutgoingMessage,
-        voipCallRingingMessage amsg: BoxVoIPCallRingingMessage
-    ) throws -> Promise<Void> {
-        let receiverIdentity = try getReceiverIdentity(for: omsg)
-        guard let msg = VoIPCallMessageDecoder.decodeVoIPCallRinging(from: amsg, contactIdentity: receiverIdentity)
         else {
             throw MediatorReflectedProcessorError.messageNotProcessed(message: omsg.loggingDescription)
         }
@@ -527,8 +526,29 @@ class MediatorReflectedOutgoingMessageProcessor {
         return processVoIPCallMessage(
             abstractMessage: amsg,
             voipMessage: msg,
-            identity: receiverIdentity,
+            identity: amsg.fromIdentity
+        )
+    }
+
+    private func process(
+        outgoingMessage omsg: D2d_OutgoingMessage,
+        voipCallRingingMessage amsg: BoxVoIPCallRingingMessage
+    ) throws -> Promise<Void> {
+        let receiverIdentity = try getReceiverIdentity(for: omsg)
+        guard let msg = VoIPCallMessageDecoder.decodeVoIPCallRinging(
+            from: amsg,
+            contactIdentity: receiverIdentity,
+            receivedAsReflected: true,
             isOutgoing: true
+        )
+        else {
+            throw MediatorReflectedProcessorError.messageNotProcessed(message: omsg.loggingDescription)
+        }
+        
+        return processVoIPCallMessage(
+            abstractMessage: amsg,
+            voipMessage: msg,
+            identity: amsg.fromIdentity
         )
     }
 
@@ -536,15 +556,14 @@ class MediatorReflectedOutgoingMessageProcessor {
         abstractMessage amsg: AbstractMessage,
         voipMessage: VoIPCallMessageProtocol,
         identity: String,
-        isOutgoing: Bool
     ) -> Promise<Void> {
         Promise { seal in
-            if !isOutgoing {
+            if !voipMessage.isOutgoing {
                 messageProcessorDelegate.incomingMessageStarted(amsg)
             }
 
             messageProcessorDelegate.processVoIPCall(voipMessage as! NSObject, identity: identity) { delegate in
-                if !isOutgoing {
+                if !voipMessage.isOutgoing {
                     if let delegate {
                         delegate.incomingMessageFinished(amsg)
                     }
@@ -568,7 +587,7 @@ class MediatorReflectedOutgoingMessageProcessor {
         
         try messageStore.save(
             groupCallStartMessage: amsg,
-            senderIdentity: frameworkInjector.myIdentityStore.identity,
+            senderIdentity: frameworkInjector.profileStore.profile.myIdentity.rawValue,
             createdAt: getCreatedAt(for: omsg),
             reflectedAt: reflectedAt,
             isOutgoing: true
@@ -596,7 +615,7 @@ class MediatorReflectedOutgoingMessageProcessor {
     ) throws -> Promise<Void> {
         try messageStore.save(
             groupReactionMessage: amsg,
-            senderIdentity: frameworkInjector.myIdentityStore.identity,
+            senderIdentity: frameworkInjector.profileStore.profile.myIdentity.rawValue,
             createdAt: getCreatedAt(for: omsg),
             isOutgoing: true
         )

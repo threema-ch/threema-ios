@@ -7,3 +7,6 @@
 /* (No Comment) */
 "safe_mode_switch" = "Gelişmiş Mod";
 
+/* (No Comment) */
+"sentry_deactivation_switch_title" = "Anonim Hata Raporlamayı Devre Dışı Bırak";
+

@@ -23,7 +23,7 @@ public final class RemoteSecretInitializeViewsManager: ObservableObject {
 
     private var currentState: ViewState?
     private var retries = 0
-    private var showDeleteAfterRetries: Int
+    private let showDeleteAfterRetries: Int
     private var isInitialFetch = true
     
     /// Stream to handle state updates

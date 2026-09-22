@@ -76,7 +76,7 @@ public final class StyleKit: NSObject {
     /// Reset images that change depending on theme
     ///
     /// - Note: You will also have to reload the image where you used it
-    @objc public class func resetThemedCache() {
+    public class func resetThemedCache() {
         Cache.workIcon = nil
         Cache.houseIcon = nil
         Cache.checkedBackground = nil
@@ -532,22 +532,26 @@ public final class StyleKit: NSObject {
             width = height
         }
         
-        let red: UIColor = .systemRed
-        let orange: UIColor = .systemOrange
-        let green = UIColor(resource: .accentColorPrivate)
-        let gray: UIColor = .systemGray
+        // Colors are baked into a cached bitmap, so resolve them against `Colors.theme` (the source of truth)
+        // instead of the ambient `UITraitCollection.current`, which lags behind on a switch and swaps the colors.
+        let traitCollection = UITraitCollection(userInterfaceStyle: Colors.theme == .dark ? .dark : .light)
+
+        let red = UIColor.systemRed.resolvedColor(with: traitCollection)
+        let orange = UIColor.systemOrange.resolvedColor(with: traitCollection)
+        let green = UIColor(resource: .accentColorPrivate).resolvedColor(with: traitCollection)
+        let gray = UIColor.systemGray.resolvedColor(with: traitCollection)
         let work =
             if TargetManager.isWork {
-                UIColor(resource: .accentColorWork)
+                UIColor(resource: .accentColorWork).resolvedColor(with: traitCollection)
             }
             else if TargetManager.current == .onPrem {
-                UIColor(resource: .accentColorOnPrem)
+                UIColor(resource: .accentColorOnPrem).resolvedColor(with: traitCollection)
             }
             else if TargetManager.isCustomOnPrem {
-                UIColor(resource: .accentColorCustomOnPrem)
+                UIColor(resource: .accentColorCustomOnPrem).resolvedColor(with: traitCollection)
             }
             else {
-                UIColor(resource: .accentColorPrivate)
+                UIColor(resource: .accentColorPrivate).resolvedColor(with: traitCollection)
             }
         
         // Group

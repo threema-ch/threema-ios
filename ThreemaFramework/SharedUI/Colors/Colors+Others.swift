@@ -9,25 +9,12 @@ extension Colors {
             UIColor(resource: .gray800)
         }
     }
-    
-    @objc public class var hairLineBallot: UIColor {
-        Colors.backgroundNavigationController
-    }
-        
-    @objc public class var qrCodeTint: UIColor {
-        switch theme {
-        case .light:
-            .black
-        case .dark:
-            .white
-        }
-    }
 }
 
 // MARK: Shadows
 
 extension Colors {
-    @objc public class var shadowNotification: UIColor {
+    public class var shadowNotification: UIColor {
         switch theme {
         case .light:
             .black
@@ -40,7 +27,7 @@ extension Colors {
 // MARK: URLs
 
 extension Colors {
-    @objc public class var licenseLogoURL: String? {
+    public class var licenseLogoURL: String? {
         switch Colors.theme {
         case .light:
             MyIdentityStore.shared().licenseLogoLightURL

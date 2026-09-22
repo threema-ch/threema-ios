@@ -1,4 +1,3 @@
-#import "AppDelegate.h"
 #import "MWPhotoBrowser.h"
 #import "MWPhoto.h"
 #import "CryptoUtils.h"
@@ -17,7 +16,6 @@
 #import "RestoreIdentityViewController.h"
 #import "IntroQuestionView.h"
 #import "KKPasscodeSettingsViewController.h"
-#import "NibUtil.h"
 #import <MediaPlayer/MediaPlayer.h>
 #import "ZSWTappableLabel.h"
 #import "ThemedNavigationController.h"

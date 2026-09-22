@@ -116,6 +116,7 @@ message TransactionScope {
     NEW_DEVICE_SYNC = 6;
     DROP_DEVICE = 7;
     WORK_SYNC_DELTA = 8;
+    O2O_CALL = 9;
   }
   Scope scope = 1;
 }

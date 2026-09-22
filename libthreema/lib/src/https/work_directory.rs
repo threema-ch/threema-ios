@@ -1,4 +1,5 @@
 //! Work directory endpoint.
+use libthreema_dependencies::crypto::digest::{self, Mac as _};
 use serde::{Deserialize, Serialize};
 
 use super::endpoint::{HttpsEndpointError, TIMEOUT, https_headers_with_authentication};
@@ -8,14 +9,16 @@ use crate::{
         config::{WorkContext, WorkServerBaseUrl, WorkServerLegacyBaseUrl},
         keys::{ClientKey, PublicKey, RemoteSecret, RemoteSecretAuthenticationToken},
     },
-    crypto::{blake2b, digest::Mac as _},
     https::{HttpsHeadersBuilder, HttpsMethod, HttpsRequest, HttpsResponse, HttpsResult},
     model::contact::{Contact, ContactUpdateError},
     protobuf::d2d_sync::contact as protobuf_contact,
-    utils::serde::{base64, string},
+    utils::{
+        serde::{base64, string},
+        update::ApplySome as _,
+    },
 };
 
-#[derive(Debug, Serialize)]
+#[derive(Serialize)]
 struct WorkCredentials<'creds> {
     #[serde(rename = "username")]
     username: &'creds str,
@@ -76,7 +79,7 @@ fn handle_status<TStatusFn: FnOnce(u16) -> Option<HttpsEndpointError>>(
     }
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Deserialize)]
 struct AuthenticationChallenge {
     #[serde(rename = "challengePublicKey", with = "base64::fixed_length")]
     public_key: [u8; PublicKey::LENGTH],
@@ -85,13 +88,13 @@ struct AuthenticationChallenge {
     challenge: Vec<u8>,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Serialize)]
 pub(crate) struct AuthenticationChallengeResponse {
     #[serde(rename = "challenge", with = "base64::variable_length")]
     challenge: Vec<u8>,
 
     #[serde(rename = "response", with = "base64::fixed_length")]
-    response: [u8; blake2b::MAC_256_LENGTH],
+    response: [u8; digest::MAC_256_LENGTH],
 }
 
 /// Process the result and solve the authentication challenge.
@@ -105,6 +108,7 @@ pub(crate) fn handle_authentication_challenge(
         challenge: challenge.challenge.clone(),
         response: client_key
             .derive_work_directory_authentication_key(&PublicKey::from(challenge.public_key))
+            .ok_or(HttpsEndpointError::InvalidChallenge)?
             .0
             .chain_update(&challenge.challenge)
             .finalize()
@@ -114,7 +118,7 @@ pub(crate) fn handle_authentication_challenge(
     Ok(response)
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Serialize)]
 struct WorkContactsRequest<'body> {
     #[serde(flatten)]
     credentials: WorkCredentials<'body>,
@@ -123,7 +127,7 @@ struct WorkContactsRequest<'body> {
     identities: &'body [ThreemaId],
 }
 
-/// Request additonal properties associated to a set of contacts of the same Work
+/// Request additional properties associated to a set of contacts of the same Work
 /// subscription.
 pub(crate) fn request_contacts(
     client_info: &ClientInfo,
@@ -153,13 +157,13 @@ pub(crate) struct WorkContact {
     pub(crate) identity: ThreemaId,
 
     #[serde(rename = "pk", with = "base64::fixed_length")]
-    pub(crate) public_key: [u8; PublicKey::LENGTH],
+    public_key: [u8; PublicKey::LENGTH],
 
     #[serde(rename = "first", deserialize_with = "string::empty_to_optional::deserialize")]
-    pub(crate) first_name: Option<String>,
+    first_name: Option<String>,
 
     #[serde(rename = "last", deserialize_with = "string::empty_to_optional::deserialize")]
-    pub(crate) last_name: Option<String>,
+    last_name: Option<String>,
 }
 impl WorkContact {
     pub(crate) fn update(self, contact: &mut Contact) -> Result<(), ContactUpdateError> {
@@ -191,12 +195,8 @@ impl WorkContact {
         }
 
         // Update first and last name if provided
-        if let Some(first_name) = first_name {
-            contact.first_name = Some(first_name);
-        }
-        if let Some(last_name) = last_name {
-            contact.last_name = Some(last_name);
-        }
+        contact.first_name.apply_some(first_name);
+        contact.last_name.apply_some(last_name);
 
         // Done
         Ok(())
@@ -211,7 +211,7 @@ pub(crate) fn handle_contacts_result(result: HttpsResult) -> Result<Vec<WorkCont
     Ok(amendments)
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Serialize)]
 struct WorkPropertiesRequest<'body> {
     #[serde(rename = "identity")]
     identity: ThreemaId,
@@ -247,7 +247,7 @@ pub(crate) fn update_work_properties_authentication_request(
     }
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Serialize)]
 struct CreateWorkPropertiesAuthenticatedRequest<'body> {
     #[serde(flatten)]
     request: WorkPropertiesRequest<'body>,
@@ -290,7 +290,7 @@ pub(crate) fn handle_update_work_properties_result(result: HttpsResult) -> Resul
     Ok(())
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Serialize)]
 struct WorkCreateRemoteSecretRequest<'body> {
     #[serde(rename = "identity")]
     identity: ThreemaId,
@@ -326,7 +326,7 @@ pub(crate) fn create_remote_secret_authentication_request(
     }
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Serialize)]
 struct WorkCreateRemoteSecretAuthenticatedRequest<'body> {
     #[serde(flatten)]
     request: WorkCreateRemoteSecretRequest<'body>,
@@ -363,7 +363,7 @@ pub(crate) fn create_remote_secret_request(
     }
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Deserialize)]
 struct WorkCreateRemoteSecretResponse {
     #[serde(rename = "secretAuthenticationToken", with = "base64::fixed_length")]
     remote_secret_authentication_token: [u8; RemoteSecretAuthenticationToken::LENGTH],
@@ -380,7 +380,7 @@ pub(crate) fn handle_create_remote_secret_result(
     ))
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Serialize)]
 struct WorkDeleteRemoteSecretRequest<'body> {
     #[serde(rename = "identity")]
     identity: ThreemaId,
@@ -416,7 +416,7 @@ pub(crate) fn delete_remote_secret_authentication_request(
     }
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Serialize)]
 struct WorkDeleteRemoteSecretAuthenticatedRequest<'body> {
     #[serde(flatten)]
     request: WorkDeleteRemoteSecretRequest<'body>,
@@ -459,7 +459,7 @@ pub(crate) fn handle_delete_remote_secret_result(result: HttpsResult) -> Result<
     Ok(())
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Serialize)]
 struct WorkFetchRemoteSecretRequest<'body> {
     #[serde(rename = "secretAuthenticationToken", with = "base64::fixed_length")]
     remote_secret_authentication_token: &'body [u8; RemoteSecretAuthenticationToken::LENGTH],
@@ -483,7 +483,7 @@ pub(crate) fn request_remote_secret(
     }
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Deserialize)]
 pub(crate) struct WorkFetchRemoteSecretResponse {
     #[serde(rename = "secret", with = "base64::fixed_length")]
     pub(crate) remote_secret: [u8; RemoteSecret::LENGTH],
@@ -511,7 +511,7 @@ pub(crate) fn handle_remote_secret_result(
 #[cfg(test)]
 mod tests {
     use assert_matches::assert_matches;
-    use data_encoding::HEXLOWER;
+    use libthreema_dependencies::data_encoding::HEXLOWER_PERMISSIVE;
     use prost::Message as _;
     use rstest::rstest;
     use serde_json::json;
@@ -521,6 +521,7 @@ mod tests {
         common::config::{Config, WorkCredentials, WorkFlavor},
         https::HttpsResponse,
         protobuf,
+        utils::test::ResultUnwrapErrorQuiet as _,
         work::properties::{WorkAvailabilityStatus, WorkProperties},
     };
 
@@ -540,10 +541,7 @@ mod tests {
 
     fn work_properties() -> WorkProperties {
         WorkProperties {
-            availability_status: Some(WorkAvailabilityStatus {
-                category: protobuf::d2d_sync::WorkAvailabilityStatusCategory::Busy,
-                description: None,
-            }),
+            availability_status: Some(WorkAvailabilityStatus::Busy(String::default())),
         }
     }
 
@@ -668,13 +666,30 @@ mod tests {
     }
 
     #[test]
-    fn authentication_challenge_valid() -> anyhow::Result<()> {
-        let response = handle_authentication_challenge(
-            &ClientKey::from([0_u8; ClientKey::LENGTH]),
+    fn authentication_challenge_with_non_contributory_public_key() {
+        let error = handle_authentication_challenge(
+            &ClientKey::from([0; ClientKey::LENGTH]),
             Ok(HttpsResponse {
                 status: 200,
                 body: serde_json::to_vec(&json!({
                     "challengePublicKey": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+                    "challenge": "bWVvdw==",
+                }))
+                .unwrap(),
+            }),
+        )
+        .unwrap_err_quiet();
+        assert_matches!(error, HttpsEndpointError::InvalidChallenge);
+    }
+
+    #[test]
+    fn authentication_challenge_valid() -> anyhow::Result<()> {
+        let response = handle_authentication_challenge(
+            &ClientKey::from([0; ClientKey::LENGTH]),
+            Ok(HttpsResponse {
+                status: 200,
+                body: serde_json::to_vec(&json!({
+                    "challengePublicKey": "BAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
                     "challenge": "bWVvdw==",
                 }))?,
             }),
@@ -682,8 +697,8 @@ mod tests {
         assert_eq!(response.challenge, b"meow".to_vec());
         assert_eq!(
             response.response.to_vec(),
-            HEXLOWER
-                .decode(b"56266bebac77186b46982853067a9a405f28163e5d436e9353388f4f6f59e394")
+            HEXLOWER_PERMISSIVE
+                .decode(b"a9faac27a48cd83f6eed4f16c0bb6c11ca19b0ffd1fbc37c13746e068500282a")
                 .unwrap()
         );
         Ok(())
@@ -696,7 +711,7 @@ mod tests {
             &work_server_url(),
             &work_context(),
             ThreemaId::predefined(*b"TITATEST"),
-            protobuf::directory::WorkProperties::try_from(work_properties())?.encode_to_vec(),
+            protobuf::directory::WorkProperties::from(work_properties()).encode_to_vec(),
         );
 
         assert_eq!(
@@ -724,7 +739,7 @@ mod tests {
                 challenge: b"kekse".to_vec(),
                 response: [0_u8; 32],
             },
-            protobuf::directory::WorkProperties::try_from(work_properties())?.encode_to_vec(),
+            protobuf::directory::WorkProperties::from(work_properties()).encode_to_vec(),
         );
 
         assert_eq!(
@@ -980,10 +995,11 @@ mod tests {
         }"#
     )]
     fn remote_secret_response_invalid_content(#[case] body: &'static [u8]) {
-        let response = handle_remote_secret_result(Ok(HttpsResponse {
+        let error = handle_remote_secret_result(Ok(HttpsResponse {
             status: 200,
             body: body.to_vec(),
-        }));
-        assert_matches!(response, Err(HttpsEndpointError::DecodingFailed(_)));
+        }))
+        .unwrap_err_quiet();
+        assert_matches!(error, HttpsEndpointError::DecodingFailed(_));
     }
 }

@@ -1,0 +1,78 @@
+# Only the rules defined in this file run. That is deliberate: SwiftLint is here to protect one invariant, not
+# to impose a style — `.swiftformat` owns formatting — and turning on all two hundred built-ins at once would
+# bury the one that matters. A second custom rule needs nothing here, just an entry under `custom_rules`.
+#
+# `custom_rules` rather than `audio_session_ownership`: SwiftLint treats `custom_rules` as *the* rule and the
+# entries below as its sub-rules, so the parent is what `only_rules` takes. The identifier is still what
+# `// swiftlint:disable:next audio_session_ownership` names, and what appears in the output.
+only_rules:
+  - custom_rules
+
+# Not scanned at all. Vendored and generated sources are nobody's invariant to keep.
+excluded:
+  - Vendor
+  - libthreema
+  - libthreemaSwift
+  - saltyrtc-task-relayed-data-rs
+  - threema-protocols
+  - build
+  - DerivedData
+  - .build
+
+custom_rules:
+  audio_session_ownership:
+    name: "Audio session ownership"
+    regex: '(AVAudioSession|RTCAudioSession)\.sharedInstance\(\)|RTCAudioSessionConfiguration\.setWebRTC'
+    message: >
+      The process-wide audio session belongs to AudioSessionManager. Acquire a claim and let it decide:
+      `try await audioSessionManager.acquire(.playback)`. Only a driver may touch a session, reads included —
+      if you need something no AudioSessionClientKind provides, add a kind rather than configuring here.
+      See Audio-Session-Package.md.
+    severity: error
+    # The drivers are the seam, and are the only code permitted through it. The package's tests hand a real
+    # `AVAudioSession` to the CallKit forwarders on purpose, because that is what `CXProvider` does.
+    excluded:
+      - "AudioSessionManager/Sources/AudioSessionManager/Driver"
+      - "AudioSessionManager/Sources/AudioSessionManagerRTC"
+      - "AudioSessionManager/Tests"
+    # Otherwise every mention in a doc comment — including the ones explaining this rule — is a violation.
+    excluded_match_kinds:
+      - comment
+      - doccomment
+      - string
+
+  record_permission_ownership:
+    name: "Record permission ownership"
+    regex: 'AVAudioApplication\.(shared\.recordPermission|requestRecordPermission)'
+    message: >
+      `AVAudioApplication` only reports the microphone access that was cached when this process asked for it the
+      first time, and the Notification Extension reuses its process for multiple pushes. Use `RecordPermission`,
+      which merges that value with the one the app stored in the app group.
+    severity: error
+    excluded:
+      # The seam, and the only code permitted through it.
+      - "ThreemaFramework/Utilities/RecordPermission.swift"
+      # The package cannot reach `ThreemaFramework`, thus it has no way to comply. It only runs in the app.
+      - "GroupCalls"
+    excluded_match_kinds:
+      - comment
+      - doccomment
+      - string
+
+  record_permission_app_only:
+    name: "Record permission is asked and stored by the app"
+    regex: 'RecordPermission\.(requestPermission|storeCurrentAccess)'
+    message: >
+      Only the app may ask for microphone access and publish the result. An extension cannot show the system
+      alert, and its `AVAudioApplication` value is stale as soon as its process is reused, so storing it would
+      overwrite what the app knows. Read `RecordPermission.access` or `RecordPermission.isGranted` instead.
+    severity: error
+    # Everything that also runs outside the app: the extensions and the framework, which is linked by both.
+    included:
+      - "ThreemaNotificationExtension"
+      - "ThreemaShareExtension"
+      - "ThreemaFramework"
+    excluded_match_kinds:
+      - comment
+      - doccomment
+      - string

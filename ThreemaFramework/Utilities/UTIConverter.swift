@@ -1,9 +1,8 @@
 import CocoaLumberjackSwift
 
-@objcMembers
 public final class UTIConverter: NSObject {
     
-    public static func mimeType(fromUTI uti: String) -> String? {
+    @objc public static func mimeType(fromUTI uti: String) -> String? {
         UTType(uti)?.preferredMIMEType
     }
 
@@ -11,42 +10,42 @@ public final class UTIConverter: NSObject {
         UTType(mimeType: mimeType)?.identifier
     }
 
-    public static func uti(forFileURL url: URL) -> String? {
+    @objc public static func uti(forFileURL url: URL) -> String? {
         UTType(filenameExtension: url.pathExtension)?.identifier
     }
 
-    public static func preferredFileExtension(forMimeType mimeType: String) -> String? {
+    @objc public static func preferredFileExtension(forMimeType mimeType: String) -> String? {
         UTType(mimeType: mimeType)?.preferredFilenameExtension
     }
 
-    public static func isImageMimeType(_ mimeType: String) -> Bool {
+    @objc public static func isImageMimeType(_ mimeType: String) -> Bool {
         UTType(mimeType: mimeType)?.conforms(to: .image) ?? false
     }
 
-    public static func isRenderingImageMimeType(_ mimeType: String) -> Bool {
+    @objc public static func isRenderingImageMimeType(_ mimeType: String) -> Bool {
         guard let type = UTType(mimeType: mimeType) else {
             return false
         }
         return type.conforms(to: .jpeg) || type.conforms(to: .png)
     }
 
-    public static func isPNGImageMimeType(_ mimeType: String) -> Bool {
+    @objc public static func isPNGImageMimeType(_ mimeType: String) -> Bool {
         UTType(mimeType: mimeType)?.conforms(to: .png) ?? false
     }
 
-    public static func isGifMimeType(_ mimeType: String) -> Bool {
+    @objc public static func isGifMimeType(_ mimeType: String) -> Bool {
         UTType(mimeType: mimeType)?.conforms(to: .gif) ?? false
     }
 
-    public static func isAudioMimeType(_ mimeType: String) -> Bool {
+    @objc public static func isAudioMimeType(_ mimeType: String) -> Bool {
         UTType(mimeType: mimeType)?.conforms(to: .audio) ?? false
     }
 
-    public static func isRenderingAudioMimeType(_ mimeType: String) -> Bool {
+    @objc public static func isRenderingAudioMimeType(_ mimeType: String) -> Bool {
         renderingAudioMimeTypes().contains(mimeType)
     }
 
-    public static func isVideoMimeType(_ mimeType: String) -> Bool {
+    @objc public static func isVideoMimeType(_ mimeType: String) -> Bool {
         UTType(mimeType: mimeType)?.conforms(to: .video) ?? false
     }
 
@@ -54,7 +53,7 @@ public final class UTIConverter: NSObject {
         UTType(mimeType: mimeType)?.conforms(to: .movie) ?? false
     }
 
-    public static func isRenderingVideoMimeType(_ mimeType: String) -> Bool {
+    @objc public static func isRenderingVideoMimeType(_ mimeType: String) -> Bool {
         renderingVideoMimeTypes().contains(mimeType)
     }
 

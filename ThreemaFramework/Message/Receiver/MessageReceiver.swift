@@ -31,7 +31,6 @@ final class MessageReceiver {
     /// - Returns: Linked/paired other devices
     /// - Throws: MultiDeviceManagerError.multiDeviceNotActivated, MessageReceiverError
     func requestDevicesInfo(thisDeviceID deviceID: Data) -> Promise<[DeviceInfo]> {
-        var dispatchMessageListener: DispatchGroup? = DispatchGroup()
         var messageListener: MessageListener?
 
         return firstly {
@@ -51,6 +50,10 @@ final class MessageReceiver {
 
             var devicesInfo: D2m_DevicesInfo?
 
+            let dispatchMessageListener = DispatchGroup()
+            let queueIsLeaveOnDispatchMessageListener = DispatchQueue(label: "queueIsLeaveOnDispatchMessageListener")
+            var isLeaveOnDispatchMessageListener = false
+
             messageListener = MessageListener(response: { listener, type, data in
                 guard messageListener === listener else {
                     return
@@ -63,13 +66,15 @@ final class MessageReceiver {
                 devicesInfo = self.mediatorMessageProtocol.decodeDevicesInfo(message: data)
 
                 // Prevent multiple calls on `leave` function
-                DispatchQueue.global().async {
-                    dispatchMessageListener?.leave()
-                    dispatchMessageListener = nil
+                queueIsLeaveOnDispatchMessageListener.async {
+                    if !isLeaveOnDispatchMessageListener {
+                        dispatchMessageListener.leave()
+                        isLeaveOnDispatchMessageListener = true
+                    }
                 }
             })
 
-            dispatchMessageListener?.enter()
+            dispatchMessageListener.enter()
 
             self.serverConnector.registerMessageListenerDelegate(delegate: messageListener!)
 
@@ -77,7 +82,7 @@ final class MessageReceiver {
                 throw error
             }
 
-            let result = dispatchMessageListener?.wait(timeout: .now() + .seconds(self.responseTimeoutInSeconds))
+            let result = dispatchMessageListener.wait(timeout: .now() + .seconds(self.responseTimeoutInSeconds))
             if result != .success {
                 throw MessageReceiverError.responseTimeout
             }

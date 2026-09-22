@@ -751,6 +751,33 @@
     } onError:onError];
 }
 
+- (void)reportSpamForSenderWithIdentity:(nonnull NSString *)senderIdentity andNickname:(nullable NSString *)senderNickname withStore:(nonnull id<MyIdentityStoreProtocol>)identityStore onCompletion:(void(^_Nonnull)(void))onCompletion onError:(void(^_Nonnull)( NSError * _Nullable error))onError {
+     if (identityStore.identity == nil) {
+         onError([ThreemaError threemaError:@"No identity"]);
+         return;
+     }
+     
+     NSMutableDictionary *request = [[NSMutableDictionary alloc] initWithDictionary: @{
+        @"identity": identityStore.identity,
+        @"senderIdentity": senderIdentity,
+     }];
+     
+     if (senderNickname != nil || senderNickname.length > 0) {
+         [request setObject:senderNickname forKey:@"senderNickname"];
+     }
+     
+     [self sendSignedRequest:request toApiPath:@"identity/report_junk" forStore:identityStore onCompletion:^(NSDictionary *jsonObject) {
+         if ([jsonObject[@"success"] boolValue]) {
+             onCompletion();
+         }
+         else {
+             onError([ThreemaError threemaError:jsonObject[@"error"]]);
+         }
+     } onError:onError];
+}
+
+#pragma mark - Private helpers
+
 - (void)sendSignedRequest:(NSDictionary*)request toApiPath:(NSString*)apiPath forStore:(id<MyIdentityStoreProtocol>)identityStore onCompletion:(void(^)(NSDictionary *response))onCompletion onError:(void(^)(NSError *error))onError {
     [self sendSignedRequestPhase1:request toApiPath:apiPath onCompletion:^(NSDictionary *response) {
         [self sendSignedRequestPhase2:request toApiPath:apiPath phase1Response:response forStore:identityStore onCompletion:onCompletion onError:onError];

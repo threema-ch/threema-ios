@@ -44,6 +44,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, readonly) BOOL isIPv6Connection;
 @property (nonatomic, readonly) BOOL isProxyConnection;
 
+/// Whether we are currently the leader device when MD is active
+@property (readonly) BOOL isRolePromotedToLeader;
 /**
  Connect to chat or mediator server.
 

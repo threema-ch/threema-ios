@@ -7,3 +7,6 @@
 /* (No Comment) */
 "safe_mode_switch" = "Разширен помощен режим";
 
+/* (No Comment) */
+"sentry_deactivation_switch_title" = "Деактивиране на анонимното докладване на грешки";
+

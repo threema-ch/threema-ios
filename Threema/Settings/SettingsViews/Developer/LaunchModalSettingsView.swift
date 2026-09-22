@@ -18,7 +18,9 @@ struct LaunchModalSettingsView: View {
                     Text(verbatim: "Notification Reminder")
                 }
                 .sheet(isPresented: $showNotificationReminderView) {
-                    NotificationReminderView()
+                    NotificationReminderView {
+                        // no-op
+                    }
                 }
                 
                 Button {
@@ -27,7 +29,9 @@ struct LaunchModalSettingsView: View {
                     Text(verbatim: "Notification Type Selection")
                 }
                 .sheet(isPresented: $showNotificationTypeSelectionView) {
-                    NotificationTypeSelectionView()
+                    NotificationTypeSelectionView {
+                        // no-op
+                    }
                 }
 
                 Button {
@@ -52,7 +56,9 @@ struct LaunchModalSettingsView: View {
                     RemoteSecretActivateDeactivateView(
                         viewModel: RemoteSecretActivateDeactivateViewModel(
                             type: RemoteSecretActivateDeactivateViewModel.ViewType.activate
-                        )
+                        ) {
+                            // no-op
+                        }
                     )
                 }
 
@@ -65,7 +71,9 @@ struct LaunchModalSettingsView: View {
                     RemoteSecretActivateDeactivateView(
                         viewModel: RemoteSecretActivateDeactivateViewModel(
                             type: RemoteSecretActivateDeactivateViewModel.ViewType.deactivate
-                        )
+                        ) {
+                            // no-op
+                        }
                     )
                 }
                 
@@ -75,7 +83,9 @@ struct LaunchModalSettingsView: View {
                     Text(verbatim: "Identity This Device Only")
                 }
                 .sheet(isPresented: $showIdentityThisDeviceOnlyDecisionView) {
-                    IdentityThisDeviceOnlyDecisionView(businessInjector: BusinessInjector.ui)
+                    IdentityThisDeviceOnlyDecisionView(businessInjector: BusinessInjector.ui) {
+                        // no-op
+                    }
                 }
             } header: {
                 Text(verbatim: "Show Modals")

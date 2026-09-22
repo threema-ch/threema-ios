@@ -1,3 +1,4 @@
+import AudioSessionManager
 import CocoaLumberjackSwift
 import Foundation
 import SwiftUI
@@ -19,18 +20,27 @@ final class MWPhotoBrowserWrapper: NSObject, MWPhotoBrowserDelegate, MWVideoDele
     let entityManager: EntityManager
     
     private weak var delegate: MWPhotoBrowserWrapperDelegate?
+
+    private let audioSessionManager: any AudioSessionManagerProtocol
+
+    /// Held from the first video played until the browser goes away.
+    private var audioSessionClaim: AudioSessionClaim?
+
+    // MARK: - Lifecycle
     
     init(
         for conversation: ConversationEntity,
         in parentViewController: UIViewController?,
         entityManager: EntityManager,
-        delegate: MWPhotoBrowserWrapperDelegate
+        delegate: MWPhotoBrowserWrapperDelegate,
+        audioSessionManager: any AudioSessionManagerProtocol = BusinessInjector.ui.audioSessionManager
     ) {
         self.conversation = conversation
         self.parentViewController = parentViewController
         self.entityManager = entityManager
         self.delegate = delegate
-        
+        self.audioSessionManager = audioSessionManager
+
         super.init()
         NotificationCenter.default.addObserver(
             self,
@@ -40,6 +50,18 @@ final class MWPhotoBrowserWrapper: NSObject, MWPhotoBrowserDelegate, MWVideoDele
         )
     }
     
+    deinit {
+        guard let claim = audioSessionClaim else {
+            return
+        }
+
+        // Copied into a local: the `Task` outlives this object.
+        let manager = audioSessionManager
+        Task {
+            await manager.release(claim)
+        }
+    }
+
     private lazy var photoBrowser: MWPhotoBrowser? = createPhotoBrowser()
     
     private var mediaMessages = [BaseMessageEntity]()
@@ -209,7 +231,7 @@ final class MWPhotoBrowserWrapper: NSObject, MWPhotoBrowserDelegate, MWVideoDele
     // MARK: MWVideoDelegate
 
     func play(_ video: MediaBrowserVideo!) {
-        try? AVAudioSession.sharedInstance().setCategory(.playback)
+        acquireAudioSessionClaim()
     }
     
     // MARK: MWFileDelegate
@@ -221,7 +243,25 @@ final class MWPhotoBrowserWrapper: NSObject, MWPhotoBrowserDelegate, MWVideoDele
     }
     
     func playFileVideo(_ fileMessageEntity: FileMessageEntity) {
-        try? AVAudioSession.sharedInstance().setCategory(.playback)
+        acquireAudioSessionClaim()
+    }
+
+    // MARK: - Audio session claim
+
+    private func acquireAudioSessionClaim() {
+        guard audioSessionClaim == nil else {
+            return
+        }
+
+        Task { [weak self] in
+            let claim = try? await self?.audioSessionManager.acquire(.mediaPlayback)
+
+            guard let self, let claim else {
+                return
+            }
+
+            audioSessionClaim = claim
+        }
     }
     
     func toggleControls() {

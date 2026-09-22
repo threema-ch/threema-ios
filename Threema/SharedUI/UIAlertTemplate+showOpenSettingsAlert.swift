@@ -3,7 +3,7 @@ import ThreemaMacros
 import UIKit
 
 // TODO: Move this into `UIAlertTemplate` if no more Objective-C is needed
-public enum NoAccessAlertType: Int {
+enum NoAccessAlertType: Int {
     case camera
     case contacts
     case location
@@ -54,7 +54,7 @@ extension UIAlertTemplate {
     ///   - noAccessAlertType: Type of missing access
     ///   - openSettingsCompletion: Closure called after settings are opened
     ///   - actionCancel: Closure called when cancel is selected
-    public static func showOpenSettingsAlert(
+    static func showOpenSettingsAlert(
         owner: UIViewController,
         noAccessAlertType: NoAccessAlertType,
         openSettingsCompletion: (() -> Void)? = nil,
@@ -98,7 +98,7 @@ extension UIAlertTemplate {
     /// - Parameters:
     ///   - owner: UIViewController to present the alert on
     ///   - noAccessAlertType: Type of missing access
-    public static func showOpenSettingsAlert(
+    static func showOpenSettingsAlert(
         owner: UIViewController,
         noAccessAlertType: NoAccessAlertType
     ) {

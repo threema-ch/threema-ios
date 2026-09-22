@@ -2,8 +2,8 @@
 use core::{cmp::min, mem};
 
 use const_format::formatcp;
-use data_encoding::HEXLOWER_PERMISSIVE;
 use educe;
+use libthreema_dependencies::data_encoding::HEXLOWER_PERMISSIVE;
 use libthreema_macros::{DebugVariantNames, Name, VariantNames};
 use prost::Message as _;
 use tracing::{debug, error, trace, warn};
@@ -16,7 +16,7 @@ use crate::{
         PayloadEncoder as _,
         handshake::{ServerHello, ServerInfo},
     },
-    protobuf::d2m::{self as protobuf},
+    protobuf,
     utils::{
         bytes::{ByteReaderError, ByteWriterError},
         debug::Name as _,
@@ -25,9 +25,9 @@ use crate::{
 };
 
 /// The minimum supported protocol version (inclusive).
-const MINIMUM_PROTOCOL_VERSION: u32 = protobuf::ProtocolVersion::V0 as u32;
+const MINIMUM_PROTOCOL_VERSION: u32 = protobuf::d2m::ProtocolVersion::V0 as u32;
 /// The maximum supported protocol version (inclusive).
-const MAXIMUM_PROTOCOL_VERSION: u32 = protobuf::ProtocolVersion::V0 as u32;
+const MAXIMUM_PROTOCOL_VERSION: u32 = protobuf::d2m::ProtocolVersion::V0 as u32;
 
 pub mod payload;
 
@@ -163,19 +163,21 @@ pub struct D2mContext {
 
     /// Policy to be applied in case the device id is not registered on the server and all device slots have
     /// been exhausted.
-    pub device_slots_exhausted_policy: protobuf::client_hello::DeviceSlotsExhaustedPolicy,
+    pub device_slots_exhausted_policy: protobuf::d2m::client_hello::DeviceSlotsExhaustedPolicy,
 
     /// Policy determining the device slot's lifetime.
-    pub device_slot_expiration_policy: protobuf::DeviceSlotExpirationPolicy,
+    pub device_slot_expiration_policy: protobuf::d2m::DeviceSlotExpirationPolicy,
 
     /// Expected device registration state on the mediator server.
-    pub expected_device_slot_state: protobuf::DeviceSlotState,
+    pub expected_device_slot_state: protobuf::d2m::DeviceSlotState,
 
     /// Client info to derive the `DeviceInfo` from.
     pub client_info: ClientInfo,
 
     /// The device's label (e.g. "PC at Work"), recommended to not exceed 64 grapheme clusters.
-    pub device_label: Option<String>,
+    ///
+    /// Empty string means that the device has no provided label.
+    pub device_label: String,
 }
 
 /// A D2M state update to indicate advancing.
@@ -284,6 +286,9 @@ impl State {
                 .device_group_key
                 .path_key()
                 .authentication_cipher(&server_hello.ephemeral_server_key)
+                .ok_or(D2mProtocolError::ServerError(
+                    "Non-contributory ephemeral server key for authentication cipher",
+                ))?
                 .0
                 .encrypt_random_nonce_ahead(server_hello.challenge.as_slice())
                 .map_err(|_| {
@@ -312,7 +317,7 @@ impl State {
             };
 
             // Wrap it in a ClientHello
-            protobuf::ClientHello {
+            protobuf::d2m::ClientHello {
                 version: chosen_version,
                 response: challenge_response,
                 device_id: context.device_id.0,
@@ -399,7 +404,7 @@ impl State {
             outgoing_datagram: None,
             incoming_payload: Some(payload),
         };
-        Ok((State::PostHandshake(state), Some(instruction)))
+        Ok((Self::PostHandshake(state), Some(instruction)))
     }
 }
 
@@ -461,13 +466,13 @@ impl D2mProtocol {
             let device_group_id = context.device_group_key.path_key().public_key();
             trace!(
                 ?device_group_id,
-                server_group = &context.csp_server_group.0,
+                server_group = context.csp_server_group.as_str(),
                 "Create client-url-info message"
             );
             let client_url_info = HEXLOWER_PERMISSIVE.encode(
-                &protobuf::ClientUrlInfo {
+                &protobuf::d2m::ClientUrlInfo {
                     device_group_id: device_group_id.0.as_bytes().to_vec(),
-                    server_group: context.csp_server_group.0.clone().to_string(),
+                    server_group: context.csp_server_group.as_str().to_owned(),
                 }
                 .encode_to_vec(),
             );

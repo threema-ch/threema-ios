@@ -43,9 +43,6 @@ protocol VoIPCallPeerConnectionClientProtocol {
 
     func muteAudio(completion: @escaping () -> Void)
     func unmuteAudio(completion: @escaping () -> Void)
-    func activateRTCAudio(speakerActive: Bool)
-    func speakerOff()
-    func speakerOn()
 
     func startCaptureLocalVideo(renderer: RTCVideoRenderer, useBackCamera: Bool, switchCamera: Bool)
     func endCaptureLocalVideo(renderer: RTCVideoRenderer, switchCamera: Bool)
@@ -62,11 +59,11 @@ protocol VoIPCallPeerConnectionClientProtocol {
 }
 
 struct PeerConnectionParameters {
-    public var isVideoCallAvailable = true
-    public var videoCodecHwAcceleration = true
-    public var forceTurn = false
-    public var gatherContinually = false
-    public var allowIpv6 = true
+    var isVideoCallAvailable = true
+    var videoCodecHwAcceleration = true
+    var forceTurn = false
+    var gatherContinually = false
+    var allowIpv6 = true
 
     var isDataChannelAvailable = false
 }
@@ -110,9 +107,6 @@ final class VoIPCallPeerConnectionClient: NSObject, VoIPCallPeerConnectionClient
     var peerConnection: RTCPeerConnection?
     private var peerConnectionParameters: PeerConnectionParameters?
 
-    private let rtcAudioSession = RTCAudioSession.sharedInstance()
-    private let audioQueue = DispatchQueue(label: "VoIPCallAudioQueue")
-    
     private var dataChannelQueue = Deque<Any>()
     private let dataChannelLockQueue = DispatchQueue(label: "VoIIPCallPeerConnectionClientLockQueue")
     
@@ -123,6 +117,12 @@ final class VoIPCallPeerConnectionClient: NSObject, VoIPCallPeerConnectionClient
     private var dataChannel: RTCDataChannel?
         
     private var statsTimer: Timer?
+
+    /// One-shot that relaxes `statsTimer` to a longer interval once the call has settled. Held so
+    /// teardown can cancel it: left running it would fire after the call ended and install a fresh
+    /// stats timer against a dead peer connection.
+    private var statsSettleTimer: Timer?
+
     private var receivingVideoTimer: Timer?
     
     private var isInitiator = false
@@ -146,24 +146,64 @@ final class VoIPCallPeerConnectionClient: NSObject, VoIPCallPeerConnectionClient
     }
     
     private static let logStatsIntervalConnecting = 2.0
-    private static let logStatsIntervalConnected = 30.0
+
+    // Every audio playout metric is a delta between consecutive samples, so one long period averages
+    // a transient delay spike away to nothing, and a call that ends before the second sample yields
+    // no usable delta at all.
+    //
+    // So the connected phase opens densely and relaxes once the call has settled.
+    private static let logStatsIntervalConnected = TargetManager.isSandbox ? 5.0 : 15.0
+    private static let logStatsIntervalSettled = TargetManager.isSandbox ? 10.0 : 30.0
+
+    /// How long the connected phase samples at `logStatsIntervalConnected` before relaxing to
+    /// `logStatsIntervalSettled`.
+    private static let logStatsSettleAfter = 30.0
+
     private static let checkReceivingVideoInterval = 2.0
     
     private var videoCallQualityObserver: NSObjectProtocol?
     
     private let webrtcLogger = RTCCallbackLogger()
 
+    /// Matches the `name` and `UID` fields of an `AVAudioSessionPortDescription`
+    ///
+    /// Deliberately narrow, because these lines also carry values worth keeping:
+    /// - `\b` stops `name` from matching inside a longer key such as `payload_name`
+    /// - the value may not contain `;` or `>`, so one field is consumed rather than the rest of the
+    ///   line — a device name containing a comma is still redacted whole
+    /// - the value *must* be terminated by `;` or `>`, which is what an actual port description
+    ///   guarantees. Without it, `{number = 22, name = (null)}, bypass_voice_processing=0` from the
+    ///   thread dump would match and swallow the setting that follows it.
+    private static let audioDeviceIdentity = try? NSRegularExpression(
+        pattern: "\\b(name|UID) = [^;>]*(?=[;>])"
+    )
+
     enum VoIPCallPeerConnectionClientError: Error {
         case peerConnectionIsNotInitialized
     }
-    
+
     override init() {
-        webrtcLogger.severity = .warning
+        // `.info` surfaces libwebrtc's audio unit and audio device module start/stop messages, which is what makes
+        // a playout stall visible in a log at all. Far too verbose to ship, so it is limited to the
+        // sandbox flavours; a log from a release build will not contain these lines.
+        webrtcLogger.severity = TargetManager.isSandbox ? .info : .warning
         webrtcLogger.start { message in
             let trimmed = message.trimmingCharacters(in: .newlines)
-            DDLogNotice("libwebrtc: \(trimmed)")
+            DDLogNotice("libwebrtc: \(VoIPCallPeerConnectionClient.redactingAudioDeviceIdentity(trimmed))")
         }
         super.init()
+    }
+
+    private static func redactingAudioDeviceIdentity(_ message: String) -> String {
+        guard let audioDeviceIdentity else {
+            return message
+        }
+
+        return audioDeviceIdentity.stringByReplacingMatches(
+            in: message,
+            range: NSRange(message.startIndex..., in: message),
+            withTemplate: "$1 = <redacted>"
+        )
     }
     
     deinit {
@@ -204,7 +244,6 @@ final class VoIPCallPeerConnectionClient: NSObject, VoIPCallPeerConnectionClient
                     self.callID = callID
 
                     self.createMediaSenders()
-                    self.configureAudioSession()
                     self.peerConnection?.delegate = self
                     NotificationCenter.default.addObserver(
                         self,
@@ -242,16 +281,6 @@ final class VoIPCallPeerConnectionClient: NSObject, VoIPCallPeerConnectionClient
         peerConnection?.close()
         peerConnection = nil
         isRemoteVideoActivated = false
-        
-        do {
-            RTCAudioSession.sharedInstance().lockForConfiguration()
-            try RTCAudioSession.sharedInstance().setActive(false)
-            RTCAudioSession.sharedInstance().unlockForConfiguration()
-        }
-        catch {
-            DDLogError("Could not set shared session to not active. Error: \(error)")
-            RTCAudioSession.sharedInstance().unlockForConfiguration()
-        }
     }
 }
 
@@ -276,68 +305,6 @@ extension VoIPCallPeerConnectionClient {
             sendDataToRemote(protobufMessage)
         }
         completion()
-    }
-    
-    /// Activate RTC audio
-    func activateRTCAudio(speakerActive: Bool) {
-        audioQueue.async { [weak self] in
-            guard let self else {
-                return
-            }
-            rtcAudioSession.lockForConfiguration()
-            do {
-                try rtcAudioSession.overrideOutputAudioPort(speakerActive ? .speaker : .none)
-                try rtcAudioSession.setActive(true)
-            }
-            catch {
-                debugPrint("Error setting AVAudioSession category: \(error)")
-            }
-            rtcAudioSession.unlockForConfiguration()
-                        
-            rtcAudioSession.isAudioEnabled = true
-        }
-    }
-    
-    /// Disable the speaker for the RTC session
-    func speakerOff() {
-        audioQueue.async { [weak self] in
-            guard let self else {
-                return
-            }
-                        
-            rtcAudioSession.lockForConfiguration()
-            do {
-                try rtcAudioSession.overrideOutputAudioPort(.none)
-                try rtcAudioSession.setActive(true)
-            }
-            catch {
-                debugPrint("Error setting AVAudioSession category: \(error)")
-            }
-            rtcAudioSession.unlockForConfiguration()
-            
-            delegate?.peerConnectionClient(self, speakerActive: false)
-        }
-    }
-    
-    /// Enable the speaker for the RTC session
-    func speakerOn() {
-        audioQueue.async { [weak self] in
-            guard let self else {
-                return
-            }
-            
-            rtcAudioSession.lockForConfiguration()
-            do {
-                try rtcAudioSession.overrideOutputAudioPort(.speaker)
-                try rtcAudioSession.setActive(true)
-            }
-            catch {
-                debugPrint("Couldn't force audio to speaker: \(error)")
-            }
-            rtcAudioSession.unlockForConfiguration()
-            
-            delegate?.peerConnectionClient(self, speakerActive: true)
-        }
     }
     
     /// Set the audio track for the peer connection
@@ -599,22 +566,6 @@ extension VoIPCallPeerConnectionClient {
         return dataChannel
     }
 
-    /// Configure the audio session category to .playAndRecord in the mode .voiceChat
-    private func configureAudioSession() {
-        rtcAudioSession.lockForConfiguration()
-
-        let configuration = RTCAudioSessionConfiguration.webRTC()
-        configuration.categoryOptions = .threemaCategoryOptions
-
-        do {
-            try rtcAudioSession.setConfiguration(configuration)
-        }
-        catch {
-            DDLogError("VoipCallService: [cid=\(callID?.callID ?? 0)]: Error configuring audio session: \(error)")
-        }
-        rtcAudioSession.unlockForConfiguration()
-    }
-    
     /// set outgoing video limits
     private func setOutgoingVideoLimits(maxBitrate: Int, maxFps: Int, w: UInt32, h: UInt32) {
         setOutgoingVideoEncoderLimits(maxBitrate: maxBitrate, maxFps: maxFps)
@@ -903,7 +854,15 @@ extension VoIPCallPeerConnectionClient: RTCPeerConnectionDelegate {
             options.outboundRtp = true
             options.tracks = true
             options.candidatePairsFlag = .OVERVIEW
-            schedulePeriodStats(options: options, period: VoIPCallPeerConnectionClient.logStatsIntervalConnected)
+           
+            schedulePeriodStats(
+                options: options,
+                period: VoIPCallPeerConnectionClient.logStatsIntervalConnected,
+                settlingTo: (
+                    period: VoIPCallPeerConnectionClient.logStatsIntervalSettled,
+                    after: VoIPCallPeerConnectionClient.logStatsSettleAfter
+                )
+            )
             
             if peerConnectionParameters.isVideoCallAvailable {
                 let receivedVideoOptions = VoIPStatsOptions()
@@ -967,24 +926,32 @@ extension VoIPCallPeerConnectionClient: RTCDataChannelDelegate {
     func dataChannel(_ dataChannel: RTCDataChannel, didReceiveMessageWith buffer: RTCDataBuffer) {
         delegate?.peerConnectionClient(self, didReceiveData: buffer.data)
     }
-}
 
-extension VoIPCallPeerConnectionClient {
-    // MARK: VoIP Stats
+    // MARK: - VoIP Stats
     
-    private func schedulePeriodStats(options: VoIPStatsOptions, period: TimeInterval) {
+    /// - Parameters:
+    ///   - period: Interval to sample at from now.
+    ///   - settle: Relaxes to a longer interval once the call has been sampling at `period` for
+    ///     `after` seconds. `nil` samples at `period` for the whole phase.
+    private func schedulePeriodStats(
+        options: VoIPStatsOptions,
+        period: TimeInterval,
+        settlingTo settle: (period: TimeInterval, after: TimeInterval)? = nil
+    ) {
         guard peerConnection != nil else {
             assertionFailure("\(VoIPCallPeerConnectionClientError.peerConnectionIsNotInitialized)")
             DDLogWarn("\(VoIPCallPeerConnectionClientError.peerConnectionIsNotInitialized)")
             return
         }
 
-        // check on main thread for statsTimer
+        // Check on main thread for statsTimer
         DispatchQueue.main.async {
             if self.statsTimer != nil {
                 self.statsTimer?.invalidate()
                 self.statsTimer = nil
             }
+            self.statsSettleTimer?.invalidate()
+            self.statsSettleTimer = nil
         }
         // Create new timer with <period> (but immediately log once)
         // Note: The peer connection is intentionally not stored in the dict. It is resolved at
@@ -993,6 +960,28 @@ extension VoIPCallPeerConnectionClient {
         DispatchQueue.main.async {
             self.statsTimer = Timer.scheduledTimer(withTimeInterval: period, repeats: true) { [weak self] _ in
                 self?.logDebugStats(options: options)
+            }
+
+            guard let settle else {
+                return
+            }
+
+            // Swap the repeating timer for a slower one rather than re-entering this method, so the
+            // step-down does not emit an extra sample right next to the one the fast timer just
+            // produced — two samples microseconds apart difference to nothing and would read as a
+            // flat jitter buffer.
+            self.statsSettleTimer = Timer.scheduledTimer(
+                withTimeInterval: settle.after,
+                repeats: false
+            ) { [weak self] _ in
+                guard let self else {
+                    return
+                }
+
+                statsTimer?.invalidate()
+                statsTimer = Timer.scheduledTimer(withTimeInterval: settle.period, repeats: true) { [weak self] _ in
+                    self?.logDebugStats(options: options)
+                }
             }
         }
     }
@@ -1020,6 +1009,8 @@ extension VoIPCallPeerConnectionClient {
         DispatchQueue.main.async {
             self.statsTimer?.invalidate()
             self.statsTimer = nil
+            self.statsSettleTimer?.invalidate()
+            self.statsSettleTimer = nil
             self.receivingVideoTimer?.invalidate()
             self.receivingVideoTimer = nil
         }
@@ -1036,6 +1027,8 @@ extension VoIPCallPeerConnectionClient {
             DispatchQueue.main.async {
                 self.statsTimer?.invalidate()
                 self.statsTimer = nil
+                self.statsSettleTimer?.invalidate()
+                self.statsSettleTimer = nil
             }
             
             // Hijack the existing dict, override options and set callback
@@ -1089,6 +1082,13 @@ extension VoIPCallPeerConnectionClient {
             statsString +=
                 "\n\(CallsignalingProtocol.printDebugQualityProfiles(remoteProfile: self.remoteVideoQualityProfile, networkIsRelayed: self.networkIsRelayed))"
             DDLogNotice("VoipCallService: [cid=\(self.callID?.callID ?? 0)]: Stats: \n \(statsString)")
+
+            // Separate from the stats dump, and at warning level to discover delay bug
+            if let diagnosis = stats.inflatedJitterBufferDiagnosis {
+                DDLogWarn(
+                    "VoipCallService: [cid=\(self.callID?.callID ?? 0)]: Jitter buffer inflated: \(diagnosis)"
+                )
+            }
             
             // this is only needed if video calls are not available
             if !peerConnectionParameters.isVideoCallAvailable {
@@ -1137,7 +1137,7 @@ extension VoIPCallPeerConnectionClient {
 extension VoIPCallPeerConnectionClient {
     // MARK: Network Status Changed
     
-    @objc func networkStatusDidChange(notice: Notification) {
+    @objc private func networkStatusDidChange(notice: Notification) {
         if CallsignalingProtocol.isThreemaVideoCallQualitySettingAuto() {
             let currentInternetStatus = internetReachability.connection
             if lastInternetStatus != currentInternetStatus {

@@ -93,6 +93,10 @@ final class CrashingFileUtilityRemoteSecretDecorator: FileUtilityProtocol {
         wrapped.fileExists(atPath: path)
     }
     
+    func createEmptyFile(atURL url: URL) throws {
+        try wrapped.createEmptyFile(atURL: url)
+    }
+
     func createFile(
         atPath path: String,
         contents data: Data?,
@@ -104,7 +108,19 @@ final class CrashingFileUtilityRemoteSecretDecorator: FileUtilityProtocol {
             attributes: attr
         )
     }
+
+    func createFileHandle(forReadingFromURL url: URL) throws -> FileHandle {
+        try wrapped.createFileHandle(forReadingFromURL: url)
+    }
     
+    func createFileHandle(forWritingToURL url: URL) throws -> FileHandle {
+        try wrapped.createFileHandle(forWritingToURL: url)
+    }
+
+    func closeFileHandle(_ fileHandle: FileHandle) throws {
+        try wrapped.closeFileHandle(fileHandle)
+    }
+
     func mkDir(
         at url: URL,
         withIntermediateDirectories createIntermediates: Bool,
@@ -214,7 +230,17 @@ final class CrashingFileUtilityRemoteSecretDecorator: FileUtilityProtocol {
         
         return fileData
     }
-    
+
+    func read(offset: UInt64?, length: UInt64?, from fileHandle: FileHandle, fileURL: URL) throws -> Data {
+        guard shouldAllowOperation(fileURL) else {
+            fatalError(
+                "Correct instance of FileUtilityProtocol must be used for reading at \(String(describing: fileURL))."
+            )
+        }
+
+        return try wrapped.read(offset: offset, length: length, from: fileHandle, fileURL: fileURL)
+    }
+
     func write(contents: Data?, to fileURL: URL?) -> Bool {
         guard shouldAllowOperation(fileURL) else {
             fatalError(
@@ -224,7 +250,16 @@ final class CrashingFileUtilityRemoteSecretDecorator: FileUtilityProtocol {
         
         return wrapped.write(contents: contents, to: fileURL)
     }
-    
+
+    func write(contents: Data, offset: UInt64?, to fileHandle: FileHandle, fileURL: URL) throws {
+        guard shouldAllowOperation(fileURL) else {
+            fatalError(
+                "Correct instance of FileUtilityProtocol must be used for writing at \(String(describing: fileURL))."
+            )
+        }
+        try wrapped.write(contents: contents, offset: offset, to: fileHandle, fileURL: fileURL)
+    }
+
     func logDirectoriesAndFiles(pathURL: URL) {
         wrapped.logDirectoriesAndFiles(pathURL: pathURL)
     }

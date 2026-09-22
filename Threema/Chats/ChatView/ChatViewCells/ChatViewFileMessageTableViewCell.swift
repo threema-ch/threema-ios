@@ -225,7 +225,11 @@ extension ChatViewFileMessageTableViewCell: ChatViewMessageActions {
                 NotificationPresenterWrapper.shared.present(type: .copyError)
                 return
             }
-            UIPasteboard.general.setData(data, forPasteboardType: message.blobUTTypeIdentifier!)
+            UIPasteboard.general.set(
+                data: data,
+                forPasteboardType: message.blobUTTypeIdentifier!,
+                sensitiveContent: .messageContent
+            )
             NotificationPresenterWrapper.shared.present(type: .copySuccess)
         }
         

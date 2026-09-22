@@ -6,6 +6,7 @@ final class ServerConnectorMock: NSObject, ServerConnectorProtocol {
     var reflectMessageCalls = [Data]()
     var sendMessageCalls = [BoxedMessage]()
     var completedProcessingMessageCalls = [BoxedMessage]()
+    var disconnectCalls = [ConnectionInitiator]()
 
     var reflectMessageClosure: ((_ message: Data) -> NSError?)?
     var sendMessageClosure: ((_ message: BoxedMessage) -> Bool)?
@@ -53,6 +54,8 @@ final class ServerConnectorMock: NSObject, ServerConnectorProtocol {
     var isIPv6Connection = false
     var isProxyConnection = false
     
+    var isRolePromotedToLeader = false
+
     func connect(initiator: ConnectionInitiator, completionHandler: ((Bool) -> Void)? = nil) {
         // no-op
     }
@@ -70,15 +73,16 @@ final class ServerConnectorMock: NSObject, ServerConnectorProtocol {
     }
 
     func disconnect(initiator: ConnectionInitiator) {
-        // no-op
+        disconnectCalls.append(initiator)
     }
 
     func disconnect(initiator: ConnectionInitiator, force: Bool) {
-        // no-op
+        disconnectCalls.append(initiator)
     }
 
     func disconnectWait(initiator: ConnectionInitiator) -> Bool {
-        true
+        disconnectCalls.append(initiator)
+        return true
     }
     
     func reconnect() {
@@ -235,7 +239,7 @@ final class ServerConnectorMock: NSObject, ServerConnectorProtocol {
     
     func processVoIPCall(
         _ message: NSObject,
-        identity: String?,
+        identity: String,
         onCompletion: @escaping ((any MessageProcessorDelegate)?) -> Void,
         onError: @escaping (any Error, (any MessageProcessorDelegate)?) -> Void
     ) {

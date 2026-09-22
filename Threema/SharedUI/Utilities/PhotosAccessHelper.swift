@@ -78,7 +78,7 @@ final class PhotosAccessHelper: NSObject {
                 MediaConverter.videoMaxDurationInMinutes()
             )
             
-            UIAlertTemplate.showAlert(owner: picker, title: errorTitle, message: errorMessage)
+            UIAlertTemplate.showOKAlert(owner: picker, title: errorTitle, message: errorMessage)
         }
     }
     

@@ -72,6 +72,6 @@ actor BlobManagerState {
 }
 
 /// Used to track if there are active syncs in a non actor isolated context
-public final class BlobManagerActiveState {
-    public var hasActiveSyncs = false
+final class BlobManagerActiveState {
+    var hasActiveSyncs = false
 }

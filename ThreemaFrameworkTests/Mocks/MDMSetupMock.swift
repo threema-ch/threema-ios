@@ -56,4 +56,5 @@ final class MDMSetupMock: MDMSetupProtocol {
     
     func disableIDExport() -> Bool { false }
     func disableWorkDirectory() -> Bool { mockDisableWorkDirectory }
+    func disableScreenshots() -> Bool { false }
 }

@@ -47,7 +47,7 @@ import ThreemaMacros
 ///  │exclusion list│       └──────────┘
 ///  └──────────────┘
 /// ```
-final class DeleteContactAction: NSObject {
+final class DeleteContactAction {
     
     /// Called before the deletion starts after the user approves it
     typealias WillDeleteHandler = () -> Void
@@ -67,7 +67,6 @@ final class DeleteContactAction: NSObject {
     /// Create a new contact delete action
     ///
     /// - Parameter contact: Contact to be deleted
-    @objc
     init(for contact: ContactEntity) {
         self.contact = contact
     }
@@ -81,7 +80,6 @@ final class DeleteContactAction: NSObject {
     ///   - viewController: View controller to show sheets and alerts on
     ///   - willDelete: Called before deletions starts if the deletion is not canceled
     ///   - completion: Called at the end of execution
-    @objc
     func execute(
         in view: UIView,
         of viewController: UIViewController,
@@ -276,18 +274,18 @@ extension DeleteContactAction {
         
         // Remove INInteractions
         SettingsStore.removeINInteractions(for: contact.objectID)
-        
-        // Delete any PFS sessions
-        do {
-            try businessInjector.dhSessionStore.deleteAllDHSessions(
-                myIdentity: businessInjector.myIdentityStore.identity,
-                peerIdentity: contact.identity
-            )
-        }
-        catch {
-            DDLogWarn("Cannot delete PFS sessions: \(error)")
-        }
-        
+
+        // Note: We intentionally do *not* delete the PFS (forward security) sessions here.
+        //
+        // Contacts are not deleted but only marked as deleted (see below) and kept on the
+        // device. Deleting the DH sessions would discard our half of an existing session while the
+        // peer keeps theirs. The peer would then continue to use that session, and the next message
+        // we receive from them, e.g. a call offer, would be rejected by our forward security laye
+        // until a new session is negotiated. This both breaks the first call/message after a
+        // deletion and leaks the fact that we deleted the contact to the other party. Keeping the
+
+        // session avoids both problems; it is cleaned up through the regular protocol flow if needed.
+
         // Remove contact & conversation
         businessInjector.entityManager.performAndWaitSave {
             tempContactCouldBeExcluded = self.contactCouldBeExcluded
@@ -311,7 +309,7 @@ extension DeleteContactAction {
         }
         
         // Recalculate the unread count
-        let notificationManager = NotificationManager()
+        let notificationManager = NotificationManager(businessInjector: BusinessInjector.ui)
         notificationManager.updateUnreadMessagesCount()
         
         guard let contactIdentity = tempContactIdentity else {

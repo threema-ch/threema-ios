@@ -287,7 +287,7 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
         else {
             if ([self.navigationController.viewControllers objectAtIndex:0] == self || self.navigationController == nil) {
                 // We're first on stack so show done button
-                _doneButton = [[UIBarButtonItem alloc] initWithTitle:NSLocalizedString(@"Done", nil) style:UIBarButtonItemStylePlain target:self action:@selector(doneButtonPressed:)];
+                _doneButton = [[UIBarButtonItem alloc] initWithTitle:NSLocalizedString(@"done", nil) style:UIBarButtonItemStylePlain target:self action:@selector(doneButtonPressed:)];
                 // Set appearance
                 [_doneButton setBackgroundImage:nil forState:UIControlStateNormal barMetrics:UIBarMetricsDefault];
                 [_doneButton setBackgroundImage:nil forState:UIControlStateNormal barMetrics:UIBarMetricsCompact];
@@ -2024,7 +2024,7 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
 
 - (void)showAlert:(NSString *)title message:(NSString *)message {
     ///***** BEGIN THREEMA MODIFICATION: Use own AlertController *********/
-    [UIAlertTemplate showAlertWithOwner:self title:title message:message actionOk:nil];
+    [UIAlertTemplate showOKAlertWithOwner:self title:title message:message actionOk:nil];
     ///***** END THREEMA MODIFICATION: Use own AlertController *********/
 }
 

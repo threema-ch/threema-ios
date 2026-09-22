@@ -35,18 +35,6 @@ final class VoIPCallPeerConnectionClientMock: VoIPCallPeerConnectionClientProtoc
         // no-op
     }
 
-    func activateRTCAudio(speakerActive: Bool) {
-        // no-op
-    }
-
-    func speakerOff() {
-        // no-op
-    }
-
-    func speakerOn() {
-        // no-op
-    }
-
     func startCaptureLocalVideo(renderer: RTCVideoRenderer, useBackCamera: Bool, switchCamera: Bool) {
         // no-op
     }

@@ -7,7 +7,7 @@ import ThreemaMacros
 
 final class WCSessionManager: NSObject {
     
-    @objc static let shared = WCSessionManager()
+    static let shared = WCSessionManager()
     
     private let businessInjector: BusinessInjectorProtocol
 
@@ -26,7 +26,7 @@ final class WCSessionManager: NSObject {
         try? fileUtility.delete(at: runningSessionsURL())
     }
     
-    public final class func isWebHostAllowed(scannedHostName: String, whiteList: String) -> Bool {
+    final class func isWebHostAllowed(scannedHostName: String, whiteList: String) -> Bool {
         if whiteList.isEmpty {
             return false
         }
@@ -171,7 +171,7 @@ extension WCSessionManager {
 extension WCSessionManager {
     
     /// Connect a old or new session. Search for correct session or create a new one
-    @objc public func connect(authToken: Data?, wca: String?, publicKeyHash: String) {
+    func connect(authToken: Data?, wca: String?, publicKeyHash: String) {
         canConnectToWebClient { isValid in
             guard isValid == true else {
                 return
@@ -218,7 +218,7 @@ extension WCSessionManager {
                             // instead of blocking the main thread to read the root view controller.
                             Task { @MainActor in
                                 if let rootVC = SharedAppProvider.keyWindow?.rootViewController {
-                                    UIAlertTemplate.showAlert(
+                                    UIAlertTemplate.showOKAlert(
                                         owner: rootVC,
                                         title: #localize("webClient_scan_error_mdm_host_title"),
                                         message: #localize("webClient_scan_error_mdm_host_message")
@@ -255,7 +255,7 @@ extension WCSessionManager {
         }
     }
     
-    @objc public func connect(authToken: Data?, wca: String?, webClientSession: WebClientSessionEntity) {
+    func connect(authToken: Data?, wca: String?, webClientSession: WebClientSessionEntity) {
         // Pre-read Core Data properties before any async work
         let (publicKey, saltyRTCHost, saltyRTCPort, selfHosted, permanent, version):
             (Data, String, String, String, String, String?) = businessInjector.entityManager.performAndWait {
@@ -322,7 +322,7 @@ extension WCSessionManager {
                             // instead of blocking the main thread to read the root view controller.
                             Task { @MainActor in
                                 if let rootVC = SharedAppProvider.keyWindow?.rootViewController {
-                                    UIAlertTemplate.showAlert(
+                                    UIAlertTemplate.showOKAlert(
                                         owner: rootVC,
                                         title: #localize("webClient_scan_error_mdm_host_title"),
                                         message: #localize("webClient_scan_error_mdm_host_message")
@@ -345,7 +345,7 @@ extension WCSessionManager {
         })
     }
     
-    @objc public func connectAllRunningSessions() {
+    func connectAllRunningSessions() {
         if running.isEmpty {
             DDLogNotice("[Threema Web] There is no active session")
             WebClientSessionStore.shared.setAllWebClientSessionsInactive()
@@ -388,7 +388,7 @@ extension WCSessionManager {
     
     /// Stop all running sessions.
     /// Clears the list of running sessions
-    @objc public func stopAllSessions() {
+    func stopAllSessions() {
         // disconnect all active sessions and set all sessions on core data to inactive
         DDLogNotice("[Threema Web] Stop all active sessions")
         for publicKey in running {
@@ -405,7 +405,7 @@ extension WCSessionManager {
     
     /// Stop and delete all running sessions.
     /// Clears the list of running sessions
-    @objc public func stopAndForgetAllSessions() {
+    func stopAndForgetAllSessions() {
         // disconnect all active sessions and set all sessions on core data to inactive
         DDLogNotice("[Threema Web] Stop and forget all active sessions")
         WebClientSessionStore.shared.setAllWebClientSessionsInactive()
@@ -419,7 +419,7 @@ extension WCSessionManager {
     }
     
     /// Stop specific session.
-    public func stopSession(_ webClientSession: WebClientSessionEntity) {
+    func stopSession(_ webClientSession: WebClientSessionEntity) {
         DDLogNotice("[Threema Web] Stop session")
         let publicKey: Data = businessInjector.entityManager.performAndWait {
             webClientSession.initiatorPermanentPublicKey
@@ -433,7 +433,7 @@ extension WCSessionManager {
     }
     
     /// Stop and delete specific session.
-    public func stopAndDeleteSession(_ webClientSession: WebClientSessionEntity) {
+    func stopAndDeleteSession(_ webClientSession: WebClientSessionEntity) {
         DDLogNotice("[Threema Web] Stop and delete all active sessions")
         let publicKey: Data = businessInjector.entityManager.performAndWait {
             webClientSession.initiatorPermanentPublicKey
@@ -452,7 +452,7 @@ extension WCSessionManager {
     }
 
     /// Remove WebClientSession from running list.
-    public func removeWCSessionFromRunning(_ session: WCSession) {
+    func removeWCSessionFromRunning(_ session: WCSession) {
         let publicKey: Data? = businessInjector.entityManager.performAndWait {
             session.webClientSession?.initiatorPermanentPublicKey
         }
@@ -472,16 +472,16 @@ extension WCSessionManager {
     }
     
     /// Remove all not permanent sessions.
-    public func removeAllNotPermanentSessions() {
+    func removeAllNotPermanentSessions() {
         // Remove all not permanent sessions
         WebClientSessionStore.shared.removeAllNotPermanentSessions()
     }
     
-    @objc public func isRunningWCSession() -> Bool {
+    func isRunningWCSession() -> Bool {
         !running.isEmpty
     }
     
-    @objc public func pauseAllRunningSessions() {
+    func pauseAllRunningSessions() {
         DDLogNotice("[Threema Web] Pause all sessions")
         sendConnectionAckToAllActiveSessions()
         for publicKey in running {
@@ -493,7 +493,7 @@ extension WCSessionManager {
         }
     }
     
-    @objc public func updateConversationPushSetting(conversation: ConversationEntity) {
+    func updateConversationPushSetting(conversation: ConversationEntity) {
         for publicKey in running {
             guard let session: WCSession = sessions[publicKey] else {
                 return
@@ -769,7 +769,7 @@ extension WCSessionManager {
 extension WCSessionManager {
     //     MARK: Database Observer
     
-    @objc func managedObjectContextDidChange(notification: NSNotification) {
+    @objc private func managedObjectContextDidChange(notification: NSNotification) {
         if let managedObjectContext = notification.object as? NSManagedObjectContext,
            managedObjectContext.concurrencyType == .mainQueueConcurrencyType {
             
@@ -1397,13 +1397,13 @@ extension WCSessionManager {
 extension WCSessionManager {
     // MARK: BatteryNotifications
     
-    @objc func batteryLevelDidChange(_ notification: Notification) {
+    @objc private func batteryLevelDidChange(_ notification: Notification) {
         let batteryResponse = WebBatteryStatusUpdate()
         DDLogVerbose("[Threema Web] MessagePack -> Send update/batteryStatus")
         sendMessagePackToAllActiveSessions(messagePack: batteryResponse.messagePack(), blackListed: true)
     }
     
-    @objc func batteryStateDidChange(_ notification: Notification) {
+    @objc private func batteryStateDidChange(_ notification: Notification) {
         let batteryResponse = WebBatteryStatusUpdate()
         DDLogVerbose("[Threema Web] MessagePack -> Send update/batteryStatus")
         sendMessagePackToAllActiveSessions(messagePack: batteryResponse.messagePack(), blackListed: true)
@@ -1411,7 +1411,7 @@ extension WCSessionManager {
     
     // MARK: ProfileNotifications
     
-    @objc func profileNicknameChanged(_ notification: Notification) {
+    @objc private func profileNicknameChanged(_ notification: Notification) {
         let profileUpdate = WebProfileUpdate(
             nicknameChanged: true,
             newNickname: MyIdentityStore.shared().pushFromName,
@@ -1422,7 +1422,7 @@ extension WCSessionManager {
         sendMessagePackToAllActiveSessions(messagePack: profileUpdate.messagePack(), blackListed: false)
     }
     
-    @objc func profilePictureChanged(_ notification: Notification) {
+    @objc private func profilePictureChanged(_ notification: Notification) {
         let profileUpdate: WebProfileUpdate? =
             if let profileDict = MyIdentityStore.shared().profilePicture as? [AnyHashable: Any] {
                 if let pictureData = profileDict["ProfilePicture"] {
@@ -1454,7 +1454,7 @@ extension WCSessionManager {
         sendMessagePackToAllActiveSessions(messagePack: profileUpdate!.messagePack(), blackListed: false)
     }
     
-    @objc func blackListChanged(_ notification: Notification) {
+    @objc private func blackListChanged(_ notification: Notification) {
         guard !running.isEmpty else {
             return
         }

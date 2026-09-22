@@ -27,7 +27,7 @@ public final class VideoURLSenderItemCreator: NSObject {
 
     // MARK: - Lifecycle
     
-    @objc override public init() {
+    override public init() {
         self.videoConversionHelper = VideoConversionHelper()
     }
 

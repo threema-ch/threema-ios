@@ -1,5 +1,6 @@
 import CoreData
 import Foundation
+import ThreemaEssentials
 import UIKit
 
 /// Protocol used to show alerts and view controllers from the GroupCalls package in the Threema-App via the
@@ -12,6 +13,12 @@ public protocol GroupCallManagerSingletonUIDelegate: AnyObject {
     /// Tries to show an alert for a given `GroupCallErrorProtocol`
     /// - Parameter error: `GroupCallErrorProtocol`
     func showAlert(for error: GroupCallErrorProtocol)
+
+    /// Called when the local user is no longer participating in a group call of the given group
+    ///
+    /// This is independent of whether the call itself is still running with other participants.
+    /// - Parameter groupIdentity: Identity of the group whose call the local user left
+    func localUserLeftGroupCall(in groupIdentity: GroupIdentity)
     
     /// Shows an alert that the group call is currently full
     /// - Parameter maxParticipants: Optional maximal participant count

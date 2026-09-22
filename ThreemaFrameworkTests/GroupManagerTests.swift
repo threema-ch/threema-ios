@@ -3154,7 +3154,7 @@ final class GroupManagerTests: XCTestCase {
             id: BytesUtility.generateGroupID(),
             creator: ThreemaIdentity("CREATOR1")
         )
-        let expectedGroupMembers = Set(["MEMBER01", "MEMBER02", "MEMBER03", myIdentityStoreMock.identity])
+        let expectedGroupMembers = Set(["MEMBER01", "MEMBER02", "MEMBER03", myIdentityStoreMock.identity!])
 
         let testDatabase = TestDatabase()
         testDatabase.backgroundPreparer.save {

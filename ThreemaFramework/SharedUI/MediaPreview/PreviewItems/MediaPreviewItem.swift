@@ -3,7 +3,7 @@ import FileUtility
 import Foundation
 import PromiseKit
 
-@objc open class MediaPreviewItem: NSObject {
+open class MediaPreviewItem: NSObject {
     public enum LoadError: Error {
         case unknown
         case memoryConstrained

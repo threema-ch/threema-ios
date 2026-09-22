@@ -145,6 +145,7 @@ final class ConversationListWorkStatusBannerView: UIView {
         super.init(frame: .zero)
         
         setupView()
+        updateView()
     }
     
     @available(*, unavailable)
@@ -228,11 +229,11 @@ final class ConversationListWorkStatusBannerView: UIView {
         NSLayoutConstraint.activate([
             roundedContainer.topAnchor.constraint(equalTo: topAnchor, constant: 0),
             roundedContainer.leadingAnchor.constraint(
-                equalTo: leadingAnchor,
+                equalTo: safeAreaLayoutGuide.leadingAnchor,
                 constant: Configuration.containerHorizontalInset
             ),
             roundedContainer.trailingAnchor.constraint(
-                equalTo: trailingAnchor,
+                equalTo: safeAreaLayoutGuide.trailingAnchor,
                 constant: -Configuration.containerHorizontalInset
             ),
             roundedContainer.bottomAnchor.constraint(
@@ -280,4 +281,18 @@ extension ConversationListWorkStatusBannerView: UIGestureRecognizerDelegate {
         // Allow the banner tap to fire even while another recognizer (sidebar resize, table view) is tracking
         true
     }
+}
+
+#Preview {
+    let view = ConversationListWorkStatusBannerView(
+        status: WorkAvailabilityStatus(category: .unavailable, text: "I'm no vacation. 🏝️")
+    ) {
+        // no-op
+    }
+    
+    // Needed to add rounded corners to Edit-"Button"
+    view.setNeedsLayout()
+    view.layoutIfNeeded()
+    
+    return view
 }

@@ -626,7 +626,7 @@ extension ChatBarCoordinator: ChatBarViewDelegate {
                 return
             }
             
-            UIAlertTemplate.showAlert(
+            UIAlertTemplate.showOKAlert(
                 owner: currentTopViewController,
                 title: title,
                 message: message,
@@ -748,7 +748,7 @@ extension ChatBarCoordinator: ChatBarViewDelegate {
             return
         }
         
-        UIAlertTemplate.showAlert(
+        UIAlertTemplate.showOKAlert(
             owner: chatViewController,
             title: #localize("edit_message"),
             message: #localize("edit_message_can_not_edit")
@@ -784,7 +784,7 @@ extension ChatBarCoordinator: ChatBarViewDelegate {
         }
         
         let message = String.localizedStringWithFormat(#localize("edit_message_not_sent_to"), summary)
-        UIAlertTemplate.showAlert(
+        UIAlertTemplate.showOKAlert(
             owner: chatViewController,
             title: #localize("edit_message"),
             message: message
@@ -796,7 +796,7 @@ extension ChatBarCoordinator: ChatBarViewDelegate {
             return
         }
         
-        UIAlertTemplate.showAlert(
+        UIAlertTemplate.showOKAlert(
             owner: chatViewController,
             title: #localize("edit_message"),
             message: #localize("edit_message_text_to_long")
@@ -805,7 +805,7 @@ extension ChatBarCoordinator: ChatBarViewDelegate {
     
     /// Checks permission for microphone and starts recording if granted. Shows alert otherwise.
     func startRecording(with draftAudioURL: URL? = nil) {
-        AVAudioApplication.requestRecordPermission { granted in
+        RecordPermission.requestPermission { granted in
             if granted {
                 self.record(with: draftAudioURL)
             }
@@ -1085,7 +1085,7 @@ extension ChatBarCoordinator {
         }
     }
     
-    @objc func showMessagePermissionNotGranted() {
+    @objc private func showMessagePermissionNotGranted() {
         guard let chatViewController else {
             DDLogError("Cannot show alert for unable to send text because chatViewController is nil.")
             return
@@ -1093,7 +1093,7 @@ extension ChatBarCoordinator {
 
         let canSendText: (isAllowed: Bool, reason: String?) = canSendText()
         if !canSendText.isAllowed, let reason = canSendText.reason {
-            UIAlertTemplate.showAlert(owner: chatViewController, title: reason, message: nil)
+            UIAlertTemplate.showOKAlert(owner: chatViewController, title: reason, message: nil)
         }
         else {
             updateMessagePermission()

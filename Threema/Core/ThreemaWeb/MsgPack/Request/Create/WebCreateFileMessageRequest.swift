@@ -3,7 +3,7 @@ import FileUtility
 import Foundation
 import ThreemaFramework
 
-public final class WebCreateFileMessageRequest: WebAbstractMessage {
+final class WebCreateFileMessageRequest: WebAbstractMessage {
     
     var backgroundIdentifier: String?
     

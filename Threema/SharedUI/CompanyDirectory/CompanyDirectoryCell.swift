@@ -1,6 +1,6 @@
 import Foundation
 
-class CompanyDirectoryCell: UITableViewCell, Reusable {
+final class CompanyDirectoryCell: UITableViewCell, Reusable {
     
     private lazy var companyDirectoryView = CompanyDirectoryCellView()
     

@@ -1,0 +1,48 @@
+{
+  "configurations" : [
+    {
+      "id" : "09B413B8-D539-4992-BE95-D1F9FAFD7F63",
+      "name" : "English",
+      "options" : {
+        "language" : "en",
+        "region" : "US"
+      }
+    },
+    {
+      "id" : "5A6268F1-424F-4205-A924-C33086AF0278",
+      "name" : "German",
+      "options" : {
+        "language" : "de",
+        "region" : "DE"
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "applicationCrashDetectionSeverity" : "off",
+    "codeCoverage" : false,
+    "diagnosticCollectionPolicy" : "Never",
+    "mainThreadCheckerDetectionPolicy" : {
+      "enabled" : false
+    },
+    "preferredScreenCaptureFormat" : "screenshot",
+    "runtimeIssueDetection" : {
+      "enabled" : false
+    },
+    "threadPerformanceCheckerRuntimeIssueDetection" : {
+      "enabled" : false
+    },
+    "uiTestingScreenshotsLifetime" : "keepNever",
+    "userAttachmentLifetime" : "keepNever"
+  },
+  "testTargets" : [
+    {
+      "parallelizable" : true,
+      "target" : {
+        "containerPath" : "container:Threema.xcodeproj",
+        "identifier" : "086F25493004DA1200B81454",
+        "name" : "ThreemaPreviewsTests"
+      }
+    }
+  ],
+  "version" : 1
+}

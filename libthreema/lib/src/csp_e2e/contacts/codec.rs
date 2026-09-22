@@ -1,9 +1,12 @@
 use duplicate::duplicate_item;
 
 use crate::{
-    common::Delta,
-    model::contact::{ContactInit, ContactUpdate},
-    protobuf::{self, d2d_sync::contact as protobuf_contact},
+    model::contact::{ContactInit, ContactNotificationTriggerPolicyOverride, ContactUpdate},
+    protobuf::{
+        self,
+        d2d_sync::contact::{self as protobuf_contact},
+    },
+    utils::update::Delta,
 };
 
 /// D2D encoder for contacts and related types.
@@ -28,12 +31,6 @@ trait InternalD2dContactEncoder<TOutput>: Sized {
         output_type [ protobuf_contact::TypingIndicatorPolicyOverride ]
         override_type [ protobuf_contact::typing_indicator_policy_override::Override ]
         policy_transform [ policy.into() ]
-    ]
-    [
-        input_type [ protobuf_contact::notification_trigger_policy_override::Policy ]
-        output_type [ protobuf_contact::NotificationTriggerPolicyOverride ]
-        override_type [ protobuf_contact::notification_trigger_policy_override::Override ]
-        policy_transform [ policy ]
     ]
 )]
 impl InternalD2dContactEncoder<output_type> for Option<input_type> {
@@ -60,22 +57,45 @@ impl InternalD2dContactEncoder<output_type> for Option<input_type> {
         override_type [ protobuf_contact::typing_indicator_policy_override::Override ]
         policy_transform [ (*policy).into() ]
     ]
-    [
-        input_type [ protobuf_contact::notification_trigger_policy_override::Policy ]
-        output_type [ protobuf_contact::NotificationTriggerPolicyOverride ]
-        override_type [ protobuf_contact::notification_trigger_policy_override::Override ]
-        policy_transform [ *policy ]
-    ]
 )]
 impl InternalD2dContactEncoder<Option<output_type>> for Delta<input_type> {
     fn encode(&self) -> Option<output_type> {
         match self {
-            Delta::Unchanged => None,
-            Delta::Update(policy) => Some(output_type {
+            Self::Unchanged => None,
+            Self::Update(policy) => Some(output_type {
                 r#override: Some(override_type::Policy(policy_transform)),
             }),
-            Delta::Remove => Some(output_type {
+            Self::Remove => Some(output_type {
                 r#override: Some(override_type::Default(protobuf::common::Unit {})),
+            }),
+        }
+    }
+}
+
+impl InternalD2dContactEncoder<protobuf_contact::NotificationTriggerPolicyOverride>
+    for ContactNotificationTriggerPolicyOverride
+{
+    fn encode(&self) -> protobuf_contact::NotificationTriggerPolicyOverride {
+        protobuf_contact::NotificationTriggerPolicyOverride {
+            r#override: Some(
+                protobuf_contact::notification_trigger_policy_override::Override::Policy(self.into()),
+            ),
+        }
+    }
+}
+impl InternalD2dContactEncoder<Option<protobuf_contact::NotificationTriggerPolicyOverride>>
+    for Delta<ContactNotificationTriggerPolicyOverride>
+{
+    fn encode(&self) -> Option<protobuf_contact::NotificationTriggerPolicyOverride> {
+        match self {
+            Self::Unchanged => None,
+            Self::Update(policy) => Some(policy.encode()),
+            Self::Remove => Some(protobuf_contact::NotificationTriggerPolicyOverride {
+                r#override: Some(
+                    protobuf_contact::notification_trigger_policy_override::Override::Default(
+                        protobuf::common::Unit {},
+                    ),
+                ),
             }),
         }
     }
@@ -90,11 +110,11 @@ impl D2dContactEncoder<protobuf::d2d_sync::Contact> for ContactUpdate {
 
             created_at: None,
 
-            first_name: self.first_name.clone().into_non_empty(),
+            first_name: self.first_name.clone(),
 
-            last_name: self.last_name.clone().into_non_empty(),
+            last_name: self.last_name.clone(),
 
-            nickname: self.nickname.clone().into_non_empty(),
+            nickname: self.nickname.clone(),
 
             verification_level: self.verification_level.map(Into::into),
 
@@ -112,7 +132,7 @@ impl D2dContactEncoder<protobuf::d2d_sync::Contact> for ContactUpdate {
 
             work_last_full_sync_at: self.work_last_full_sync_at,
 
-            work_availability_status: self.work_availability_status.clone(),
+            work_availability_status: self.work_availability_status.clone().map(Into::into),
 
             read_receipt_policy_override: self.read_receipt_policy_override.encode(),
 
@@ -143,11 +163,11 @@ impl D2dContactEncoder<protobuf::d2d_sync::Contact> for ContactInit {
 
             created_at: Some(self.created_at),
 
-            first_name: self.first_name.clone(),
+            first_name: Some(self.first_name.clone()),
 
-            last_name: self.last_name.clone(),
+            last_name: Some(self.last_name.clone()),
 
-            nickname: self.nickname.clone(),
+            nickname: Some(self.nickname.clone()),
 
             verification_level: Some(self.verification_level.into()),
 
@@ -165,13 +185,24 @@ impl D2dContactEncoder<protobuf::d2d_sync::Contact> for ContactInit {
 
             work_last_full_sync_at: self.work_last_full_sync_at,
 
-            work_availability_status: self.work_availability_status.clone(),
+            work_availability_status: self.work_availability_status.clone().map(Into::into),
 
             read_receipt_policy_override: Some(self.read_receipt_policy_override.encode()),
 
             typing_indicator_policy_override: Some(self.typing_indicator_policy_override.encode()),
 
-            notification_trigger_policy_override: Some(self.notification_trigger_policy_override.encode()),
+            notification_trigger_policy_override: Some(
+                self.notification_trigger_policy_override.as_ref().map_or(
+                    protobuf_contact::NotificationTriggerPolicyOverride {
+                        r#override: Some(
+                            protobuf_contact::notification_trigger_policy_override::Override::Default(
+                                protobuf::common::Unit {},
+                            ),
+                        ),
+                    },
+                    ContactNotificationTriggerPolicyOverride::encode,
+                ),
+            ),
 
             #[expect(deprecated, reason = "Must be provided until phased out")]
             deprecated_notification_sound_policy_override: Some(

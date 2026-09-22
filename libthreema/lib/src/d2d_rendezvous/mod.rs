@@ -3,17 +3,19 @@ use std::collections::HashMap;
 
 use duplicate::duplicate_item;
 use educe::Educe;
+use libthreema_dependencies::{
+    crypto::x25519,
+    rand::{self, Rng as _},
+};
 use libthreema_macros::{DebugVariantNames, VariantNames};
 use prost::Message as _;
-use rand::{self, Rng as _};
 use tracing::{debug, trace, warn};
 use zeroize::ZeroizeOnDrop;
 
 pub use crate::d2d_rendezvous::frame::{RendezvousIncomingFrame, RendezvousOutgoingFrame};
 use crate::{
-    crypto::x25519,
     d2d_rendezvous::frame::FrameDecoder,
-    protobuf::d2d_rendezvous as protobuf,
+    protobuf,
     utils::time::{Duration, Instant},
 };
 
@@ -104,6 +106,10 @@ pub enum RendezvousProtocolError {
     /// Nomination is required before sending ULP data.
     #[error("Nomination is required before sending ULP data")]
     NominationRequired,
+
+    /// Public key was non-contributory.
+    #[error("Remote public key was non-contributory")]
+    NonContributoryPublicKey,
 }
 
 /// Authentication Key (AK).
@@ -233,7 +239,7 @@ impl RidPath {
     fn new(ak: &RendezvousAuthenticationKey, pid: u32) -> Self {
         Self {
             pid,
-            decoder: FrameDecoder::new(vec![]),
+            decoder: FrameDecoder::new(),
             state: RidPathState::AwaitingHello {
                 authentication_keys: rxdak::ForRid::new(ak, pid),
             },
@@ -420,7 +426,8 @@ impl RidPath {
         // Decrypt and decode into a `RrdToRid.Hello`
         let (remote_challenge, remote_etk) = {
             keys.rrdak.decrypt(&mut incoming_frame.0)?;
-            let hello = protobuf::handshake::rrd_to_rid::Hello::decode(incoming_frame.0.as_ref())?;
+            let hello =
+                protobuf::d2d_rendezvous::handshake::rrd_to_rid::Hello::decode(incoming_frame.0.as_ref())?;
 
             // Validate `RrdToRid.Hello`
             let remote_challenge = Challenge(hello.challenge.as_slice().try_into().map_err(|_| {
@@ -445,10 +452,10 @@ impl RidPath {
             let local_challenge = Challenge::random();
 
             // Generate local part of ETK
-            let local_etk = x25519::EphemeralSecret::random_from_rng(rand::thread_rng());
+            let local_etk = x25519::EphemeralSecret::random();
 
             // Encode and encrypt `RidToRrd.AuthHello`
-            let local_auth_hello = protobuf::handshake::rid_to_rrd::AuthHello {
+            let local_auth_hello = protobuf::d2d_rendezvous::handshake::rid_to_rrd::AuthHello {
                 response: remote_challenge.0.to_vec(),
                 challenge: local_challenge.0.to_vec(),
                 etk: x25519::PublicKey::from(&local_etk).as_bytes().to_vec(),
@@ -457,7 +464,11 @@ impl RidPath {
             keys.ridak.encrypt(&mut outgoing_data)?;
 
             // Derive ETK
-            let shared_etk = EphemeralTransportKey(local_etk.diffie_hellman(&remote_etk).into());
+            let shared_etk = EphemeralTransportKey(
+                local_etk
+                    .diffie_hellman_hsalsa20(&remote_etk)
+                    .ok_or(RendezvousProtocolError::NonContributoryPublicKey)?,
+            );
 
             (
                 local_challenge,
@@ -477,7 +488,8 @@ impl RidPath {
     ) -> Result<(), RendezvousProtocolError> {
         // Decrypt and decode into a `RrdToRid.Auth`
         keys.rrdak.decrypt(&mut incoming_frame.0)?;
-        let remote_auth = protobuf::handshake::rrd_to_rid::Auth::decode(incoming_frame.0.as_ref())?;
+        let remote_auth =
+            protobuf::d2d_rendezvous::handshake::rrd_to_rid::Auth::decode(incoming_frame.0.as_ref())?;
 
         // Validate `RrdToRid.Auth`
         if remote_auth.response.as_ref() != local_challenge.0 {
@@ -493,7 +505,7 @@ impl RidPath {
 
     fn create_nominate(keys: &mut rxdtk::ForRid) -> Result<RendezvousOutgoingFrame, RendezvousProtocolError> {
         // Encode and encrypt a `Nominate`
-        let local_nominate = protobuf::Nominate {};
+        let local_nominate = protobuf::d2d_rendezvous::Nominate {};
         let mut outgoing_data = local_nominate.encode_to_vec();
         keys.ridtk.encrypt(&mut outgoing_data)?;
         Ok(RendezvousOutgoingFrame(outgoing_data))
@@ -505,7 +517,7 @@ impl RidPath {
     ) -> Result<(), RendezvousProtocolError> {
         // Decrypt and decode into a `Nominate`
         keys.rrdtk.decrypt(&mut incoming_frame.0)?;
-        let _ = protobuf::Nominate::decode(incoming_frame.0.as_ref())?;
+        let _ = protobuf::d2d_rendezvous::Nominate::decode(incoming_frame.0.as_ref())?;
         Ok(())
     }
 
@@ -534,7 +546,7 @@ enum RrdPathState {
     /// Briefly used internally when moving from one state to another.
     Invalid,
 
-    /// Sent an `RrdtoRid.Hello`, awaiting an `RidToRrd.AuthHello`.
+    /// Sent an `RrdToRid.Hello`, awaiting an `RidToRrd.AuthHello`.
     AwaitingAuthHello {
         authentication_keys: rxdak::ForRrd,
         sent_at: Instant,
@@ -570,7 +582,7 @@ impl RrdPath {
         // Create path
         let path = Self {
             pid,
-            decoder: FrameDecoder::new(vec![]),
+            decoder: FrameDecoder::new(),
             state: RrdPathState::AwaitingAuthHello {
                 authentication_keys,
                 sent_at: Instant::now(),
@@ -742,10 +754,10 @@ impl RrdPath {
         let local_challenge = Challenge::random();
 
         // Generate local part of ETK
-        let local_etk = x25519::EphemeralSecret::random_from_rng(rand::thread_rng());
+        let local_etk = x25519::EphemeralSecret::random();
 
         // Encode and encrypt `RrdToRid.Hello`
-        let local_hello = protobuf::handshake::rrd_to_rid::Hello {
+        let local_hello = protobuf::d2d_rendezvous::handshake::rrd_to_rid::Hello {
             challenge: local_challenge.0.to_vec(),
             etk: x25519::PublicKey::from(&local_etk).as_bytes().to_vec(),
         };
@@ -766,8 +778,9 @@ impl RrdPath {
         // Decrypt and decode into a `RidToRrd.AuthHello`
         let (remote_challenge, remote_etk) = {
             keys.ridak.decrypt(&mut incoming_frame.0)?;
-            let remote_auth_hello =
-                protobuf::handshake::rid_to_rrd::AuthHello::decode(incoming_frame.0.as_ref())?;
+            let remote_auth_hello = protobuf::d2d_rendezvous::handshake::rid_to_rrd::AuthHello::decode(
+                incoming_frame.0.as_ref(),
+            )?;
 
             // Validate `RidToRrd.AuthHello`
             if remote_auth_hello.response != local_challenge.0 {
@@ -797,14 +810,18 @@ impl RrdPath {
         // Encode and encrypt `RrdToRid.Auth`
         let (shared_etk, outgoing_frame) = {
             // Encode and encrypt `RrdToRid.Auth`
-            let local_auth = protobuf::handshake::rrd_to_rid::Auth {
+            let local_auth = protobuf::d2d_rendezvous::handshake::rrd_to_rid::Auth {
                 response: remote_challenge.0.to_vec(),
             };
             let mut outgoing_data = local_auth.encode_to_vec();
             keys.rrdak.encrypt(&mut outgoing_data)?;
 
             // Derive ETK
-            let shared_etk = EphemeralTransportKey(local_etk.diffie_hellman(&remote_etk).into());
+            let shared_etk = EphemeralTransportKey(
+                local_etk
+                    .diffie_hellman_hsalsa20(&remote_etk)
+                    .ok_or(RendezvousProtocolError::NonContributoryPublicKey)?,
+            );
 
             (shared_etk, RendezvousOutgoingFrame(outgoing_data))
         };
@@ -815,7 +832,7 @@ impl RrdPath {
 
     fn create_nominate(keys: &mut rxdtk::ForRrd) -> Result<RendezvousOutgoingFrame, RendezvousProtocolError> {
         // Encode and encrypt a `Nominate`
-        let local_nominate = protobuf::Nominate {};
+        let local_nominate = protobuf::d2d_rendezvous::Nominate {};
         let mut outgoing_data = local_nominate.encode_to_vec();
         keys.rrdtk.encrypt(&mut outgoing_data)?;
         Ok(RendezvousOutgoingFrame(outgoing_data))
@@ -827,7 +844,7 @@ impl RrdPath {
     ) -> Result<(), RendezvousProtocolError> {
         // Decrypt and decode into a `Nominate`
         keys.ridtk.decrypt(&mut incoming_frame.0)?;
-        let _ = protobuf::Nominate::decode(incoming_frame.0.as_ref())?;
+        let _ = protobuf::d2d_rendezvous::Nominate::decode(incoming_frame.0.as_ref())?;
         Ok(())
     }
 

@@ -1,7 +1,7 @@
 import ThreemaFramework
 import ThreemaMacros
 
-public struct CallActionFactory: Factory {
+struct CallActionFactory: Factory {
     
     private let title: String
     private let action: () -> Void
@@ -14,7 +14,7 @@ public struct CallActionFactory: Factory {
         self.action = action
     }
     
-    public func make() -> UIContextualAction {
+    func make() -> UIContextualAction {
         let callAction = UIContextualAction(
             style: .normal,
             title: title,
@@ -31,10 +31,10 @@ public struct CallActionFactory: Factory {
 }
 
 extension CallActionFactory {
-    public static func make(for group: Group) -> UIContextualAction {
-        CallActionFactory {
-            Task {
-                await GlobalGroupCallManagerSingleton.shared.startGroupCall(
+    static func make(for group: Group) -> UIContextualAction {
+        CallActionFactory(title: #localize("call")) {
+            Task { @MainActor in
+                CallProvider.shared.startGroupCall(
                     in: group,
                     intent: .createOrJoin
                 )
@@ -42,9 +42,13 @@ extension CallActionFactory {
         }.make()
     }
     
-    public static func make(for contact: Contact) -> UIContextualAction {
+    static func make(for contact: Contact) -> UIContextualAction {
         CallActionFactory(title: #localize("call")) {
-            VoIPCallStateManager.shared.startCall(callee: contact.identity.rawValue)
+            Task { @MainActor in
+                CallProvider.shared.startOutgoingCall(
+                    with: contact.identity.rawValue
+                )
+            }
         }.make()
     }
 }

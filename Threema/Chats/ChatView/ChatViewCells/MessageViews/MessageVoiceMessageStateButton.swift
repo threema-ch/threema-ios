@@ -5,7 +5,7 @@ final class MessageVoiceMessageStateButton: ThemedCodeButton {
 
     // MARK: - Internal Properties
 
-    /// `VoiceMessage` whose messsage state is shown
+    /// `VoiceMessage` whose message state is shown
     var voiceMessage: VoiceMessage? {
         didSet {
             updateView(with: voiceMessage)

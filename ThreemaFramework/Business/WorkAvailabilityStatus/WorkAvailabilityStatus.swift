@@ -3,7 +3,7 @@ import Foundation
 import ThreemaMacros
 import ThreemaProtocols
 
-@objc public final class WorkAvailabilityStatus: NSObject {
+public final class WorkAvailabilityStatus: NSObject {
     
     // MARK: - Category
     

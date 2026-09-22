@@ -1,10 +1,12 @@
 import CocoaLumberjackSwift
+import ThreemaFramework
 import ThreemaMacros
 import UIKit
 
 @objc protocol RestoreOptionBackupViewControllerDelegate {
     func restoreSafe()
     func restoreIdentityFromSafe()
+    func restoreLocalBackup()
     func restoreIdentity()
     func restoreCancelled()
 }
@@ -16,8 +18,12 @@ final class RestoreOptionBackupViewController: IDCreationPageViewController {
     @IBOutlet var content: UIStackView!
     @IBOutlet var titleLabel: UILabel!
     @IBOutlet var descriptionLabel: UILabel!
+    @IBOutlet var safeStackView: UIStackView!
     @IBOutlet var safeButton: SetupButton!
     @IBOutlet var safeLabel: UILabel!
+    @IBOutlet var localBackupStackView: UIStackView!
+    @IBOutlet var localBackupButton: SetupButton!
+    @IBOutlet var localBackupLabel: UILabel!
     @IBOutlet var idButton: SetupButton!
     @IBOutlet var idLabel: UILabel!
 
@@ -52,6 +58,12 @@ final class RestoreOptionBackupViewController: IDCreationPageViewController {
             TargetManager.localizedAppName
         ) : #localize("restore_option_safe")
         
+        localBackupStackView.isHidden = !ThreemaEnvironment.backups2Enabled
+
+        localBackupButton.setTitle(#localize("restore_option_local_backup_title"), for: .normal)
+        localBackupButton.accessibilityIdentifier = "RestoreOptionBackupViewControllerLocalBackupButton"
+        localBackupLabel.text = #localize("restore_option_local_backup")
+
         idButton.setTitle(#localize("id_backup"), for: .normal)
         idLabel.text = hasDataOnDevice ? String.localizedStringWithFormat(
             #localize("restore_option_id_keep_data"),
@@ -102,6 +114,9 @@ extension RestoreOptionBackupViewController {
             else {
                 delegate?.restoreSafe()
             }
+        }
+        else if sender == localBackupButton {
+            delegate?.restoreLocalBackup()
         }
         else if sender == idButton {
             delegate?.restoreIdentity()

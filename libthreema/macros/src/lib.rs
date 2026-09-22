@@ -51,6 +51,239 @@ pub fn derive_name(input: TokenStream) -> TokenStream {
     TokenStream::from(expanded)
 }
 
+/// Invokes `uniffi::custom_newtype!()` for the derived item.
+///
+/// Note: This is only applicable for new-type structs with data types supported by UniFFI.
+///
+/// # Examples
+///
+/// ## Basic Usage
+///
+/// ```nobuild
+/// #[derive(UniffiNewType)]
+/// pub struct MyStruct(pub u64);
+/// ```
+///
+/// The derive macro expands it to:
+///
+/// ```nobuild
+/// pub struct MyStruct(pub u64);
+/// uniffi::custom_newtype!(MyStruct, u64);
+/// ```
+///
+/// ## Fixed-Size Bytes
+///
+/// One can specify conversion to and from fixed size bytes:
+///
+/// ```nobuild
+/// pub struct MyKey(pub [u8; Self::LENGTH]);
+/// impl MyKey {
+///     pub const LENGTH: usize = 32;
+/// }
+///
+/// #[uniffi_new_type(fixed_size_bytes = MyKey)]
+/// pub struct MyKeyBindingVersion(pub Vec<u8>);
+/// ```
+///
+/// Note: The constant `LENGTH` must be present on the struct!
+///
+/// The derive macro expands it to:
+/// ```nobuild
+/// pub struct MyKey(pub [u8; 32]);
+/// impl MyKey {
+///     pub const LENGTH: usize = 32;
+/// }
+///
+/// pub struct MyKeyBindingVersion(pub Vec<u8>);
+/// uniffi::custom_newtype!(MyKeyBindingVersion, Vec<u8>);
+/// impl From<MyKey> for MyKeyBindingVersion {
+///     fn from(value: MyKey) -> MyKeyBindingVersion {
+///         MyKeyBindingVersion(value.0.to_vec())
+///     }
+/// }
+/// impl TryFrom<MyKeyBindingVersion> for MyKey {
+///     type Error = crate::bindings::uniffi::ConversionError;
+///
+///     fn try_from(value: MyKey) -> ::core::result::Result<Self, Self::Error> {
+///         Self::try_from(value.0.as_slice()).map_err(|_| {
+///             crate::bindings::uniffi::ConversionError::ContractViolation {
+///                 name: "MyKey".to_owned(),
+///                 reason: format!("Must be {} bytes", Self::LENGTH),
+///             }
+///         })
+///     }
+/// }
+/// ```
+#[proc_macro_derive(UniffiNewType, attributes(uniffi_new_type))]
+pub fn derive_uniffi_new_type(input: TokenStream) -> TokenStream {
+    fn annotate_uniffi_new_type(input: DeriveInput) -> syn::Result<TokenStream> {
+        let name = input.ident;
+
+        #[expect(
+            clippy::unimplemented,
+            reason = "Only applicable to new-type structs with exactly one field"
+        )]
+        let inner_type = match &input.data {
+            Data::Struct(data) => match &data.fields {
+                Fields::Unnamed(fields) => {
+                    if fields.unnamed.len() != 1 {
+                        unimplemented!()
+                    }
+                    let Some(field) = fields.unnamed.first() else {
+                        unimplemented!()
+                    };
+                    field.ty.clone()
+                },
+                _ => unimplemented!(),
+            },
+            _ => unimplemented!(),
+        };
+
+        // Declare the new type.
+        // TODO(LIB-159): Add docs once https://github.com/mozilla/uniffi-rs/issues/2850 is resolved.
+        let mut expanded = quote! { uniffi::custom_newtype!(#name, #inner_type); };
+
+        // Extract the path of the new-type it should refer to.
+        for attribute in input.attrs {
+            #[expect(clippy::unimplemented, reason = "Unsupported attribute")]
+            if attribute.path().is_ident("uniffi_new_type") {
+                attribute.parse_nested_meta(|meta| {
+                    if meta.path.is_ident("fixed_size_bytes") {
+                        // Implement conversion from/to the fixed size bytes newtype.
+                        let path = meta.value()?.parse::<syn::Path>()?;
+                        expanded.extend(quote! {
+                            impl From<#path> for #name {
+                                fn from(value: #path) -> Self {
+                                    Self(value.0.to_vec())
+                                }
+                            }
+
+                            impl TryFrom<#name> for #path {
+                                type Error = crate::bindings::uniffi::ConversionError;
+
+                                fn try_from(value: #name) -> ::core::result::Result<Self, Self::Error> {
+                                    Self::try_from(value.0.as_slice()).map_err(|_| {
+                                        crate::bindings::uniffi::ConversionError::ContractViolation {
+                                            name: stringify!(#name).to_owned(),
+                                            reason: format!("Must be {} bytes", Self::LENGTH),
+                                        }
+                                    })
+                                }
+                            }
+                        });
+
+                        Ok(())
+                    } else {
+                        unimplemented!()
+                    }
+                })?;
+            }
+        }
+
+        Ok(TokenStream::from(expanded))
+    }
+    annotate_uniffi_new_type(parse_macro_input!(input))
+        .unwrap_or_else(|error| error.into_compile_error().into())
+}
+
+/// Generates a UniFFI-compatible binding enum for a `Delta`.
+///
+/// # Examples
+///
+/// ```nobuild
+/// uniffi_define_delta!(path::to::Foo, DeltaFoo);
+/// ```
+///
+/// This will expand to:
+///
+/// ```nobuild
+/// #[derive(uniffi::Enum)]
+/// pub enum DeltaFoo {
+///     Unchanged,
+///     Update(path::to::Foo),
+///     Remove,
+/// }
+/// impl From<crate::utils::update::Delta<path::to::Foo>> for DeltaFoo {
+///     fn from(delta: crate::utils::update::Delta<path::to::Foo>) -> Self {
+///         match delta {
+///             crate::utils::update::Delta::Unchanged => Self::Unchanged,
+///             crate::utils::update::Delta::Update(value) => Self::Update(value.into()),
+///             crate::utils::update::Delta::Remove => Self::Remove,
+///         }
+///     }
+/// }
+/// impl From<DeltaFoo> for crate::utils::update::Delta<path::to::Foo> {
+///     fn from(delta: DeltaFoo) -> Self {
+///         match delta {
+///             DeltaFoo::Unchanged => Self::Unchanged,
+///             DeltaFoo::Update(value) => Self::Update(value.into()),
+///             DeltaFoo::Remove => Self::Remove,
+///         }
+///     }
+/// }
+/// ```
+#[proc_macro]
+pub fn uniffi_define_delta(input: TokenStream) -> TokenStream {
+    struct UniffiDefineDeltaInput {
+        inner_type: syn::Path,
+        _comma: syn::Token![,],
+        output_name: Ident,
+    }
+    impl Parse for UniffiDefineDeltaInput {
+        fn parse(input: ParseStream<'_>) -> syn::Result<Self> {
+            Ok(Self {
+                inner_type: input.parse()?,
+                _comma: input.parse()?,
+                output_name: input.parse()?,
+            })
+        }
+    }
+
+    let UniffiDefineDeltaInput {
+        inner_type,
+        _comma,
+        output_name: delta_name,
+    } = parse_macro_input!(input as UniffiDefineDeltaInput);
+
+    let docstring = format!(
+        "Binding version of [`crate::utils::update::Delta`] for [`{}`].",
+        inner_type.segments.to_token_stream()
+    );
+    let expanded = quote! {
+        #[doc = #docstring]
+        #[derive(Default, uniffi::Enum)]
+        #[expect(missing_docs, reason = "Binding version")]
+        pub enum #delta_name {
+            #[default]
+            Unchanged,
+
+            Update(#inner_type),
+
+            Remove,
+        }
+        impl From<crate::utils::update::Delta<#inner_type>> for #delta_name {
+            fn from(delta: crate::utils::update::Delta<#inner_type>) -> Self {
+                match delta {
+                    crate::utils::update::Delta::Unchanged => Self::Unchanged,
+                    crate::utils::update::Delta::Update(value) => Self::Update(value),
+                    crate::utils::update::Delta::Remove => Self::Remove,
+                }
+            }
+        }
+        impl From<#delta_name> for crate::utils::update::Delta<#inner_type> {
+            fn from(delta: #delta_name) -> Self {
+                match delta {
+                    #delta_name::Unchanged => Self::Unchanged,
+                    #delta_name::Update(value) => Self::Update(value),
+                    #delta_name::Remove => Self::Remove,
+                }
+            }
+        }
+    };
+
+    TokenStream::from(expanded)
+}
+
 /// Provides variant names for an `enum`.
 ///
 /// # Examples
@@ -219,9 +452,9 @@ pub fn derive_debug_variant_names(input: TokenStream) -> TokenStream {
 struct Arrays(Punctuated<Expr, syn::Token![,]>);
 
 impl Parse for Arrays {
-    fn parse(input: ParseStream) -> syn::parse::Result<Arrays> {
+    fn parse(input: ParseStream) -> syn::parse::Result<Self> {
         let punctuated = Punctuated::parse_terminated(input)?;
-        Ok(Arrays(punctuated))
+        Ok(Self(punctuated))
     }
 }
 
@@ -327,11 +560,11 @@ pub fn protobuf_annotations(_attribute: TokenStream, input: TokenStream) -> Toke
         .unwrap_or_else(|error| error.into_compile_error().into())
 }
 
-/// Implements [`subtle::ConstantTimeEq`] for named and unnamed structs.
+/// Implements [`libthreema_dependencies::crypto::subtle::ConstantTimeEq`] for named and unnamed structs.
 ///
 /// Moreover, this derives [`PartialEq`] and [`Eq`] using constant time comparison.
 ///
-/// Note: All fields must implement [`subtle::ConstantTimeEq`].
+/// Note: All fields must implement [`libthreema_dependencies::crypto::subtle::ConstantTimeEq`].
 ///
 /// The proc macro was adapted from <https://github.com/dalek-cryptography/subtle/pull/111>.
 ///
@@ -357,10 +590,10 @@ pub fn protobuf_annotations(_attribute: TokenStream, input: TokenStream) -> Toke
 ///     second_field: u64,
 /// }
 ///
-/// impl ::subtle::ConstantTimeEq for MyStruct {
+/// impl ::libthreema_dependencies::crypto::subtle::ConstantTimeEq for MyStruct {
 ///     #[inline]
-///     fn ct_eq(&self, other: &Self) -> ::subtle::Choice {
-///         use ::subtle::ConstantTimeEq as _;
+///     fn ct_eq(&self, other: &Self) -> ::libthreema_dependencies::crypto::subtle::Choice {
+///         use ::libthreema_dependencies::crypto::subtle::ConstantTimeEq as _;
 ///         return { self.first_field }.ct_eq(&{ other.first_field })
 ///             & { self.second_field }.ct_eq(&{ other.second_field });
 ///     }
@@ -368,7 +601,7 @@ pub fn protobuf_annotations(_attribute: TokenStream, input: TokenStream) -> Toke
 /// impl PartialEq<Self> for MyStruct {
 ///     #[inline]
 ///     fn eq(&self, other: &Self) -> bool {
-///         use ::subtle::ConstantTimeEq as _;
+///         use ::libthreema_dependencies::crypto::subtle::ConstantTimeEq as _;
 ///         bool::from(self.ct_eq(other))
 ///     }
 /// }
@@ -420,10 +653,12 @@ pub fn constant_time_eq(input: TokenStream) -> TokenStream {
     let name = &input.ident;
     let (impl_generics, type_generics, where_clause) = input.generics.split_for_impl();
     let expanded = quote! {
-        impl #impl_generics ::subtle::ConstantTimeEq for #name #type_generics #where_clause {
+        impl #impl_generics ::libthreema_dependencies::crypto::subtle::ConstantTimeEq
+            for #name #type_generics #where_clause
+        {
             #[inline]
-            fn ct_eq(&self, other: &Self) -> ::subtle::Choice {
-                use ::subtle::ConstantTimeEq as _;
+            fn ct_eq(&self, other: &Self) -> ::libthreema_dependencies::crypto::subtle::Choice {
+                use ::libthreema_dependencies::crypto::subtle::ConstantTimeEq as _;
                 return #constant_time_eq_stream
             }
         }
@@ -431,7 +666,7 @@ pub fn constant_time_eq(input: TokenStream) -> TokenStream {
         impl #impl_generics PartialEq<Self> for #name #type_generics #where_clause {
             #[inline]
             fn eq(&self, other: &Self) -> bool{
-                use ::subtle::ConstantTimeEq as _;
+                use ::libthreema_dependencies::crypto::subtle::ConstantTimeEq as _;
                 bool::from(self.ct_eq(other))
             }
         }
@@ -441,12 +676,12 @@ pub fn constant_time_eq(input: TokenStream) -> TokenStream {
     TokenStream::from(expanded)
 }
 
-// Avoids dependencies to be picked up by the linter.
+// Avoids dependencies to be picked up by the linter that are used in tests.
 mod external_crate_false_positives {
-    use subtle as _;
+    use libthreema_dependencies as _;
 }
 
-// Avoids test dependencies to be picked up by the linter.
+// Avoids dependencies to be picked up by the linter that are used in tests.
 #[cfg(test)]
 mod external_crate_false_positives_test_feature {
     use rstest as _;

@@ -2,7 +2,7 @@ import CocoaLumberjackSwift
 import Foundation
 import ThreemaProtocols
 
-@objc public final class DeleteGroupMessage: AbstractGroupMessage {
+public final class DeleteGroupMessage: AbstractGroupMessage {
     public var decoded: CspE2e_DeleteMessage?
 
     override public var loggingDescription: String {

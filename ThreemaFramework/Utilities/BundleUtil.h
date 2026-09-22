@@ -15,6 +15,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 + (nullable NSString *)targetManagerKey;
 
++ (nullable NSString *)oppfAppIdentifier;
+
 + (nullable id)objectForInfoDictionaryKey:(NSString *)key;
 
 + (id)objectForThreemaFrameworkConfigurationKey:(NSString *)key;

@@ -454,7 +454,7 @@ import SwiftProtobuf
 // incompatible with the version of SwiftProtobuf to which you are linking.
 // Please ensure that you are building against the same version of the API
 // that was used to generate this file.
-fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAPIVersionCheck {
+fileprivate nonisolated struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAPIVersionCheck {
   struct _2: SwiftProtobuf.ProtobufAPIVersion_2 {}
   typealias Version = _2
 }
@@ -466,7 +466,7 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
 ///
 /// IMPORTANT: Don't remove any versions. Apps may serialize and deserialize this
 /// enum into the database.
-public enum CspE2eFs_Version: SwiftProtobuf.Enum, Swift.CaseIterable {
+public nonisolated enum CspE2eFs_Version: SwiftProtobuf.Enum, Swift.CaseIterable {
   public typealias RawValue = Int
 
   /// The version is unspecified.
@@ -533,7 +533,7 @@ public enum CspE2eFs_Version: SwiftProtobuf.Enum, Swift.CaseIterable {
 }
 
 /// Forward security version range.
-public struct CspE2eFs_VersionRange: Sendable {
+public nonisolated struct CspE2eFs_VersionRange: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -577,7 +577,7 @@ public struct CspE2eFs_VersionRange: Sendable {
 ///    `content` is `Encapsulated`, return the inner message type as
 ///    `inner-type`, the decapsulated message as `inner-message` and the
 ///    `fs-commit-fn` function.
-public struct CspE2eFs_Envelope: Sendable {
+public nonisolated struct CspE2eFs_Envelope: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -629,7 +629,7 @@ public struct CspE2eFs_Envelope: Sendable {
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public enum OneOf_Content: Equatable, Sendable {
+  public nonisolated enum OneOf_Content: Equatable, Sendable {
     case init_p(CspE2eFs_Init)
     case accept(CspE2eFs_Accept)
     case reject(CspE2eFs_Reject)
@@ -656,7 +656,7 @@ public struct CspE2eFs_Envelope: Sendable {
 /// 6. Send an `Accept` and await acknowledgement of the `Accept` message.
 /// 7. _Acknowledge_ the message that contained this variant.
 /// 8. Commit the R24 session to storage.
-public struct CspE2eFs_Init: Sendable {
+public nonisolated struct CspE2eFs_Init: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -695,7 +695,7 @@ public struct CspE2eFs_Init: Sendable {
 /// 4. [...]
 /// 5. _Acknowledge_ the message that contained this variant.
 /// 6. Commit the session transition to L44 to storage.
-public struct CspE2eFs_Accept: Sendable {
+public nonisolated struct CspE2eFs_Accept: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -824,7 +824,7 @@ public struct CspE2eFs_Accept: Sendable {
 /// requesting a re-send for the message may be asynchronously updated, making
 /// this check necessary so that a subsequent re-send for the remaining group
 /// members can be triggered.
-public struct CspE2eFs_Reject: Sendable {
+public nonisolated struct CspE2eFs_Reject: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -848,7 +848,7 @@ public struct CspE2eFs_Reject: Sendable {
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
   /// Cause for the reject.
-  public enum Cause: SwiftProtobuf.Enum, Swift.CaseIterable {
+  public nonisolated enum Cause: SwiftProtobuf.Enum, Swift.CaseIterable {
     public typealias RawValue = Int
 
     /// General state mismatch. Explicitly includes the following cases:
@@ -921,7 +921,7 @@ public struct CspE2eFs_Reject: Sendable {
 ///    to refresh the feature mask of the sender.
 /// 3. If `session` is defined, terminate `session` due to `cause` and remove
 ///    `session` from storage.
-public struct CspE2eFs_Terminate: Sendable {
+public nonisolated struct CspE2eFs_Terminate: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -931,7 +931,7 @@ public struct CspE2eFs_Terminate: Sendable {
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
   /// Cause for termination.
-  public enum Cause: SwiftProtobuf.Enum, Swift.CaseIterable {
+  public nonisolated enum Cause: SwiftProtobuf.Enum, Swift.CaseIterable {
     public typealias RawValue = Int
 
     /// No session could be found matching the given Session ID.
@@ -1084,7 +1084,7 @@ public struct CspE2eFs_Terminate: Sendable {
 ///
 /// ¹: This an exception to the silent ping rule which ensures that FS sessions
 /// are updated to use the highest available version ASAP.
-public struct CspE2eFs_Encapsulated: Sendable {
+public nonisolated struct CspE2eFs_Encapsulated: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -1137,7 +1137,7 @@ public struct CspE2eFs_Encapsulated: Sendable {
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
   /// Encryption scheme applied to the encapsulated message.
-  public enum DHType: SwiftProtobuf.Enum, Swift.CaseIterable {
+  public nonisolated enum DHType: SwiftProtobuf.Enum, Swift.CaseIterable {
     public typealias RawValue = Int
 
     /// The message is encrypted with the 2DH encryption scheme.
@@ -1182,13 +1182,13 @@ public struct CspE2eFs_Encapsulated: Sendable {
 
 // MARK: - Code below here is support for the SwiftProtobuf runtime.
 
-fileprivate let _protobuf_package = "csp_e2e_fs"
+fileprivate nonisolated let _protobuf_package = "csp_e2e_fs"
 
-extension CspE2eFs_Version: SwiftProtobuf._ProtoNameProviding {
+nonisolated extension CspE2eFs_Version: SwiftProtobuf._ProtoNameProviding {
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0UNSPECIFIED\0\u{2}@\u{4}V1_0\0\u{1}V1_1\0\u{1}V1_2\0")
 }
 
-extension CspE2eFs_VersionRange: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension CspE2eFs_VersionRange: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".VersionRange"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}min\0\u{1}max\0")
 
@@ -1223,7 +1223,7 @@ extension CspE2eFs_VersionRange: SwiftProtobuf.Message, SwiftProtobuf._MessageIm
   }
 }
 
-extension CspE2eFs_Envelope: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension CspE2eFs_Envelope: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".Envelope"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}session_id\0\u{1}init\0\u{1}accept\0\u{1}reject\0\u{1}terminate\0\u{1}encapsulated\0")
 
@@ -1346,7 +1346,7 @@ extension CspE2eFs_Envelope: SwiftProtobuf.Message, SwiftProtobuf._MessageImplem
   }
 }
 
-extension CspE2eFs_Init: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension CspE2eFs_Init: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".Init"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}fssk\0\u{3}supported_version\0")
 
@@ -1385,7 +1385,7 @@ extension CspE2eFs_Init: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementa
   }
 }
 
-extension CspE2eFs_Accept: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension CspE2eFs_Accept: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".Accept"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}fssk\0\u{3}supported_version\0")
 
@@ -1424,7 +1424,7 @@ extension CspE2eFs_Accept: SwiftProtobuf.Message, SwiftProtobuf._MessageImplemen
   }
 }
 
-extension CspE2eFs_Reject: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension CspE2eFs_Reject: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".Reject"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}message_id\0\u{1}cause\0\u{3}group_identity\0")
 
@@ -1468,11 +1468,11 @@ extension CspE2eFs_Reject: SwiftProtobuf.Message, SwiftProtobuf._MessageImplemen
   }
 }
 
-extension CspE2eFs_Reject.Cause: SwiftProtobuf._ProtoNameProviding {
+nonisolated extension CspE2eFs_Reject.Cause: SwiftProtobuf._ProtoNameProviding {
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0STATE_MISMATCH\0\u{1}UNKNOWN_SESSION\0\u{1}DISABLED_BY_LOCAL\0")
 }
 
-extension CspE2eFs_Terminate: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension CspE2eFs_Terminate: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".Terminate"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}cause\0")
 
@@ -1502,11 +1502,11 @@ extension CspE2eFs_Terminate: SwiftProtobuf.Message, SwiftProtobuf._MessageImple
   }
 }
 
-extension CspE2eFs_Terminate.Cause: SwiftProtobuf._ProtoNameProviding {
+nonisolated extension CspE2eFs_Terminate.Cause: SwiftProtobuf._ProtoNameProviding {
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0UNKNOWN_SESSION\0\u{1}RESET\0\u{1}DISABLED_BY_LOCAL\0\u{1}DISABLED_BY_REMOTE\0")
 }
 
-extension CspE2eFs_Encapsulated: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension CspE2eFs_Encapsulated: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".Encapsulated"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}dh_type\0\u{1}counter\0\u{3}encrypted_inner\0\u{3}offered_version\0\u{3}applied_version\0\u{3}group_identity\0")
 
@@ -1565,6 +1565,6 @@ extension CspE2eFs_Encapsulated: SwiftProtobuf.Message, SwiftProtobuf._MessageIm
   }
 }
 
-extension CspE2eFs_Encapsulated.DHType: SwiftProtobuf._ProtoNameProviding {
+nonisolated extension CspE2eFs_Encapsulated.DHType: SwiftProtobuf._ProtoNameProviding {
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0TWODH\0\u{1}FOURDH\0")
 }

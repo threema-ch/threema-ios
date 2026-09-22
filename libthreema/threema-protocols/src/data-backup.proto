@@ -1,0 +1,486 @@
+// # Data Backup (Supplementary)
+
+syntax = "proto3";
+
+package data_backup;
+
+option java_package = "ch.threema.protobuf.data_backup";
+option java_multiple_files = true;
+option php_namespace = "Threema\\Protocols\\DataBackup";
+
+import "common.proto";
+import "md-d2d-join.proto";
+import "md-d2d-sync.proto";
+import "md-d2d.proto";
+
+// Data backup protocol versions.
+enum ProtocolVersion {
+  // Initial cross-platform data backup protocol version.
+  V0 = 0;
+
+  // TODO(LIB-185): Remove V0, release with V1_0 or V0_X.
+}
+
+// A profile picture
+message ProfilePicture {
+  // Media type of the image.
+  common.Image.Type media_type = 1;
+
+  // Bytes of the profile picture.
+  bytes data = 2;
+}
+
+// User's identity data
+message IdentityData {
+  // The user's Threema ID
+  string identity = 1;
+
+  // The permanent client key associated to the Threema ID (32 bytes)
+  bytes ck = 2;
+
+  // The CSP server group associated to the Threema ID (1 byte)
+  string csp_server_group = 3;
+}
+
+// User's profile.
+message UserProfile {
+  // Nickname
+  optional string nickname = 1;
+
+  // Profile picture
+  optional ProfilePicture profile_picture = 2;
+
+  // Profile picture share policy
+  d2d_sync.UserProfile.ProfilePictureShareWith profile_picture_share_with = 3;
+
+  // List of identity links
+  d2d_sync.UserProfile.IdentityLinks identity_links = 4;
+
+  // Availability status of the user.
+  //
+  // Shall not be present in the _Consumer_ flavour.
+  //
+  // Always optional in the _Work_ flavour.
+  d2d_sync.WorkAvailabilityStatus work_availability_status = 5;
+}
+
+// The user's data.
+message UserData {
+  // User's identity data
+  IdentityData identity_data = 1;
+
+  // User's profile.
+  UserProfile user_profile = 2;
+
+  // Settings.
+  d2d_sync.Settings settings = 3;
+}
+
+message AugmentedContact {
+  // The contact's data.
+  //
+  // Important: Both the `contact.contact_defined_profile_picture` and the `contact.user_defined_profile_picture` must not be set.
+  d2d_sync.Contact contact = 1;
+
+  // Unix-ish timestamp in milliseconds when the conversation with this
+  // contact was last updated.
+  //
+  // Optional if no conversation exists for this contact.
+  optional uint64 last_update_at = 2;
+
+  // Contact-defined profile picture as received from the contact in a
+  // `set-profile-picture` message.
+  optional ProfilePicture contact_defined_profile_picture = 3;
+
+  // User-defined profile picture set by the user or imported from the address
+  // book.
+  optional ProfilePicture user_defined_profile_picture = 4;
+}
+
+message AugmentedGroup {
+  // The group's data.
+  //
+  // Important: The `group.profile_picture` must not be set.
+  d2d_sync.Group group = 1;
+
+  // Unix-ish timestamp in milliseconds when the conversation with this
+  // group was last updated.
+  //
+  // Optional if no conversation exists for this group.
+  optional uint64 last_update_at = 2;
+
+  // Group profile picture as received in a `group-setup` message.
+  optional ProfilePicture profile_picture = 3;
+}
+
+message EssentialDataContainer {
+  // The container's content.
+  //
+  // TODO(LIB-78):
+  // - Add steps
+  // - State that order:
+  //   1. `UserData` must appear in the first package and exactly once.
+  //   2. Contact
+  //   3. Group
+  //   4. Distribution List
+  oneof content {
+    // User data
+    UserData user_data = 1;
+
+    // Contacts
+    AugmentedContact contact = 2;
+
+    // Groups
+    AugmentedGroup group = 3;
+
+    // Distribution lists
+    // TODO(LIB-78): Change type to include profile pictures.
+    d2d_join.EssentialData.AugmentedDistributionList distribution_list = 4;
+  }
+}
+
+// A message star marker set by the user.
+enum MessageStarMarker {
+  // Not starred.
+  NO_MARKER = 0;
+
+  // The message has been starred.
+  STAR = 1;
+}
+
+// A revision of a text in a message.
+message MessageTextRevision {
+  // Unix-ish timestamp in milliseconds for when the revision has been created.
+  uint64 created_at = 1;
+  // Text of the revision.
+  string text = 2;
+}
+
+// A text message including all its revisions.
+message TextMessageState {
+  // The original revision of the text message.
+  string original_text = 1;
+
+  // The revisions of the text message in ascending order of their reception.
+  // The last revision contains the most recent revision (i.e. the one that should
+  // be displayed).
+  repeated MessageTextRevision revisions = 2;
+}
+
+// A location message state.
+message LocationMessageState {
+  // Latitude.
+  double latitude = 1;
+
+  // Longitude.
+  double longitude = 2;
+
+  // Accuracy of the original sender's position in meters.
+  optional double accuracy_m = 3;
+
+  // Closest name of the location or a point of interest.
+  optional string name = 4;
+
+  // An arbitrary address, not following any standardised pattern. May contain line breaks.
+  optional string address = 5;
+}
+
+// A message indicating the event that a `Poll` was opened.
+message PollOpen {
+  // Must be the same as Poll.poll_id.
+  fixed64 poll_id = 1;
+}
+
+// A message indicating the event that a `Poll` was closed.
+message PollClose {
+  // Must be the same as `Poll.poll_id`.
+  fixed64 poll_id = 1;
+}
+
+// A reaction to a message
+message MessageReaction {
+  // Threema ID of the creator.
+  string creator_identity = 1;
+
+  // Unix-ish timestamp in milliseconds when the reaction was created.
+  uint64 created_at = 2;
+
+  // A single fully-qualified [emoji codepoint sequence that is part of the
+  // currently supported Unicode standard][emoji-test.txt]
+  //
+  // [emoji-test.txt]:
+  // https://www.unicode.org/Public/emoji/latest/emoji-test.txt
+  string emoji = 3;
+}
+
+message DeletedMessageState {
+  MessageStateBodyType previous_type = 1;
+}
+
+// Keep this in sync with `MessageStateBody`.
+enum MessageStateBodyType {
+  TEXT = 0;
+  LOCATION = 1;
+  POLLOPEN = 2;
+  POLLCLOSE = 3;
+  DELETED = 4;
+}
+
+// Keep this in sync with `MessageStateBodyType`
+message MessageStateBody {
+  oneof body {
+    TextMessageState text = 1;
+    LocationMessageState location = 2;
+    PollOpen poll_open = 3;
+    PollClose poll_close = 4;
+    DeletedMessageState deleted = 5;
+  }
+}
+
+// Directional data associated to an incoming message.
+message IncomingMessageDirection {
+  // Unix timestamp in milliseconds for when the original enclosed message was received.
+  uint64 received_at = 5;
+}
+
+// Directional data associated to an outgoing message.
+message OutgoingMessageDirection {
+  // Optional Unix-ish timestamp in milliseconds for when the message has been sent.
+  optional uint64 sent_at = 1;
+
+  // Optional Unix-ish timestamp in milliseconds for when the message has been delivered.
+  optional uint64 delivered_at = 2;
+}
+
+// Direction with directional data associated to a message.
+message MessageDirection {
+  oneof direction {
+    // Incoming.
+    IncomingMessageDirection incoming = 1;
+
+    // Outgoing.
+    OutgoingMessageDirection outgoing = 2;
+  }
+}
+
+message MessageState {
+  // The ID of the conversation this message state belongs to.
+  d2d.ConversationId conversation_id = 1;
+
+  // Creator of the state.
+  string creator_identity = 2;
+
+  // The ID of the message.
+  fixed64 message_id = 3;
+
+  // Unix-ish timestamp in milliseconds for when the message has been created.
+  uint64 created_at = 4;
+
+  // Direction, containing directional specific data.
+  //
+  // Note: While alignment is required, you should always use [`MessageState::creator_identity`] as the
+  // primary source of truth to determine whether a message is incoming or outgoing!
+  MessageDirection direction = 5;
+
+  // Optional Unix-ish timestamp in milliseconds for when the message has been marked as read.
+  optional uint64 read_at = 6;
+
+  // Message marker.
+  MessageStarMarker star_marker = 7;
+
+  // Reactions to this message.
+  repeated MessageReaction reactions = 8;
+
+  // The message type dependent message body state.
+  MessageStateBody body = 9;
+}
+
+// Message behaviour overrides that need to be stored.
+message MessageOverrides {
+  // Whether delivery receipts should be omitted. If `true`, this overrides the default behaviour.
+  bool disable_delivery_receipts = 1;
+}
+
+// The forward security mode of a message.
+enum MessageForwardSecurityMode {
+  // The message was sent without forward security.
+  NO_FORWARD_SECURITY = 0;
+
+  // The message was sent with 2DH. This is only set for contact messages.
+  CONTACT_2_DH = 1;
+
+  // The message was sent with 4DH. This is only set for contact messages.
+  CONTACT_4_DH = 2;
+
+  // The message was sent with 2DH or 4DH to some members of the group and without forward security
+  // to others. This is only set for group messages.
+  GROUP_PARTIAL = 3;
+
+  // The message was sent to each member of the group with 2DH or 4DH. This is only set for group
+  // messages.
+  GROUP_ALL = 4;
+}
+
+// A poll including all possible choices and votes.
+//
+// TODO(LIB-184): Disregard full-qualification style and continue nested style as previously.
+message Poll {
+  // Random unique (per creator within a conversation) ID of the poll.
+  fixed64 poll_id = 1;
+
+  // The conversation in which the poll is located in (either a contact or a group).
+  d2d.ConversationId conversation = 2;
+
+  // Threema ID of the creator of the poll.
+  string creator_identity = 3;
+
+  // Unix-ish timestamp in milliseconds for when the poll has been created.
+  uint64 created_at = 4;
+
+  // The state of the poll.
+  enum PollState {
+    // The poll is open, new votes can be added.
+    OPEN = 0;
+
+    // The poll has been closed.
+    CLOSED = 1;
+  }
+  PollState state = 5;
+
+  // A short description/topic of the poll.
+  string description = 6;
+
+  // The answer type of the poll.
+  enum PollAnswerType {
+    // Single choice poll.
+    SINGLE_CHOICE = 0;
+
+    // Multiple choice poll.
+    MULTIPLE_CHOICE = 1;
+  }
+  PollAnswerType answer_type = 7;
+
+  // The announce type of the poll.
+  enum PollAnnounceType {
+    // Announce votes only to the creator of the poll.
+    //
+    // Results are invisible to other eligible voters until the creator closes the vote and broadcasts the final results.
+    CREATOR_ONLY = 0;
+
+    // Announce votes to everyone in the conversation.
+    //
+    // Intermediate results are therefore visible to all eligible voters.
+    EVERYONE = 1;
+  }
+  PollAnnounceType announce_type = 8;
+
+  // The display mode of a the poll.
+  //
+  // Any transition from one of the types to another is illegal.
+  enum PollDisplayMode {
+    // List votes of all participants.
+    LIST = 0;
+
+    // Only display the total amount of votes per choice and the user's vote (if any).
+    SUMMARY = 1;
+  }
+  PollDisplayMode display_mode = 9;
+
+  // A map from possible choice IDs to their descriptions.
+  //
+  // The descriptions must not be empty.
+  message PollChoice {
+    // The poll choice ID.
+    uint32 id = 1;
+
+    // The choice description.
+    string description = 2;
+  }
+  repeated PollChoice choices = 10;
+
+  // The votes of a poll.
+  message PollVotes {
+    // Full list of the poll votes.
+    message PollVotesList {
+      // A vote cast in a poll.
+      message PollVote {
+        // The most recent list of the voter's choices.
+        repeated uint32 choices = 1;
+
+        // Unix-ish timestamp in milliseconds for when the choice has been cast.
+        uint64 created_at = 2;
+
+        // Unix-ish timestamp in milliseconds for when the choice has been modified.
+        optional uint64 modified_at = 3;
+      }
+      // A map of participants to their chosen vote(s).
+      map<string, PollVote> participant_to_votes = 1;
+    }
+
+    // A summary of the poll results.
+    message PollVotesSummary {
+      // A map of poll choice IDs to the number of votes for it.
+      map<uint32, uint32> poll_choice_id_to_count = 1;
+    }
+
+    oneof votes {
+      PollVotesList poll_votes_list = 1;
+      PollVotesSummary poll_votes_summary = 2;
+    }
+  }
+  PollVotes votes = 11;
+}
+
+// A delta message containing an incremental backup update.
+//
+// TODO(PRD-320): Add support for incremental backups
+message Delta {
+  // Unix-ish timestamp in milliseconds for when the event was created.
+  uint64 created_at = 1;
+
+  // The message
+  oneof message {
+    // A user profile change
+    d2d.UserProfileSync user_profile_change = 2;
+
+    // A settings change
+    d2d.SettingsSync settings_change = 3;
+
+    // A contact change
+    d2d.ContactSync contact_change = 4;
+
+    // A group change
+    d2d.GroupSync group_change = 5;
+
+    // A distribution list change
+    d2d.DistributionListSync distribution_list_change = 6;
+
+    // A new outgoing message
+    d2d.OutgoingMessage outgoing_message = 7;
+
+    // An update for a previously backed up `d2d.OutgoingMessage`
+    d2d.OutgoingMessageUpdate outgoing_message_update = 8;
+
+    // A new incoming message
+    d2d.IncomingMessage incoming_message = 9;
+
+    // An update for a previously backed up `d2d.IncomingMessage`
+    d2d.IncomingMessageUpdate incoming_message_update = 10;
+  }
+}
+
+// Delta container that includes either a `Delta` or a `common.BlobData`
+// corresponding to delta blobs.
+//
+// TODO(LIB-78): Adapt steps, once the steps for `EssentialDataContainer` are settled.
+//
+message DeltaContainer {
+  // The container's content.
+  oneof content {
+    // A Blob that is referenced as part of a `Delta`.
+    common.BlobData blob_data = 1;
+
+    // The `Delta` message.
+    Delta delta = 2;
+  }
+}

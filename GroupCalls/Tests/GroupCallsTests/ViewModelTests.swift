@@ -5,8 +5,10 @@ import XCTest
 @testable import GroupCalls
 
 final class GroupCallViewModelTests: XCTestCase {
-    fileprivate var navigationTitle = ""
-    
+    fileprivate let lock = NSLock()
+    fileprivate var navigationContentUpdates = [GroupCallNavigationBarContentUpdate]()
+    fileprivate var navigationContentUpdateExpectation: XCTestExpectation?
+
     fileprivate var closed = false
     fileprivate lazy var creatorIdentity = ThreemaIdentity("ECHOECHO")
     fileprivate lazy var groupIdentity = GroupIdentity(id: Data(repeating: 0x00, count: 8), creator: creatorIdentity)
@@ -14,96 +16,33 @@ final class GroupCallViewModelTests: XCTestCase {
     fileprivate lazy var groupModel = GroupCallThreemaGroupModel(groupIdentity: groupIdentity, groupName: "TESTGROUP")
     fileprivate lazy var sfuBaseURL = URL(string: "sfu.threema.test")!
 
-    func testBasicInit() async throws {
+    /// A `connected` event is handled by the view model and updates the navigation bar
+    func testConnectedEventUpdatesNavigationBar() async throws {
         let dependencies = MockDependencies().create()
-        let groupCallActor = try! GroupCallActor(
+        let groupCallActor = try GroupCallActor(
             localContactModel: localContactModel,
             groupModel: groupModel,
             sfuBaseURL: sfuBaseURL,
             gck: Data(repeating: 0x01, count: 32),
             dependencies: dependencies
         )
-        
-        let viewModel = GroupCallViewModel(groupCallActor: groupCallActor)
-        
+
+        // We use the view model of the actor. Creating a second one is not allowed, see the `didSet` of `viewModel`.
+        let viewModel = await groupCallActor.viewModel
         viewModel.setViewDelegate(self)
-        
-        await groupCallActor.uiContinuation.yield(.connected)
-        
-        await Task.yield()
-        
-        // This isn't great since our tests will either succeed or fail by timing out
-        // we never quickly discover that our tests fail. But otherwise we might not wait long enough for the state to
-        // converge.
-        while navigationTitle != "Connected" {
-            await Task.yield()
+
+        let expectation = XCTestExpectation(description: "Navigation content was updated")
+        lock.withLock {
+            navigationContentUpdateExpectation = expectation
         }
-        
-        XCTAssertEqual("Connected", navigationTitle)
+
+        await groupCallActor.uiContinuation.yield(.connected)
+
+        await fulfillment(of: [expectation], timeout: 10)
+
+        let lastUpdate = try XCTUnwrap(lock.withLock { navigationContentUpdates.last })
+        XCTAssertEqual(lastUpdate.title, "group_call_navbar_state_connected")
     }
-    
-//    func testBasicAddRemoveParticipant() async throws {
-//        let dependencies = MockDependencies().create()
-//
-//        let gck = Data(repeating: 0x01, count: 32)
-//        let groupIdentity = GroupIdentity(id: Data(repeating: 0x00, count: 8), creator: ThreemaIdentity("ECHOECHO"))
-//
-//        let groupCallActor = try! GroupCallActor(
-//            localContactModel: localContactModel,
-//            groupModel: groupModel,
-//            sfuBaseURL: "",
-//            gck: gck,
-//            dependencies: dependencies
-//        )
-//        let groupCallDescription = try GroupCallBaseState(
-//            group: groupModel,
-//            startedAt: Date(),
-//            dependencies: dependencies,
-//            groupCallStartData: GroupCallStartData(protocolVersion: 0, gck: gck, sfuBaseURL: "")
-//        )
-//
-//        let viewModel = GroupCallViewModel(groupCallActor: groupCallActor)
-//
-//        viewModel.setViewDelegate(self)
-//        let participantID = ParticipantID(id: 0)
-//        let remoteParticipant = await PendingRemoteParticipant(
-//            participantID: participantID,
-//            dependencies: dependencies,
-//            groupCallMessageCrypto: groupCallDescription,
-//            isExistingParticipant: false
-//        )
-//
-//        let viewModelParticipant = await ViewModelParticipant(
-//            remoteParticipant: remoteParticipant,
-//            name: "ECHOECHO",
-//            idColor: .red
-//        )
-//
-//        await groupCallActor.uiContinuation
-//            .yield(.add(viewModelParticipant))
-//
-//        while viewModel.snapshotPublisher.numberOfItems != 1 {
-//            await Task.yield()
-//            try! await Task.sleep(nanoseconds: 1_000_000_000)
-//        }
-//
-//        XCTAssertEqual(viewModel.snapshotPublisher.numberOfItems, 1)
-//
-//        await groupCallActor.uiContinuation.yield(.remove(ParticipantID(id: 1)))
-//        await groupCallActor.uiContinuation.yield(.remove(ParticipantID(id: 1)))
-//
-//        await Task.yield()
-//        try! await Task.sleep(nanoseconds: 1_000_000_000)
-//
-//        XCTAssertEqual(viewModel.snapshotPublisher.numberOfItems, 1)
-//
-//        await groupCallActor.uiContinuation.yield(.remove(participantID))
-//
-//        await Task.yield()
-//        try! await Task.sleep(nanoseconds: 1_000_000_000)
-//
-//        XCTAssertEqual(viewModel.snapshotPublisher.numberOfItems, 0)
-//    }
 }
 
 // MARK: - GroupCallViewModelDelegate
@@ -118,6 +57,13 @@ extension GroupCallViewModelTests: GroupCallViewModelDelegate {
     func dismissGroupCallView(animated: Bool) async {
         closed = true
     }
-    
-    func updateNavigationContent(_ contentUpdate: GroupCalls.GroupCallNavigationBarContentUpdate) async { }
+
+    func updateNavigationContent(_ contentUpdate: GroupCalls.GroupCallNavigationBarContentUpdate) async {
+        let expectation = lock.withLock {
+            navigationContentUpdates.append(contentUpdate)
+            return navigationContentUpdateExpectation
+        }
+
+        expectation?.fulfill()
+    }
 }

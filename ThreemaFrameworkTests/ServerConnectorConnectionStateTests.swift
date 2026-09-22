@@ -176,6 +176,47 @@ final class ServerConnectorConnectionStateTests: XCTestCase {
             XCTAssertEqual(changedCalls.last, .loggedIn)
         }
     }
+
+    func testStateIsNotExpiredRightAfterChange() {
+        let serverConnectionState = ServerConnectorConnectionState(
+            userSettings: UserSettingsMock(),
+            connectionStateDelegate: self
+        )
+
+        serverConnectionState.connecting()
+        XCTAssertFalse(serverConnectionState.isStateExpired)
+
+        serverConnectionState.connected()
+        XCTAssertFalse(serverConnectionState.isStateExpired)
+
+        serverConnectionState.disconnecting()
+        XCTAssertFalse(serverConnectionState.isStateExpired)
+    }
+
+    func testDisconnectingExpiresAndFinalStatesDoNot() {
+        let disconnectingState = ServerConnectorConnectionState(
+            userSettings: UserSettingsMock(),
+            connectionStateDelegate: self
+        )
+        disconnectingState.disconnecting()
+
+        let loggedInState = ServerConnectorConnectionState(
+            userSettings: UserSettingsMock(),
+            connectionStateDelegate: self
+        )
+        loggedInState.loggedInChatServer()
+
+        let disconnectedState = ServerConnectorConnectionState(
+            userSettings: UserSettingsMock(),
+            connectionStateDelegate: self
+        )
+
+        Thread.sleep(forTimeInterval: TimeInterval(kDisconnectTimeout) + 0.2)
+
+        XCTAssertTrue(disconnectingState.isStateExpired)
+        XCTAssertFalse(loggedInState.isStateExpired, "A final state must never expire")
+        XCTAssertFalse(disconnectedState.isStateExpired, "A final state must never expire")
+    }
 }
 
 // MARK: - ConnectionStateDelegate

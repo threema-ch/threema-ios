@@ -1,7 +1,7 @@
 import Foundation
 
 extension GroupEntity {
-    @objc public enum GroupState: Int {
+    @objc public enum GroupState: Int, CaseIterable {
         case active, requestedSync, left, forcedLeft
     }
     

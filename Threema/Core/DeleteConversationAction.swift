@@ -1,11 +1,11 @@
 import ThreemaMacros
 import UIKit
 
-final class DeleteConversationAction: NSObject {
+enum DeleteConversationAction {
     
     // MARK: - Types
     
-    @objc enum SingleFunction: Int {
+    enum SingleFunction: Int {
         case double
         case leaveDissolve
         case delete
@@ -17,7 +17,7 @@ final class DeleteConversationAction: NSObject {
     private static var chatScrollPositionStore = ChatScrollPosition.shared
     private static var wallpaperStore = WallpaperStore.shared
     private static var messageDraftStore = MessageDraftStore.shared
-    private static var notificationManager = NotificationManager()
+    private static var notificationManager = NotificationManager(businessInjector: BusinessInjector.ui)
     private static var groupManager = BusinessInjector.ui.groupManager
     private static var entityManager = BusinessInjector.ui.entityManager
     
@@ -28,7 +28,7 @@ final class DeleteConversationAction: NSObject {
     ///   - conversation: Conversation to Delete
     ///   - owner: ViewController to Display Alert
     ///   - handler: Handler to execute when action Completes
-    @objc static func execute(
+    static func execute(
         for conversation: ConversationEntity,
         owner: UIViewController,
         cell: UITableViewCell? = nil,

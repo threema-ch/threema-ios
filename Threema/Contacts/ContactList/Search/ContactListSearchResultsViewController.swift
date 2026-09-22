@@ -13,6 +13,7 @@ final class ContactListSearchResultsViewController: ThemedViewController {
     // MARK: - Private properties
     
     private weak var delegate: ContactListSearchResultsDelegate?
+    private let businessInjector: any BusinessInjectorProtocol
     private let dataSourceFactory: (UITableView) -> ContactListSearchDataSource
     private let onDirectoryContactAdded: () -> Void
     
@@ -37,10 +38,12 @@ final class ContactListSearchResultsViewController: ThemedViewController {
 
     init(
         delegate: ContactListSearchResultsDelegate?,
+        businessInjector: any BusinessInjectorProtocol,
         dataSourceFactory: @escaping (UITableView) -> ContactListSearchDataSource,
         onDirectoryContactAdded: @escaping () -> Void
     ) {
         self.delegate = delegate
+        self.businessInjector = businessInjector
         self.dataSourceFactory = dataSourceFactory
         self.onDirectoryContactAdded = onDirectoryContactAdded
         super.init(nibName: nil, bundle: nil)
@@ -111,13 +114,13 @@ extension ContactListSearchResultsViewController: UITableViewDelegate {
             searchController.searchBar.text = " "
             
         case let .contact(contactID):
-            delegate?.present(for: .contact(objectID: contactID))
+            delegate?.present(for: .contact(contactID))
 
         case let .group(conversationID):
-            delegate?.present(for: .groupFromID(conversationID))
+            delegate?.present(for: .group(conversationID))
 
         case let .distributionList(distributionListID):
-            delegate?.present(for: .distributionList(objectID: distributionListID))
+            delegate?.present(for: .distributionList(distributionListID))
 
         case let .directoryContact(directoryContact):
             Task { [weak self] in
@@ -126,6 +129,53 @@ extension ContactListSearchResultsViewController: UITableViewDelegate {
 
         case .progress:
             return
+        }
+    }
+    
+    func tableView(
+        _ tableView: UITableView,
+        leadingSwipeActionsConfigurationForRowAt indexPath: IndexPath
+    ) -> UISwipeActionsConfiguration? {
+        guard let identifier = dataSource.itemIdentifier(for: indexPath) else {
+            return nil
+        }
+        
+        let provider = ContactListSwipeActionProvider(businessInjector: businessInjector)
+        
+        switch identifier {
+        case let .contact(contactID):
+            let contactEntity: ContactEntity? = businessInjector.entityManager.performAndWait {
+                self.businessInjector.entityManager.entityFetcher.existingObject(
+                    with: contactID
+                ) as? ContactEntity
+            }
+            guard let contactEntity else {
+                return nil
+            }
+            let contact = Contact(contactEntity: contactEntity)
+            return UISwipeActionsConfiguration(actions: provider.makeLeadingSwipeActions(for: contact))
+            
+        case let .group(conversationID):
+            let (conversation, group): (ConversationEntity?, Group?) = businessInjector.entityManager.performAndWait {
+                guard let conversation = self.businessInjector.entityManager.entityFetcher.existingObject(
+                    with: conversationID
+                ) as? ConversationEntity else {
+                    return (nil, nil)
+                }
+                
+                return (conversation, self.businessInjector.groupManager.getGroup(conversation: conversation))
+            }
+
+            guard let group, let conversation else {
+                return nil
+            }
+            
+            return UISwipeActionsConfiguration(
+                actions: provider.makeLeadingSwipeActions(for: group, conversation: conversation)
+            )
+            
+        default:
+            return nil
         }
     }
     

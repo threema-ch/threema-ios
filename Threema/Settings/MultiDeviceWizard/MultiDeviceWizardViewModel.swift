@@ -37,13 +37,13 @@ final class MultiDeviceWizardViewModel: ObservableObject {
     // MARK: - Public Functions
 
     @MainActor
-    public func advanceState(_ state: WizardState) {
+    func advanceState(_ state: WizardState) {
         if wizardState != state {
             wizardState = state
         }
     }
     
-    public func cancelLinking() {
+    func cancelLinking() {
         Task { @MainActor in
             resetLinking()
         }

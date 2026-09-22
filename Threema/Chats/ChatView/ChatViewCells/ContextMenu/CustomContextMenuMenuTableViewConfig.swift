@@ -1,6 +1,6 @@
 import Foundation
 
-public struct CustomContextMenuMenuTableViewConfig {
+struct CustomContextMenuMenuTableViewConfig {
     // Table
     let sectionSpacingHeight: CGFloat
     let sectionBackgroundColorDark: UIColor

@@ -385,7 +385,7 @@ extension LinkedContactManager {
             let localizedAlertTile = #localize("restricted_contacts_access_title")
             let localizedAlertMessage = #localize("restricted_contacts_access_message")
             
-            UIAlertTemplate.showAlert(
+            UIAlertTemplate.showOKAlert(
                 owner: viewController,
                 title: localizedAlertTile,
                 message: localizedAlertMessage

@@ -2,6 +2,7 @@ protocol SafeManagerProtocol {
     var isActivated: Bool { get }
     var isBackupRunning: Bool { get }
 
+    func initTrigger()
     func deactivate()
 
     func testServer(
@@ -22,6 +23,8 @@ protocol SafeManagerProtocol {
     ) async throws
 
     func startBackup(force: Bool) async throws
+    
+    func performThreemaSafeLaunchChecks()
 }
 
 #if DEBUG
@@ -56,6 +59,10 @@ protocol SafeManagerProtocol {
 
         var isBackupRunning: Bool {
             mockIsBackupRunning
+        }
+        
+        func initTrigger() {
+            mockIsActivated = true
         }
 
         func deactivate() {
@@ -99,6 +106,8 @@ protocol SafeManagerProtocol {
             verifyStartBackupCalls.append(force)
             mockStartBackupReturn = .success(())
         }
+        
+        func performThreemaSafeLaunchChecks() { }
     }
 
     extension SafeManagerProtocol where Self == MockSafeManager {

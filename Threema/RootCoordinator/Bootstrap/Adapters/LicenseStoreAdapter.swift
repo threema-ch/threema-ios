@@ -4,8 +4,9 @@ import ThreemaFramework
 
 @MainActor
 protocol LicenseStoreAdapterProtocol: AnyObject {
-    /// Direct access to underlying LicenseStore for legacy code
-    var store: LicenseStore { get }
+    /// Direct access to the underlying license store, e.g. to write the credentials of a license
+    /// activation link
+    var store: any LicenseStoreProtocol { get }
     
     var licenseUsername: String? { get set }
     var licensePassword: String? { get set }
@@ -21,8 +22,8 @@ protocol LicenseStoreAdapterProtocol: AnyObject {
 
 @MainActor
 final class LicenseStoreAdapter: LicenseStoreAdapterProtocol {
-    
-    var store: LicenseStore {
+
+    var store: any LicenseStoreProtocol {
         LicenseStore.shared()
     }
     

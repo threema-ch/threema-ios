@@ -3,12 +3,16 @@ import FileUtility
 import Foundation
 import ThreemaFramework
 
-class AppLaunchTasks: NSObject {
+enum AppLaunchEvent {
+    case didFinishLaunching
+    case willEnterForeground
+}
 
-    enum LaunchEvent {
-        case didFinishLaunching
-        case willEnterForeground
-    }
+protocol AppLaunchTasksProtocol {
+    func run(launchEvent: AppLaunchEvent)
+}
+
+final class AppLaunchTasks: AppLaunchTasksProtocol {
 
     private let businessInjector: BusinessInjectorProtocol
     private static var isRunning = false
@@ -16,7 +20,7 @@ class AppLaunchTasks: NSObject {
     
     // Did the version or build change since the last launch? (This also detects changes between Store, TestFlight and
     // Xcode builds.)
-    @objc public static var lastLaunchedVersionChanged: Bool {
+    static var lastLaunchedVersionChanged: Bool {
         let lastVersion = AppGroup.userDefaults().string(forKey: "LastLaunchedAppVersionAndBuild")
         let currentVersion = ThreemaUtility.appAndBuildVersion
         
@@ -36,20 +40,16 @@ class AppLaunchTasks: NSObject {
         return false
     }
 
-    @objc override convenience init() {
-        self.init(businessInjector: BusinessInjector.ui)
-    }
-
-    required init(businessInjector: BusinessInjectorProtocol) {
+    init(businessInjector: BusinessInjectorProtocol) {
         self.businessInjector = businessInjector
     }
-
+    
     /// Runs some tasks/procedures when the App will be launched or will enter foreground. Especially DB repairing and
     /// checks must be run in the right order. But also other tasks can be started here, with the benefit this tasks
     /// will be run in serial.
     ///
     /// - Parameter launchEvent: App is launching or will enter foreground
-    func run(launchEvent: LaunchEvent) {
+    func run(launchEvent: AppLaunchEvent) {
         AppLaunchTasks.isRunningQueue.sync {
             guard !AppLaunchTasks.isRunning else {
                 return
@@ -66,6 +66,7 @@ class AppLaunchTasks: NSObject {
             
             switch launchEvent {
             case .didFinishLaunching:
+                
                 // Repairs database integrity only on app start and synchronously,
                 // must be finished before running other tasks and returning to the caller
                 businessInjector.entityManager.repairDatabaseIntegrity()
@@ -93,6 +94,9 @@ class AppLaunchTasks: NSObject {
                 RemoteSecretProvider.remoteSecretManager.checkValidity()
             }
             
+            // Publish the microphone permission for the extensions, it might have been changed in the settings
+            RecordPermission.storeCurrentAccess()
+
             checkLastMessageOfAllConversations()
             businessInjector.messageRetentionManager.deleteOldMessages()
             
@@ -158,15 +162,5 @@ class AppLaunchTasks: NSObject {
         if doUpdateUnreadMessagesCount {
             NotificationManager(businessInjector: businessInjector).updateUnreadMessagesCount()
         }
-    }
-}
-
-extension AppLaunchTasks {
-    @objc func runLaunchEventDidFinishLaunching() {
-        run(launchEvent: .didFinishLaunching)
-    }
-
-    @objc func runLaunchEventWillEnterForeground() {
-        run(launchEvent: .willEnterForeground)
     }
 }

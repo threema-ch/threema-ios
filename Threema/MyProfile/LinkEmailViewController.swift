@@ -82,7 +82,7 @@ final class LinkEmailViewController: ThemedTableViewController {
                 
                 MBProgressHUD.hide(for: view, animated: true)
                 if let text = emailTextField.text, !text.isEmpty, !linked {
-                    UIAlertTemplate.showAlert(
+                    UIAlertTemplate.showOKAlert(
                         owner: self,
                         title: #localize("link_email_sent_title"),
                         message: String.localizedStringWithFormat(
@@ -99,7 +99,7 @@ final class LinkEmailViewController: ThemedTableViewController {
             }, onError: { _ in
                 MBProgressHUD.hide(for: self.view, animated: true)
                 self.navigationItem.rightBarButtonItem?.isEnabled = true
-                UIAlertTemplate.showAlert(
+                UIAlertTemplate.showOKAlert(
                     owner: self,
                     title: #localize("invalid_email_address_title"),
                     message: #localize("invalid_email_address_message"),

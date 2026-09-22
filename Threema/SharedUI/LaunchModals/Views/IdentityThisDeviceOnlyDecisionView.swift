@@ -8,7 +8,8 @@ struct IdentityThisDeviceOnlyDecisionView: View {
     @State var allowTransfer = true
     @State var showAlert = false
     
-    var businessInjector: BusinessInjectorProtocol
+    let businessInjector: BusinessInjectorProtocol
+    let onDisappear: () -> Void
     
     private let accessibilityThreshold = DynamicTypeSize.accessibility1
     
@@ -27,7 +28,7 @@ struct IdentityThisDeviceOnlyDecisionView: View {
                 Text(#localize("this_device_decision_additional_info"))
                     .padding(.top)
                 Link(
-                    #localize("learn_more"),
+                    #localize("learn_more_dots"),
                     destination: ThreemaURLProvider.thisDeviceOnlyFAQ
                 )
                 .padding(.bottom)
@@ -113,5 +114,7 @@ struct IdentityThisDeviceOnlyDecisionView: View {
 }
 
 #Preview {
-    IdentityThisDeviceOnlyDecisionView(businessInjector: BusinessInjector())
+    IdentityThisDeviceOnlyDecisionView(businessInjector: BusinessInjector(), onDisappear: {
+        // no-op
+    })
 }

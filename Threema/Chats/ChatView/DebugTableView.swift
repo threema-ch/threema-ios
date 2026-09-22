@@ -1,7 +1,7 @@
 import CocoaLumberjackSwift
 import Foundation
 
-class DebugTableView: UITableView {
+final class DebugTableView: UITableView {
     #if DEBUG
         override func insertRows(at indexPaths: [IndexPath], with animation: UITableView.RowAnimation) {
             super.insertRows(at: indexPaths, with: animation)

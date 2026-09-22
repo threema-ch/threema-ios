@@ -10,6 +10,7 @@ final class ContactStoreMock: NSObject, ContactStoreProtocol {
     private(set) var numberOfUpdateStatusCalls = 0
     var markContactAsDeletedCalls = [String]()
     var addContactCalls = [String]()
+    var addAsWorkCalls = [String]()
 
     required init(callOnCompletion: Bool, _ contact: ContactEntity? = nil, errorHandler: NSError? = nil) {
         self.callOnCompletion = callOnCompletion
@@ -166,7 +167,9 @@ final class ContactStoreMock: NSObject, ContactStoreProtocol {
     }
 
     func addAsWork(identities: NSOrderedSet, contactSyncer mediatorSyncableContacts: MediatorSyncableContacts?) {
-        // no-op
+        for item in identities {
+            addAsWorkCalls.append(item as! String)
+        }
     }
 
     func updateContact(withIdentity identity: String, avatar: Data?, firstName: String?, lastName: String?) {

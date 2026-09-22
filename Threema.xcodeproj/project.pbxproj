@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		082966472F63122300A57ABE /* libPhoneNumber in Frameworks */ = {isa = PBXBuildFile; productRef = 082966462F63122300A57ABE /* libPhoneNumber */; };
+		087D48C430224ED000792070 /* FileUtility in Frameworks */ = {isa = PBXBuildFile; productRef = 087D48C330224ED000792070 /* FileUtility */; };
+		087D48C630224EDE00792070 /* ThreemaEssentials in Frameworks */ = {isa = PBXBuildFile; productRef = 087D48C530224EDE00792070 /* ThreemaEssentials */; };
 		08BFCC5F2FC09F9C00235F00 /* ZipArchive in Frameworks */ = {isa = PBXBuildFile; productRef = 08BFCC5E2FC09F9C00235F00 /* ZipArchive */; };
 		08BFCC612FC0A02000235F00 /* ZipArchive in Frameworks */ = {isa = PBXBuildFile; productRef = 08BFCC602FC0A02000235F00 /* ZipArchive */; };
 		08BFCC632FC0A02900235F00 /* ZipArchive in Frameworks */ = {isa = PBXBuildFile; productRef = 08BFCC622FC0A02900235F00 /* ZipArchive */; };
@@ -21,6 +23,7 @@
 		08BFCC732FC0A07600235F00 /* ZipArchive in Frameworks */ = {isa = PBXBuildFile; productRef = 08BFCC722FC0A07600235F00 /* ZipArchive */; };
 		08BFCC752FC0A07C00235F00 /* ZipArchive in Frameworks */ = {isa = PBXBuildFile; productRef = 08BFCC742FC0A07C00235F00 /* ZipArchive */; };
 		08BFCC772FC0A08300235F00 /* ZipArchive in Frameworks */ = {isa = PBXBuildFile; productRef = 08BFCC762FC0A08300235F00 /* ZipArchive */; };
+		08F2F8C5302218B300E20E6D /* ThreemaEssentials in Frameworks */ = {isa = PBXBuildFile; productRef = 08F2F8C4302218B300E20E6D /* ThreemaEssentials */; };
 		08F9BADA2F62AE8100E4164B /* libPhoneNumber in Frameworks */ = {isa = PBXBuildFile; productRef = 08F9BAD92F62AE8100E4164B /* libPhoneNumber */; };
 		08F9DE142F62C3F100E4164B /* libPhoneNumber in Frameworks */ = {isa = PBXBuildFile; productRef = 08F9DE132F62C3F100E4164B /* libPhoneNumber */; };
 		08F9DE162F62C40E00E4164B /* libPhoneNumber in Frameworks */ = {isa = PBXBuildFile; productRef = 08F9DE152F62C40E00E4164B /* libPhoneNumber */; };
@@ -232,6 +235,7 @@
 		2D0FEE0A2E60A19A0020AE37 /* PromiseKit in Frameworks */ = {isa = PBXBuildFile; productRef = 2D0FEE092E60A19A0020AE37 /* PromiseKit */; };
 		2D0FEE0C2E60A1B20020AE37 /* FileUtility in Frameworks */ = {isa = PBXBuildFile; productRef = 2D0FEE0B2E60A1B20020AE37 /* FileUtility */; };
 		2D1A19C22DE0AC65005E4AE4 /* FileUtilityTestHelper in Frameworks */ = {isa = PBXBuildFile; productRef = 2D1A19C12DE0AC65005E4AE4 /* FileUtilityTestHelper */; };
+		2D3F1AD82F67E4F600F6B59A /* DataBackup in Frameworks */ = {isa = PBXBuildFile; productRef = 2D3F1AD72F67E4F600F6B59A /* DataBackup */; };
 		2D3FD5192E61A561003D3DEE /* PromiseKit in Frameworks */ = {isa = PBXBuildFile; productRef = 2D3FD5182E61A561003D3DEE /* PromiseKit */; };
 		2D3FD51B2E61A567003D3DEE /* FileUtility in Frameworks */ = {isa = PBXBuildFile; productRef = 2D3FD51A2E61A567003D3DEE /* FileUtility */; };
 		2D3FD51D2E61A804003D3DEE /* FileUtility in Frameworks */ = {isa = PBXBuildFile; productRef = 2D3FD51C2E61A804003D3DEE /* FileUtility */; };
@@ -334,23 +338,50 @@
 		2D5A1F4F24C9B5DF00F87DD0 /* ThreemaFramework.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 0A677B821C6250C90019B361 /* ThreemaFramework.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		2D5B8FB321BF8E9700788B2E /* salsa20.c in Sources */ = {isa = PBXBuildFile; fileRef = 2DE1BECE210EEDDD0058D7FF /* salsa20.c */; };
 		2D6F196B2F03BFC0004E1F90 /* ThreemaEssentials in Frameworks */ = {isa = PBXBuildFile; productRef = 2D6F196A2F03BFC0004E1F90 /* ThreemaEssentials */; };
-		2D6F196D2F03BFC0004E1F90 /* ThreemaEssentialsTestHelper in Frameworks */ = {isa = PBXBuildFile; productRef = 2D6F196C2F03BFC0004E1F90 /* ThreemaEssentialsTestHelper */; };
 		2D84777A21BEC7CD009EB43B /* pbkdf2.c in Sources */ = {isa = PBXBuildFile; fileRef = 2DE1BECF210EEDDD0058D7FF /* pbkdf2.c */; };
 		2D84777C21BEC7D2009EB43B /* sha256.c in Sources */ = {isa = PBXBuildFile; fileRef = 2DE1BECD210EEDDD0058D7FF /* sha256.c */; };
 		2D84777E21BEC7D7009EB43B /* scrypt.c in Sources */ = {isa = PBXBuildFile; fileRef = 2DE1BECC210EEDDD0058D7FF /* scrypt.c */; };
 		2D84778021BEC7E2009EB43B /* hmac.c in Sources */ = {isa = PBXBuildFile; fileRef = 2DE1BEC6210EEDDD0058D7FF /* hmac.c */; };
 		2D84778221BEC7E7009EB43B /* Scrypt.c in Sources */ = {isa = PBXBuildFile; fileRef = 2DE1BEC3210EEDDD0058D7FF /* Scrypt.c */; };
 		2D9E4F8A2E276DA40010A5D1 /* Keychain in Frameworks */ = {isa = PBXBuildFile; productRef = 2D9E4F892E276DA40010A5D1 /* Keychain */; };
+		2DA0005F002F41A00000AD10 /* AudioSessionManagerRTC in Frameworks */ = {isa = PBXBuildFile; productRef = 2DA0005E002F41A00000AD10 /* AudioSessionManagerRTC */; };
+		2DA0015F012F41A00100AD10 /* AudioSessionManagerRTC in Frameworks */ = {isa = PBXBuildFile; productRef = 2DA0015E012F41A00100AD10 /* AudioSessionManagerRTC */; };
+		2DA0025F022F41A00200AD10 /* AudioSessionManagerRTC in Frameworks */ = {isa = PBXBuildFile; productRef = 2DA0025E022F41A00200AD10 /* AudioSessionManagerRTC */; };
+		2DA0035F032F41A00300AD10 /* AudioSessionManagerRTC in Frameworks */ = {isa = PBXBuildFile; productRef = 2DA0035E032F41A00300AD10 /* AudioSessionManagerRTC */; };
+		2DA0045F042F41A00400AD10 /* AudioSessionManagerRTC in Frameworks */ = {isa = PBXBuildFile; productRef = 2DA0045E042F41A00400AD10 /* AudioSessionManagerRTC */; };
+		2DA0055F052F41A00500AD10 /* AudioSessionManagerRTC in Frameworks */ = {isa = PBXBuildFile; productRef = 2DA0055E052F41A00500AD10 /* AudioSessionManagerRTC */; };
 		2DA017A02EAA30DF008EAB3C /* FileUtility in Frameworks */ = {isa = PBXBuildFile; productRef = 2DA0179F2EAA30DF008EAB3C /* FileUtility */; };
 		2DA017A22EAA30E8008EAB3C /* FileUtility in Frameworks */ = {isa = PBXBuildFile; productRef = 2DA017A12EAA30E8008EAB3C /* FileUtility */; };
 		2DA017A42EAA30F4008EAB3C /* FileUtility in Frameworks */ = {isa = PBXBuildFile; productRef = 2DA017A32EAA30F4008EAB3C /* FileUtility */; };
 		2DA017A62EAA30FC008EAB3C /* FileUtility in Frameworks */ = {isa = PBXBuildFile; productRef = 2DA017A52EAA30FC008EAB3C /* FileUtility */; };
 		2DA017A82EAA3105008EAB3C /* FileUtility in Frameworks */ = {isa = PBXBuildFile; productRef = 2DA017A72EAA3105008EAB3C /* FileUtility */; };
+		2DB1006F2F41B00000000BE2 /* AudioSessionManager in Frameworks */ = {isa = PBXBuildFile; productRef = 2DB1006E2F41B00000000BE2 /* AudioSessionManager */; };
+		2DB1016F2F41B00000000BE2 /* AudioSessionManager in Frameworks */ = {isa = PBXBuildFile; productRef = 2DB1016E2F41B00000000BE2 /* AudioSessionManager */; };
+		2DB1026F2F41B00000000BE2 /* AudioSessionManager in Frameworks */ = {isa = PBXBuildFile; productRef = 2DB1026E2F41B00000000BE2 /* AudioSessionManager */; };
+		2DB1036F2F41B00000000BE2 /* AudioSessionManager in Frameworks */ = {isa = PBXBuildFile; productRef = 2DB1036E2F41B00000000BE2 /* AudioSessionManager */; };
+		2DB1046F2F41B00000000BE2 /* AudioSessionManager in Frameworks */ = {isa = PBXBuildFile; productRef = 2DB1046E2F41B00000000BE2 /* AudioSessionManager */; };
+		2DB1056F2F41B00000000BE2 /* AudioSessionManager in Frameworks */ = {isa = PBXBuildFile; productRef = 2DB1056E2F41B00000000BE2 /* AudioSessionManager */; };
+		2DB1066F2F41B00000000BE2 /* AudioSessionManager in Frameworks */ = {isa = PBXBuildFile; productRef = 2DB1066E2F41B00000000BE2 /* AudioSessionManager */; };
+		2DB1076F2F41B00000000BE2 /* AudioSessionManagerRTC in Frameworks */ = {isa = PBXBuildFile; productRef = 2DB1076E2F41B00000000BE2 /* AudioSessionManagerRTC */; };
+		2DC2007F2F41C00000000CF3 /* AudioSessionManager in Frameworks */ = {isa = PBXBuildFile; productRef = 2DC2007E2F41C00000000CF3 /* AudioSessionManager */; };
+		2DC2017F2F41C00000000CF3 /* AudioSessionManager in Frameworks */ = {isa = PBXBuildFile; productRef = 2DC2017E2F41C00000000CF3 /* AudioSessionManager */; };
+		2DC2027F2F41C00000000CF3 /* AudioSessionManager in Frameworks */ = {isa = PBXBuildFile; productRef = 2DC2027E2F41C00000000CF3 /* AudioSessionManager */; };
+		2DC2037F2F41C00000000CF3 /* AudioSessionManager in Frameworks */ = {isa = PBXBuildFile; productRef = 2DC2037E2F41C00000000CF3 /* AudioSessionManager */; };
+		2DC2047F2F41C00000000CF3 /* AudioSessionManager in Frameworks */ = {isa = PBXBuildFile; productRef = 2DC2047E2F41C00000000CF3 /* AudioSessionManager */; };
+		2DC2057F2F41C00000000CF3 /* AudioSessionManager in Frameworks */ = {isa = PBXBuildFile; productRef = 2DC2057E2F41C00000000CF3 /* AudioSessionManager */; };
+		2DC2067F2F41C00000000CF3 /* AudioSessionManager in Frameworks */ = {isa = PBXBuildFile; productRef = 2DC2067E2F41C00000000CF3 /* AudioSessionManager */; };
 		2DC414AE24C9C07400A7C58E /* Threema Blue ShareExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 2D08983524C98984006A70E1 /* Threema Blue ShareExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		2DCBA8CD2F16402C00B2E5F7 /* ThreemaFramework.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A677B821C6250C90019B361 /* ThreemaFramework.framework */; };
 		2DD228FD2E5C59A900CD7132 /* ThreemaEssentials in Frameworks */ = {isa = PBXBuildFile; productRef = 2DD228FC2E5C59A900CD7132 /* ThreemaEssentials */; };
 		2DD228FF2E5C59B200CD7132 /* FileUtility in Frameworks */ = {isa = PBXBuildFile; productRef = 2DD228FE2E5C59B200CD7132 /* FileUtility */; };
 		2DD229022E5C629E00CD7132 /* PromiseKit in Frameworks */ = {isa = PBXBuildFile; productRef = 2DD229012E5C629E00CD7132 /* PromiseKit */; };
+		2DD3008F2F41D00000000EF4 /* AudioSessionManagerTestHelper in Frameworks */ = {isa = PBXBuildFile; productRef = 2DD3008E2F41D00000000EF4 /* AudioSessionManagerTestHelper */; };
+		2DD3018F2F41D00000000EF4 /* AudioSessionManagerTestHelper in Frameworks */ = {isa = PBXBuildFile; productRef = 2DD3018E2F41D00000000EF4 /* AudioSessionManagerTestHelper */; };
+		2DD3028F2F41D00000000EF4 /* AudioSessionManagerTestHelper in Frameworks */ = {isa = PBXBuildFile; productRef = 2DD3028E2F41D00000000EF4 /* AudioSessionManagerTestHelper */; };
+		2DD3038F2F41D00000000EF4 /* AudioSessionManagerTestHelper in Frameworks */ = {isa = PBXBuildFile; productRef = 2DD3038E2F41D00000000EF4 /* AudioSessionManagerTestHelper */; };
+		2DD3048F2F41D00000000EF4 /* AudioSessionManagerTestHelper in Frameworks */ = {isa = PBXBuildFile; productRef = 2DD3048E2F41D00000000EF4 /* AudioSessionManagerTestHelper */; };
+		2DD3058F2F41D00000000EF4 /* AudioSessionManagerTestHelper in Frameworks */ = {isa = PBXBuildFile; productRef = 2DD3058E2F41D00000000EF4 /* AudioSessionManagerTestHelper */; };
+		2DD3068F2F41D00000000EF4 /* AudioSessionManagerTestHelper in Frameworks */ = {isa = PBXBuildFile; productRef = 2DD3068E2F41D00000000EF4 /* AudioSessionManagerTestHelper */; };
 		2DD445912511F481008EC521 /* Threema Work NotificationExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 2DEF20012511EDE9001CC54F /* Threema Work NotificationExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		2DD445A72511F913008EC521 /* Threema Blue NotificationExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 2DD445A52511F78F008EC521 /* Threema Blue NotificationExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		2DDB045F2F18D48A00C19CC5 /* SwiftProtobuf in Frameworks */ = {isa = PBXBuildFile; productRef = 2D26220A2DD626E400A63682 /* SwiftProtobuf */; };
@@ -695,7 +726,6 @@
 		7EFC205026C2941D009614E9 /* PhotosUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7EFC204F26C2941D009614E9 /* PhotosUI.framework */; };
 		7EFC205126C2945D009614E9 /* Photos.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0AFF75081B5FD71C008E08DB /* Photos.framework */; };
 		8D34862B2747B2980064AD35 /* WebRTC.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8D965B3D271E9C4F009A4E4C /* WebRTC.xcframework */; settings = {ATTRIBUTES = (Weak, ); }; };
-		8D73743F2735554900CEE9D7 /* OCMockito in Frameworks */ = {isa = PBXBuildFile; productRef = 8D73743E2735554900CEE9D7 /* OCMockito */; };
 		8D965B3E271E9C4F009A4E4C /* WebRTC.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8D965B3D271E9C4F009A4E4C /* WebRTC.xcframework */; };
 		8D965B3F271E9C4F009A4E4C /* WebRTC.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 8D965B3D271E9C4F009A4E4C /* WebRTC.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		8D965B40271E9C5E009A4E4C /* WebRTC.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8D965B3D271E9C4F009A4E4C /* WebRTC.xcframework */; };
@@ -1044,6 +1074,20 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		086F254E3004DA1200B81454 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4DD01F5F14C1CCA900EF7690 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 2D5A1CCC24C9B5DF00F87DD0;
+			remoteInfo = "Threema Blue";
+		};
+		087D48C030224E6900792070 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4DD01F5F14C1CCA900EF7690 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 2D5A1CCC24C9B5DF00F87DD0;
+			remoteInfo = "Threema Blue";
+		};
 		0A677B8D1C6250CA0019B361 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 4DD01F5F14C1CCA900EF7690 /* Project object */;
@@ -1492,6 +1536,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		086F254A3004DA1200B81454 /* ThreemaPreviewsTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ThreemaPreviewsTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		0A677B821C6250C90019B361 /* ThreemaFramework.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = ThreemaFramework.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		0A677B8B1C6250CA0019B361 /* ThreemaFrameworkTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ThreemaFrameworkTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		0A688AB619A3A4670013FCE8 /* Threema Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Threema Tests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -1507,8 +1552,10 @@
 		249C15F129FFDA2300F81D20 /* BinUtils.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BinUtils.swift; sourceTree = "<group>"; };
 		24A8619B2CBCDBBB009BACEC /* ThreemaMacros */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = ThreemaMacros; sourceTree = SOURCE_ROOT; };
 		24B149E32D91959B0059280C /* Coordinator */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = Coordinator; sourceTree = "<group>"; };
+		24B8F07D30177B88005428AF /* AudioSessionManager */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = AudioSessionManager; sourceTree = "<group>"; };
 		24E0D24D2A56E474003F87E3 /* ThreemaEssentials */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = ThreemaEssentials; sourceTree = "<group>"; };
 		2D08983524C98984006A70E1 /* Threema Blue ShareExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "Threema Blue ShareExtension.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
+		2D20979A2F6459EF00DFA3CC /* DataBackup */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = DataBackup; sourceTree = "<group>"; };
 		2D479A6A2609F6BE00047397 /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = System/Library/Frameworks/Accelerate.framework; sourceTree = SDKROOT; };
 		2D5A1F5924C9B5DF00F87DD0 /* Threema Blue.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Threema Blue.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		2DD445A52511F78F008EC521 /* Threema Blue NotificationExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "Threema Blue NotificationExtension.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -2354,7 +2401,6 @@
 				SharedUI/TableDataSource/RecentTableDataSource.h,
 				SupportingFiles/Info.plist,
 				Utilities/CryptoUtils.h,
-				Utilities/NibUtil.h,
 				"Utilities/NSString+Hex.h",
 			);
 			publicHeaders = (
@@ -2608,12 +2654,6 @@
 				"ManuallyTests/Screenshots/ScreenshotsJsonImporter+Codable.swift",
 				Resources/audioAnalyzerTest.m4a,
 				Resources/test_texts.json,
-				"Utilities/Swizzling/NSBundle+OverrideLanguage.m",
-				"Utilities/Swizzling/NSBundle+OverrideObjectForInfoDictionaryKey.m",
-				"Utilities/Swizzling/NSDate+DateSwizzling.m",
-				"Utilities/Swizzling/NSLocale+OverrideLocale.m",
-				"Utilities/Swizzling/NSObject+Swizzling.m",
-				Utilities/TestLocale.m,
 			);
 			target = 4D5C4CA11CD79C8500512FE6 /* Threema Work Tests */;
 		};
@@ -2627,12 +2667,6 @@
 				Resources/SmallVoice.mp3,
 				Resources/test_texts.json,
 				"Resources/Video-1.mp4",
-				"Utilities/Swizzling/NSBundle+OverrideLanguage.m",
-				"Utilities/Swizzling/NSBundle+OverrideObjectForInfoDictionaryKey.m",
-				"Utilities/Swizzling/NSDate+DateSwizzling.m",
-				"Utilities/Swizzling/NSLocale+OverrideLocale.m",
-				"Utilities/Swizzling/NSObject+Swizzling.m",
-				Utilities/TestLocale.m,
 			);
 			target = CE08C0DE27299A13001EFCDE /* Threema OnPrem Tests */;
 		};
@@ -2714,6 +2748,11 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		086F254B3004DA1200B81454 /* ThreemaPreviewsTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = ThreemaPreviewsTests;
+			sourceTree = "<group>";
+		};
 		24257C862E39DF8D00F0FBB0 /* SharedResources */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
@@ -2874,6 +2913,15 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		087D48C230224EC700792070 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				087D48C630224EDE00792070 /* ThreemaEssentials in Frameworks */,
+				087D48C430224ED000792070 /* FileUtility in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		0A677B7E1C6250C90019B361 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -2902,6 +2950,7 @@
 				0AC9EF2D1C99AE1700555E62 /* AVFoundation.framework in Frameworks */,
 				08F9BADA2F62AE8100E4164B /* libPhoneNumber in Frameworks */,
 				8DDCF7CC27107FB8000CB4F6 /* SwiftProtobuf in Frameworks */,
+				2D3F1AD82F67E4F600F6B59A /* DataBackup in Frameworks */,
 				24AD2ED12B4D916000BB0BDF /* Reachability in Frameworks */,
 				4250536E2F8E25E400441645 /* OrderedCollections in Frameworks */,
 				8D34862B2747B2980064AD35 /* WebRTC.xcframework in Frameworks */,
@@ -2911,6 +2960,8 @@
 				42A6D2802A1CA6B600C641D9 /* ThreemaBlake2b in Frameworks */,
 				4D088B30255C1287002F3129 /* Ed25519 in Frameworks */,
 				4AF82FCB29B9E46C00DFEB82 /* GroupCalls in Frameworks */,
+				2DB1076F2F41B00000000BE2 /* AudioSessionManagerRTC in Frameworks */,
+				2DB1066F2F41B00000000BE2 /* AudioSessionManager in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2920,7 +2971,6 @@
 			files = (
 				2DDB04602F18D48A00C19CC5 /* ThreemaProtocols in Frameworks */,
 				2DDB045F2F18D48A00C19CC5 /* SwiftProtobuf in Frameworks */,
-				8D73743F2735554900CEE9D7 /* OCMockito in Frameworks */,
 				2D1A19C22DE0AC65005E4AE4 /* FileUtilityTestHelper in Frameworks */,
 				24C28FBF2AB9A16200D1C789 /* Foundation.framework in Frameworks */,
 				2D44B6532F16484100459A99 /* RemoteSecretProtocolTestHelper in Frameworks */,
@@ -2928,6 +2978,8 @@
 				2DCBA8CD2F16402C00B2E5F7 /* ThreemaFramework.framework in Frameworks */,
 				7E2201532D3F758E00DBAA07 /* Testing.framework in Frameworks */,
 				2D44B64D2F16482200459A99 /* FileUtilityTestHelper in Frameworks */,
+				2DC2007F2F41C00000000CF3 /* AudioSessionManager in Frameworks */,
+				2DD3008F2F41D00000000EF4 /* AudioSessionManagerTestHelper in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2945,6 +2997,8 @@
 				24B8200F2B32CEEB00E8D13E /* CocoaLumberjack in Frameworks */,
 				42F546642E1F9F1200C8C8FC /* RemoteSecretProtocolTestHelper in Frameworks */,
 				0A688AB919A3A4670013FCE8 /* Foundation.framework in Frameworks */,
+				2DC2017F2F41C00000000CF3 /* AudioSessionManager in Frameworks */,
+				2DD3018F2F41D00000000EF4 /* AudioSessionManagerTestHelper in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3016,6 +3070,8 @@
 				0A7DF8191C9FDBDE002D4DC3 /* UIKit.framework in Frameworks */,
 				8D965B40271E9C5E009A4E4C /* WebRTC.xcframework in Frameworks */,
 				4AA64BFA29B79F8F00F66543 /* GroupCalls in Frameworks */,
+				2DB1016F2F41B00000000BE2 /* AudioSessionManager in Frameworks */,
+				2DA0015F012F41A00100AD10 /* AudioSessionManagerRTC in Frameworks */,
 				2DE70BC62ED4426700F4F2E0 /* TrustKit in Frameworks */,
 				0A7DF81B1C9FDBDE002D4DC3 /* CoreGraphics.framework in Frameworks */,
 			);
@@ -3065,10 +3121,11 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				2D6F196D2F03BFC0004E1F90 /* ThreemaEssentialsTestHelper in Frameworks */,
 				2D3FD5192E61A561003D3DEE /* PromiseKit in Frameworks */,
 				2D3FD51B2E61A567003D3DEE /* FileUtility in Frameworks */,
 				2D6F196B2F03BFC0004E1F90 /* ThreemaEssentials in Frameworks */,
+				2DC2027F2F41C00000000CF3 /* AudioSessionManager in Frameworks */,
+				2DD3028F2F41D00000000EF4 /* AudioSessionManagerTestHelper in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3078,6 +3135,9 @@
 			files = (
 				2D3FD51D2E61A804003D3DEE /* FileUtility in Frameworks */,
 				2D3FD51F2E61A80C003D3DEE /* PromiseKit in Frameworks */,
+				08F2F8C5302218B300E20E6D /* ThreemaEssentials in Frameworks */,
+				2DC2037F2F41C00000000CF3 /* AudioSessionManager in Frameworks */,
+				2DD3038F2F41D00000000EF4 /* AudioSessionManagerTestHelper in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3087,6 +3147,8 @@
 			files = (
 				2D3FD5212E61B194003D3DEE /* FileUtility in Frameworks */,
 				2D3FD5232E61B19E003D3DEE /* PromiseKit in Frameworks */,
+				2DC2047F2F41C00000000CF3 /* AudioSessionManager in Frameworks */,
+				2DD3048F2F41D00000000EF4 /* AudioSessionManagerTestHelper in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3176,6 +3238,8 @@
 				7E0A4BC52AD68E6D00C38A25 /* PromiseKit in Frameworks */,
 				8DF1BC84271071A6000D241D /* SwiftMsgPack in Frameworks */,
 				4AA64C0029B79FA800F66543 /* GroupCalls in Frameworks */,
+				2DB1026F2F41B00000000BE2 /* AudioSessionManager in Frameworks */,
+				2DA0025F022F41A00200AD10 /* AudioSessionManagerRTC in Frameworks */,
 				2D5A1EE824C9B5DF00F87DD0 /* MessageUI.framework in Frameworks */,
 				245565D42E94DB5D00B1E0BC /* Collections in Frameworks */,
 				8DDCF7AE27107802000CB4F6 /* Gzip in Frameworks */,
@@ -3309,6 +3373,8 @@
 				2DEDB37824C9903400FC9099 /* MobileCoreServices.framework in Frameworks */,
 				2DE70BB02ED4379A00F4F2E0 /* JDStatusBarNotification in Frameworks */,
 				4AA64BFE29B79FA000F66543 /* GroupCalls in Frameworks */,
+				2DB1036F2F41B00000000BE2 /* AudioSessionManager in Frameworks */,
+				2DA0035F032F41A00300AD10 /* AudioSessionManagerRTC in Frameworks */,
 				2DEDB37924C9903400FC9099 /* CoreData.framework in Frameworks */,
 				24EFCD872B31E92A00DD7C66 /* MBProgressHUD in Frameworks */,
 				2DEDB37B24C9903400FC9099 /* AddressBook.framework in Frameworks */,
@@ -3448,6 +3514,8 @@
 				4D088AB5255C0CD4002F3129 /* UIKit.framework in Frameworks */,
 				8D965B42271E9C6D009A4E4C /* WebRTC.xcframework in Frameworks */,
 				4AA64BFC29B79F9900F66543 /* GroupCalls in Frameworks */,
+				2DB1046F2F41B00000000BE2 /* AudioSessionManager in Frameworks */,
+				2DA0045F042F41A00400AD10 /* AudioSessionManagerRTC in Frameworks */,
 				2DE70BCE2ED4462D00F4F2E0 /* TrustKit in Frameworks */,
 				4D088AB7255C0CD4002F3129 /* CoreGraphics.framework in Frameworks */,
 			);
@@ -3510,6 +3578,8 @@
 				F24E52622ECF669700C6884B /* FileUtilityTestHelper in Frameworks */,
 				F24E52602ECF665600C6884B /* RemoteSecretProtocolTestHelper in Frameworks */,
 				24B8201B2B32D06300E8D13E /* CocoaLumberjackSwift in Frameworks */,
+				2DC2057F2F41C00000000CF3 /* AudioSessionManager in Frameworks */,
+				2DD3058F2F41D00000000EF4 /* AudioSessionManagerTestHelper in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3543,6 +3613,8 @@
 				4D73A45F19E5E881007459F5 /* LocalAuthentication.framework in Frameworks */,
 				8DDCF7CF27108162000CB4F6 /* ZipArchive in Frameworks */,
 				4A7AE40229B732C10093BB85 /* GroupCalls in Frameworks */,
+				2DB1006F2F41B00000000BE2 /* AudioSessionManager in Frameworks */,
+				2DA0005F002F41A00000AD10 /* AudioSessionManagerRTC in Frameworks */,
 				4D0FC68719E3F33900CF7BB5 /* QuickLook.framework in Frameworks */,
 				8DDCF7A5271077BE000CB4F6 /* Gzip in Frameworks */,
 				4D08BF13190FB04800458BC4 /* CoreImage.framework in Frameworks */,
@@ -3614,6 +3686,8 @@
 				242083C92CBCDCDE0079D9B8 /* ThreemaMacros in Frameworks */,
 				2DD228FF2E5C59B200CD7132 /* FileUtility in Frameworks */,
 				F2540EAD2ECF6B8F00866020 /* FileUtilityTestHelper in Frameworks */,
+				2DC2067F2F41C00000000CF3 /* AudioSessionManager in Frameworks */,
+				2DD3068F2F41D00000000EF4 /* AudioSessionManagerTestHelper in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3709,6 +3783,8 @@
 				F2EAFEDA2D6CC9C400DFFD48 /* UIKit.framework in Frameworks */,
 				F2EAFEDB2D6CC9C400DFFD48 /* WebRTC.xcframework in Frameworks */,
 				F2EAFEDC2D6CC9C400DFFD48 /* GroupCalls in Frameworks */,
+				2DB1056F2F41B00000000BE2 /* AudioSessionManager in Frameworks */,
+				2DA0055F052F41A00500AD10 /* AudioSessionManagerRTC in Frameworks */,
 				F2EAFEDD2D6CC9C400DFFD48 /* CoreGraphics.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -3840,17 +3916,19 @@
 				F25FD3162E7043FA00EA8AF3 /* ThreemaFramework */,
 				F2FC38C62E7054A400A289D0 /* ThreemaNotificationExtension */,
 				2427FCBD2E6067E5004AFB8B /* ThreemaShareExtension */,
+				24B8F07D30177B88005428AF /* AudioSessionManager */,
 				24B149E32D91959B0059280C /* Coordinator */,
+				2D20979A2F6459EF00DFA3CC /* DataBackup */,
 				241C263B2DC256C400363A8D /* FileUtility */,
+				4A7AE40029B731130093BB85 /* GroupCalls */,
 				42F521832E1D50C400C8C8FC /* Keychain */,
+				4230B7072D38198500BFF929 /* libthreemaSwift */,
 				42F521812E1D504600C8C8FC /* RemoteSecret */,
 				42F521822E1D509200C8C8FC /* RemoteSecretProtocol */,
 				42B167EE2A150EC500ECD685 /* ThreemaBlake2b */,
 				24E0D24D2A56E474003F87E3 /* ThreemaEssentials */,
 				24A8619B2CBCDBBB009BACEC /* ThreemaMacros */,
 				4AFB718E29B8ABCF00E92842 /* ThreemaProtocols */,
-				4A7AE40029B731130093BB85 /* GroupCalls */,
-				4230B7072D38198500BFF929 /* libthreemaSwift */,
 				4A38E3CC2A5EDB40008484A2 /* Settings.bundle */,
 				24257C862E39DF8D00F0FBB0 /* SharedResources */,
 				0A688AAB19A371A80013FCE8 /* Vendor */,
@@ -3859,6 +3937,7 @@
 				F2FC39252E7054BB00A289D0 /* SharedTests */,
 				F2FC3C122E7055CC00A289D0 /* ScreenshotsWithData */,
 				F2FC3BF22E7055B900A289D0 /* ThreemaUITests */,
+				086F254B3004DA1200B81454 /* ThreemaPreviewsTests */,
 				4DD01F6B14C1CCA900EF7690 /* Frameworks */,
 				4DD01F6914C1CCA900EF7690 /* Products */,
 			);
@@ -3897,6 +3976,7 @@
 				2412D2AE2DA639DC008823F5 /* Threema Green Tests.xctest */,
 				2412D2BF2DA63A1A008823F5 /* Threema Blue Tests.xctest */,
 				2412D2D02DA63A5A008823F5 /* Custom Onprem Tests.xctest */,
+				086F254A3004DA1200B81454 /* ThreemaPreviewsTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -4132,6 +4212,32 @@
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
+		086F25493004DA1200B81454 /* ThreemaPreviewsTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 086F25503004DA1200B81454 /* Build configuration list for PBXNativeTarget "ThreemaPreviewsTests" */;
+			buildPhases = (
+				086F25463004DA1200B81454 /* Sources */,
+				086F25483004DA1200B81454 /* Resources */,
+				087D48C230224EC700792070 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				086F254F3004DA1200B81454 /* PBXTargetDependency */,
+				087D48C130224E6900792070 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				086F254B3004DA1200B81454 /* ThreemaPreviewsTests */,
+			);
+			name = ThreemaPreviewsTests;
+			packageProductDependencies = (
+				087D48C330224ED000792070 /* FileUtility */,
+				087D48C530224EDE00792070 /* ThreemaEssentials */,
+			);
+			productName = ThreemaPreviewsTests;
+			productReference = 086F254A3004DA1200B81454 /* ThreemaPreviewsTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 		0A677B811C6250C90019B361 /* ThreemaFramework */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 0A677B991C6250CA0019B361 /* Build configuration list for PBXNativeTarget "ThreemaFramework" */;
@@ -4160,6 +4266,8 @@
 				42A6D27F2A1CA6B600C641D9 /* ThreemaBlake2b */,
 				4AFB718F29B8AF0F00E92842 /* ThreemaProtocols */,
 				4AF82FCA29B9E46C00DFEB82 /* GroupCalls */,
+				2DB1076E2F41B00000000BE2 /* AudioSessionManagerRTC */,
+				2DB1066E2F41B00000000BE2 /* AudioSessionManager */,
 				24D02F342A56EF650074ABE4 /* ThreemaEssentials */,
 				7E0A4BBC2AD68DE000C38A25 /* PromiseKit */,
 				24B3A5FE2B31E7EA0053CFB6 /* MBProgressHUD */,
@@ -4176,6 +4284,7 @@
 				4250536D2F8E25E400441645 /* OrderedCollections */,
 				08F9BAD92F62AE8100E4164B /* libPhoneNumber */,
 				08BFCC5E2FC09F9C00235F00 /* ZipArchive */,
+				2D3F1AD72F67E4F600F6B59A /* DataBackup */,
 			);
 			productName = ThreemaFramework;
 			productReference = 0A677B821C6250C90019B361 /* ThreemaFramework.framework */;
@@ -4185,7 +4294,6 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 0A677B9D1C6250CA0019B361 /* Build configuration list for PBXNativeTarget "ThreemaFrameworkTests" */;
 			buildPhases = (
-				E1C25EFA2731421E00DE59EA /* SwiftFormat */,
 				0A677B871C6250CA0019B361 /* Sources */,
 				0A677B881C6250CA0019B361 /* Frameworks */,
 				0A677B891C6250CA0019B361 /* Resources */,
@@ -4202,10 +4310,11 @@
 			);
 			name = ThreemaFrameworkTests;
 			packageProductDependencies = (
-				8D73743E2735554900CEE9D7 /* OCMockito */,
 				2D26220A2DD626E400A63682 /* SwiftProtobuf */,
 				2D1A19C12DE0AC65005E4AE4 /* FileUtilityTestHelper */,
 				427B7B232E4B957200DB93D3 /* ThreemaProtocols */,
+				2DC2007E2F41C00000000CF3 /* AudioSessionManager */,
+				2DD3008E2F41D00000000EF4 /* AudioSessionManagerTestHelper */,
 			);
 			productName = ThreemaFrameworkTests;
 			productReference = 0A677B8B1C6250CA0019B361 /* ThreemaFrameworkTests.xctest */;
@@ -4215,7 +4324,6 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 0A688AC619A3A4670013FCE8 /* Build configuration list for PBXNativeTarget "Threema Tests" */;
 			buildPhases = (
-				E1465DBA27285E55004F3103 /* SwiftFormat */,
 				0A688AB219A3A4670013FCE8 /* Sources */,
 				0A688AB319A3A4670013FCE8 /* Frameworks */,
 				0A688AB419A3A4670013FCE8 /* Resources */,
@@ -4239,6 +4347,8 @@
 				42F546632E1F9F1200C8C8FC /* RemoteSecretProtocolTestHelper */,
 				F2BDF6EC2E79A7AB0034C642 /* KeychainTestHelper */,
 				688E45702E818890000B17F8 /* FileUtilityTestHelper */,
+				2DC2017E2F41C00000000CF3 /* AudioSessionManager */,
+				2DD3018E2F41D00000000EF4 /* AudioSessionManagerTestHelper */,
 			);
 			productName = "Threema Tests";
 			productReference = 0A688AB619A3A4670013FCE8 /* Threema Tests.xctest */;
@@ -4274,6 +4384,8 @@
 				8DBF271527108D360008045E /* Sentry */,
 				4A9029E02892D953007604D8 /* DSWaveformImage */,
 				4AA64BF929B79F8F00F66543 /* GroupCalls */,
+				2DB1016E2F41B00000000BE2 /* AudioSessionManager */,
+				2DA0015E012F41A00100AD10 /* AudioSessionManagerRTC */,
 				4A30E87F2A0B9D15008E039C /* ThreemaProtocols */,
 				24D02F3C2A56EF840074ABE4 /* ThreemaEssentials */,
 				7E0A4BBE2AD68E4000C38A25 /* PromiseKit */,
@@ -4368,7 +4480,6 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 2412D2B42DA639DC008823F5 /* Build configuration list for PBXNativeTarget "Threema Green Tests" */;
 			buildPhases = (
-				2412D2BA2DA639EE008823F5 /* SwiftFormat */,
 				2412D2AA2DA639DC008823F5 /* Sources */,
 				2412D2AB2DA639DC008823F5 /* Frameworks */,
 				2412D2AC2DA639DC008823F5 /* Resources */,
@@ -4383,7 +4494,8 @@
 				2D3FD5182E61A561003D3DEE /* PromiseKit */,
 				2D3FD51A2E61A567003D3DEE /* FileUtility */,
 				2D6F196A2F03BFC0004E1F90 /* ThreemaEssentials */,
-				2D6F196C2F03BFC0004E1F90 /* ThreemaEssentialsTestHelper */,
+				2DC2027E2F41C00000000CF3 /* AudioSessionManager */,
+				2DD3028E2F41D00000000EF4 /* AudioSessionManagerTestHelper */,
 			);
 			productName = "Threema Green Tests";
 			productReference = 2412D2AE2DA639DC008823F5 /* Threema Green Tests.xctest */;
@@ -4393,7 +4505,6 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 2412D2C52DA63A1A008823F5 /* Build configuration list for PBXNativeTarget "Threema Blue Tests" */;
 			buildPhases = (
-				24B8F3462DA68F5D000FDB71 /* SwiftFormat */,
 				2412D2BB2DA63A1A008823F5 /* Sources */,
 				2412D2BC2DA63A1A008823F5 /* Frameworks */,
 				2412D2BD2DA63A1A008823F5 /* Resources */,
@@ -4407,6 +4518,8 @@
 			packageProductDependencies = (
 				2D3FD51C2E61A804003D3DEE /* FileUtility */,
 				2D3FD51E2E61A80C003D3DEE /* PromiseKit */,
+				2DC2037E2F41C00000000CF3 /* AudioSessionManager */,
+				2DD3038E2F41D00000000EF4 /* AudioSessionManagerTestHelper */,
 			);
 			productName = "Threema Blue Tests";
 			productReference = 2412D2BF2DA63A1A008823F5 /* Threema Blue Tests.xctest */;
@@ -4416,7 +4529,6 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 2412D2D62DA63A5A008823F5 /* Build configuration list for PBXNativeTarget "Custom Onprem Tests" */;
 			buildPhases = (
-				2412D2DC2DA63A6A008823F5 /* SwiftFormat */,
 				2412D2CC2DA63A5A008823F5 /* Sources */,
 				2412D2CD2DA63A5A008823F5 /* Frameworks */,
 				2412D2CE2DA63A5A008823F5 /* Resources */,
@@ -4430,6 +4542,8 @@
 			packageProductDependencies = (
 				2D3FD5202E61B194003D3DEE /* FileUtility */,
 				2D3FD5222E61B19E003D3DEE /* PromiseKit */,
+				2DC2047E2F41C00000000CF3 /* AudioSessionManager */,
+				2DD3048E2F41D00000000EF4 /* AudioSessionManagerTestHelper */,
 			);
 			productName = "Custom Onprem Tests";
 			productReference = 2412D2D02DA63A5A008823F5 /* Custom Onprem Tests.xctest */;
@@ -4534,6 +4648,8 @@
 				8DBF271B27108D550008045E /* Sentry */,
 				4A9029E72892D989007604D8 /* DSWaveformImage */,
 				4AA64BFF29B79FA800F66543 /* GroupCalls */,
+				2DB1026E2F41B00000000BE2 /* AudioSessionManager */,
+				2DA0025E022F41A00200AD10 /* AudioSessionManagerRTC */,
 				4A30E8832A0B9D27008E039C /* ThreemaProtocols */,
 				24D02F362A56EF700074ABE4 /* ThreemaEssentials */,
 				7E0A4BC42AD68E6D00C38A25 /* PromiseKit */,
@@ -4666,7 +4782,6 @@
 			buildPhases = (
 				2DEDB15C24C9903400FC9099 /* Sources */,
 				2DEDB35524C9903400FC9099 /* Frameworks */,
-				68C60BCF2F30EE9C008EBA75 /* Configure Scene Delegate Script */,
 				2DEDB38A24C9903400FC9099 /* Resources */,
 				2DEDB3D624C9903400FC9099 /* Embed Frameworks */,
 				2DEDB3D924C9903400FC9099 /* Embed Foundation Extensions */,
@@ -4691,6 +4806,8 @@
 				8DBF271927108D4A0008045E /* Sentry */,
 				4A9029E52892D984007604D8 /* DSWaveformImage */,
 				4AA64BFD29B79FA000F66543 /* GroupCalls */,
+				2DB1036E2F41B00000000BE2 /* AudioSessionManager */,
+				2DA0035E032F41A00300AD10 /* AudioSessionManagerRTC */,
 				4A30E87B2A0B9C15008E039C /* ThreemaProtocols */,
 				24D02F382A56EF760074ABE4 /* ThreemaEssentials */,
 				7E0A4BC22AD68E5F00C38A25 /* PromiseKit */,
@@ -4812,6 +4929,8 @@
 				8DBF271727108D410008045E /* Sentry */,
 				4A9029E32892D97E007604D8 /* DSWaveformImage */,
 				4AA64BFB29B79F9900F66543 /* GroupCalls */,
+				2DB1046E2F41B00000000BE2 /* AudioSessionManager */,
+				2DA0045E042F41A00400AD10 /* AudioSessionManagerRTC */,
 				4A30E8812A0B9D1D008E039C /* ThreemaProtocols */,
 				24D02F3A2A56EF7C0074ABE4 /* ThreemaEssentials */,
 				7E0A4BC02AD68E4E00C38A25 /* PromiseKit */,
@@ -4907,7 +5026,6 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 4D5C4CC91CD79C8500512FE6 /* Build configuration list for PBXNativeTarget "Threema Work Tests" */;
 			buildPhases = (
-				E1465DBB27285E91004F3103 /* SwiftFormat */,
 				4D5C4CA51CD79C8500512FE6 /* Sources */,
 				4D5C4CBD1CD79C8500512FE6 /* Frameworks */,
 				4D5C4CC21CD79C8500512FE6 /* Resources */,
@@ -4929,6 +5047,8 @@
 				F24E525F2ECF665600C6884B /* RemoteSecretProtocolTestHelper */,
 				F24E52612ECF669700C6884B /* FileUtilityTestHelper */,
 				F24E52632ECF66A500C6884B /* ThreemaProtocols */,
+				2DC2057E2F41C00000000CF3 /* AudioSessionManager */,
+				2DD3058E2F41D00000000EF4 /* AudioSessionManagerTestHelper */,
 			);
 			productName = "Threema Tests";
 			productReference = 4D5C4CCD1CD79C8500512FE6 /* Threema Work Tests.xctest */;
@@ -4964,6 +5084,8 @@
 				8DBF271327108D260008045E /* Sentry */,
 				4AD3502A28886518002B37C8 /* DSWaveformImage */,
 				4A7AE40129B732C10093BB85 /* GroupCalls */,
+				2DB1006E2F41B00000000BE2 /* AudioSessionManager */,
+				2DA0005E002F41A00000AD10 /* AudioSessionManagerRTC */,
 				4A30E87D2A0B9D0D008E039C /* ThreemaProtocols */,
 				24D02F3E2A56EF8E0074ABE4 /* ThreemaEssentials */,
 				7EAEA2152ABD5FE4007C49F2 /* PromiseKit */,
@@ -5014,7 +5136,6 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = CE08C0F827299A13001EFCDE /* Build configuration list for PBXNativeTarget "Threema OnPrem Tests" */;
 			buildPhases = (
-				2412D2A92DA639A7008823F5 /* SwiftFormat */,
 				CE08C0E427299A13001EFCDE /* Sources */,
 				CE08C0F327299A13001EFCDE /* Frameworks */,
 				CE08C0F627299A13001EFCDE /* Resources */,
@@ -5036,6 +5157,8 @@
 				F2540EAE2ECF6B9C00866020 /* KeychainTestHelper */,
 				F2540EB02ECF6BA700866020 /* RemoteSecretProtocolTestHelper */,
 				F2540EB22ECF6BB300866020 /* ThreemaProtocols */,
+				2DC2067E2F41C00000000CF3 /* AudioSessionManager */,
+				2DD3068E2F41D00000000EF4 /* AudioSessionManagerTestHelper */,
 			);
 			productName = "Threema Tests";
 			productReference = CE08C0FE27299A13001EFCDE /* Threema OnPrem Tests.xctest */;
@@ -5114,6 +5237,8 @@
 				F2EAFBD12D6CC9C400DFFD48 /* Sentry */,
 				F2EAFBD32D6CC9C400DFFD48 /* DSWaveformImage */,
 				F2EAFBD52D6CC9C400DFFD48 /* GroupCalls */,
+				2DB1056E2F41B00000000BE2 /* AudioSessionManager */,
+				2DA0055E052F41A00500AD10 /* AudioSessionManagerRTC */,
 				F2EAFBD62D6CC9C400DFFD48 /* ThreemaProtocols */,
 				F2EAFBD92D6CC9C400DFFD48 /* ThreemaEssentials */,
 				F2EAFBDA2D6CC9C400DFFD48 /* PromiseKit */,
@@ -5213,10 +5338,14 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
 				DefaultBuildSystemTypeForWorkspace = Original;
-				LastSwiftUpdateCheck = 1630;
+				LastSwiftUpdateCheck = 2660;
 				LastUpgradeCheck = 1620;
 				ORGANIZATIONNAME = "Threema AG";
 				TargetAttributes = {
+					086F25493004DA1200B81454 = {
+						CreatedOnToolsVersion = 26.6;
+						TestTargetID = 2D5A1CCC24C9B5DF00F87DD0;
+					};
 					0A677B811C6250C90019B361 = {
 						CreatedOnToolsVersion = 7.2;
 						LastSwiftMigration = 1020;
@@ -5412,7 +5541,6 @@
 				8DDCF7D8271082AB000CB4F6 /* XCRemoteSwiftPackageReference "SDWebImage" */,
 				8DBF271027108B350008045E /* XCRemoteSwiftPackageReference "sentry-cocoa" */,
 				8DBF271D271096070008045E /* XCRemoteSwiftPackageReference "TrustKit" */,
-				8D73743D2735554900CEE9D7 /* XCRemoteSwiftPackageReference "OCMockito" */,
 				4AD3502928886518002B37C8 /* XCRemoteSwiftPackageReference "DSWaveformImage" */,
 				24CCB0D528AE23D300545893 /* XCRemoteSwiftPackageReference "JDStatusBarNotification" */,
 				4D4941F328B8F68F003FFC9B /* XCRemoteSwiftPackageReference "SQLite" */,
@@ -5452,6 +5580,7 @@
 				2D08982024C98984006A70E1 /* Threema Blue ShareExtension */,
 				0A677B811C6250C90019B361 /* ThreemaFramework */,
 				0A688AB519A3A4670013FCE8 /* Threema Tests */,
+				086F25493004DA1200B81454 /* ThreemaPreviewsTests */,
 				4D5C4CA11CD79C8500512FE6 /* Threema Work Tests */,
 				CE08C0DE27299A13001EFCDE /* Threema OnPrem Tests */,
 				2412D2AD2DA639DC008823F5 /* Threema Green Tests */,
@@ -5467,6 +5596,13 @@
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		086F25483004DA1200B81454 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		0A677B801C6250C90019B361 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -5703,156 +5839,14 @@
 		};
 /* End PBXResourcesBuildPhase section */
 
-/* Begin PBXShellScriptBuildPhase section */
-		2412D2A92DA639A7008823F5 /* SwiftFormat */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-			);
-			name = SwiftFormat;
-			outputFileListPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "if ! [ -z ${CI+x} ]; then\n    return 0 2>/dev/null || exit 0\nfi\n\nexport PATH=\"$HOME/.local/bin:$PATH\"\n\nif ! command -v mise &> /dev/null; then\n    echo \"warning: mise not found — skipping SwiftFormat\"\n    exit 0\nfi\n\nmise exec -- swiftformat $SRCROOT \\\n    --config \"$SRCROOT/.swiftformat\" \\\n    --swift-version $(cat $SRCROOT/.swift-version)\n";
-		};
-		2412D2BA2DA639EE008823F5 /* SwiftFormat */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-			);
-			name = SwiftFormat;
-			outputFileListPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "if ! [ -z ${CI+x} ]; then\n    return 0 2>/dev/null || exit 0\nfi\n\nexport PATH=\"$HOME/.local/bin:$PATH\"\n\nif ! command -v mise &> /dev/null; then\n    echo \"warning: mise not found — skipping SwiftFormat\"\n    exit 0\nfi\n\nmise exec -- swiftformat $SRCROOT \\\n    --config \"$SRCROOT/.swiftformat\" \\\n    --swift-version $(cat $SRCROOT/.swift-version)\n";
-		};
-		2412D2DC2DA63A6A008823F5 /* SwiftFormat */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-			);
-			name = SwiftFormat;
-			outputFileListPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "if ! [ -z ${CI+x} ]; then\n    return 0 2>/dev/null || exit 0\nfi\n\nexport PATH=\"$HOME/.local/bin:$PATH\"\n\nif ! command -v mise &> /dev/null; then\n    echo \"warning: mise not found — skipping SwiftFormat\"\n    exit 0\nfi\n\nmise exec -- swiftformat $SRCROOT \\\n    --config \"$SRCROOT/.swiftformat\" \\\n    --swift-version $(cat $SRCROOT/.swift-version)\n";
-		};
-		24B8F3462DA68F5D000FDB71 /* SwiftFormat */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-			);
-			name = SwiftFormat;
-			outputFileListPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "if ! [ -z ${CI+x} ]; then\n    return 0 2>/dev/null || exit 0\nfi\n\nexport PATH=\"$HOME/.local/bin:$PATH\"\n\nif ! command -v mise &> /dev/null; then\n    echo \"warning: mise not found — skipping SwiftFormat\"\n    exit 0\nfi\n\nmise exec -- swiftformat $SRCROOT \\\n    --config \"$SRCROOT/.swiftformat\" \\\n    --swift-version $(cat $SRCROOT/.swift-version)\n";
-		};
-		68C60BCF2F30EE9C008EBA75 /* Configure Scene Delegate Script */ = {
-			isa = PBXShellScriptBuildPhase;
-			alwaysOutOfDate = 1;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-				"$(SRCROOT)/$(INFOPLIST_FILE)",
-			);
-			name = "Configure Scene Delegate Script";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "#!/bin/bash\n\n# Configure Scene Delegate in Info.plist\n#\n# When SCENE_DELEGATE_ROOT_COORDINATOR_DEVELOPMENT flag is present in\n# SWIFT_ACTIVE_COMPILATION_CONDITIONS, this script adds the UIApplicationSceneManifest\n# configuration to the target's Info.plist. Otherwise, it removes it.\n#\n# Add this as a Run Script build phase BEFORE \"Copy Bundle Resources\".\n\nset -euo pipefail\n\nPLIST=\"${TARGET_BUILD_DIR}/${INFOPLIST_PATH}\"\n\n# Fallback to source plist if built plist doesn't exist yet\nif [ ! -f \"$PLIST\" ]; then\n    PLIST=\"${SRCROOT}/${INFOPLIST_FILE}\"\nfi\n\nif [ ! -f \"$PLIST\" ]; then\n    echo \"warning: Info.plist not found at ${PLIST}\"\n    exit 0\nfi\n\nSCENE_MANIFEST_KEY=\"UIApplicationSceneManifest\"\nFLAG=\"SCENE_DELEGATE_ROOT_COORDINATOR_DEVELOPMENT\"\n\nif echo \"${SWIFT_ACTIVE_COMPILATION_CONDITIONS:-}\" | grep -qw \"$FLAG\"; then\n    echo \"note: ${FLAG} is active — adding scene manifest to Info.plist\"\n\n    # Add UIApplicationSceneManifest dictionary\n    /usr/libexec/PlistBuddy -c \"Delete :${SCENE_MANIFEST_KEY}\" \"$PLIST\" 2>/dev/null || true\n    /usr/libexec/PlistBuddy -c \"Add :${SCENE_MANIFEST_KEY} dict\" \"$PLIST\"\n\n    # UIApplicationSupportsMultipleScenes = false\n    /usr/libexec/PlistBuddy -c \"Add :${SCENE_MANIFEST_KEY}:UIApplicationSupportsMultipleScenes bool false\" \"$PLIST\"\n\n    # UISceneConfigurations dictionary\n    /usr/libexec/PlistBuddy -c \"Add :${SCENE_MANIFEST_KEY}:UISceneConfigurations dict\" \"$PLIST\"\n\n    # UIWindowSceneSessionRoleApplication array\n    /usr/libexec/PlistBuddy -c \"Add :${SCENE_MANIFEST_KEY}:UISceneConfigurations:UIWindowSceneSessionRoleApplication array\" \"$PLIST\"\n\n    # First (and only) scene configuration\n    /usr/libexec/PlistBuddy -c \"Add :${SCENE_MANIFEST_KEY}:UISceneConfigurations:UIWindowSceneSessionRoleApplication:0 dict\" \"$PLIST\"\n    /usr/libexec/PlistBuddy -c \"Add :${SCENE_MANIFEST_KEY}:UISceneConfigurations:UIWindowSceneSessionRoleApplication:0:UISceneConfigurationName string 'Default Configuration'\" \"$PLIST\"\n    /usr/libexec/PlistBuddy -c \"Add :${SCENE_MANIFEST_KEY}:UISceneConfigurations:UIWindowSceneSessionRoleApplication:0:UISceneDelegateClassName string '${PRODUCT_MODULE_NAME}.SceneDelegate'\" \"$PLIST\"\n\n    echo \"note: Scene manifest added successfully\"\nelse\n    echo \"note: ${FLAG} is not active — removing scene manifest from Info.plist\"\n\n    /usr/libexec/PlistBuddy -c \"Delete :${SCENE_MANIFEST_KEY}\" \"$PLIST\" 2>/dev/null || true\n\n    echo \"note: Scene manifest removed (or was not present)\"\nfi\n";
-		};
-		E1465DBA27285E55004F3103 /* SwiftFormat */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-			);
-			name = SwiftFormat;
-			outputFileListPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "if ! [ -z ${CI+x} ]; then\n    return 0 2>/dev/null || exit 0\nfi\n\nexport PATH=\"$HOME/.local/bin:$PATH\"\n\nif ! command -v mise &> /dev/null; then\n    echo \"warning: mise not found — skipping SwiftFormat\"\n    exit 0\nfi\n\nmise exec -- swiftformat $SRCROOT \\\n    --config \"$SRCROOT/.swiftformat\" \\\n    --swift-version $(cat $SRCROOT/.swift-version)\n";
-		};
-		E1465DBB27285E91004F3103 /* SwiftFormat */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-			);
-			name = SwiftFormat;
-			outputFileListPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "if ! [ -z ${CI+x} ]; then\n    return 0 2>/dev/null || exit 0\nfi\n\nexport PATH=\"$HOME/.local/bin:$PATH\"\n\nif ! command -v mise &> /dev/null; then\n    echo \"warning: mise not found — skipping SwiftFormat\"\n    exit 0\nfi\n\nmise exec -- swiftformat $SRCROOT \\\n    --config \"$SRCROOT/.swiftformat\" \\\n    --swift-version $(cat $SRCROOT/.swift-version)\n";
-		};
-		E1C25EFA2731421E00DE59EA /* SwiftFormat */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-			);
-			name = SwiftFormat;
-			outputFileListPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "if ! [ -z ${CI+x} ]; then\n    return 0 2>/dev/null || exit 0\nfi\n\nexport PATH=\"$HOME/.local/bin:$PATH\"\n\nif ! command -v mise &> /dev/null; then\n    echo \"warning: mise not found — skipping SwiftFormat\"\n    exit 0\nfi\n\nmise exec -- swiftformat $SRCROOT \\\n    --config \"$SRCROOT/.swiftformat\" \\\n    --swift-version $(cat $SRCROOT/.swift-version)\n";
-		};
-/* End PBXShellScriptBuildPhase section */
-
 /* Begin PBXSourcesBuildPhase section */
+		086F25463004DA1200B81454 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		0A677B7D1C6250C90019B361 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -6380,6 +6374,16 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		086F254F3004DA1200B81454 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 2D5A1CCC24C9B5DF00F87DD0 /* Threema Blue */;
+			targetProxy = 086F254E3004DA1200B81454 /* PBXContainerItemProxy */;
+		};
+		087D48C130224E6900792070 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 2D5A1CCC24C9B5DF00F87DD0 /* Threema Blue */;
+			targetProxy = 087D48C030224E6900792070 /* PBXContainerItemProxy */;
+		};
 		0A677B8E1C6250CA0019B361 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 0A677B811C6250C90019B361 /* ThreemaFramework */;
@@ -6588,6 +6592,191 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		086F25513004DA1200B81454 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = DL5SR3PBJC;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = ch.threema.iapp.ThreemaPreviewsTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Threema Blue.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Threema Blue";
+			};
+			name = Debug;
+		};
+		086F25523004DA1200B81454 /* AdHoc */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = DL5SR3PBJC;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MARKETING_VERSION = 1.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = ch.threema.iapp.ThreemaPreviewsTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Threema Blue.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Threema Blue";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = AdHoc;
+		};
+		086F25533004DA1200B81454 /* AppStore */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = DL5SR3PBJC;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MARKETING_VERSION = 1.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = ch.threema.iapp.ThreemaPreviewsTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Threema Blue.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Threema Blue";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = AppStore;
+		};
 		0A677B9A1C6250CA0019B361 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReferenceAnchor = F2FC39052E7054AF00A289D0 /* Configurations */;
@@ -8459,6 +8648,7 @@
 				DEVELOPMENT_TEAM = DL5SR3PBJC;
 				ENABLE_BITCODE = NO;
 				ENABLE_MODULE_VERIFIER = YES;
+				ENABLE_TESTABILITY = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/ThreemaFramework",
@@ -11944,6 +12134,16 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		086F25503004DA1200B81454 /* Build configuration list for PBXNativeTarget "ThreemaPreviewsTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				086F25513004DA1200B81454 /* Debug */,
+				086F25523004DA1200B81454 /* AdHoc */,
+				086F25533004DA1200B81454 /* AppStore */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = AppStore;
+		};
 		0A677B991C6250CA0019B361 /* Build configuration list for PBXNativeTarget "ThreemaFramework" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -12278,7 +12478,7 @@
 			repositoryURL = "https://github.com/CocoaLumberjack/CocoaLumberjack";
 			requirement = {
 				kind = exactVersion;
-				version = 3.8.5;
+				version = 3.9.1;
 			};
 		};
 		24AD2ECD2B4D8F4500BB0BDF /* XCRemoteSwiftPackageReference "Reachability" */ = {
@@ -12353,20 +12553,12 @@
 				version = 8.2.0;
 			};
 		};
-		8D73743D2735554900CEE9D7 /* XCRemoteSwiftPackageReference "OCMockito" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/jonreid/OCMockito";
-			requirement = {
-				kind = revision;
-				revision = 3005c2f05b0f809aee9e4f2a36b901c3a6b96d16;
-			};
-		};
 		8DBF271027108B350008045E /* XCRemoteSwiftPackageReference "sentry-cocoa" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/threema-ch/sentry-cocoa";
 			requirement = {
 				kind = revision;
-				revision = de4e8dc11b2f3c34d3ce8a976c4b10e30748fd22;
+				revision = 04e176269abb0d2ffdcc0a8b4fc82217a2ff4c78;
 			};
 			traits = (
 			);
@@ -12408,7 +12600,7 @@
 			repositoryURL = "https://github.com/apple/swift-protobuf";
 			requirement = {
 				kind = exactVersion;
-				version = 1.33.3;
+				version = 1.38.1;
 			};
 		};
 		8DDCF7CD27108162000CB4F6 /* XCRemoteSwiftPackageReference "ZipArchive" */ = {
@@ -12675,6 +12867,14 @@
 			package = 08F9BAD82F62AE8100E4164B /* XCRemoteSwiftPackageReference "libPhoneNumber-iOS" */;
 			productName = libPhoneNumber;
 		};
+		087D48C330224ED000792070 /* FileUtility */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = FileUtility;
+		};
+		087D48C530224EDE00792070 /* ThreemaEssentials */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = ThreemaEssentials;
+		};
 		08BFCC5E2FC09F9C00235F00 /* ZipArchive */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 8DDCF7CD27108162000CB4F6 /* XCRemoteSwiftPackageReference "ZipArchive" */;
@@ -12739,6 +12939,10 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 8DDCF7CD27108162000CB4F6 /* XCRemoteSwiftPackageReference "ZipArchive" */;
 			productName = ZipArchive;
+		};
+		08F2F8C4302218B300E20E6D /* ThreemaEssentials */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = ThreemaEssentials;
 		};
 		08F9BAD92F62AE8100E4164B /* libPhoneNumber */ = {
 			isa = XCSwiftPackageProductDependency;
@@ -13434,6 +13638,10 @@
 			package = 8DDCF7C827107F94000CB4F6 /* XCRemoteSwiftPackageReference "swift-protobuf" */;
 			productName = SwiftProtobuf;
 		};
+		2D3F1AD72F67E4F600F6B59A /* DataBackup */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = DataBackup;
+		};
 		2D3FD5182E61A561003D3DEE /* PromiseKit */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 7EAEA2142ABD5FE4007C49F2 /* XCRemoteSwiftPackageReference "PromiseKit" */;
@@ -13477,13 +13685,33 @@
 			isa = XCSwiftPackageProductDependency;
 			productName = ThreemaEssentials;
 		};
-		2D6F196C2F03BFC0004E1F90 /* ThreemaEssentialsTestHelper */ = {
-			isa = XCSwiftPackageProductDependency;
-			productName = ThreemaEssentialsTestHelper;
-		};
 		2D9E4F892E276DA40010A5D1 /* Keychain */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = Keychain;
+		};
+		2DA0005E002F41A00000AD10 /* AudioSessionManagerRTC */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = AudioSessionManagerRTC;
+		};
+		2DA0015E012F41A00100AD10 /* AudioSessionManagerRTC */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = AudioSessionManagerRTC;
+		};
+		2DA0025E022F41A00200AD10 /* AudioSessionManagerRTC */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = AudioSessionManagerRTC;
+		};
+		2DA0035E032F41A00300AD10 /* AudioSessionManagerRTC */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = AudioSessionManagerRTC;
+		};
+		2DA0045E042F41A00400AD10 /* AudioSessionManagerRTC */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = AudioSessionManagerRTC;
+		};
+		2DA0055E052F41A00500AD10 /* AudioSessionManagerRTC */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = AudioSessionManagerRTC;
 		};
 		2DA0179F2EAA30DF008EAB3C /* FileUtility */ = {
 			isa = XCSwiftPackageProductDependency;
@@ -13505,6 +13733,66 @@
 			isa = XCSwiftPackageProductDependency;
 			productName = FileUtility;
 		};
+		2DB1006E2F41B00000000BE2 /* AudioSessionManager */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = AudioSessionManager;
+		};
+		2DB1016E2F41B00000000BE2 /* AudioSessionManager */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = AudioSessionManager;
+		};
+		2DB1026E2F41B00000000BE2 /* AudioSessionManager */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = AudioSessionManager;
+		};
+		2DB1036E2F41B00000000BE2 /* AudioSessionManager */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = AudioSessionManager;
+		};
+		2DB1046E2F41B00000000BE2 /* AudioSessionManager */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = AudioSessionManager;
+		};
+		2DB1056E2F41B00000000BE2 /* AudioSessionManager */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = AudioSessionManager;
+		};
+		2DB1066E2F41B00000000BE2 /* AudioSessionManager */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = AudioSessionManager;
+		};
+		2DB1076E2F41B00000000BE2 /* AudioSessionManagerRTC */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = AudioSessionManagerRTC;
+		};
+		2DC2007E2F41C00000000CF3 /* AudioSessionManager */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = AudioSessionManager;
+		};
+		2DC2017E2F41C00000000CF3 /* AudioSessionManager */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = AudioSessionManager;
+		};
+		2DC2027E2F41C00000000CF3 /* AudioSessionManager */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = AudioSessionManager;
+		};
+		2DC2037E2F41C00000000CF3 /* AudioSessionManager */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = AudioSessionManager;
+		};
+		2DC2047E2F41C00000000CF3 /* AudioSessionManager */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = AudioSessionManager;
+		};
+		2DC2057E2F41C00000000CF3 /* AudioSessionManager */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = AudioSessionManager;
+		};
+		2DC2067E2F41C00000000CF3 /* AudioSessionManager */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = AudioSessionManager;
+		};
 		2DD228FC2E5C59A900CD7132 /* ThreemaEssentials */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = ThreemaEssentials;
@@ -13517,6 +13805,34 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 7EAEA2142ABD5FE4007C49F2 /* XCRemoteSwiftPackageReference "PromiseKit" */;
 			productName = PromiseKit;
+		};
+		2DD3008E2F41D00000000EF4 /* AudioSessionManagerTestHelper */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = AudioSessionManagerTestHelper;
+		};
+		2DD3018E2F41D00000000EF4 /* AudioSessionManagerTestHelper */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = AudioSessionManagerTestHelper;
+		};
+		2DD3028E2F41D00000000EF4 /* AudioSessionManagerTestHelper */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = AudioSessionManagerTestHelper;
+		};
+		2DD3038E2F41D00000000EF4 /* AudioSessionManagerTestHelper */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = AudioSessionManagerTestHelper;
+		};
+		2DD3048E2F41D00000000EF4 /* AudioSessionManagerTestHelper */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = AudioSessionManagerTestHelper;
+		};
+		2DD3058E2F41D00000000EF4 /* AudioSessionManagerTestHelper */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = AudioSessionManagerTestHelper;
+		};
+		2DD3068E2F41D00000000EF4 /* AudioSessionManagerTestHelper */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = AudioSessionManagerTestHelper;
 		};
 		2DE70BAF2ED4379A00F4F2E0 /* JDStatusBarNotification */ = {
 			isa = XCSwiftPackageProductDependency;
@@ -13962,11 +14278,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 8DBF271D271096070008045E /* XCRemoteSwiftPackageReference "TrustKit" */;
 			productName = TrustKit;
-		};
-		8D73743E2735554900CEE9D7 /* OCMockito */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 8D73743D2735554900CEE9D7 /* XCRemoteSwiftPackageReference "OCMockito" */;
-			productName = OCMockito;
 		};
 		8DACAAEB2747C7FE005880A8 /* SDWebImage */ = {
 			isa = XCSwiftPackageProductDependency;

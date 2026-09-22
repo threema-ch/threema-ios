@@ -5,8 +5,9 @@ import RemoteSecretProtocolTestHelper
 import Testing
 @testable import ThreemaFramework
 
+/// Note that the DB must be created in a real physical path, because Core Data is not mocked.
+@MainActor
 @Suite("Database Manager", .serialized)
-/// Note that the DB must be create in a real physical path, because Core Data is not mocked.
 final class DatabaseManagerTests {
     let appGroupID = "group.ch.threema"
     var appDataDirectoryURL: URL!
@@ -17,7 +18,7 @@ final class DatabaseManagerTests {
 
     init() throws {
         FileUtility.updateSharedInstance(with: FileUtility())
-        
+
         self.appDataDirectoryURL = FileUtility.shared.appDataDirectory(appGroupID: appGroupID)?
             .appendingPathComponent("unit-test")
 
@@ -54,10 +55,9 @@ final class DatabaseManagerTests {
         }
     }
 
-    @Test("Require migration with database not exists")
-    func storeRequiresMigrationNoneDatabaseNotExists() {
+    @Test func `Require migration with database not exists`() {
         let fileUtilityMock = FileUtilityMock()
-        fileUtilityMock.appDataDirectory = URL(string: "/data/")
+        fileUtilityMock.mockAppDataDirectory = { _ in URL(string: "/data/") }
         fileUtilityMock.appDocumentsDirectory = URL(string: "/documents/")
 
         let databaseManager = DatabaseManager(
@@ -69,16 +69,15 @@ final class DatabaseManagerTests {
         #expect(databaseManager.storeRequiresMigration() == .none)
     }
 
-    @Test("Require migration with database exists")
-    func storeRequiresMigrationNoneDatabaseExists() {
+    @Test func `Require migration with database exists`() {
         // Config
         createTestDB(forMigration: true)
         let storeURL = appDataDirectoryURL.appendingPathComponent(DatabaseManager.databaseFileName)
 
         let fileUtilityMock = FileUtilityMock()
-        fileUtilityMock.appDataDirectory = appDataDirectoryURL
+        fileUtilityMock.mockAppDataDirectory = { _ in self.appDataDirectoryURL }
         fileUtilityMock.appDocumentsDirectory = URL(string: "/documents/")
-        fileUtilityMock.content.append(storeURL)
+        fileUtilityMock.mockFileExistsAtURL = { $0 == storeURL }
 
         // Act
         let databaseManager = DatabaseManager(
@@ -91,8 +90,7 @@ final class DatabaseManagerTests {
         #expect(databaseManager.storeRequiresMigration() == .required)
     }
 
-    @Test("None migration required. Test migration of old external storage backup")
-    func persistentStoreCoordinatorMigrationNone() throws {
+    @Test func `None migration required. Test migration of old external storage backup`() throws {
         // Config
         let urlToExternalStorage = appDataDirectoryURL.appendingPathComponent(
             DatabaseManager.databaseExternalStoragePath,
@@ -103,11 +101,10 @@ final class DatabaseManagerTests {
             isDirectory: true
         )
 
-        let fileUtilityMock = FileUtilityMock(content: [
-            tmpURLToExternalStorage,
-        ])
-        fileUtilityMock.appDataDirectory = appDataDirectoryURL
+        let fileUtilityMock = FileUtilityMock()
+        fileUtilityMock.mockAppDataDirectory = { _ in self.appDataDirectoryURL }
         fileUtilityMock.appDocumentsDirectory = URL(string: "/documents/")
+        fileUtilityMock.mockFileExistsAtURL = { $0 == tmpURLToExternalStorage }
 
         // Act
         _ = try DatabaseManager(
@@ -118,25 +115,24 @@ final class DatabaseManagerTests {
         .persistentStoreCoordinator
 
         // Test
-        #expect(fileUtilityMock.isExistsCalledWithFileURL.contains(tmpURLToExternalStorage) == true)
+        #expect(fileUtilityMock.calls.contains(.fileExistsAtURL(tmpURLToExternalStorage)))
         #expect(
-            fileUtilityMock.mergeContentsOfPathCalledWithFromTo
-                .count(where: { $0.0 == tmpURLToExternalStorage && $0.1 == urlToExternalStorage
-                }) == 1
+            fileUtilityMock.calls
+                .count(where: { $0 == .mergeContentsOfPath(from: tmpURLToExternalStorage, to: urlToExternalStorage) })
+                == 1
         )
-        #expect(fileUtilityMock.deleteIfExistsCalledWithSourceURL.contains(tmpURLToExternalStorage) == true)
+        #expect(fileUtilityMock.calls.contains(.deleteIfExists(tmpURLToExternalStorage)))
         #expect(
-            fileUtilityMock.isExistsCalledWithFileURL
-                .contains(
-                    where: { url in
-                        url.lastPathComponent.hasPrefix("\(DatabaseManager.databaseFileName).bak")
-                    }
-                ) == true
+            fileUtilityMock.calls.contains { call in
+                guard case let .fileExistsAtURL(url) = call else {
+                    return false
+                }
+                return url?.lastPathComponent.hasPrefix("\(DatabaseManager.databaseFileName).bak") ?? false
+            }
         )
     }
 
-    @Test("Migration required. Test backup of the database files and the clean up")
-    func persistentStoreCoordinatorMigrationReqired() throws {
+    @Test func `Migration required. Test backup of the database files and the clean up`() throws {
         // Config
         createTestDB(forMigration: true)
 
@@ -179,9 +175,10 @@ final class DatabaseManagerTests {
             isDirectory: false
         )
 
-        let fileUtilityMock = FileUtilityMock(content: [storeURL, urlToExternalStorage])
-        fileUtilityMock.appDataDirectory = appDataDirectoryURL
+        let fileUtilityMock = FileUtilityMock()
+        fileUtilityMock.mockAppDataDirectory = { _ in self.appDataDirectoryURL }
         fileUtilityMock.appDocumentsDirectory = URL(string: "/documents/")
+        fileUtilityMock.mockFileExistsAtURL = { $0 == storeURL || $0 == urlToExternalStorage }
 
         // Act
         _ = try DatabaseManager(
@@ -195,113 +192,112 @@ final class DatabaseManagerTests {
 
         // Backup Store before migration
         #expect(
-            fileUtilityMock.copyCalledWithFromTo
-                .count(
-                    where: {
-                        $0.0 == storeURL && $0.1.lastPathComponent
-                            .hasPrefix(tmpURLToBackupStorePrefix.lastPathComponent)
-                    }
-                ) == 1,
+            fileUtilityMock.calls.count(where: { call in
+                guard case let .copy(from, to) = call else {
+                    return false
+                }
+                return from == storeURL && to.lastPathComponent.hasPrefix(tmpURLToBackupStorePrefix.lastPathComponent)
+            }) == 1,
             "Copy of store to tmp backup file"
         )
         #expect(
-            fileUtilityMock.moveCalledWithFromTo
-                .count(
-                    where: {
-                        $0.0.lastPathComponent.hasPrefix(tmpURLToBackupStorePrefix.lastPathComponent) && $0.1
-                            .lastPathComponent.hasPrefix(urlToBackupStorePrefix.lastPathComponent)
-                    }
-                ) == 1,
+            fileUtilityMock.calls.count(where: { call in
+                guard case let .moveURL(from, to) = call else {
+                    return false
+                }
+                return from.lastPathComponent.hasPrefix(tmpURLToBackupStorePrefix.lastPathComponent)
+                    && to.lastPathComponent.hasPrefix(urlToBackupStorePrefix.lastPathComponent)
+            }) == 1,
             "Move of store tmp backup file to backup file"
         )
 
         #expect(
-            fileUtilityMock.copyCalledWithFromTo
-                .count(
-                    where: {
-                        $0.0 == walURL && $0.1.lastPathComponent.hasPrefix(tmpURLToBackupWalPrefix.lastPathComponent)
-                    }
-                ) == 1,
+            fileUtilityMock.calls.count(where: { call in
+                guard case let .copy(from, to) = call else {
+                    return false
+                }
+                return from == walURL && to.lastPathComponent.hasPrefix(tmpURLToBackupWalPrefix.lastPathComponent)
+            }) == 1,
             "Copy of wal to tmp backup file"
         )
         #expect(
-            fileUtilityMock.moveCalledWithFromTo
-                .count(
-                    where: {
-                        $0.0.lastPathComponent.hasPrefix(tmpURLToBackupWalPrefix.lastPathComponent) && $0.1
-                            .lastPathComponent.hasPrefix(urlToBackupWalPrefix.lastPathComponent)
-                    }
-                ) == 1,
+            fileUtilityMock.calls.count(where: { call in
+                guard case let .moveURL(from, to) = call else {
+                    return false
+                }
+                return from.lastPathComponent.hasPrefix(tmpURLToBackupWalPrefix.lastPathComponent)
+                    && to.lastPathComponent.hasPrefix(urlToBackupWalPrefix.lastPathComponent)
+            }) == 1,
             "Move of wal tmp backup file to backup file"
         )
 
         #expect(
-            fileUtilityMock.copyCalledWithFromTo
-                .count(
-                    where: {
-                        $0.0 == shmURL && $0.1.lastPathComponent.hasPrefix(tmpURLToBackupShmPrefix.lastPathComponent)
-                    }
-                ) == 1,
+            fileUtilityMock.calls.count(where: { call in
+                guard case let .copy(from, to) = call else {
+                    return false
+                }
+                return from == shmURL && to.lastPathComponent.hasPrefix(tmpURLToBackupShmPrefix.lastPathComponent)
+            }) == 1,
             "Copy of shm to tmp backup file"
         )
         #expect(
-            fileUtilityMock.moveCalledWithFromTo
-                .count(
-                    where: {
-                        $0.0.lastPathComponent.hasPrefix(tmpURLToBackupShmPrefix.lastPathComponent) && $0.1
-                            .lastPathComponent.hasPrefix(urlToBackupShmPrefix.lastPathComponent)
-                    }
-                ) == 1,
+            fileUtilityMock.calls.count(where: { call in
+                guard case let .moveURL(from, to) = call else {
+                    return false
+                }
+                return from.lastPathComponent.hasPrefix(tmpURLToBackupShmPrefix.lastPathComponent)
+                    && to.lastPathComponent.hasPrefix(urlToBackupShmPrefix.lastPathComponent)
+            }) == 1,
             "Move of shm tmp backup file to backup file"
         )
 
         // Extrenal Storage merge and remove after migration
-        #expect(fileUtilityMock.isExistsCalledWithFileURL.count(where: { $0 == urlToExternalStorage }) == 1)
+        #expect(fileUtilityMock.calls.count(where: { $0 == .fileExistsAtURL(urlToExternalStorage) }) == 1)
 
-        #expect(fileUtilityMock.isExistsCalledWithFileURL.count(where: { $0 == tmpURLToExternalStorage }) == 1)
+        #expect(fileUtilityMock.calls.count(where: { $0 == .fileExistsAtURL(tmpURLToExternalStorage) }) == 1)
 
         #expect(
-            fileUtilityMock.moveCalledWithFromTo
-                .count(where: { $0.0 == urlToExternalStorage && $0.1 == tmpURLToExternalStorage }) == 1,
+            fileUtilityMock.calls
+                .count(where: { $0 == .moveURL(from: urlToExternalStorage, to: tmpURLToExternalStorage) }) == 1,
             "Move of external storage to backup dictionary"
         )
 
         #expect(
-            fileUtilityMock.mergeContentsOfPathCalledWithFromTo
-                .count(where: { $0.0 == tmpURLToExternalStorage && $0.1 == urlToExternalStorage }) == 1,
+            fileUtilityMock.calls
+                .count(where: { $0 == .mergeContentsOfPath(from: tmpURLToExternalStorage, to: urlToExternalStorage) })
+                == 1,
             "Merge of tmp backup directory to external storage"
         )
 
         #expect(
-            fileUtilityMock.deleteIfExistsCalledWithSourceURL.count(where: { $0 == tmpURLToExternalStorage }) == 1,
+            fileUtilityMock.calls.count(where: { $0 == .deleteIfExists(tmpURLToExternalStorage) }) == 1,
             "Delete of tmp backup directory, after migration"
         )
 
         #expect(
-            fileUtilityMock.isExistsCalledWithFileURL
-                .contains(
-                    where: { url in
-                        url.lastPathComponent.hasPrefix("\(DatabaseManager.databaseFileName).bak")
-                    }
-                ) == true
+            fileUtilityMock.calls.contains { call in
+                guard case let .fileExistsAtURL(url) = call else {
+                    return false
+                }
+                return url?.lastPathComponent.hasPrefix("\(DatabaseManager.databaseFileName).bak") ?? false
+            }
         )
 
         #expect(
-            fileUtilityMock.dirCalledWithSourceURL.count(where: { $0 == appDataDirectoryURL }) == 2,
+            fileUtilityMock.calls.count(where: { $0 == .dir(at: appDataDirectoryURL) }) == 2,
             "Called from `removeMigrationLeftover` function 2 times, before and after migration"
         )
     }
 
-    @Test("Erase existing database")
-    func eraseDB() throws {
+    @Test func `Erase existing database`() throws {
         // Config
         createTestDB()
 
         let storeURL = appDataDirectoryURL.appendingPathComponent(DatabaseManager.databaseFileName)
         let fileUtilityMock = FileUtilityMock()
-        fileUtilityMock.appDataDirectory = appDataDirectoryURL
+        fileUtilityMock.mockAppDataDirectory = { _ in self.appDataDirectoryURL }
         fileUtilityMock.appDocumentsDirectory = URL(string: "/documents/")
-        fileUtilityMock.content.append(storeURL)
+        fileUtilityMock.mockFileExistsAtURL = { $0 == storeURL }
 
         let databaseManager = DatabaseManager(
             appGroupID: appGroupID,
@@ -320,16 +316,16 @@ final class DatabaseManagerTests {
         #expect(coordinator.persistentStores.isEmpty == true)
         #expect(DatabaseManager.localPersistentStoreCoordinator == nil)
 
-        #expect(fileUtilityMock.deleteIfExistsCalledWithSourceURL.contains(storeURL))
+        #expect(fileUtilityMock.calls.contains(.deleteIfExists(storeURL)))
         #expect(
-            fileUtilityMock.deleteIfExistsCalledWithSourceURL.contains(
+            fileUtilityMock.calls.contains(.deleteIfExists(
                 URL(fileURLWithPath: storeURL.path.appending("-wal"))
-            )
+            ))
         )
         #expect(
-            fileUtilityMock.deleteIfExistsCalledWithSourceURL.contains(
+            fileUtilityMock.calls.contains(.deleteIfExists(
                 URL(fileURLWithPath: storeURL.path.appending("-shm"))
-            )
+            ))
         )
     }
 

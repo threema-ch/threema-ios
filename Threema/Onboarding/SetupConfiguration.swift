@@ -2,16 +2,16 @@ import RemoteSecret
 
 /// Store setup configuration of steps after the ID is set
 final class SetupConfiguration: NSObject {
-    @objc var remoteSecretAndKeychain: RemoteSecretAndKeychainObjC?
+    let remoteSecretAndKeychain: RemoteSecretAndKeychainObjC
     
     // Parameters from `SafeViewController`
     @objc var safePassword: String?
-    @objc var safeServer: String?
-    @objc var safeCustomServer: String?
-    @objc var safeServerUsername: String?
-    @objc var safeServerPassword: String?
-    @objc var safeMaxBackupBytes: NSNumber?
-    @objc var safeRetentionDays: NSNumber?
+    var safeServer: String?
+    var safeCustomServer: String?
+    var safeServerUsername: String?
+    var safeServerPassword: String?
+    var safeMaxBackupBytes: NSNumber?
+    var safeRetentionDays: NSNumber?
     
     // Parameters from `PickNicknameViewController`
     @objc var nickname: String?
@@ -25,18 +25,6 @@ final class SetupConfiguration: NSObject {
     
     // MARK: Lifecycle
     
-    @objc init(mdm: MDMSetup) {
-        super.init()
-        applyMDMDefaults(mdm)
-    }
-    
-    /// Legacy flow: RemoteSecret passed through from SetupApp
-    @available(
-        swift,
-        obsoleted: 1.0,
-        renamed: "SetupConfiguration.init(mdm:)",
-        message: "Only use from Objective-C"
-    )
     @objc init(
         remoteSecretAndKeychain: RemoteSecretAndKeychainObjC,
         mdm: MDMSetup

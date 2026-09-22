@@ -108,7 +108,7 @@ public struct NotificationPresenterType {
     }
 
     public static let generalSuccess = NotificationPresenterType(
-        notificationText: #localize("Done"),
+        notificationText: #localize("done"),
         notificationStyle: .success
     )
     public static let copySuccess = NotificationPresenterType(
@@ -161,6 +161,10 @@ public struct NotificationPresenterType {
     public static let recordingFailed = NotificationPresenterType(
         notificationText: #localize("notification_recording_failed"),
         notificationStyle: .error
+    )
+    public static let recordingPaused = NotificationPresenterType(
+        notificationText: #localize("notification_recording_paused"),
+        notificationStyle: .warning
     )
     public static let recordingPlayingFailed = NotificationPresenterType(
         notificationText: #localize("notification_recording_playing_failed"),
@@ -373,34 +377,38 @@ public struct NotificationPresenterType {
         notificationText: #localize("set_work_availability_status_failed"),
         notificationStyle: .error
     )
+    public static let playbackFailed = NotificationPresenterType(
+        notificationText: #localize("notification_playback_failed"),
+        notificationStyle: .error
+    )
 }
 
 // MARK: - AccessibilityAnnouncementType
 
-public struct AccessibilityAnnouncementType {
+struct AccessibilityAnnouncementType {
     
     // MARK: - Properties
 
     /// String to be used as main notification text
     let announcementText: String
     
-    public init(announcementText: String) {
+    init(announcementText: String) {
         self.announcementText = announcementText
     }
     
-    public static let audioMuted = AccessibilityAnnouncementType(
+    static let audioMuted = AccessibilityAnnouncementType(
         announcementText: #localize("notification_audio_muted")
     )
-    public static let audioUnmuted = AccessibilityAnnouncementType(
+    static let audioUnmuted = AccessibilityAnnouncementType(
         announcementText: #localize("notification_audio_unmuted")
     )
-    public static let videoMuted = AccessibilityAnnouncementType(
+    static let videoMuted = AccessibilityAnnouncementType(
         announcementText: #localize("notification_video_muted")
     )
-    public static let videoUnmuted = AccessibilityAnnouncementType(
+    static let videoUnmuted = AccessibilityAnnouncementType(
         announcementText: #localize("notification_video_unmuted")
     )
-    public static let screenUnmuted = AccessibilityAnnouncementType(
+    static let screenUnmuted = AccessibilityAnnouncementType(
         announcementText: #localize("notification_screen_unmuted")
     )
 }

@@ -3,7 +3,7 @@ import Foundation
 import PromiseKit
 import ThreemaMacros
 
-class VideoAssetPreviewItem: VideoPreviewItem {
+final class VideoAssetPreviewItem: VideoPreviewItem {
     private var assetItem: AVAsset?
     
     override var originalAsset: Any? {
@@ -21,7 +21,7 @@ class VideoAssetPreviewItem: VideoPreviewItem {
         self.originalAsset = originalAsset
     }
     
-    override open var internalOriginalAsset: Promise<AVAsset> {
+    override public var internalOriginalAsset: Promise<AVAsset> {
         Promise { seal in
             let manager = PHImageManager()
             

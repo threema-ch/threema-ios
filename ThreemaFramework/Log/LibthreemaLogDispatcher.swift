@@ -1,7 +1,7 @@
 import CocoaLumberjackSwift
 import libthreemaSwift
 
-class LibthreemaLogDispatcher: LogDispatcher {
+final class LibthreemaLogDispatcher: LogDispatcher {
     func log(level: LogLevel, record: String) throws {
         switch level {
         case .trace:

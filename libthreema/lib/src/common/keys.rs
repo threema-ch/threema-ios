@@ -3,20 +3,22 @@ use core::{array::TryFromSliceError, fmt};
 
 #[cfg(any(test, feature = "cli"))]
 use anyhow;
-use data_encoding::HEXLOWER_PERMISSIVE;
 use educe::Educe;
-use libthreema_macros::{ConstantTimeEq, Name, concat_fixed_bytes};
-use rand::{self, Rng as _};
-use zeroize::ZeroizeOnDrop;
-
-use crate::{
-    common::ThreemaId,
+use libthreema_dependencies::{
     crypto::{
-        blake2b,
+        argon2, blake2b, chacha20,
         cipher::KeyInit as _,
         digest::{FixedOutput as _, Mac as _},
         salsa20, x25519,
     },
+    data_encoding::HEXLOWER_PERMISSIVE,
+    rand::{self, Rng as _, distributions::DistString as _},
+};
+use libthreema_macros::{ConstantTimeEq, Name, concat_fixed_bytes};
+use zeroize::ZeroizeOnDrop;
+
+use crate::{
+    common::ThreemaId,
     utils::debug::{Name as _, debug_static_secret},
 };
 
@@ -62,7 +64,7 @@ pub(crate) struct WorkDirectoryAuthenticationKey(pub(crate) blake2b::Blake2bMac2
 /// permanent secret key associated to the Threema ID.
 ///
 /// IMPORTANT: This is **THE** key which requires ultimate care!
-#[derive(Educe, ZeroizeOnDrop)]
+#[derive(Name, Educe, ZeroizeOnDrop)]
 #[educe(Debug)]
 pub struct ClientKey(#[educe(Debug(method(debug_static_secret)))] x25519::StaticSecret);
 impl ClientKey {
@@ -90,18 +92,24 @@ impl ClientKey {
     }
 
     /// Derive the key to solve an authentication challenge during the CSP handshake (aka _vouch key_).
+    ///
+    /// `None` is returned in case the shared secret is derived from a non-contributory key.
     #[must_use]
     pub(crate) fn derive_csp_authentication_key(
         &self,
         permanent_server_key: &PublicKey,
         temporary_server_key: &PublicKey,
-    ) -> CspAuthenticationKey {
+    ) -> Option<CspAuthenticationKey> {
         // Calculate the secret as the concatenation of two shared secrets
         let secret: [u8; 2 * x25519::SharedSecretHSalsa20::LENGTH] = concat_fixed_bytes!(
             // Compute first half as X25519HSalsa20(CK.secret, SK.public)
-            x25519::SharedSecretHSalsa20::from(self.0.diffie_hellman(&permanent_server_key.0)).to_bytes(),
+            self.0
+                .diffie_hellman_hsalsa20(&permanent_server_key.0)?
+                .to_bytes(),
             // Compute second half as X25519HSalsa20(CK.secret, temporary_server_key.public)
-            x25519::SharedSecretHSalsa20::from(self.0.diffie_hellman(&temporary_server_key.0)).to_bytes(),
+            self.0
+                .diffie_hellman_hsalsa20(&temporary_server_key.0)?
+                .to_bytes(),
         );
 
         // Apply Blake2b to obtain the CSP authentication secret (aka _vouch key_)
@@ -109,28 +117,30 @@ impl ClientKey {
             .expect("Blake2bMac256 failed")
             .finalize()
             .into_bytes();
-        CspAuthenticationKey(
+        Some(CspAuthenticationKey(
             blake2b::Blake2bMac256::new_with_salt_and_personal(Some(&key), &[], &[])
                 .expect("Blake2bMac256 failed"),
-        )
+        ))
     }
 
     /// Derive the key to solve an authentication challenge against the directory server.
+    ///
+    /// `None` is returned in case the shared secret is derived from a non-contributory key.
     #[must_use]
     pub(crate) fn derive_directory_authentication_key(
         &self,
         challenge_public_key: &PublicKey,
-    ) -> DirectoryAuthenticationKey {
-        let secret = x25519::SharedSecretHSalsa20::from(self.0.diffie_hellman(&challenge_public_key.0));
+    ) -> Option<DirectoryAuthenticationKey> {
+        let secret = self.0.diffie_hellman_hsalsa20(&challenge_public_key.0)?;
         let key =
             blake2b::Blake2bMac256::new_with_salt_and_personal(Some(secret.as_bytes()), b"dir", b"3ma-csp")
                 .expect("Blake2bMac256 failed")
                 .finalize()
                 .into_bytes();
-        DirectoryAuthenticationKey(
+        Some(DirectoryAuthenticationKey(
             blake2b::Blake2bMac256::new_with_salt_and_personal(Some(&key), &[], &[])
                 .expect("Blake2bMac256 failed"),
-        )
+        ))
     }
 
     /// Derive the key to solve an authentication challenge against the work directory server.
@@ -138,30 +148,37 @@ impl ClientKey {
     pub(crate) fn derive_work_directory_authentication_key(
         &self,
         challenge_public_key: &PublicKey,
-    ) -> WorkDirectoryAuthenticationKey {
-        let secret = x25519::SharedSecretHSalsa20::from(self.0.diffie_hellman(&challenge_public_key.0));
+    ) -> Option<WorkDirectoryAuthenticationKey> {
+        let secret = self.0.diffie_hellman_hsalsa20(&challenge_public_key.0)?;
         let key =
             blake2b::Blake2bMac256::new_with_salt_and_personal(Some(secret.as_bytes()), b"wdir", b"3ma-csp")
                 .expect("Blake2bMac256 failed")
                 .finalize()
                 .into_bytes();
-        WorkDirectoryAuthenticationKey(
+        Some(WorkDirectoryAuthenticationKey(
             blake2b::Blake2bMac256::new_with_salt_and_personal(Some(&key), &[], &[])
                 .expect("Blake2bMac256 failed"),
-        )
+        ))
     }
 
     /// Derive the shared secret for usage between two identities (i.e. client to client).
+    ///
+    /// `None` is returned in case the shared secret is derived from a non-contributory key.
     #[must_use]
-    pub(crate) fn derive_csp_e2e_key(&self, client_public_key: &PublicKey) -> CspE2eKey {
-        CspE2eKey(x25519::SharedSecretHSalsa20::from(
-            self.0.diffie_hellman(&client_public_key.0),
-        ))
+    pub(crate) fn derive_csp_e2e_key(&self, client_public_key: &PublicKey) -> Option<CspE2eKey> {
+        Some(CspE2eKey(self.0.diffie_hellman_hsalsa20(&client_public_key.0)?))
     }
 }
 impl From<[u8; Self::LENGTH]> for ClientKey {
     fn from(bytes: [u8; Self::LENGTH]) -> Self {
         Self(x25519::StaticSecret::from(bytes))
+    }
+}
+impl TryFrom<&[u8]> for ClientKey {
+    type Error = TryFromSliceError;
+
+    fn try_from(bytes: &[u8]) -> Result<Self, Self::Error> {
+        Ok(Self::from(TryInto::<[u8; Self::LENGTH]>::try_into(bytes)?))
     }
 }
 #[cfg(any(test, feature = "cli"))]
@@ -171,7 +188,7 @@ impl From<&RawClientKey> for ClientKey {
     }
 }
 
-/// Also the Client key but [`Clone`].
+/// Also the client key but [`Clone`].
 ///
 /// For example needed for the CLI which requires this struct to be [`Clone`] but we don't want
 /// [`ClientKey`] to be [`Clone`].
@@ -202,7 +219,7 @@ impl RawClientKey {
 
 /// Public portion associated to an X25519 secret key.
 #[derive(Clone, Copy, Eq, Hash, PartialEq, Name)]
-pub struct PublicKey(pub x25519::PublicKey);
+pub struct PublicKey(pub(crate) x25519::PublicKey);
 impl PublicKey {
     /// Byte length of the public portion of an X25519 secret key.
     pub const LENGTH: usize = x25519::KEY_LENGTH;
@@ -259,7 +276,7 @@ impl fmt::Debug for PublicKey {
 pub(crate) struct DeviceGroupPathAuthenticationCipher(pub(crate) salsa20::XSalsa20Poly1305);
 
 /// The Device Group Path Key (DGPK).
-pub(crate) struct DeviceGroupPathKey(x25519_dalek::StaticSecret);
+pub(crate) struct DeviceGroupPathKey(x25519::StaticSecret);
 impl DeviceGroupPathKey {
     /// Byte length of the device group key.
     pub(crate) const LENGTH: usize = 32;
@@ -274,11 +291,14 @@ impl DeviceGroupPathKey {
     pub(crate) fn authentication_cipher(
         self,
         ephemeral_server_key: &PublicKey,
-    ) -> DeviceGroupPathAuthenticationCipher {
-        DeviceGroupPathAuthenticationCipher(salsa20::XSalsa20Poly1305::new(
-            x25519::SharedSecretHSalsa20::from(self.0.diffie_hellman(&ephemeral_server_key.0))
-                .as_bytes()
-                .into(),
+    ) -> Option<DeviceGroupPathAuthenticationCipher> {
+        Some(DeviceGroupPathAuthenticationCipher(
+            salsa20::XSalsa20Poly1305::new(
+                self.0
+                    .diffie_hellman_hsalsa20(&ephemeral_server_key.0)?
+                    .as_bytes()
+                    .into(),
+            ),
         ))
     }
 }
@@ -339,7 +359,7 @@ impl DeviceGroupKey {
             .finalize_fixed()
     }
 }
-impl From<[u8; DeviceGroupKey::LENGTH]> for DeviceGroupKey {
+impl From<[u8; Self::LENGTH]> for DeviceGroupKey {
     fn from(bytes: [u8; Self::LENGTH]) -> Self {
         Self(x25519::StaticSecret::from(bytes))
     }
@@ -565,5 +585,132 @@ impl RemoteSecretAuthenticationToken {
 impl From<[u8; Self::LENGTH]> for RemoteSecretAuthenticationToken {
     fn from(bytes: [u8; Self::LENGTH]) -> Self {
         Self(bytes)
+    }
+}
+
+/// A salt used to derive the data backup root key from the [`DataBackupPassword`].
+#[derive(Clone, Name)]
+pub(crate) struct DataBackupSalt(pub(crate) [u8; Self::LENGTH]);
+impl DataBackupSalt {
+    /// Byte length of a data backup salt.
+    pub(crate) const LENGTH: usize = 32;
+
+    pub(crate) fn random() -> Self {
+        let mut salt = [0_u8; Self::LENGTH];
+        rand::thread_rng().fill(&mut salt);
+        Self(salt)
+    }
+}
+
+/// The password for a data backup.
+#[cfg_attr(any(test, feature = "cli"), derive(Clone))]
+#[cfg_attr(feature = "uniffi", derive(libthreema_macros::UniffiNewType))]
+pub struct DataBackupPassword(pub String);
+impl DataBackupPassword {
+    /// Sample a random data backup password.
+    #[must_use]
+    pub fn random() -> Self {
+        Self(rand::distributions::Alphanumeric.sample_string(&mut rand::thread_rng(), 52))
+    }
+
+    pub(crate) fn derive_root_key(self, salt: &DataBackupSalt) -> Result<DataBackupRootKey, argon2::Error> {
+        let mut root_key = [0; DataBackupRootKey::LENGTH];
+        argon2::Argon2::new(
+            argon2::Argon2id,
+            argon2::Version::V0x13,
+            argon2::Params::new(
+                128 * 1024, // 128 MiB memory
+                8,          // iterations
+                1,          // No parallelization
+                Some(DataBackupRootKey::LENGTH),
+            )?,
+        )
+        .hash_password_into(self.0.as_bytes(), &salt.0, &mut root_key)?;
+
+        Ok(DataBackupRootKey(root_key))
+    }
+}
+
+/// The data backup root key derived from [`DataBackupPassword`].
+///
+/// This key is used to derive the [`DataBackupPageKey`] and the
+/// [`DataBackupLayoutKey`].
+pub(crate) struct DataBackupRootKey(pub(crate) [u8; Self::LENGTH]);
+impl DataBackupRootKey {
+    /// Byte length of the data backup root key.
+    pub(crate) const LENGTH: usize = 32;
+
+    fn derive_key(&self, salt: &[u8]) -> chacha20::XChaCha20Poly1305 {
+        let derived_key: [u8; chacha20::KEY_LENGTH] =
+            blake2b::Blake2bMac256::new_with_salt_and_personal(Some(&self.0), salt, b"3ma-bup")
+                .expect("Blake2bMac256 failed")
+                .finalize_fixed()
+                .into();
+        chacha20::XChaCha20Poly1305::new(&derived_key.into())
+    }
+
+    pub(crate) fn layout_key(&self) -> DataBackupLayoutKey {
+        DataBackupLayoutKey(self.derive_key(b"l"))
+    }
+
+    pub(crate) fn page_key(&self) -> DataBackupPageKey {
+        DataBackupPageKey(self.derive_key(b"p"))
+    }
+}
+
+/// Key to encrypt the layout of the data backup.
+#[derive(Name)]
+pub(crate) struct DataBackupLayoutKey(pub(crate) chacha20::XChaCha20Poly1305);
+
+/// Key to encrypt pages of the data backup.
+pub(crate) struct DataBackupPageKey(pub(crate) chacha20::XChaCha20Poly1305);
+
+#[cfg(test)]
+mod tests {
+    use libthreema_dependencies::crypto::x25519;
+    use rstest::rstest;
+
+    use crate::common::keys::{ClientKey, DeviceGroupPathKey, PublicKey};
+
+    #[rstest]
+    #[case(PublicKey::from([0; PublicKey::LENGTH]), PublicKey::from([0; PublicKey::LENGTH]))]
+    #[case(PublicKey::from([0; PublicKey::LENGTH]), PublicKey::from([1; PublicKey::LENGTH]))]
+    #[case(PublicKey::from([1; PublicKey::LENGTH]), PublicKey::from([0; PublicKey::LENGTH]))]
+    fn client_key_derive_csp_authentication_key_non_contributory(
+        #[case] permanent_server_key: PublicKey,
+        #[case] temporary_server_key: PublicKey,
+    ) {
+        assert!(
+            ClientKey::from([1; PublicKey::LENGTH])
+                .derive_csp_authentication_key(&permanent_server_key, &temporary_server_key,)
+                .is_none()
+        );
+    }
+
+    #[test]
+    fn client_key_derive_directory_authentication_key_non_contributory() {
+        assert!(
+            ClientKey::from([1; PublicKey::LENGTH])
+                .derive_directory_authentication_key(&PublicKey::from([0; PublicKey::LENGTH]))
+                .is_none()
+        );
+    }
+
+    #[test]
+    fn client_key_derive_work_directory_authentication_key_non_contributory() {
+        assert!(
+            ClientKey::from([1; PublicKey::LENGTH])
+                .derive_work_directory_authentication_key(&PublicKey::from([0; PublicKey::LENGTH]))
+                .is_none()
+        );
+    }
+
+    #[test]
+    fn device_group_path_key_derive_authentication_cipher_non_contributory() {
+        assert!(
+            DeviceGroupPathKey(x25519::StaticSecret::from([1_u8; DeviceGroupPathKey::LENGTH]))
+                .authentication_cipher(&PublicKey::from([0; PublicKey::LENGTH]))
+                .is_none()
+        );
     }
 }

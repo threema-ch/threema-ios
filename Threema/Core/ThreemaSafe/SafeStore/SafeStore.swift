@@ -7,7 +7,7 @@ import ThreemaEssentials
 import ThreemaFramework
 import ThreemaMacros
 
-final class SafeStore: NSObject, SafeStoreProtocol {
+final class SafeStore: SafeStoreProtocol {
     
     // MARK: - Static properties
     
@@ -40,8 +40,7 @@ final class SafeStore: NSObject, SafeStoreProtocol {
         self.phoneNumberNormalizer = phoneNumberNormalizer
     }
     
-    // NSObject thereby not the whole SafeConfigManagerProtocol interface must be like @objc
-    @objc convenience init(
+    convenience init(
         safeConfigManagerAsObject safeConfigManager: NSObject,
         serverApiConnector: ServerAPIConnector,
         groupManager: GroupManager,
@@ -181,7 +180,7 @@ final class SafeStore: NSObject, SafeStoreProtocol {
     /// - Parameters:
     ///   - mdmSetup: MDM setup configuration
     ///   - completion: True if server has changed
-    @objc func isSafeServerChanged(mdmSetup: MDMSetup, completion: @escaping (Bool) -> Void) {
+    func isSafeServerChanged(mdmSetup: MDMSetup, completion: @escaping (Bool) -> Void) {
         if mdmSetup.isSafeBackupServerPreset() {
             completion(
                 mdmSetup.safeServerURL() != safeConfigManager.getServer()
@@ -487,12 +486,8 @@ final class SafeStore: NSObject, SafeStoreProtocol {
         jSettings.sendTyping = UserSettings.shared().sendTypingIndicator
         jSettings.threemaCalls = UserSettings.shared().enableThreemaCall
         jSettings.relayThreemaCalls = UserSettings.shared().alwaysRelayCalls
-        jSettings.blockedContacts = UserSettings.shared().blacklist.map { identity -> String in
-            identity as! String
-        }
-        jSettings.syncExcludedIDs = UserSettings.shared().syncExclusionList.map { identity -> String in
-            identity as! String
-        }
+        jSettings.blockedContacts = UserSettings.shared().blacklist.array as? [String] ?? []
+        jSettings.syncExcludedIDs = UserSettings.shared().syncExclusionList
         
         let parser = SafeJsonParser()
         var safeBackupData = parser.getSafeBackupData()

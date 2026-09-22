@@ -10,14 +10,17 @@ struct NotificationTypeSelectionView: View {
     let disablePreviewToggle = MDMSetup().existsMdmKey(MDM_KEY_DISABLE_MESSAGE_PREVIEW)
     @ObservedObject var settingsStore: SettingsStore
     
+    private let onDisappear: () -> Void
+    
     private let cornerRadius = 20.0
     private let padding = 16.0
     
-    init() {
+    init(onDisappear: @escaping () -> Void) {
         let settingsStore = BusinessInjector.ui.settingsStore as! SettingsStore
         _settingsStore = ObservedObject(initialValue: settingsStore)
         _selectedType = State(initialValue: settingsStore.notificationType)
         _showPreview = State(initialValue: settingsStore.pushShowPreview)
+        self.onDisappear = onDisappear
     }
     
     var body: some View {
@@ -99,9 +102,7 @@ struct NotificationTypeSelectionView: View {
         .background(UIColor.systemGroupedBackground.color)
         .interactiveDismissDisabled()
         .onDisappear {
-            // TODO: (IOS-3251) Remove
-            LaunchModalManager.shared.isBeingDisplayed = false
-            LaunchModalManager.shared.checkLaunchModals()
+            onDisappear()
         }
     }
     
@@ -118,7 +119,9 @@ struct NotificationTypeSelectionView: View {
 
 struct NotificationTypeSelectionView_Previews: PreviewProvider {
     static var previews: some View {
-        NotificationTypeSelectionView()
-            .tint(.accentColor)
+        NotificationTypeSelectionView {
+            // no-op
+        }
+        .tint(.accentColor)
     }
 }

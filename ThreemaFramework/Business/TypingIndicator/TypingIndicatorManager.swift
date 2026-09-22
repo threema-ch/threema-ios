@@ -2,7 +2,7 @@ import CocoaLumberjackSwift
 import Foundation
 import ThreemaEssentials
 
-@objcMembers public final class TypingIndicatorManager: NSObject {
+public final class TypingIndicatorManager {
     // MARK: - Public properties
 
     public static let sharedInstance = TypingIndicatorManager()
@@ -15,8 +15,7 @@ import ThreemaEssentials
 
     // MARK: - Lifecycle
 
-    override public init() {
-        super.init()
+    public init() {
         setupResetTimer()
     }
 

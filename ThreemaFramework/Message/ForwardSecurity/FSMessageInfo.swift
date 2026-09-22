@@ -4,7 +4,7 @@ import Foundation
 ///
 /// Helper to pass FS info from `ForwardSecurityMessageProcessor` to `TaskExecutionReceiveMessage` through
 /// `MessageProcessor` written in Objective-C
-class FSMessageInfo {
+final class FSMessageInfo {
     
     /// Session used to process the incoming FS message
     let session: DHSession

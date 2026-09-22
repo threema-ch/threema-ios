@@ -10,7 +10,7 @@ import ThreemaFramework
 import ThreemaMacros
 import UserNotifications
 
-class NotificationService: UNNotificationServiceExtension {
+final class NotificationService: UNNotificationServiceExtension {
     
     private static var isRunning = false
     private static var runningStartDate: Date?
@@ -259,9 +259,7 @@ class NotificationService: UNNotificationServiceExtension {
                 businessInjector.serverConnector.registerMessageProcessorDelegate(delegate: self)
                 businessInjector.serverConnector.registerConnectionStateDelegate(delegate: self)
 
-                if !businessInjector.userSettings.ipcCommunicationEnabled {
-                    AppGroup.setMeActive()
-                }
+                AppGroup.setMeActiveUnlessIPC(userSettings: businessInjector.userSettings)
 
                 businessInjector.serverConnector
                     .connect(initiator: .notificationExtension) { isConnecting in
@@ -905,7 +903,7 @@ extension NotificationService: MessageProcessorDelegate {
     
     func processVoIPCall(
         _ message: NSObject,
-        identity: String?,
+        identity: String,
         onCompletion: @escaping ((any MessageProcessorDelegate)?) -> Void,
         onError: @escaping (any Error, (any MessageProcessorDelegate)?) -> Void
     ) {
@@ -918,30 +916,32 @@ extension NotificationService: MessageProcessorDelegate {
         case is VoIPCallOfferMessage:
             let offerMessage = message as! VoIPCallOfferMessage
             
-            guard let identity else {
-                DDLogError("No contact for processing VoIP call offer.")
-                onCompletion(self) // Discard message
-                return
-            }
             guard backgroundBusinessInjector.userSettings.enableThreemaCall else {
                 offerMessage.contactIdentity = identity
                 rejectCall(offer: offerMessage)
-                onCompletion(self) // Discard message
+                // Discard message
+                onCompletion(self)
                 return
             }
             guard backgroundBusinessInjector.pushSettingManager.canMasterDndSendPush() else {
                 offerMessage.contactIdentity = identity
-                rejectCall(offer: offerMessage, rejectReason: .offHours)
-                onCompletion(self) // Discard message
+                rejectCall(offer: offerMessage, rejectReason: .reject)
+                // Discard message
+                onCompletion(self)
                 return
             }
             
             // In the context of Framework tests, setting the permission is not feasible. Consequently, we must
             // disregard this guard.
-            guard AVAudioApplication.shared.recordPermission == .granted || ProcessInfoHelper.isRunningForTests else {
+            guard RecordPermission.isGranted || ProcessInfoHelper.isRunningForTests else {
                 offerMessage.contactIdentity = identity
-                rejectCall(offer: offerMessage, rejectReason: .unknown)
-                
+
+                // Only ask for access if the user was never asked before. If access was denied the call is just ended
+                // locally, because other devices might be able to pick it up.
+                let isAccessUndetermined = RecordPermission.access == .undetermined
+
+                rejectCall(offer: offerMessage, rejectReason: .unknown, sendMessage: isAccessUndetermined)
+
                 ThreemaUtility
                     .sendMicrophonePermissionErrorLocalNotification(
                         entityManager: backgroundBusinessInjector
@@ -1015,40 +1015,48 @@ extension NotificationService: MessageProcessorDelegate {
 
         default:
             DDLogError("Message couldn't be processed as VoIP call.")
-            onCompletion(self) // Discard message
+            // Discard message
+            onCompletion(self)
         }
     }
     
     /// Reject call because Threema Calls are disabled on this device
     /// - Parameter offer: VoIPCallOfferMessage
-    /// - Parameter rejectReason: Reject reason (Default: .disabled)
+    /// - Parameter rejectReason: Reject reason (Default: `.reject`)
+    /// - Parameter sendMessage: Send the reject to the caller, `false` ends the call locally only (Default: `true`)
     private func rejectCall(
         offer: VoIPCallOfferMessage,
-        rejectReason: VoIPCallAnswerMessage.MessageRejectReason = .disabled
+        rejectReason: VoIPCallAnswerMessage.MessageRejectReason = .reject,
+        sendMessage: Bool = true
     ) {
         guard let backgroundBusinessInjector else {
             DDLogError("BusinessInjector is not ready")
             return
         }
 
-        let voIPCallSender = VoIPCallSender(
-            messageSender: backgroundBusinessInjector.messageSender,
-            myIdentityStore: backgroundBusinessInjector.myIdentityStore
-        )
-        let reason: VoIPCallAnswerMessage.MessageRejectReason = rejectReason
-        let answer = VoIPCallAnswerMessage(
-            action: .reject,
-            answer: nil,
-            rejectReason: reason,
-            features: nil,
-            isVideoAvailable: false,
-            isUserInteraction: false,
-            callID: offer.callID,
-            completion: nil
-        )
-        answer.contactIdentity = offer.contactIdentity
-        voIPCallSender.sendVoIPCall(answer: answer)
-        
+        if sendMessage {
+            let voIPCallSender = VoIPCallSender(
+                messageSender: backgroundBusinessInjector.messageSender,
+                myIdentity: backgroundBusinessInjector.profileStore.profile.myIdentity,
+                isMultiDeviceEnabled: backgroundBusinessInjector.userSettings.enableMultiDevice
+            )
+
+            let reason: VoIPCallAnswerMessage.MessageRejectReason = rejectReason
+            let answer = VoIPCallAnswerMessage(
+                action: .reject,
+                answer: nil,
+                rejectReason: reason,
+                features: nil,
+                isVideoAvailable: false,
+                isUserInteraction: false,
+                callID: offer.callID,
+                isOutgoing: true,
+                completion: nil
+            )
+            answer.contactIdentity = offer.contactIdentity
+            voIPCallSender.sendVoIPCall(answer: answer)
+        }
+
         guard let contactIdentity = offer.contactIdentity else {
             DDLogError("Cannot reject call offer as it does not have an identity")
             return

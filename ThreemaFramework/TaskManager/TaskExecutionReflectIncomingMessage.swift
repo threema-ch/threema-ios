@@ -19,7 +19,7 @@ final class TaskExecutionReflectIncomingMessage: TaskExecution, TaskExecutionPro
         }
         .then { doReflect -> Promise<Date?> in
             Promise { seal in
-                // Reflect message if is necessary
+                // Reflect message if necessary
                 guard doReflect, MediatorMessageProtocol.doReflectMessage(Int32(task.message.type())) else {
                     seal.fulfill(nil)
                     return
@@ -44,7 +44,7 @@ final class TaskExecutionReflectIncomingMessage: TaskExecution, TaskExecutionPro
             self.frameworkInjector.entityManager.markMessageAsReceived(
                 task.message,
                 receivedAt: reflectedAt ?? .now,
-                myIdentity: MyIdentityStore.shared().identity
+                myIdentity: self.frameworkInjector.profileStore.profile.myIdentity.rawValue
             )
 
             return Promise()

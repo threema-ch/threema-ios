@@ -1,5 +1,6 @@
 import CocoaLumberjackSwift
 import FileUtility
+import Keychain
 import RemoteSecretProtocol
 
 /// Centralized access point for the current `RemoteSecretManagerProtocol`.
@@ -53,11 +54,7 @@ public final class RemoteSecretProvider: Sendable {
         /// For the new coordinator flow, we're centering it into the static API
         /// of `RemoteSecretProvider`, meaning it will crash if accessed before it should.
         /// In case this happens, we'll fix the crashes as we go.
-        #if SCENE_DELEGATE_ROOT_COORDINATOR_DEVELOPMENT
-            remoteSecretManager.isRemoteSecretEnabled
-        #else
-            _remoteSecretManager?.isRemoteSecretEnabled ?? false
-        #endif
+        remoteSecretManager.isRemoteSecretEnabled
     }
 
     /// Called exactly once during app launch to set the active RS manager.
@@ -90,5 +87,9 @@ extension RemoteSecretProvider {
     
     public static func setRemoteSecretManager(_ remoteSecretManager: any RemoteSecretManagerProtocol) {
         shared.set(remoteSecretManager)
+    }
+    
+    public static func isRemoteSecretInKeychain() throws -> Bool {
+        try KeychainManager.loadRemoteSecret() != nil
     }
 }

@@ -317,7 +317,7 @@ final class MediatorReflectedOutgoingMessageProcessorTests: XCTestCase {
         let expectedAbstractMessage = GroupTextMessage()
         expectedAbstractMessage.groupID = groupID
         expectedAbstractMessage.groupCreator = "MEMBER01"
-        expectedAbstractMessage.fromIdentity = frameworkInjectorMock.myIdentityStore.identity
+        expectedAbstractMessage.fromIdentity = frameworkInjectorMock.profileStore.profile.myIdentity.rawValue
         expectedAbstractMessage.toIdentity = "MEMBER02"
         expectedAbstractMessage.text = "Test text message"
         expectedAbstractMessage.nonce = BytesUtility.generateMessageNonce()

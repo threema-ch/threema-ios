@@ -1,8 +1,8 @@
 //! Example for updating an availability status.
 #![expect(unused_crate_dependencies, reason = "Example triggered false positive")]
-use clap::{Args, Parser};
+use clap::{ArgAction, Args, Parser};
 use libthreema::{
-    cli::{MinimalIdentityConfig, MinimalIdentityConfigOptions},
+    cli::config::{MinimalIdentityConfig, MinimalIdentityConfigOptions},
     https::cli::https_client_builder,
     protobuf,
     utils::logging::init_stderr_logging,
@@ -28,11 +28,18 @@ struct WorkPropertiesOptions {
     availability_status: WorkAvailabilityStatusOptions,
 }
 impl From<WorkPropertiesOptions> for WorkProperties {
-    fn from(properties: WorkPropertiesOptions) -> WorkProperties {
+    fn from(properties: WorkPropertiesOptions) -> Self {
         Self {
-            availability_status: Some(WorkAvailabilityStatus {
-                category: properties.availability_status.category,
-                description: properties.availability_status.description,
+            availability_status: Some(match properties.availability_status.category {
+                protobuf::d2d_sync::WorkAvailabilityStatusCategory::None => WorkAvailabilityStatus::None,
+                protobuf::d2d_sync::WorkAvailabilityStatusCategory::Unavailable => {
+                    WorkAvailabilityStatus::Unavailable(
+                        properties.availability_status.description.unwrap_or_default(),
+                    )
+                },
+                protobuf::d2d_sync::WorkAvailabilityStatusCategory::Busy => WorkAvailabilityStatus::Busy(
+                    properties.availability_status.description.unwrap_or_default(),
+                ),
             }),
         }
     }
@@ -46,6 +53,11 @@ struct AvailabilityStatusCommand {
 
     #[command(flatten)]
     work_properties: WorkPropertiesOptions,
+
+    /// Turn on debugging information.
+    /// Use -v -vv to control log level.
+    #[arg(short, action = ArgAction::Count)]
+    verbose: u8,
 }
 
 async fn run_set_availability_status(
@@ -68,14 +80,19 @@ async fn run_set_availability_status(
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
+    // Parse arguments for command.
+    let arguments = AvailabilityStatusCommand::parse();
+
     // Configure logging.
-    init_stderr_logging(Level::DEBUG);
+    let log_level = match arguments.verbose {
+        1 => Level::DEBUG,
+        2 => Level::TRACE,
+        _ => Level::INFO,
+    };
+    init_stderr_logging(log_level);
 
     // Create HTTP client.
     let http_client = https_client_builder().build()?;
-
-    // Parse arguments for command.
-    let arguments = AvailabilityStatusCommand::parse();
     let config = MinimalIdentityConfig::from_options(&http_client, arguments.config).await?;
 
     // Update the availability status.
@@ -86,4 +103,10 @@ async fn main() -> anyhow::Result<()> {
     )
     .await?;
     Ok(())
+}
+
+#[test]
+fn verify_cli() {
+    use clap::CommandFactory;
+    AvailabilityStatusCommand::command().debug_assert();
 }

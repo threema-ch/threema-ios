@@ -1,7 +1,7 @@
 import CocoaLumberjackSwift
 import Foundation
 
-public class WorkAvailabilityStatusManager: WorkAvailabilityStatusManagerProtocol {
+public final class WorkAvailabilityStatusManager: WorkAvailabilityStatusManagerProtocol {
     
     private let workAvailabilityStatusCategoryKey = "WorkAvailabilityStatusCategoryKey"
     private let workAvailabilityStatusTextKey = "workAvailabilityStatusTextKey"

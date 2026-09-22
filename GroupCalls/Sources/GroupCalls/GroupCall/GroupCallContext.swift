@@ -234,6 +234,39 @@ final class GroupCallContext<
                 }
             }
         }
+
+        observeMediaKeyRefresh(keyRefreshTask)
+    }
+
+    /// Observes the result of a media key refresh as soon as it completes.
+    ///
+    /// Without this the failure would only surface at the next rekey. Until then the other participants already use the
+    /// new PCMK that we announced but never applied, i.e. they cannot decrypt our media anymore.
+    private func observeMediaKeyRefresh(_ task: Task<Void, Error>?) {
+        guard let task else {
+            return
+        }
+
+        Task {
+            do {
+                try await task.value
+            }
+            catch is CancellationError {
+                DDLogNotice("[GroupCall] [Rekey] Media key refresh was cancelled")
+            }
+            catch {
+                // TODO: (IOS-4124) The call should be torn down here. There is currently no way to signal a fatal
+                // error from the context to the state machine, thus we at least make sure that the next rekey is not
+                // blocked by the failed task.
+                DDLogError(
+                    "[GroupCall] [Rekey] Media key refresh failed: \(error). The other participants might not be able to decrypt our media anymore."
+                )
+
+                if keyRefreshTask == task {
+                    keyRefreshTask = nil
+                }
+            }
+        }
     }
     
     func rekeyReceived(from remoteParticipant: JoinedRemoteParticipant, with mediaKeys: MediaKeys) throws {
@@ -556,7 +589,9 @@ extension GroupCallContext {
     
     private func groupCallState(from participants: Set<JoinedRemoteParticipant>) -> GroupCall_CallState {
         var callState = GroupCall_CallState()
-        callState.stateCreatedAt = UInt64(Date().timeIntervalSinceReferenceDate)
+        /// **Protocol Step: CallState (Creating 2.)**
+        /// Set `state_created_at` to the current UNIX-ish timestamp in **milliseconds**.
+        callState.stateCreatedAt = UInt64(Date().timeIntervalSince1970 * 1000)
         callState.stateCreatedBy = participantState.localParticipant.participantID.id
         callState.participants = groupCallParticipants(from: participants)
         

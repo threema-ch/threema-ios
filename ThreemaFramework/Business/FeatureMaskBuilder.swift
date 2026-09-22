@@ -1,7 +1,7 @@
 import Foundation
 import ThreemaProtocols
 
-class FeatureMaskBuilder {
+final class FeatureMaskBuilder {
     private var mask = 0
     
     func audio(enabled: Bool) -> FeatureMaskBuilder {

@@ -1,6 +1,6 @@
 import UIKit
 
-@objc protocol SetupTextFieldDelegate {
+protocol SetupTextFieldDelegate: AnyObject {
     func editingChangedTextField(_ sender: SetupTextField, forEvent event: UIEvent) -> Void
     func primaryActionTriggered(_ sender: SetupTextField, forEvent event: UIEvent) -> Void
 }
@@ -113,7 +113,7 @@ import UIKit
     
     weak var delegate: SetupTextFieldDelegate?
     
-    @objc func editingChanged(_ sender: UITextField, forEvent event: UIEvent) {
+    @objc private func editingChanged(_ sender: UITextField, forEvent event: UIEvent) {
         delegate?.editingChangedTextField(self, forEvent: event)
     }
     

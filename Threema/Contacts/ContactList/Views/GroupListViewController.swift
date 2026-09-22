@@ -54,22 +54,38 @@ final class GroupListViewController: ContactListBaseViewController {
             return
         }
         
-        itemsDelegate?.didSelect(.groupFromID(objectID))
+        itemsDelegate?.didSelect(.group(objectID))
     }
     
     override func tableView(
         _ tableView: UITableView,
         leadingSwipeActionsConfigurationForRowAt indexPath: IndexPath
     ) -> UISwipeActionsConfiguration? {
-        UISwipeActionsConfiguration(actions: rowActions(for: indexPath))
+        guard let group = group(for: indexPath) else {
+            return nil
+        }
+        
+        let entityManager = businessInjector.entityManager
+        let conversation: ConversationEntity? = entityManager.performAndWait { [weak self] in
+            self?.businessInjector.groupManager.getConversation(for: group.groupIdentity)
+        }
+        
+        guard let conversation else {
+            return nil
+        }
+        
+        let provider = ContactListSwipeActionProvider(businessInjector: businessInjector)
+        return UISwipeActionsConfiguration(
+            actions: provider.makeLeadingSwipeActions(for: group, conversation: conversation)
+        )
     }
     
     override func tableView(
         _ tableView: UITableView,
         trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath
     ) -> UISwipeActionsConfiguration? {
-        
-        let action = DeleteActionFactory { [weak self] in
+        let provider = ContactListSwipeActionProvider(businessInjector: businessInjector)
+        return provider.makeTrailingDeleteConfiguration(title: #localize("delete")) { [weak self] in
             guard let self,
                   let group = group(for: indexPath),
                   let cell = tableView.cellForRow(at: indexPath)
@@ -93,35 +109,7 @@ final class GroupListViewController: ContactListBaseViewController {
                     tableView.reloadData()
                 }
             }
-        }.make()
-       
-        let swipeAction = UISwipeActionsConfiguration(actions: [action])
-        swipeAction.performsFirstActionWithFullSwipe = false
-        return swipeAction
-    }
-    
-    private func rowActions(for indexPath: IndexPath) -> [UIContextualAction] {
-        guard let group = group(for: indexPath) else {
-            return []
         }
-        
-        let entityManager = businessInjector.entityManager
-        let conversation: ConversationEntity? = entityManager.performAndWait { [weak self] in
-            self?.businessInjector.groupManager.getConversation(for: group.groupIdentity)
-        }
-        
-        guard let conversation else {
-            return []
-        }
-        
-        let messageAction = MessageActionFactory.make(for: conversation)
-        
-        guard businessInjector.settingsStore.enableThreemaGroupCalls else {
-            return [messageAction]
-        }
-        
-        let groupCallAction = CallActionFactory.make(for: group)
-        return [messageAction, groupCallAction]
     }
     
     // MARK: - Helper

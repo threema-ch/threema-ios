@@ -59,7 +59,7 @@ static ErrorHandler *errorHandler;
         application.windows.firstObject.rootViewController = dummyViewController;
     }
     
-    [UIAlertTemplate showAlertWithOwner:application.windows.firstObject.rootViewController title:title message:message actionOk:^(UIAlertAction * _Nonnull action) {
+    [UIAlertTemplate showOKAlertWithOwner:application.windows.firstObject.rootViewController title:title message:message actionOk:^(UIAlertAction * _Nonnull action) {
         exit(0);
     }];
 }

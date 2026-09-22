@@ -43,6 +43,7 @@ public protocol KeychainManagerProtocol: Sendable {
     static func deleteForwardSecurityKey() throws
 
     static func loadOnPremServer() throws -> String?
+    static func loadUnencryptedLicense() throws -> ThreemaLicense?
 
     func loadLicense() throws -> ThreemaLicense?
     func storeLicense(_ license: ThreemaLicense) throws
@@ -55,6 +56,10 @@ public protocol KeychainManagerProtocol: Sendable {
     func loadThreemaSafeServer() throws -> ThreemaSafeServerInfo?
     func storeThreemaSafeServer(_ safeServer: ThreemaSafeServerInfo) throws
     func deleteThreemaSafeServer() throws
+
+    func loadDataBackupRecoveryKey() throws -> Data?
+    func storeDataBackupRecoveryKey(_ key: Data) throws
+    func deleteDataBackupRecoveryKey() throws
 
     func migrateToDowngrade() throws
     func migrateToVersion0() throws

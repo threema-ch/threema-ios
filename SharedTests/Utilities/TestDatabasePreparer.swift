@@ -122,6 +122,7 @@ public final class TestDatabasePreparer {
     @discardableResult public func createContact(
         publicKey: Data = BytesUtility.generatePublicKey(),
         identity: String,
+        createdAt: Date = .now,
         featureMask: Int = 1, // Voice calls
         verificationLevel: ContactEntity.VerificationLevel = .unverified,
         nickname: String? = nil,
@@ -129,6 +130,7 @@ public final class TestDatabasePreparer {
     ) -> ContactEntity {
         let contact = ContactEntity(
             context: objCnx,
+            createdAt: createdAt,
             featureMask: featureMask,
             forwardSecurityState: NSNumber(integerLiteral: 0),
             identity: identity,
@@ -441,12 +443,13 @@ public final class TestDatabasePreparer {
         return fileMessage
     }
 
+    @discardableResult
     func createGroup(
-        groupID: Data,
+        groupID: Data = BytesUtility.generateGroupID(),
         groupCreatorIdentity: String,
         members: [String],
         myIdentityStoreMock: MyIdentityStoreMock? = nil
-    ) throws -> (ContactEntity?, GroupEntity, ConversationEntity) {
+    ) -> (ContactEntity?, GroupEntity, ConversationEntity) {
         save {
             let isSelfCreator = myIdentityStoreMock?.identity == groupCreatorIdentity
             var creatorContactEntity: ContactEntity?

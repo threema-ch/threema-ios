@@ -2,10 +2,9 @@
 #![expect(unused_crate_dependencies, reason = "Example triggered false positive")]
 #![expect(clippy::print_stdout, reason = "Examples are allowed to print")]
 
-use clap::{Parser, Subcommand};
-use data_encoding::HEXLOWER_PERMISSIVE;
+use clap::{ArgAction, Parser, Subcommand};
 use libthreema::{
-    cli::{MinimalIdentityConfig, MinimalIdentityConfigOptions},
+    cli::config::{MinimalIdentityConfig, MinimalIdentityConfigOptions},
     common::keys::{RemoteSecretAuthenticationToken, RemoteSecretHash},
     https::cli::https_client_builder,
     remote_secret::{
@@ -21,6 +20,7 @@ use libthreema::{
     },
     utils::logging::init_stderr_logging,
 };
+use libthreema_dependencies::data_encoding::HEXLOWER_PERMISSIVE;
 use tokio::time;
 use tracing::{Level, debug, info};
 
@@ -32,6 +32,11 @@ struct RemoteSecretCommand {
 
     #[command(subcommand)]
     command: Commands,
+
+    /// Turn on debugging information.
+    /// Use -v -vv to control log level.
+    #[arg(short, action = ArgAction::Count)]
+    verbose: u8,
 }
 
 #[derive(Subcommand)]
@@ -119,14 +124,19 @@ async fn run_monitor_remote_secret(
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
+    // Parse arguments for command
+    let arguments = RemoteSecretCommand::parse();
+
     // Configure logging
-    init_stderr_logging(Level::TRACE);
+    let log_level = match arguments.verbose {
+        1 => Level::DEBUG,
+        2 => Level::TRACE,
+        _ => Level::INFO,
+    };
+    init_stderr_logging(log_level);
 
     // Create HTTP client
     let http_client = https_client_builder().build()?;
-
-    // Parse arguments for command
-    let arguments = RemoteSecretCommand::parse();
     let config = MinimalIdentityConfig::from_options(&http_client, arguments.config).await?;
     match arguments.command {
         Commands::Create => {

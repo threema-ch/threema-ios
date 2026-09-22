@@ -50,7 +50,7 @@ extension KeychainProviding {
     ) throws -> KeychainItemData? {
         try load(searchItem, searchAccount: searchAccount)
     }
-    
+
     func store(
         searchItem: KeychainItem? = nil,
         searchAccount: String? = nil,

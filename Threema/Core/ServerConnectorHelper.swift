@@ -16,9 +16,11 @@ enum ServerConnectorHelper {
         onConnect: @escaping (() -> Void),
         onTimeout: @escaping (() -> Void)
     ) {
-        if ServerConnector.shared().connectionState != .loggedIn {
-            ServerConnector.shared().connect(initiator: initiator)
+        // Also register the initiator when we are already connected, otherwise the connection is not claimed and
+        // someone else disconnects it while it is still needed
+        ServerConnector.shared().connect(initiator: initiator)
 
+        if ServerConnector.shared().connectionState != .loggedIn {
             waitUntilConnected(timeout: timeout, onConnect: onConnect, onTimeout: onTimeout)
         }
         else {

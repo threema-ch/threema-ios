@@ -22,7 +22,7 @@ extension GroupCallSystemMessageAdapter: GroupCallSystemMessageAdapterProtocol {
     func post(_ systemMessage: GroupCallSystemMessage, in groupModel: GroupCallThreemaGroupModel) async throws {
         let entityManager = businessInjector.entityManager
         let entityFetcher = entityManager.entityFetcher
-        let identity = businessInjector.myIdentityStore.identity
+        let identity = businessInjector.profileStore.profile.myIdentity.rawValue
         try await entityManager.performSave {
             guard let conversation = entityFetcher.conversationEntity(
                 for: groupModel.groupIdentity,

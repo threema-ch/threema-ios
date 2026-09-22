@@ -1,7 +1,7 @@
 import CocoaLumberjackSwift
 import Foundation
 
-public final class WebCreateTextMessageRequest: WebAbstractMessage {
+final class WebCreateTextMessageRequest: WebAbstractMessage {
     var type: String
     var id: String?
     var groupID: Data?

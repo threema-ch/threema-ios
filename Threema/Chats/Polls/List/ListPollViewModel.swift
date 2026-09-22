@@ -18,7 +18,7 @@ final class ListPollViewModel: ObservableObject {
     
     let openBallotsTitle = #localize("ballot_open_ballots")
     let closedBallotsTitle = #localize("ballot_closed_ballots")
-    let doneTitle = #localize("Done")
+    let doneTitle = #localize("done")
     let navigationTitle = #localize("ballots")
     let deleteAlertTitle = #localize("ballot_alert_delete_own_open_poll_title")
     let deleteAlertOkButtonTitle = #localize("ok")

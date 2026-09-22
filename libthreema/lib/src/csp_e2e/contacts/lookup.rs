@@ -11,8 +11,8 @@ use crate::{
     csp_e2e::{CspE2eProtocolContext, CspE2eProtocolError, Flavor},
     https::{HttpsRequest, HttpsResult, directory, work_directory},
     model::contact::{Contact, ContactInit, ContactUpdateError},
-    protobuf::d2d_sync::contact as protobuf_contact,
-    utils::{cache::TimedCache, debug::Name as _},
+    protobuf,
+    utils::{cache::TimedCache, debug::Name as _, update::TryApply as _},
 };
 
 /// Contact that was looked up.
@@ -40,10 +40,8 @@ impl ContactResult {
     ) -> Result<(), ContactUpdateError> {
         // Apply update (if possible)
         match self {
-            ContactResult::User | ContactResult::Invalid(_) => Ok(()),
-            ContactResult::ExistingContact(contact) | ContactResult::NewContact(contact) => {
-                work_contact.update(contact)
-            },
+            Self::User | Self::Invalid(_) => Ok(()),
+            Self::ExistingContact(contact) | Self::NewContact(contact) => work_contact.update(contact),
         }
     }
 }
@@ -176,8 +174,8 @@ impl State {
             }
 
             // Lookup existing contact (and map correctly if revoked)
-            if let Some(existing_contact) = context.contacts.borrow().get(identity)? {
-                if existing_contact.activity_state == protobuf_contact::ActivityState::Invalid {
+            if let Some(existing_contact) = context.providers.contacts.borrow().get(identity)? {
+                if existing_contact.activity_state == protobuf::d2d_sync::contact::ActivityState::Invalid {
                     let _ = contacts
                         .known
                         .insert(identity, ContactResult::Invalid(existing_contact.identity));
@@ -263,7 +261,7 @@ impl State {
 
                 // If the contact is a _Predefined Contact_, update it
                 if let Some(predefined_contact) = context.config.predefined_contacts.get(&contact.identity)
-                    && let Err(error) = predefined_contact.update(&mut contact)
+                    && let Err(error) = contact.try_apply(predefined_contact)
                 {
                     error!(identity = ?contact.identity, ?error,
                             "Unable to update contact from predefined contact");
@@ -351,7 +349,7 @@ pub(crate) struct ContactsLookupSubtask {
     state: State,
 }
 impl ContactsLookupSubtask {
-    pub(crate) fn new(identities: Vec<ThreemaId>, cache_policy: CacheLookupPolicy) -> ContactsLookupSubtask {
+    pub(crate) fn new(identities: Vec<ThreemaId>, cache_policy: CacheLookupPolicy) -> Self {
         Self {
             state: State::Init(InitState {
                 identities,

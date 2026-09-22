@@ -360,7 +360,7 @@ final class ChatViewVoiceMessageTableViewCell: ChatViewBaseTableViewCell, Measur
     
     // MARK: - Updates
     
-    @objc func toggleTimerDirection() {
+    @objc private func toggleTimerDirection() {
         showsRemaining = !showsRemaining
     }
     
@@ -754,7 +754,7 @@ extension ChatViewVoiceMessageTableViewCell: ChatViewMessageActions {
                 return
             }
             
-            UIPasteboard.general.setData(data, forPasteboardType: uti)
+            UIPasteboard.general.set(data: data, forPasteboardType: uti, sensitiveContent: .messageContent)
             NotificationPresenterWrapper.shared.present(type: .copySuccess)
         }
         
@@ -858,7 +858,7 @@ extension ChatViewVoiceMessageTableViewCell: ChatViewMessageActions {
         }
     }
     
-    @objc func handleTap(_ sender: UITapGestureRecognizer) {
+    @objc private func handleTap(_ sender: UITapGestureRecognizer) {
         if sender.state == .ended {
             stateButtonAction(nil)
         }

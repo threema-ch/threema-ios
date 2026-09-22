@@ -2,7 +2,7 @@ import Foundation
 import WebRTC
 @testable import GroupCalls
 
-final class MockPeerConnectionContext: PeerConnectionContextProtocol {
+final class MockPeerConnectionContext: PeerConnectionContextProtocol, @unchecked Sendable {
     init(
         peerConnection: GroupCalls.RTCPeerConnectionProtocol,
         dataChannelContext: GroupCalls.DataChannelContextProtocol
@@ -29,7 +29,7 @@ extension MockPeerConnectionContext {
     }
 }
 
-final class MockRTCRtpTransceiver: NSObject, GroupCalls.RTCRtpTransceiverProtocol {
+final class MockRTCRtpTransceiver: NSObject, GroupCalls.RTCRtpTransceiverProtocol, @unchecked Sendable {
     var mid: String
     
     var mediaType: RTCRtpMediaType

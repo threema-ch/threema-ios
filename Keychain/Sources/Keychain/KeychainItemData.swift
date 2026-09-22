@@ -7,7 +7,7 @@ struct KeychainItemData: Equatable {
     let password: Data?
     let generic: Data?
     let service: String?
-    
+
     init(
         accessibility: CFString?,
         label: String?,

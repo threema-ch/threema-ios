@@ -53,7 +53,7 @@ pub struct MessageWithMetadataBox {
     pub sender_identity: ThreemaId,
 
     /// The ID of the message.
-    pub id: MessageId,
+    pub message_id: MessageId,
 
     /// Message flags of the message.
     pub flags: MessageFlags,
@@ -68,14 +68,14 @@ impl MessageWithMetadataBox {
         reader.truncate();
 
         // Decode the sender's identity, message ID and flags
-        let (sender_identity, id, flags) = reader
+        let (sender_identity, message_id, flags) = reader
             .run(|reader| {
                 let sender_identity = reader.read_fixed::<{ ThreemaId::LENGTH }>()?;
                 reader.skip(ThreemaId::LENGTH)?;
-                let id = MessageId(reader.read_u64_le()?);
+                let message_id = MessageId(reader.read_u64_le()?);
                 reader.skip(4)?;
                 let message_flags = MessageFlags(reader.read_u8()?);
-                Ok((sender_identity, id, message_flags))
+                Ok((sender_identity, message_id, message_flags))
             })
             .map_err(|error| CspProtocolError::DecodingFailed {
                 name: Self::NAME,
@@ -90,7 +90,7 @@ impl MessageWithMetadataBox {
                     cause: error.to_string(),
                 }
             })?,
-            id,
+            message_id,
             flags,
             bytes,
         })
@@ -119,7 +119,7 @@ impl TryFrom<Vec<u8>> for MessageWithMetadataBox {
     type Error = CspProtocolError;
 
     fn try_from(bytes: Vec<u8>) -> Result<Self, Self::Error> {
-        MessageWithMetadataBox::decode(OwnedVecByteReader::new(bytes))
+        Self::decode(OwnedVecByteReader::new(bytes))
     }
 }
 
@@ -131,18 +131,18 @@ pub struct MessageAck {
     pub sender_identity: ThreemaId,
 
     /// Refers to the message id of the acknowledged message.
-    pub id: MessageId,
+    pub message_id: MessageId,
 }
 impl MessageAck {
     const LENGTH: usize = ThreemaId::LENGTH + MessageId::LENGTH;
 
     fn decode(reader: impl ByteReader) -> Result<Self, CspProtocolError> {
-        let (identity, id) = reader
+        let (identity, message_id) = reader
             .run_owned(|mut reader| {
                 let sender_identity = reader.read_fixed::<{ ThreemaId::LENGTH }>()?;
-                let id = reader.read_u64_le()?;
+                let message_id = reader.read_u64_le()?;
                 let _ = reader.expect_consumed()?;
-                Ok((sender_identity, id))
+                Ok((sender_identity, message_id))
             })
             .map_err(|error| CspProtocolError::DecodingFailed {
                 name: Self::NAME,
@@ -156,7 +156,7 @@ impl MessageAck {
                     cause: error.to_string(),
                 }
             })?,
-            id: MessageId(id),
+            message_id: MessageId(message_id),
         })
     }
 
@@ -164,7 +164,7 @@ impl MessageAck {
         writer
             .run(|writer| {
                 writer.write(&self.sender_identity.to_bytes())?;
-                writer.write_u64_le(self.id.0)
+                writer.write_u64_le(self.message_id.0)
             })
             .map_err(|error| CspProtocolInternalErrorCause::EncodingFailed {
                 name: Self::NAME,
@@ -247,8 +247,8 @@ impl PushNotificationToken {
 
     fn length(&self) -> usize {
         PushNotificationTokenType::LENGTH.saturating_add(match self {
-            PushNotificationToken::Clear => 0,
-            PushNotificationToken::Apns {
+            Self::Clear => 0,
+            Self::Apns {
                 bundle_id,
                 encryption_key,
                 token,
@@ -259,8 +259,8 @@ impl PushNotificationToken {
                 .saturating_add(bundle_id.len())
                 .saturating_add(Self::AWKWARD_DELIMITER.len())
                 .saturating_add(encryption_key.len()),
-            PushNotificationToken::Fcm(token) => token.len(),
-            PushNotificationToken::Hms { app_id, token } => app_id
+            Self::Fcm(token) => token.len(),
+            Self::Hms { app_id, token } => app_id
                 .len()
                 .saturating_add(Self::AWKWARD_DELIMITER.len())
                 .saturating_add(token.len()),
@@ -270,8 +270,8 @@ impl PushNotificationToken {
     fn encode_into(&self, writer: &mut impl ByteWriter) -> Result<(), CspProtocolError> {
         writer
             .run(|writer| match self {
-                PushNotificationToken::Clear => writer.write_u8(PushNotificationTokenType::None as u8),
-                PushNotificationToken::Apns {
+                Self::Clear => writer.write_u8(PushNotificationTokenType::None as u8),
+                Self::Apns {
                     r#type,
                     bundle_id,
                     encryption_key,
@@ -290,12 +290,12 @@ impl PushNotificationToken {
                     writer.write(Self::AWKWARD_DELIMITER)?;
                     writer.write(encryption_key)
                 },
-                PushNotificationToken::Fcm(token) => {
+                Self::Fcm(token) => {
                     writer.write_u8(PushNotificationTokenType::Fcm as u8)?;
 
                     writer.write(token.as_bytes())
                 },
-                PushNotificationToken::Hms { app_id, token } => {
+                Self::Hms { app_id, token } => {
                     writer.write_u8(PushNotificationTokenType::Hms as u8)?;
 
                     writer.write(app_id.as_bytes())?;
@@ -327,17 +327,15 @@ pub enum DeletePushNotificationToken {
 impl DeletePushNotificationToken {
     fn length(&self) -> usize {
         match self {
-            DeletePushNotificationToken::All => 0,
-            DeletePushNotificationToken::Devices(csp_device_ids) => {
-                csp_device_ids.len().saturating_mul(CspDeviceId::LENGTH)
-            },
+            Self::All => 0,
+            Self::Devices(csp_device_ids) => csp_device_ids.len().saturating_mul(CspDeviceId::LENGTH),
         }
     }
 
     fn encode_into(&self, writer: &mut impl ByteWriter) -> Result<(), CspProtocolError> {
         match self {
-            DeletePushNotificationToken::All => Ok(()),
-            DeletePushNotificationToken::Devices(csp_device_ids) => {
+            Self::All => Ok(()),
+            Self::Devices(csp_device_ids) => {
                 if csp_device_ids.is_empty() {
                     return Err(CspProtocolError::InvalidParameter(const_format::formatcp!(
                         "Device list may not be empty for {}",
@@ -550,7 +548,7 @@ impl TryFrom<Vec<u8>> for IncomingPayload {
 
 #[cfg(test)]
 mod incoming_payload_tests {
-    use data_encoding::HEXLOWER_PERMISSIVE;
+    use libthreema_dependencies::data_encoding::HEXLOWER_PERMISSIVE;
 
     use super::IncomingPayload;
     use crate::common::{MessageFlags, MessageId, ThreemaId};
@@ -576,7 +574,7 @@ mod incoming_payload_tests {
         };
 
         assert_eq!(message.sender_identity, ThreemaId::try_from("0DA5ME76")?);
-        assert_eq!(message.id, MessageId::from_hex("89aa9a7eaff77d96")?);
+        assert_eq!(message.message_id, MessageId::from_hex("89aa9a7eaff77d96")?);
         assert_eq!(message.flags, MessageFlags(MessageFlags::SEND_PUSH_NOTIFICATION));
         assert_eq!(message.bytes.len(), 393);
 
@@ -636,24 +634,24 @@ impl OutgoingPayload {
     pub(crate) fn encode(&self) -> Result<Vec<u8>, CspProtocolError> {
         // Determine the payload type and length
         let (r#type, length) = match self {
-            OutgoingPayload::EchoRequest(payload) => (OutgoingPayloadType::EchoRequest, payload.length()),
-            OutgoingPayload::EchoResponse(payload) => (OutgoingPayloadType::EchoResponse, payload.length()),
-            OutgoingPayload::MessageWithMetadataBox(payload) => {
+            Self::EchoRequest(payload) => (OutgoingPayloadType::EchoRequest, payload.length()),
+            Self::EchoResponse(payload) => (OutgoingPayloadType::EchoResponse, payload.length()),
+            Self::MessageWithMetadataBox(payload) => {
                 (OutgoingPayloadType::MessageWithMetadataBox, payload.length())
             },
-            OutgoingPayload::MessageAck(_) => (OutgoingPayloadType::MessageAck, MessageAck::LENGTH),
-            OutgoingPayload::UnblockIncomingMessages => (OutgoingPayloadType::UnblockIncomingMessages, 0),
-            OutgoingPayload::SetPushNotificationToken(payload) => {
+            Self::MessageAck(_) => (OutgoingPayloadType::MessageAck, MessageAck::LENGTH),
+            Self::UnblockIncomingMessages => (OutgoingPayloadType::UnblockIncomingMessages, 0),
+            Self::SetPushNotificationToken(payload) => {
                 (OutgoingPayloadType::SetPushNotificationToken, payload.length())
             },
-            OutgoingPayload::DeletePushNotificationToken(payload) => {
+            Self::DeletePushNotificationToken(payload) => {
                 (OutgoingPayloadType::DeletePushNotificationToken, payload.length())
             },
-            OutgoingPayload::SetConnectionIdleTimeout(_) => (
+            Self::SetConnectionIdleTimeout(_) => (
                 OutgoingPayloadType::SetConnectionIdleTimeout,
                 ConnectionIdleTimeout::LENGTH,
             ),
-            OutgoingPayload::ClearDeviceCookieChangeIndiciation => {
+            Self::ClearDeviceCookieChangeIndiciation => {
                 (OutgoingPayloadType::ClearDeviceCookieChangeIndiciation, 0)
             },
         };
@@ -675,16 +673,13 @@ impl OutgoingPayload {
 
         // Encode the payload
         match self {
-            OutgoingPayload::EchoRequest(payload) | OutgoingPayload::EchoResponse(payload) => {
-                payload.encode_into(&mut writer)
-            },
-            OutgoingPayload::MessageWithMetadataBox(payload) => payload.encode_into(&mut writer),
-            OutgoingPayload::MessageAck(payload) => payload.encode_into(&mut writer),
-            OutgoingPayload::SetPushNotificationToken(payload) => payload.encode_into(&mut writer),
-            OutgoingPayload::DeletePushNotificationToken(payload) => payload.encode_into(&mut writer),
-            OutgoingPayload::SetConnectionIdleTimeout(payload) => payload.encode_into(&mut writer),
-            OutgoingPayload::UnblockIncomingMessages
-            | OutgoingPayload::ClearDeviceCookieChangeIndiciation => Ok(()),
+            Self::EchoRequest(payload) | Self::EchoResponse(payload) => payload.encode_into(&mut writer),
+            Self::MessageWithMetadataBox(payload) => payload.encode_into(&mut writer),
+            Self::MessageAck(payload) => payload.encode_into(&mut writer),
+            Self::SetPushNotificationToken(payload) => payload.encode_into(&mut writer),
+            Self::DeletePushNotificationToken(payload) => payload.encode_into(&mut writer),
+            Self::SetConnectionIdleTimeout(payload) => payload.encode_into(&mut writer),
+            Self::UnblockIncomingMessages | Self::ClearDeviceCookieChangeIndiciation => Ok(()),
         }?;
 
         // Done

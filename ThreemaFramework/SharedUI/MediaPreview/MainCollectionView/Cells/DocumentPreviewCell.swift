@@ -172,7 +172,7 @@ final class DocumentPreviewCell: ScreenWidthSizedCell, QLPreviewControllerDelega
         }
     }
     
-    @objc func tappedThumbnail(_ gesture: UITapGestureRecognizer) {
+    @objc private func tappedThumbnail(_ gesture: UITapGestureRecognizer) {
         showPreview()
     }
 }

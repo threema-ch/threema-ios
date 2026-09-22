@@ -219,13 +219,18 @@ enum ChatViewMessageActionsProvider {
         // Return sections
         var actions = [
             generalActionsSection,
-            shareActionsSection,
             moreActionsSection,
         ]
         
-        if UIAccessibility.isSpeakSelectionEnabled {
-            actions.insert(speakActionsSection, at: 2)
+        if !shareActions.isEmpty {
+            actions.insert(shareActionsSection, at: 1)
         }
+        
+        if UIAccessibility.isSpeakSelectionEnabled {
+            // Speak is always second to last, if possible
+            actions.insert(speakActionsSection, at: max(0, actions.count - 1))
+        }
+            
         return actions
     }
     
@@ -580,7 +585,7 @@ enum ChatViewMessageActionsProvider {
             return
         }
         
-        UIAlertTemplate.showAlert(
+        UIAlertTemplate.showOKAlert(
             owner: topViewController,
             title: #localize("delete"),
             message: message

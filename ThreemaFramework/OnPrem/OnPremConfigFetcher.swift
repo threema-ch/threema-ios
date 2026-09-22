@@ -116,6 +116,18 @@ final class OnPremConfigFetcher: OnPremConfigFetcherProtocol {
                 DDLogError("[Fetch OPPF] HTTP Authorization contains user or password")
             }
             throw OnPremConfigError.fetchRequestFailed
+        case 401:
+            DDLogError("[Fetch OPPF] HTTP status code: \(httpResponse.statusCode)")
+            if let oppf = try JSONSerialization.jsonObject(with: result.oppfData, options: .allowFragments) as? [
+                String: String
+            ],
+                let errorString = oppf["error"] {
+                DDLogError("[Fetch OPPF] HTTP error message: \(errorString)")
+            }
+            if isRecoveryModeEnabled {
+                DDLogError("[Fetch OPPF] HTTP Authorization contains user or password")
+            }
+            throw OnPremConfigError.unauthorized
         case 404:
             DDLogError("[Fetch OPPF] HTTP status code: \(httpResponse.statusCode)")
             if isRecoveryModeEnabled {

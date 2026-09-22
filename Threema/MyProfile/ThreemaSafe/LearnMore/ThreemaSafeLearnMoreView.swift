@@ -6,7 +6,7 @@ struct ThreemaSafeLearnMoreView: View {
     let model: ThreemaSafeLearnMoreViewModel
 
     var body: some View {
-        VStack {
+        NavigationStack {
             ScrollView {
                 VStack(spacing: 24) {
                     Text(model.headline)
@@ -21,22 +21,39 @@ struct ThreemaSafeLearnMoreView: View {
                 .multilineTextAlignment(.leading)
                 .padding(24)
             }
-        }
-        .toolbar {
-            ToolbarItem(placement: .primaryAction) {
-                DoneButton {
-                    dismiss()
+            .toolbar {
+                ToolbarItem(placement: .primaryAction) {
+                    DoneButton {
+                        dismiss()
+                    }
                 }
             }
+            .navigationBarTitleDisplayMode(.inline)
         }
-        .navigationBarTitleDisplayMode(.inline)
     }
 }
 
 #if DEBUG
-    #Preview {
-        NavigationView {
-            ThreemaSafeLearnMoreView(model: .init(appFlavor: .onPrem))
+    #Preview(ThreemaSafeLearnMoreView.Stance.learnMore.title) {
+        ThreemaSafeLearnMoreView.Stance.learnMore.view
+    }
+
+    extension ThreemaSafeLearnMoreView {
+        enum Stance: PreviewCase {
+            case learnMore
+
+            var title: String {
+                switch self {
+                case .learnMore: "Backup Center - Threema Safe Learn More"
+                }
+            }
+
+            @MainActor var view: some View {
+                switch self {
+                case .learnMore:
+                    ThreemaSafeLearnMoreView(model: .init(appFlavor: .blue))
+                }
+            }
         }
     }
 #endif

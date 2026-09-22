@@ -35,6 +35,12 @@ extension EntityFetcher {
         )
     }
     
+    /// All groups
+    /// - Returns: An array of all group entities
+    public func allGroupEntities() -> [GroupEntity]? {
+        fetchEntities(entityName: "Group")
+    }
+
     /// All active groups (i.e. not marked as (force) left)
     /// - Returns: An array of group entities for all active groups
     public func activeGroupEntities() -> [GroupEntity]? {

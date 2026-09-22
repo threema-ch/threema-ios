@@ -40,7 +40,7 @@ public final class KeyboardResizeCenterY {
         NotificationCenter.default.removeObserver(self)
     }
     
-    @objc func keyboardDidShow(notification: NSNotification) {
+    @objc private func keyboardDidShow(notification: NSNotification) {
         if let keyboardSize = (notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)?
             .cgRectValue {
             let offset: CGFloat = UIScreen.main.bounds.height - resizeView.frame.maxY - keyboardSize.height - 10
@@ -61,7 +61,7 @@ public final class KeyboardResizeCenterY {
         }
     }
     
-    @objc func keyboardWillHide(notification: NSNotification) {
+    @objc private func keyboardWillHide(notification: NSNotification) {
         if let offsetCenterY {
             parentView.removeConstraint(offsetCenterY)
         }

@@ -1,7 +1,7 @@
 import CocoaLumberjackSwift
 import Foundation
 
-class DeviceJoinManager: ObservableObject {
+final class DeviceJoinManager: ObservableObject {
     
     enum ViewState: Equatable {
         case scanQRCode

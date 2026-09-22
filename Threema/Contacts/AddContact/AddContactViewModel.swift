@@ -19,7 +19,7 @@ final class AddContactViewModel: ObservableObject {
         !identity.isEmpty
     }
 
-    let isScanningDisabled = !DeviceCapabilitiesManager().supportsRecordingVideo
+    let isScanningDisabled = !DeviceCapabilitiesManager().hasVideoCaptureDevice
 
     private let businessInjector = BusinessInjector.ui
 

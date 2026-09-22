@@ -1,3 +1,4 @@
+import AudioSessionManager
 import CocoaLumberjackSwift
 import FileUtility
 import Foundation
@@ -27,8 +28,10 @@ final class ChatViewDefaultMessageTapActionProvider: NSObject {
     
     // Video playing state
     
-    /// Keeps track of the set audio session category before playing a video (if no VoIP call is active)
-    private var previousAudioSessionCategory: AVAudioSession.Category?
+    private let audioSessionManager: any AudioSessionManagerProtocol
+    /// Held while a video is on screen, released when it goes away.
+    private var audioSessionClaim: AudioSessionClaim?
+    
     /// Keeps track if the video is shown picture in picture
     private var videoIsPictureInPicture = false
     
@@ -38,12 +41,15 @@ final class ChatViewDefaultMessageTapActionProvider: NSObject {
     /// - Parameters:
     ///   - chatViewController: ChatViewController to show details on
     ///   - entityManager: Entity Manager used for fetching any related data
+    ///   - audioSessionManager: AudioSessionManager coordinating sound output
     init(
         chatViewController: ChatViewController?,
-        entityManager: EntityManager
+        entityManager: EntityManager,
+        audioSessionManager: any AudioSessionManagerProtocol = BusinessInjector.ui.audioSessionManager
     ) {
         self.chatViewController = chatViewController
         self.entityManager = entityManager
+        self.audioSessionManager = audioSessionManager
     }
     
     // MARK: - Run
@@ -129,15 +135,22 @@ final class ChatViewDefaultMessageTapActionProvider: NSObject {
         let playerViewController = AVPlayerViewController()
         playerViewController.player = player
         playerViewController.delegate = self
-        let voipCallState = VoIPCallStateManager.shared.currentCallState()
-        if voipCallState == .idle,
-           !NavigationBarPromptHandler.isGroupCallActive {
-            previousAudioSessionCategory = AVAudioSession.sharedInstance().category
-            try? AVAudioSession.sharedInstance().setCategory(.playback)
-        }
-                
-        chatViewController?.present(playerViewController, animated: true) {
-            player.play()
+        Task { @MainActor [weak self] in
+            guard let self else {
+                return
+            }
+
+            do {
+                audioSessionClaim = try await audioSessionManager.acquire(.mediaPlayback)
+            }
+            catch {
+                NotificationPresenterWrapper.shared.present(type: .playbackFailed)
+                DDLogError("[ChatViewDefaultMessageTapActionProvider] Failed to acquire audio session: \(error)")
+            }
+
+            chatViewController?.present(playerViewController, animated: true) {
+                player.play()
+            }
         }
     }
     
@@ -233,18 +246,15 @@ extension ChatViewDefaultMessageTapActionProvider: AVPlayerViewControllerDelegat
     }
     
     private func resetAudioSessionAndCleanUpVideoFile() {
-        // Reset audio category and resume other playing audio
-        let currentCallState = VoIPCallStateManager.shared.currentCallState()
-        if currentCallState == .idle,
-           !NavigationBarPromptHandler.isGroupCallActive {
-            do {
-                try AVAudioSession.sharedInstance().setCategory(previousAudioSessionCategory ?? .soloAmbient)
-                try AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+        // Giving the claim back is the whole reset: the manager re-applies whatever the previous winner
+        // wanted, or deactivates if this was the last claim.
+        if let claim = audioSessionClaim {
+            audioSessionClaim = nil
+
+            let manager = audioSessionManager
+            Task {
+                await manager.release(claim)
             }
-            catch {
-                DDLogError("Unable to reset audio session: \(error)")
-            }
-            previousAudioSessionCategory = nil
         }
         
         // Delete temporary file that was played if there was any

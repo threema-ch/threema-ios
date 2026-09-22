@@ -12,6 +12,7 @@ protocol ConversationSelecting: AnyObject {
 
 protocol ConversationListViewControllerDelegate: AnyObject, ConversationSelecting {
     func archivedConversationListTriggered()
+    func willAppear()
     func willDisappear()
 }
 
@@ -175,6 +176,19 @@ final class ConversationListViewController: ThemedTableViewController {
     
     private var lastAppearance = Date()
     private var viewLoadedInBackground: Bool
+
+    /// Set when fetched-results updates arrive while the table can neither apply
+    /// batch updates (not visible) nor be reloaded (an editing session is in
+    /// progress, see `refreshData()`); the next `refreshData()` — editing end,
+    /// appearance or foreground — reconciles the table.
+    private var needsDeferredReload = false
+
+    /// Object IDs, in display order, that the table view currently renders. The
+    /// fetched results controller's own `fetchedObjects` can move ahead of the
+    /// table (e.g. changes processed while off-window or backgrounded, where the
+    /// per-row updates are skipped), so we track what the table actually shows to
+    /// decide when a reload is required. See `refreshData()`.
+    private var displayedObjectIDs: [NSManagedObjectID] = []
     
     private weak var previousNavigationControllerDelegate: UINavigationControllerDelegate?
     
@@ -219,6 +233,7 @@ final class ConversationListViewController: ThemedTableViewController {
         
         do {
             try fetchedResultsController.performFetch()
+            displayedObjectIDs = currentFetchedObjectIDs()
         }
         catch {
             DDLogError("Failed to load conversations: \(error)")
@@ -240,7 +255,7 @@ final class ConversationListViewController: ThemedTableViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-                
+
         navigationItem.leftBarButtonItem = editButton
         navigationItem.rightBarButtonItem = newChatButton
         
@@ -283,11 +298,22 @@ final class ConversationListViewController: ThemedTableViewController {
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        
+
+        // `refreshData()` clears the flag itself; clearing it here instead could
+        // lose the pending reload if the refresh is skipped (e.g. while editing).
+        if needsDeferredReload {
+            refreshData()
+        }
+
         checkDateAndUpdateTimestamps()
         updateDraftForCell()
-        
+
         selectionManager.handleViewWillAppear()
+
+        // Let the coordinator sync the selection to its navigation path — selection
+        // changes from before the view was loaded (cold-start deep link) are only
+        // applied here.
+        delegate?.willAppear()
         
         updateArchivedButton()
         
@@ -377,7 +403,7 @@ extension ConversationListViewController {
         clearsSelectionOnViewWillAppear = isRegularSizeClass
     }
     
-    @objc func newMessage() {
+    @objc private func newMessage() {
         let viewController = UINavigationController(rootViewController: StartChatViewController())
         present(viewController, animated: true, completion: nil)
     }
@@ -458,8 +484,14 @@ extension ConversationListViewController {
     
     override func tableView(_ tableView: UITableView, didEndEditingRowAt indexPath: IndexPath?) {
         editButton.isEnabled = true
-        
-        selectionManager.selectItemIfNeeded()
+
+        // Pick up any changes that arrived while the swipe actions were shown and refreshing was skipped. Dispatched
+        // async so the editing state is fully torn down before `refreshData()` checks it. The selection is restored
+        // after the refresh, as a potential reload would clear it again.
+        DispatchQueue.main.async { [weak self] in
+            self?.refreshData()
+            self?.selectionManager.selectItemIfNeeded()
+        }
     }
     
     // Enables Multi-Select by Swiping with 2 Fingers
@@ -767,6 +799,9 @@ extension ConversationListViewController {
             navigationItem.searchController = searchController
         }
         navigationItem.title = #localize("chats_title")
+
+        // Pick up any changes that arrived while editing, since refreshing is skipped during it
+        refreshData()
     }
     
     /// Marks selected Conversations as "Read"
@@ -948,11 +983,48 @@ extension ConversationListViewController {
         selectionManager.setSelection(for: conversation)
     }
     
+    private func currentFetchedObjectIDs() -> [NSManagedObjectID] {
+        (fetchedResultsController.fetchedObjects as? [NSManagedObject])?.map(\.objectID) ?? []
+    }
+
+    /// Full table reload that keeps `displayedObjectIDs` in sync with what is now
+    /// rendered, so the staleness check in `refreshData()` stays accurate.
+    private func reloadConversationsData() {
+        tableView.reloadData()
+        displayedObjectIDs = currentFetchedObjectIDs()
+        // A full reload reconciles the table with the fetched results controller,
+        // so no deferred reload is pending anymore.
+        needsDeferredReload = false
+    }
+
     /// Should always be called on the Main-Thread
     private func refreshData() {
+        // `reloadData()` while a row's swipe actions are revealed detaches the visible buttons from the table view's
+        // internal state, so tapping them collapses the actions without invoking their handler. During editing (swipe
+        // session or multi-select) we skip the refresh; `tableView(_:didEndEditingRowAt:)` and `hideToolbar()` refresh
+        // again once it ends.
+        guard !tableView.isEditing else {
+            return
+        }
+
+        // We are reconciling the table with the fetched results controller now, so
+        // any deferred reload is being handled here.
+        needsDeferredReload = false
+
         do {
             try fetchedResultsController.performFetch()
-            tableView.reloadData()
+            let currentObjectIDs = currentFetchedObjectIDs()
+
+            // Cells observe the properties of their conversation themselves and the fetched results controller
+            // delegate applies row changes from view context saves, so a full reload is only needed when the set or
+            // order of rows the table currently displays no longer matches the fetch (e.g. a merge from a background
+            // context, or changes processed while the table was not visible). We compare against what the table
+            // actually shows (`displayedObjectIDs`) — not the controller's own `fetchedObjects`, which can already be
+            // ahead of the table, in which case a diff of the controller against itself would wrongly report "no
+            // change" and leave a stale list whose taps open the wrong conversation.
+            if currentObjectIDs != displayedObjectIDs {
+                reloadConversationsData()
+            }
         }
         catch {
             DDLogError("Failed to load conversations: \(error)")
@@ -964,7 +1036,7 @@ extension ConversationListViewController {
         if !Calendar.current.isDate(lastAppearance, inSameDayAs: now) {
             DDLogInfo("Last appeared on a different date; updating timestamps")
             if !viewLoadedInBackground {
-                tableView.reloadData()
+                reloadConversationsData()
             }
         }
         lastAppearance = now
@@ -1112,17 +1184,25 @@ extension ConversationListViewController {
         }
     }
     
-    @objc func applicationWillEnterForeground() {
+    @objc private func applicationWillEnterForeground() {
         DispatchQueue.main.async { [weak self] in
             guard let self else {
                 return
             }
-            
+
+            // Clear before `checkDateAndUpdateTimestamps()`: we are entering the
+            // foreground, so a date-change reload must not be skipped anymore.
+            viewLoadedInBackground = false
             checkDateAndUpdateTimestamps()
-            if viewLoadedInBackground {
-                viewLoadedInBackground = false
-                refreshData()
-            }
+
+            // Changes that arrived while not visible already triggered a lazy
+            // `reloadData()` in `controllerDidChangeContent(_:)`, so the table is
+            // usually up to date here. This is a cheap safety net (`refreshData()`
+            // only reloads when the fetch no longer matches the displayed rows),
+            // since an already-loaded, backgrounded view controller gets no
+            // `viewWillAppear` on foregrounding.
+            refreshData()
+            updateArchivedButton()
         }
     }
 
@@ -1168,14 +1248,26 @@ extension ConversationListViewController {
     }
     
     @objc private func reloadTableView() {
-        if !viewLoadedInBackground {
-            tableView.reloadData()
+        guard
+            !viewLoadedInBackground,
+            !tableView.isEditing
+        else {
+            return
         }
+
+        reloadConversationsData()
     }
-    
+
     @objc private func addressBookSynchronized() {
         DispatchQueue.main.async { [weak self] in
-            self?.tableView.reloadData()
+            guard
+                let self,
+                !tableView.isEditing
+            else {
+                return
+            }
+
+            reloadConversationsData()
         }
     }
     
@@ -1231,16 +1323,68 @@ extension ConversationListViewController {
 // MARK: - NSFetchedResultsControllerDelegate
 
 extension ConversationListViewController: NSFetchedResultsControllerDelegate {
-    
+
+    /// Live table batch updates need the table to be on-screen and laid out.
+    ///
+    /// Off-window (the fetched results controller is live from `init`, before the
+    /// view is ever shown — e.g. Core Data saves during app launch) applying them
+    /// forces a layout with a zero-sized frame, which besides broken constraints
+    /// can spin the layout engine indefinitely. Backgrounded is just as unsafe: no
+    /// layout pass runs while in the background, so batch updates advance the
+    /// table's row model without ever repositioning the cells, leaving the visible
+    /// list out of sync with the data on foreground. In both cases we skip the
+    /// per-row updates and fall back to `reloadData()`, which is safe there: it
+    /// only invalidates, and the rows are rebuilt on the next layout pass — which
+    /// runs before the first frame after appearing/foregrounding again.
+    private var isTableViewVisible: Bool {
+        viewIfLoaded?.window != nil && !isAppInBackground()
+    }
+
+    private var canPerformBatchUpdates: Bool {
+        // Once a reload was deferred, the table's cached row counts are out of sync
+        // with the fetched results controller — further batch updates would raise
+        // an inconsistency exception, so fall back to a full reload first.
+        isTableViewVisible && !needsDeferredReload
+    }
+
     func controllerWillChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
+        guard canPerformBatchUpdates else {
+            return
+        }
         tableView.beginUpdates()
     }
-    
+
     func controllerDidChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
+        guard canPerformBatchUpdates else {
+            if isTableViewVisible {
+                // An earlier reload was deferred; resync now (`refreshData()`
+                // clears `needsDeferredReload`).
+                refreshData()
+                updateArchivedButton()
+            }
+            else if tableView.isEditing {
+                // `reloadData()` would detach revealed swipe-action buttons (see
+                // `refreshData()`), so wait for the editing session to end;
+                // `tableView(_:didEndEditingRowAt:)` and `hideToolbar()` refresh then.
+                DDLogNotice("[ConversationList] Deferring table reload while not visible and editing")
+                needsDeferredReload = true
+            }
+            else {
+                // Reload immediately instead of deferring to the next appearance:
+                // `reloadData()` is lazy (see `isTableViewVisible`), so the list is
+                // already up to date when it becomes visible again — no flash of
+                // stale content on foregrounding.
+                DDLogNotice("[ConversationList] Reloading instead of updating table while not visible")
+                reloadConversationsData()
+            }
+            return
+        }
         tableView.endUpdates()
+        // After a successful batch update the table matches the controller again.
+        displayedObjectIDs = currentFetchedObjectIDs()
         updateArchivedButton()
     }
-    
+
     func controller(
         _ controller: NSFetchedResultsController<NSFetchRequestResult>,
         didChange anObject: Any,
@@ -1248,6 +1392,10 @@ extension ConversationListViewController: NSFetchedResultsControllerDelegate {
         for type: NSFetchedResultsChangeType,
         newIndexPath: IndexPath?
     ) {
+        guard canPerformBatchUpdates else {
+            return
+        }
+
         switch type {
         case .insert:
             guard let indexPath = newIndexPath else {
@@ -1282,6 +1430,10 @@ extension ConversationListViewController: NSFetchedResultsControllerDelegate {
         atSectionIndex sectionIndex: Int,
         for type: NSFetchedResultsChangeType
     ) {
+        guard canPerformBatchUpdates else {
+            return
+        }
+
         let section = IndexSet(integer: sectionIndex)
         switch type {
         case .delete:

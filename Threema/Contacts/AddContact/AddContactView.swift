@@ -142,7 +142,7 @@ struct AddContactView: View {
     private func showScanner() {
         let model = QRCodeScannerViewModel(
             mode: .identity,
-            audioSessionManager: AudioSessionManager(),
+            audioSessionManager: BusinessInjector.ui.audioSessionManager,
             systemFeedbackManager: SystemFeedbackManager(
                 deviceCapabilitiesManager: DeviceCapabilitiesManager(),
                 settingsStore: BusinessInjector.ui.settingsStore

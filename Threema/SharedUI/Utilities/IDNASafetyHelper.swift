@@ -3,7 +3,7 @@ import Foundation
 import ThreemaMacros
 import UIKit
 
-class IDNASafetyHelper: NSObject {
+final class IDNASafetyHelper: NSObject {
     class func safeOpen(url: URL, viewController: UIViewController) {
         if url.isIDNASafe {
             if url.host?.lowercased() == "threema.id" {

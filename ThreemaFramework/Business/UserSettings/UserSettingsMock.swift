@@ -5,7 +5,7 @@ public final class UserSettingsMock: NSObject, UserSettingsProtocol {
     }
 
     public init(
-        blacklist: [Any]? = nil,
+        blacklist: [String]? = nil,
         enableIPv6: Bool = false,
         enableMultiDevice: Bool = false,
         blockUnknown: Bool = false,
@@ -32,13 +32,24 @@ public final class UserSettingsMock: NSObject, UserSettingsProtocol {
 
     public var enableIPv6 = true
 
-    public var syncContacts = false
+    /// How often `syncContacts`, `blockUnknown` and `hideStaleContacts` were set
+    public private(set) var syncContactsSetCount = 0
+    public private(set) var blockUnknownSetCount = 0
+    public private(set) var hideStaleContactsSetCount = 0
 
-    public var blockUnknown = false
+    public var syncContacts = false {
+        didSet { syncContactsSetCount += 1 }
+    }
+
+    public var blockUnknown = false {
+        didSet { blockUnknownSetCount += 1 }
+    }
 
     public var enablePoi = true
 
     public var allowOutgoingDonations = false
+
+    public var allowScreenshot = true
 
     public var sendReadReceipts = true
 
@@ -58,9 +69,11 @@ public final class UserSettingsMock: NSObject, UserSettingsProtocol {
 
     public var blacklist: NSOrderedSet? = []
 
-    public var syncExclusionList: [Any]? = [Any]()
+    public var syncExclusionList: [String]? = []
 
-    public var hideStaleContacts = false
+    public var hideStaleContacts = false {
+        didSet { hideStaleContactsSetCount += 1 }
+    }
 
     public var sortOrderFirstName = true
 

@@ -30,7 +30,7 @@ final class MediaShareOptionsViewController: ThemedTableViewController {
         sendAsFileSwitch.isOn = options?.sendAsFile ?? false
         navigationBar.title = #localize("more_options")
         sendAsFileCell.textLabel?.text = #localize("send_as_file")
-        saveButton.title = #localize("Done")
+        saveButton.title = #localize("done")
         saveButton.tintColor = .primary
     }
     

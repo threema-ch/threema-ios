@@ -2,9 +2,9 @@ import Foundation
 import ThreemaEssentials
 @testable import Keychain
 
-// MARK: - KeychainItem + Hashable, @unchecked Sendable
+// MARK: - KeychainItem + Hashable
 
-extension KeychainItem: Hashable, @unchecked Sendable {
+extension KeychainItem: Hashable {
     public func hash(into hasher: inout Hasher) {
         hasher.combine(label)
         hasher.combine(accessibility as String)

@@ -1,16 +1,26 @@
 //! Debug-related utilities.
 use core::fmt;
 
-use data_encoding::HEXLOWER_PERMISSIVE;
-
-use crate::crypto::x25519;
+use libthreema_dependencies::{crypto::x25519, data_encoding::HEXLOWER_PERMISSIVE};
 
 /// Formatter to format a slice to its length.
-pub(crate) fn debug_slice_length<T: AsRef<[u8]>>(
+pub(crate) fn debug_slice_length<E, T: AsRef<[E]>>(
     slice: T,
     formatter: &mut fmt::Formatter<'_>,
 ) -> fmt::Result {
     write!(formatter, "length={}", slice.as_ref().len())
+}
+
+/// Formatter to format arbitrary collections that implement [`IntoIterator`] with [`ExactSizeIterator`].
+pub(crate) fn debug_collection_length<'collection, TCollection>(
+    collection: &'collection TCollection,
+    formatter: &mut fmt::Formatter<'_>,
+) -> fmt::Result
+where
+    &'collection TCollection: IntoIterator,
+    <&'collection TCollection as IntoIterator>::IntoIter: ExactSizeIterator,
+{
+    write!(formatter, "length={}", collection.into_iter().len())
 }
 
 /// Formatter to redact a string, replacing its content with an equal amount of `*`s.
@@ -21,17 +31,15 @@ pub(crate) fn debug_str_redacted(field: &str, formatter: &mut fmt::Formatter<'_>
     formatter.write_str(&"*".repeat(field.len()))
 }
 
-/// Formatter to format bytes as hex.
-pub(crate) fn debug_bytes_hex(bytes: &[u8], formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-    formatter.write_str(&HEXLOWER_PERMISSIVE.encode(bytes))
-}
-
 /// Formatter to format a [`x25519::StaticSecret`] to its public key.
 pub(crate) fn debug_static_secret(
     static_secret: &x25519::StaticSecret,
     formatter: &mut fmt::Formatter<'_>,
 ) -> fmt::Result {
-    debug_bytes_hex(x25519::PublicKey::from(static_secret).as_bytes(), formatter)
+    formatter
+        .debug_tuple("PublicKey")
+        .field(&HEXLOWER_PERMISSIVE.encode(x25519::PublicKey::from(static_secret).as_bytes()))
+        .finish()
 }
 
 /// Makes something name-able.

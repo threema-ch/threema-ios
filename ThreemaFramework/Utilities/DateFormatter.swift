@@ -42,7 +42,6 @@ public final class DateFormatter: NSObject {
     ///
     /// - Parameter date: Date to format
     /// - Returns: Localized short date and medium time (with seconds) string or empty string if `date` is nil
-    @objc
     public static func shortStyleDateTimeSeconds(_ date: Date?) -> String {
         guard let date else {
             return ""
@@ -64,7 +63,6 @@ public final class DateFormatter: NSObject {
     ///
     /// - Parameter date: Date to format
     /// - Returns: Localized medium date and time (with seconds) string or empty string if `date` is nil
-    @objc
     public static func mediumStyleDateTime(_ date: Date?) -> String {
         guard let date else {
             return ""
@@ -121,7 +119,6 @@ public final class DateFormatter: NSObject {
     ///
     /// - Parameter date: Date to format
     /// - Returns: Localized short time (no seconds) string or empty string if `date` is nil
-    @objc
     public static func shortStyleTimeNoDate(_ date: Date?) -> String {
         guard let date else {
             return ""
@@ -163,7 +160,6 @@ public final class DateFormatter: NSObject {
     ///
     /// - Parameter date: Date to format
     /// - Returns: Localized relative long date and short time (no seconds) string
-    @objc
     public static func relativeLongStyleDateShortStyleTime(_ date: Date) -> String {
         if relativeLongStyleDateShortStyleTimeFormatter == nil {
             relativeLongStyleDateShortStyleTimeFormatter = dateFormatterWith(date: .medium, andTime: .short)
@@ -184,7 +180,6 @@ public final class DateFormatter: NSObject {
     ///
     /// - Parameter date: Date to format
     /// - Returns: Localized short day, month and year string or empty string if `date` is nil
-    @objc
     public static func getShortDate(_ date: Date?) -> String {
         guard let date else {
             return ""
@@ -207,7 +202,6 @@ public final class DateFormatter: NSObject {
     /// - Parameter date: Date to format
     /// - Returns: Localized short weekday, medium day, medium month and full year string or empty string if `date` is
     ///            nil
-    @objc
     public static func getDayMonthAndYear(_ date: Date?) -> String {
         guard let date else {
             return ""
@@ -325,7 +319,6 @@ public final class DateFormatter: NSObject {
     /// - Parameter date: Date to format
     /// - Returns: Localized short weekday, medium day, medium month and long year string including short time or empty
     ///            string if `date` is nil
-    @objc
     public static func getFullDate(for date: Date?) -> String {
         guard let date else {
             return ""
@@ -364,7 +357,6 @@ public final class DateFormatter: NSObject {
     ///
     /// - Parameter dateString: Date string in current locale
     /// - Returns: Parsed date or nil if parsing failed
-    @objc
     public static func getDateFromDayMonthAndYearDateString(_ dateString: String) -> Date? {
         let setMediumWeekdayDayMonthAndYearDateFormatter = {
             mediumWeekdayDayMonthAndYearDateFormatter = dateFormatter(for: "EE dd MMM yyyy")
@@ -400,7 +392,6 @@ public final class DateFormatter: NSObject {
     ///
     /// - Parameter dateString: Date string with time in current locale
     /// - Returns: Parsed date or nil if parsing failed
-    @objc
     public static func getDateFromFullDateString(_ dateString: String) -> Date? {
         let setMediumWeekdayDayMonthYearAndTimeDateFormatter = {
             mediumWeekdayDayMonthYearAndTimeDateFormatter = dateFormatter(for: "j:mm EE dd MMM yyyy")
@@ -593,7 +584,6 @@ public final class DateFormatter: NSObject {
     ///
     /// - Parameter date: Date to format
     /// - Returns: Formatted date or empty string if `date` is nil
-    @objc
     public static func getDateForFilename(_ date: Date?) -> String {
         guard let date else {
             return ""
@@ -615,7 +605,6 @@ public final class DateFormatter: NSObject {
     ///
     /// - Parameter date: Date to format
     /// - Returns: Formatted date or empty string if `date` is nil
-    @objc
     public static func getDateForExport(_ date: Date?) -> String {
         guard let date else {
             return ""
@@ -670,7 +659,6 @@ public final class DateFormatter: NSObject {
     ///
     /// - Parameter totalSeconds: Seconds to transform
     /// - Returns: String of format "01:02:03" with hour omitted if it's zero
-    @objc
     public static func timeFormatted(_ totalSeconds: Int) -> String {
         let seconds = totalSeconds % 60
         let minutes = (totalSeconds / 60) % 60

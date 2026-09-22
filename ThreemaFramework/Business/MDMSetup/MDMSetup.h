@@ -1,6 +1,12 @@
 #import <Foundation/Foundation.h>
 #import "ThreemaFramework.h"
 
+// Forward declared because this header is imported by the umbrella header before the ones declaring
+// these protocols
+@protocol UserSettingsProtocol;
+@protocol LicenseStoreProtocol;
+@protocol MyIdentityStoreProtocol;
+
 extern NSString * _Nonnull const MDM_CONFIGURATION_KEY;
 extern NSString * _Nonnull const MDM_FEEDBACK_KEY;
 extern NSString * _Nonnull const MDM_THREEMA_CONFIGURATION_KEY;
@@ -71,6 +77,9 @@ typedef enum : int {
 
 @interface MDMSetup : NSObject
 
+/// `BusinessInjector` used for the MD sync of MDM parameters
+///
+/// Resolved eagerly in the initializer. `nil` while the app setup is incomplete.
 @property (readonly, nullable) NSObject *businessInjector;
 
 @property (readonly, assign) NSString *idBackup;

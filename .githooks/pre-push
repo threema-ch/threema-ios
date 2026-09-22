@@ -3,4 +3,5 @@ set -euo pipefail
 
 mise trust "$(git rev-parse --show-toplevel)/mise.toml"
 mise run format --lint
+mise run lint
 echo "Pre-Push Success!"

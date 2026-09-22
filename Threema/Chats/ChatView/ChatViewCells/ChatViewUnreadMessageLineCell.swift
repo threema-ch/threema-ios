@@ -187,7 +187,7 @@ final class ChatViewUnreadMessageLineCell: ThemedCodeTableViewCell {
         rightLineView.updateColors()
     }
     
-    @objc func preferredContentSizeChanged(_ notification: Notification) {
+    @objc private func preferredContentSizeChanged(_ notification: Notification) {
         // This doesn't work, because the content values are static and not reset when content size category changes
         // only a relaunch of the app changes this (IOS-3998)
         textBox.font = Config.font

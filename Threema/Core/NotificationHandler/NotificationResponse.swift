@@ -83,7 +83,7 @@ final class NotificationResponse {
         }
     }
 
-    @objc convenience init(response: UNNotificationResponse, completion: @escaping (() -> Void)) {
+    convenience init(response: UNNotificationResponse, completion: @escaping (() -> Void)) {
         let businessInjector = BusinessInjector.ui
         self.init(
             businessInjector: businessInjector,
@@ -93,7 +93,7 @@ final class NotificationResponse {
         )
     }
 
-    @objc func handleNotificationResponse() {
+    func handleNotificationResponse() {
         BackgroundTaskManager.shared.newBackgroundTask(
             key: notificationIdentifier,
             timeout: Int(kAppPushReplyBackgroundTaskTime)
@@ -113,9 +113,7 @@ final class NotificationResponse {
             .Category.singleCategory.rawValue || categoryIdentifier == NotificationActionProvider.Category.groupCategory
             .rawValue {
 
-            if !businessInjector.userSettings.ipcCommunicationEnabled {
-                AppGroup.setMeActive()
-            }
+            AppGroup.setMeActiveUnlessIPC(userSettings: businessInjector.userSettings)
 
             if actionIdentifier == NotificationActionProvider.Action.replyAction.rawValue {
                 handleReplyMessage()
@@ -128,6 +126,10 @@ final class NotificationResponse {
                     payload: userInfo,
                     receivedWhileRunning: false
                 )
+                // The system keeps the response delivery open until the completion
+                // handler is called; leaving it open stalls every later notification
+                // center request in this process.
+                finishResponse()
             }
         }
         else if categoryIdentifier == NotificationActionProvider.Category.callCategory.rawValue {
@@ -319,7 +321,8 @@ final class NotificationResponse {
 
         ServerConnectorHelper.connectAndWaitUntilConnected(initiator: .notificationExtension, timeout: 20) {
             if let contact = self.businessInjector.entityManager.entityFetcher.contactEntity(for: identity) {
-                VoIPCallStateManager.shared.startCall(callee: contact.identity) {
+                Task { @MainActor in
+                    CallProvider.shared.startOutgoingCall(with: contact.identity)
                     self.finishResponse()
                 }
             }

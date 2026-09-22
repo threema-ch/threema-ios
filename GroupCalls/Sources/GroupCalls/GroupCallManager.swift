@@ -21,6 +21,8 @@ public final actor GroupCallManager {
         case keep
         case remove
         case retry
+        // The peek did not succeed, but the call might still be running. It is kept and skipped for this round.
+        case skip
     }
     
     // MARK: - Private Properties
@@ -77,18 +79,14 @@ public final actor GroupCallManager {
         DDLogNotice("[GroupCall] [Message Processor] \(#function) with callID \(proposedGroupCall.hexCallID)")
         
         // As a precautionary measure, it is advisable to refrain from calling the startPeriodicCheckIfNeeded function
-        // from
-        // the extension. This action will initiate a refresh timer that is not appropriate for execution within the
-        // extension’s context.
-        if calledFromExtension {
-            try? await runPeriodicRefresh()
-        }
-        else {
+        // from the extension. This action will initiate a refresh timer that is not appropriate for execution
+        // within the extension’s context.
+        if !calledFromExtension {
             startPeriodicCheckIfNeeded()
         }
-        
+
         let groupModel = proposedGroupCall.groupRepresentation
-        
+
         do {
             let newGroupCall = try GroupCallActor(
                 localContactModel: localContactModel,
@@ -98,14 +96,28 @@ public final actor GroupCallManager {
                 actorDelegate: self,
                 dependencies: dependencies
             )
-            
+
             addGroupCall(newGroupCall)
-            
-            try await refreshRunningGroupCalls(in: groupModel.groupIdentity)
-            
+
+            // The call might have ended before we were able to process its start message. We only skip the incoming
+            // call notification if the SFU explicitly told us that the call is no longer running; if we cannot
+            // determine the state we notify, since missing a running call is worse than a notification for a call
+            // that has just ended.
+            let callMightBeRunning: Bool
+
+            if calledFromExtension {
+                // The refresh steps must not run in an extension context: they may remove calls and delete their
+                // database entities, which the app would then never see. Peeking is read-only and thus safe.
+                callMightBeRunning = await mightStillBeRunning(newGroupCall)
+            }
+            else {
+                try await refreshRunningGroupCalls(in: groupModel.groupIdentity)
+                callMightBeRunning = groupCalls(in: groupModel).contains(newGroupCall)
+            }
+
             switch creatorOrigin {
             case let .remote(threemaID):
-                // Started by ourselves in another device
+                // Started by ourselves on another device
                 if threemaID == localContactModel.identity {
                     try await dependencies.groupCallSystemMessageAdapter.post(
                         .groupCallStarted(proposedGroupCall.startMessageReceiveDate),
@@ -117,7 +129,15 @@ public final actor GroupCallManager {
                         .groupCallStartedBy(threemaID, proposedGroupCall.startMessageReceiveDate),
                         in: groupModel
                     )
-                    showIncomingGroupCallNotification(groupModel: groupModel, senderThreemaID: threemaID)
+
+                    if callMightBeRunning {
+                        showIncomingGroupCallNotification(groupModel: groupModel, senderThreemaID: threemaID)
+                    }
+                    else {
+                        DDLogNotice(
+                            "[GroupCall] Do not show a notification for call \(newGroupCall.callID) because it is no longer running"
+                        )
+                    }
                 }
             case .local:
                 try await dependencies.groupCallSystemMessageAdapter.post(
@@ -172,9 +192,10 @@ public final actor GroupCallManager {
         /// **Protocol Step: Create or Join (1.)**
         /// 1. Let intent be the user's intent, i.e. to either only join or create or join a group call.
         
-        /// 2. Refresh the SFU Token if necessary. If the SFU Token refresh fails within 10s, abort these steps and
+        /// 2. Refresh the SFU Token if necessary. If the SFU Token refresh fails within 15s, abort these steps and
         /// notify the user.
-        guard let refreshedToken = try await dependencies.httpHelper.refreshTokenWithTimeout(10) else {
+        guard let refreshedToken = try await dependencies.httpHelper
+            .refreshTokenWithTimeout(ProtocolDefines.tokenRefreshTimeout) else {
             isCurrentlyJoiningOrJoinedCall = false
             throw GroupCallError.creationError
         }
@@ -275,6 +296,21 @@ public final actor GroupCallManager {
         return createdCall
     }
     
+    /// Peeks the given call without running any of the refresh steps, since those may remove the call and delete its
+    /// database entity.
+    /// - Returns: `false` only if the SFU told us that the call is no longer running
+    private func mightStillBeRunning(_ groupCall: GroupCallActor) async -> Bool {
+        do {
+            return try await groupCall.stillRunning() != .ended
+        }
+        catch {
+            DDLogWarn(
+                "[GroupCall] Could not peek call \(groupCall.callID): \(error). Assume that it is still running"
+            )
+            return true
+        }
+    }
+
     private func showIncomingGroupCallNotification(
         groupModel: GroupCallThreemaGroupModel,
         senderThreemaID: ThreemaIdentity
@@ -401,6 +437,11 @@ extension GroupCallManager {
         
         // The full task will be tried to rerun by `GroupCallManager` after 10s or wait for the current running task
         // if it hasn't completed
+        //
+        // Note: The protocol removes calls with an unknown or failed peek result from `calls` for this round, which
+        // would hide the banner until the next successful peek. We deliberately keep them eligible and keep showing
+        // their last known state instead, so that a short connectivity loss does not make the banner flicker. Calls
+        // with an unsupported protocol version are excluded in `getCurrentlyChosenCall(from:)`.
         if let actor = try await getCurrentlyChosenCall(from: currentCalls) {
             let buttonAndBannerUpdate = await GroupCallBannerButtonUpdate(actor: actor, hideComponent: false)
             
@@ -424,81 +465,119 @@ extension GroupCallManager {
             /// **Protocol Step: Periodic Refresh (3.1. - 3.4.)**
             switch try await periodicRefresh(for: groupCall) {
             case .keep:
+                /// **Protocol Step: Periodic Refresh** 3.5 Reset the call's failed counter to 0.
+                await groupCall.resetFailedCounter()
+
+                /// **Protocol Step: Periodic Refresh** 3.6. If the protocol version of the call is not supported,
+                /// remove call from calls (but keep it in running), log a warning that a group call with an
+                /// unsupported version is currently running and abort the peek-call sub-steps.
+                warnIfUnsupportedProtocolVersion(groupCall)
                 return
-                
+
+            case .skip:
+                return
+
             case .remove:
-                await remove(groupCall)
-                
-                do {
-                    let group = groupCall.group
-                    try await dependencies.groupCallSystemMessageAdapter.post(.groupCallEnded, in: group)
-                }
-                catch {
-                    if let error = error as? GroupCallSystemMessageAdapterError {
-                        DDLogError(
-                            "[GroupCall] An error occurred when attempting to post a system message: \(error)"
-                        )
-                    }
-                }
+                await removeAndPostCallEnded(groupCall)
                 return
-                
+
             // TODO: (IOS-4070) This should probably not exist, we should retry in periodic refresh directly, for legibility.
             case .retry:
                 /// **Protocol Step: Periodic Refresh** 3.3.1. Refresh the SFU Token. If the SFU Token refresh
-                /// fails or does not yield an SFU Token within 10s, remove call from calls and abort the
-                /// peek-call sub-steps.
+                /// fails or does not yield an SFU Token within 10s, remove call from calls (but keep it in
+                /// running) and abort the peek-call sub-steps.
                 let task = Task {
                     try await dependencies.httpHelper.sfuCredentials()
                 }
-                
+
                 switch try await Task.timeout(task, 10) {
                 case let .error(error):
-                    await remove(groupCall)
-                    if let error {
-                        throw error
+                    DDLogWarn(
+                        "[GroupCall] [PeriodicCleanup] Token refresh for call with id \(groupCall.callID) failed: \(String(describing: error)). Keeping call"
+                    )
+                    if await failedPeekResult(for: groupCall) == .remove {
+                        await removeAndPostCallEnded(groupCall)
                     }
-                    
+
                 case .timeout:
-                    await remove(groupCall)
-                    
+                    DDLogWarn(
+                        "[GroupCall] [PeriodicCleanup] Token refresh for call with id \(groupCall.callID) timed out. Keeping call"
+                    )
+                    if await failedPeekResult(for: groupCall) == .remove {
+                        await removeAndPostCallEnded(groupCall)
+                    }
+
                 case .result:
                     /// **Protocol Step: Periodic Refresh** 3.3.3. Restart the peek-call sub-steps for this
                     /// call.
                     switch try await periodicRefresh(for: groupCall) {
-                    case .remove, .retry:
-                        await remove(groupCall)
                     case .keep:
                         await groupCall.resetFailedCounter()
+                        warnIfUnsupportedProtocolVersion(groupCall)
+
+                    case .remove:
+                        await removeAndPostCallEnded(groupCall)
+
+                    case .retry, .skip:
+                        // We do not retry more than once per round. The call is kept and peeked again in the
+                        // next round.
                         return
                     }
                 }
             }
         }
         catch {
-            // Any relevant network errors have already been handled by the peek steps
             // The peek might be cancelled due to a new one starting, but we do not want to remove the call in this
             // case.
-            if !(error is CancellationError) {
-                let message = "[GroupCall] An error occurred. Removing call. \(error)."
-                assertionFailure(message)
-                DDLogError("\(message)")
-                await remove(groupCall)
+            guard !(error is CancellationError) else {
+                return
+            }
+
+            // Any other error is treated like a failed peek: the call is kept and handled by the failed-counter
+            // path, since the call might still be running (e.g. the SFU was temporarily unreachable).
+            DDLogWarn(
+                "[GroupCall] [PeriodicCleanup] An error occurred when peeking call with id \(groupCall.callID): \(error). Keeping call"
+            )
+            if await failedPeekResult(for: groupCall) == .remove {
+                await removeAndPostCallEnded(groupCall)
             }
             return
         }
-        
-        /// **Protocol Step: Periodic Refresh** 3.5 Reset the call's failed counter to 0.
-        await groupCall.resetFailedCounter()
-        
-        /// **Protocol Step: Periodic Refresh** 3.6. If the protocol version of the call is not supported,
-        /// remove call from calls, log a warning that a group call with an unsupported version is currently
-        /// running and abort the peek-call sub-steps.
-        
+    }
+
+    private func removeAndPostCallEnded(_ groupCall: GroupCallActor) async {
+        await remove(groupCall)
+
+        do {
+            let group = groupCall.group
+            try await dependencies.groupCallSystemMessageAdapter.post(.groupCallEnded, in: group)
+        }
+        catch {
+            if let error = error as? GroupCallSystemMessageAdapterError {
+                DDLogError(
+                    "[GroupCall] An error occurred when attempting to post a system message: \(error)"
+                )
+            }
+        }
+    }
+
+    /// **Protocol Step: Periodic Refresh** 3.4.3 & 3.4.4: The call is removed only if its failed counter is >= 3
+    /// **and** it was received more than 10h ago. Otherwise the failed counter is incremented and the call is kept.
+    private nonisolated func failedPeekResult(for groupCallActor: GroupCallActor) async -> PeriodicRefreshResult {
+        let failedCounter = await groupCallActor.failedCounter
+        if failedCounter >= 3, groupCallActor.receivedMoreThan10HoursAgo {
+            return .remove
+        }
+
+        await groupCallActor.incrementFailedCounter()
+        return .skip
+    }
+
+    private nonisolated func warnIfUnsupportedProtocolVersion(_ groupCall: GroupCallActor) {
         if groupCall.protocolVersion > ProtocolDefines.protocolVersion {
             DDLogWarn(
-                "[GroupCall] Protocol version of currently running group call (\(groupCall.protocolVersion)) is not the same as supported version (\(ProtocolDefines.protocolVersion))."
+                "[GroupCall] Protocol version of currently running group call (\(groupCall.protocolVersion)) is not the same as supported version (\(ProtocolDefines.protocolVersion)). Keeping call"
             )
-            await remove(groupCall)
         }
     }
     
@@ -529,31 +608,27 @@ extension GroupCallManager {
             /// **Protocol Step: Periodic Refresh** 3.4.2. If the received status code is 404, remove call from running
             /// and abort the peek-call sub-steps.
             return .remove
-            
+
         case .timeout:
-            // This means we did not receive an answer within 5s, see Periodic Refresh step 3.2.
-            return .remove
-            
+            /// **Protocol Step: Group Call Peek Steps** 4.: No answer within the peek timeout means the status is
+            /// unknown. The call is kept in running and skipped for this round.
+            return .skip
+
         case .invalid:
             /// **Protocol Step: Periodic Refresh** 3.4: If the server could not be reached or the received status code
-            /// is not 200 or if the Peek response could not be decoded:
-            
-            /// **Protocol Step: Periodic Refresh** 3.4.3 If the call's failed counter is >= 3 and the call was received
-            /// more than 10h ago, remove call from running and abort the peek-call sub-steps.
-            guard await groupCallActor.failedCounter < 3, !groupCallActor.receivedMoreThan10HoursAgo else {
-                return .remove
-            }
-            
-            /// **Protocol Step: Periodic Refresh** 3.4.4. Increase the failed counter for call by 1 and abort the
-            /// peek-call sub-steps.
-            await groupCallActor.incrementFailedCounter()
-            return .retry
-            
+            /// is not 200 or if the Peek response could not be decoded, the peek failed:
+
+            /// **Protocol Step: Periodic Refresh** 3.4.3 & 3.4.4: Remove only if the failed counter is >= 3 and the
+            /// call was received more than 10h ago; otherwise increment the failed counter and keep the call.
+            return await failedPeekResult(for: groupCallActor)
+
         case .invalidToken:
             /// **Protocol Step: Periodic Refresh** 3.3 If the received status code for call is 401 and call is not
             /// marked with token-refreshed:
             guard await !(groupCallActor.tokenRefreshed) else {
-                return .remove
+                // The token was already refreshed for this call, but we still get a 401. The call might still be
+                // running, so it is handled by the failed-counter path instead of being removed.
+                return await failedPeekResult(for: groupCallActor)
             }
             
             /// **Protocol Step: Periodic Refresh** 3.3.1. Refresh the SFU Token. If the SFU Token refresh fails or
@@ -574,11 +649,24 @@ extension GroupCallManager {
         from currentCalls: Set<GroupCallActor>?
     ) async throws -> GroupCallActor? {
         var currentlyChosenCall: GroupCallActor?
-        
-        guard let thisGroupGroupCalls = currentCalls else {
+
+        guard let currentCalls else {
             return nil
         }
-        
+
+        /// **Protocol Step: Periodic Refresh** 3.6: A call with an unsupported protocol version stays in `running`, but
+        /// it was removed from `calls` and thus must never become the chosen call.
+        let thisGroupGroupCalls = currentCalls.filter { groupCall in
+            guard groupCall.protocolVersion > ProtocolDefines.protocolVersion else {
+                return true
+            }
+
+            DDLogWarn(
+                "[GroupCall] Do not choose call \(groupCall.callID) because its protocol version (\(groupCall.protocolVersion)) is not supported"
+            )
+            return false
+        }
+
         /// **Protocol Step: Periodic Refresh** 5. Let chosen-call be any call of calls with the highest started_at
         /// value (i.e. the most recently created call) as provided by the peek result.
         for groupCall in thisGroupGroupCalls {
@@ -663,18 +751,20 @@ extension GroupCallManager {
             switch await groupCall.joinState() {
             case .joining:
                 wasJoiningCall = true
+                // We are switching calls, not leaving. Handing the call we are in over to `currentlyChosenCall` before
+                // leaving the old one keeps the group call UI alive, it is reused for the call we join below.
+                currentlyJoiningOrJoinedCall = currentlyChosenCall
                 await groupCall.forceLeaveCall()
                 await remove(groupCall)
-                currentlyJoiningOrJoinedCall = nil
                 DDLogNotice("[GroupCall] [Peek Steps] Stopping running call \(groupCall.callID)")
-                
+
             case .joined:
                 wasParticipatingInCall = true
+                currentlyJoiningOrJoinedCall = currentlyChosenCall
                 await groupCall.forceLeaveCall()
                 await remove(groupCall)
-                currentlyJoiningOrJoinedCall = nil
                 DDLogNotice("[GroupCall] [Peek Steps] Stopping joined call \(groupCall.callID)")
-                
+
             case .notJoined:
                 continue
             }
@@ -689,13 +779,7 @@ extension GroupCallManager {
         if wasJoiningCall {
             assert(!wasParticipatingInCall)
             DDLogNotice("[GroupCall] [Peek Steps] Joining call \(currentlyChosenCall.callID)")
-            try await currentlyChosenCall.join(intent: .join)
-            currentlyJoiningOrJoinedCall = currentlyChosenCall
-            let viewController = await GroupCallViewController(
-                viewModel: currentlyChosenCall.viewModel,
-                dependencies: dependencies
-            )
-            singletonDelegate?.showGroupCallViewController(viewController: viewController)
+            try await joinAndShow(currentlyChosenCall)
         }
         /// **Protocol Step: Periodic Refresh (9.)**
         /// 9. If the user is currently participating in a group call of this group that is different to `chosen-call`,
@@ -704,18 +788,34 @@ extension GroupCallManager {
         else if wasParticipatingInCall {
             DDLogNotice("[GroupCall] [Peek Steps] Joining call \(currentlyChosenCall.callID)")
             assert(!wasJoiningCall)
-            try await currentlyChosenCall.join(intent: .join)
-            currentlyJoiningOrJoinedCall = currentlyChosenCall
-            let viewController = await GroupCallViewController(
-                viewModel: currentlyChosenCall.viewModel,
-                dependencies: dependencies
-            )
-            singletonDelegate?.showGroupCallViewController(viewController: viewController)
+            try await joinAndShow(currentlyChosenCall)
         }
         
         /// **Protocol Step: Periodic Refresh (10.)**
         /// 10. Return `chosen-call`.
         return currentlyChosenCall
+    }
+
+    /// Joins the call we switched to and shows its UI
+    ///
+    /// Only use this when switching to another call of the same group, i.e. when `currentlyJoiningOrJoinedCall` was
+    /// already handed over to `groupCall` before leaving the call we were in.
+    private func joinAndShow(_ groupCall: GroupCallActor) async throws {
+        do {
+            try await groupCall.join(intent: .join)
+        }
+        catch {
+            currentlyJoiningOrJoinedCall = nil
+            throw error
+        }
+
+        currentlyJoiningOrJoinedCall = groupCall
+
+        let viewController = await GroupCallViewController(
+            viewModel: groupCall.viewModel,
+            dependencies: dependencies
+        )
+        singletonDelegate?.showGroupCallViewController(viewController: viewController)
     }
 }
 
@@ -731,9 +831,16 @@ extension GroupCallManager: GroupCallActorManagerDelegate {
     }
 
     func removeFromRunningGroupCalls(groupCall: GroupCallActor) async {
-        if groupCall == currentlyJoiningOrJoinedCall {
-            currentlyJoiningOrJoinedCall = nil
+        // This is also called for calls the local user never participated in, and twice for the same call (when leaving
+        // and when tearing it down). Only the transition away from the call we are in is of interest.
+        guard groupCall == currentlyJoiningOrJoinedCall else {
+            return
         }
+
+        currentlyJoiningOrJoinedCall = nil
+
+        // Note that the call itself might still be running with other participants
+        singletonDelegate?.localUserLeftGroupCall(in: groupCall.group.groupIdentity)
     }
     
     func updateGroupCallButtonsAndBanners(groupCallBannerButtonUpdate: GroupCallBannerButtonUpdate) async {

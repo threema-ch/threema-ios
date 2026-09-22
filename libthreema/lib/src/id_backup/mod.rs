@@ -1,9 +1,11 @@
 //! Implementation of the Threema ID Backup.
 use core::str;
 
-use data_encoding::BASE32;
+use libthreema_dependencies::{
+    data_encoding::BASE32,
+    rand::{self, RngCore as _},
+};
 use libthreema_macros::concat_fixed_bytes;
-use rand::RngCore as _;
 use zeroize::ZeroizeOnDrop;
 
 use crate::common::{ThreemaId, keys::ClientKey};
@@ -26,7 +28,7 @@ pub enum IdentityBackupError {
     /// Invalid parameter provided by foreign code.
     #[cfg(feature = "uniffi")]
     #[error("Invalid parameter: {0}")]
-    InvalidParameter(&'static str),
+    InvalidParameter(String),
 
     /// The decoding failed.
     #[error("Decoding failed: {0}")]
@@ -48,20 +50,26 @@ pub enum IdentityBackupError {
     #[error("Encryption failed")]
     EncryptionFailed,
 }
+#[cfg(feature = "uniffi")]
+impl From<crate::bindings::uniffi::ConversionError> for IdentityBackupError {
+    fn from(error: crate::bindings::uniffi::ConversionError) -> Self {
+        Self::InvalidParameter(error.to_string())
+    }
+}
 
 #[derive(ZeroizeOnDrop)]
-struct BackupKey([u8; BackupKey::LENGTH]);
+struct BackupKey([u8; Self::LENGTH]);
 impl BackupKey {
     const LENGTH: usize = 32;
 }
 
 #[derive(Clone, Copy)]
-struct Salt([u8; Salt::LENGTH]);
+struct Salt([u8; Self::LENGTH]);
 impl Salt {
     const LENGTH: usize = 8;
 
     fn random() -> Self {
-        let mut res = [0; Salt::LENGTH];
+        let mut res = [0; Self::LENGTH];
         rand::thread_rng().fill_bytes(&mut res);
         Self(res)
     }
@@ -91,7 +99,7 @@ pub enum BackupVersion {
 #[derive(Debug)]
 pub struct IdentityBackupData {
     /// The user's identity.
-    pub threema_id: ThreemaId,
+    pub identity: ThreemaId,
 
     /// Client key.
     pub client_key: ClientKey,
@@ -109,21 +117,20 @@ impl IdentityBackupData {
         })?;
         let client_key = <[u8; ClientKey::LENGTH]>::try_from(client_key)
             .map_err(|_| IdentityBackupError::DecodingFailed("Invalid CK length in decrypted backup data"))?;
-        Ok(IdentityBackupData {
-            threema_id,
+        Ok(Self {
+            identity: threema_id,
             client_key: ClientKey::from(client_key),
         })
     }
 
     fn encode(&self) -> [u8; Self::LENGTH] {
-        concat_fixed_bytes!(self.threema_id.to_bytes(), *self.client_key.as_bytes())
+        concat_fixed_bytes!(self.identity.to_bytes(), *self.client_key.as_bytes())
     }
 }
-
 #[cfg(test)]
 impl PartialEq for IdentityBackupData {
     fn eq(&self, other: &Self) -> bool {
-        self.threema_id == other.threema_id && self.client_key.as_bytes() == other.client_key.as_bytes()
+        self.identity == other.identity && self.client_key.as_bytes() == other.client_key.as_bytes()
     }
 }
 
@@ -220,7 +227,7 @@ pub fn decrypt_identity_backup(
 #[cfg(test)]
 mod tests {
     use assert_matches::assert_matches;
-    use data_encoding::HEXLOWER;
+    use libthreema_dependencies::data_encoding::HEXLOWER_PERMISSIVE;
 
     use super::*;
 
@@ -229,14 +236,14 @@ mod tests {
     pub(crate) fn backup_data() -> IdentityBackupData {
         let threema_id = ThreemaId::try_from("0ZAHXXHB").expect("Threema ID should be valid");
         let client_key = {
-            let client_key = HEXLOWER
+            let client_key = HEXLOWER_PERMISSIVE
                 .decode(b"255d619ebec82341a5abe0b3ff736f900faa3eda1cb86b34f102394f86a41b2c")
                 .unwrap();
             let client_key: [u8; ClientKey::LENGTH] = client_key.as_slice().try_into().unwrap();
             ClientKey::from(client_key)
         };
         IdentityBackupData {
-            threema_id,
+            identity: threema_id,
             client_key,
         }
     }
@@ -285,7 +292,7 @@ mod tests {
         let (backup_version, decrypted_backup) = decrypt_identity_backup(PASSWORD, &encrypted_backup)?;
 
         assert_eq!(backup_version, BackupVersion::Legacy);
-        assert_eq!(decrypted_backup.threema_id, backup_data.threema_id);
+        assert_eq!(decrypted_backup.identity, backup_data.identity);
         assert_eq!(
             decrypted_backup.client_key.as_bytes(),
             backup_data.client_key.as_bytes(),
@@ -303,7 +310,7 @@ mod tests {
         let (backup_version, decrypted_backup) = decrypt_identity_backup("testpassword", encrypted_backup)?;
 
         assert_eq!(backup_version, BackupVersion::Legacy);
-        assert_eq!(decrypted_backup.threema_id, backup_data.threema_id);
+        assert_eq!(decrypted_backup.identity, backup_data.identity);
         assert_eq!(
             decrypted_backup.client_key.as_bytes(),
             backup_data.client_key.as_bytes(),
@@ -321,7 +328,7 @@ mod tests {
         let (backup_version, decrypted_backup) = decrypt_identity_backup(PASSWORD, encrypted_backup)?;
 
         assert_eq!(backup_version, BackupVersion::ArgonChachaPolyV1);
-        assert_eq!(decrypted_backup.threema_id, backup_data.threema_id);
+        assert_eq!(decrypted_backup.identity, backup_data.identity);
         assert_eq!(
             decrypted_backup.client_key.as_bytes(),
             backup_data.client_key.as_bytes(),

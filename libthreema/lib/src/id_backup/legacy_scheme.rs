@@ -6,16 +6,16 @@
 //! 4K4M-5Q6T-KFUH-KHL5-2VCJ-ZM57-NL7R-WJTA-V45L-NJAM-
 //! WLEU-5DS4-XF7S-OPH4-CTCL-N2CF-3C4C-HPB7-YZWW-U3S6
 //! ```
+use libthreema_dependencies::crypto::{
+    cipher::{KeyIvInit as _, StreamCipher as _},
+    deprecated::{pbkdf2::pbkdf2_hmac_array, salsa20},
+    digest::Digest as _,
+    sha2,
+    subtle::ConstantTimeEq as _,
+};
 use libthreema_macros::concat_fixed_bytes;
 
 use super::{BackupKey, IdentityBackupData, IdentityBackupError, Salt};
-use crate::crypto::{
-    cipher::{KeyIvInit as _, StreamCipher as _},
-    deprecated::{pbkdf2::pbkdf2_hmac_array, salsa20::XSalsa20},
-    digest::Digest as _,
-    sha2::Sha256,
-    subtle::ConstantTimeEq as _,
-};
 
 const HASH_LENGTH: usize = 2;
 const BACKUP_KEY_LENGTH: usize = 32;
@@ -33,7 +33,7 @@ pub(super) const ENCRYPTED_LENGTH: usize = Salt::LENGTH + IdentityBackupData::LE
 
 /// Derive the symmetric backup encryption key.
 fn derive_key(password: &str, salt: Salt) -> BackupKey {
-    BackupKey(pbkdf2_hmac_array::<Sha256, BACKUP_KEY_LENGTH>(
+    BackupKey(pbkdf2_hmac_array::<sha2::Sha256, BACKUP_KEY_LENGTH>(
         password.as_bytes(),
         &salt.0,
         PBKDF_ITERATIONS,
@@ -42,7 +42,7 @@ fn derive_key(password: &str, salt: Salt) -> BackupKey {
 
 /// Return the first two bytes of the SHA256 hash of the concatenation of the Threema ID and the client key.
 fn get_digest(data: &[u8]) -> [u8; HASH_LENGTH] {
-    let hash = Sha256::new().chain_update(data).finalize();
+    let hash = sha2::Sha256::new().chain_update(data).finalize();
     hash.get(..HASH_LENGTH)
         .expect("SHA-256 hash should have at least 2 bytes")
         .try_into()
@@ -61,7 +61,7 @@ pub(super) fn encrypt(password: &str, backup_data: &IdentityBackupData) -> [u8; 
     let key = derive_key(password, salt);
 
     // XOR with keystream
-    XSalsa20::new(&key.0.into(), &NONCE.into()).apply_keystream(&mut backup_data);
+    salsa20::XSalsa20::new(&key.0.into(), &NONCE.into()).apply_keystream(&mut backup_data);
 
     // Prepend the salt to the ciphertext
     concat_fixed_bytes!(salt.0, backup_data)
@@ -93,7 +93,7 @@ pub(super) fn decrypt(
     // Decrypt the backup with the extracted salt and hardcoded nonce
     let decrypted_data = {
         let key = derive_key(password, salt);
-        XSalsa20::new(&key.0.into(), &NONCE.into()).apply_keystream(encrypted_data);
+        salsa20::XSalsa20::new(&key.0.into(), &NONCE.into()).apply_keystream(encrypted_data);
         encrypted_data
     };
     let (backup_data, extracted_hash) = (
@@ -198,7 +198,7 @@ mod tests {
     #[test]
     fn invalid_backup_data() {
         let backup_data = IdentityBackupData {
-            threema_id: ThreemaId::predefined(*b"!$%&/()="),
+            identity: ThreemaId::predefined(*b"!$%&/()="),
             client_key: ClientKey::from([0_u8; ClientKey::LENGTH]),
         };
 
@@ -227,7 +227,7 @@ mod tests {
         let encrypted_backup = encrypt(PASSWORD, &backup_data);
         let decrypted_backup = decrypt(PASSWORD, encrypted_backup.to_vec())?;
 
-        assert_eq!(backup_data.threema_id, decrypted_backup.threema_id);
+        assert_eq!(backup_data.identity, decrypted_backup.identity);
         assert_eq!(
             backup_data.client_key.as_bytes(),
             decrypted_backup.client_key.as_bytes()
@@ -244,7 +244,7 @@ mod tests {
             WLEU-5DS4-XF7S-OPH4-CTCL-N2CF-3C4C-HPB7-YZWW-U3S6";
         let decrypted_backup = decrypt(PASSWORD, decode_chunked_base32(encrypted_backup)?)?;
 
-        assert_eq!(decrypted_backup.threema_id, backup_data.threema_id);
+        assert_eq!(decrypted_backup.identity, backup_data.identity);
         assert_eq!(
             decrypted_backup.client_key.as_bytes(),
             backup_data.client_key.as_bytes(),

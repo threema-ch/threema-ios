@@ -22,7 +22,7 @@ import SwiftProtobuf
 // incompatible with the version of SwiftProtobuf to which you are linking.
 // Please ensure that you are building against the same version of the API
 // that was used to generate this file.
-fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAPIVersionCheck {
+fileprivate nonisolated struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAPIVersionCheck {
   struct _2: SwiftProtobuf.ProtobufAPIVersion_2 {}
   typealias Version = _2
 }
@@ -32,7 +32,7 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
 /// IMPORTANT: The flags determine what a device/contact is capable of, not
 /// whether the settings allow for it. For example, group calls may be supported
 /// but ignored if disabled in the settings.
-public enum Common_CspFeatureMaskFlag: SwiftProtobuf.Enum, Swift.CaseIterable {
+public nonisolated enum Common_CspFeatureMaskFlag: SwiftProtobuf.Enum, Swift.CaseIterable {
   public typealias RawValue = Int
 
   /// No features available
@@ -131,7 +131,7 @@ public enum Common_CspFeatureMaskFlag: SwiftProtobuf.Enum, Swift.CaseIterable {
 }
 
 /// E2E message type as defined by the Chat Server Protocol.
-public enum Common_CspE2eMessageType: SwiftProtobuf.Enum, Swift.CaseIterable {
+public nonisolated enum Common_CspE2eMessageType: SwiftProtobuf.Enum, Swift.CaseIterable {
   public typealias RawValue = Int
 
   /// Invalid message type
@@ -448,7 +448,7 @@ public enum Common_CspE2eMessageType: SwiftProtobuf.Enum, Swift.CaseIterable {
 
 /// A unit that may be used in a `oneof` option without any values.
 /// Note: We're using this to simulate tagged unions.
-public struct Common_Unit: Sendable {
+public nonisolated struct Common_Unit: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -459,7 +459,7 @@ public struct Common_Unit: Sendable {
 }
 
 /// Threema Blob to be uploaded/downloaded from the Blob server.
-public struct Common_Blob: Sendable {
+public nonisolated struct Common_Blob: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -484,7 +484,7 @@ public struct Common_Blob: Sendable {
 }
 
 /// Inline Blob data.
-public struct Common_BlobData: Sendable {
+public nonisolated struct Common_BlobData: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -501,7 +501,7 @@ public struct Common_BlobData: Sendable {
 }
 
 /// Generic image.
-public struct Common_Image: Sendable {
+public nonisolated struct Common_Image: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -521,7 +521,7 @@ public struct Common_Image: Sendable {
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
   /// Format type of the image
-  public enum TypeEnum: SwiftProtobuf.Enum, Swift.CaseIterable {
+  public nonisolated enum TypeEnum: SwiftProtobuf.Enum, Swift.CaseIterable {
     public typealias RawValue = Int
     case jpeg // = 0
     case UNRECOGNIZED(Int)
@@ -557,7 +557,7 @@ public struct Common_Image: Sendable {
 }
 
 /// Unique group identity.
-public struct Common_GroupIdentity: Sendable {
+public nonisolated struct Common_GroupIdentity: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -577,7 +577,7 @@ public struct Common_GroupIdentity: Sendable {
 ///
 /// Note: Lack of presence generally means that the image should remain
 ///       unchanged.
-public struct Common_DeltaImage: Sendable {
+public nonisolated struct Common_DeltaImage: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -604,7 +604,7 @@ public struct Common_DeltaImage: Sendable {
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public enum OneOf_Image: Equatable, Sendable {
+  public nonisolated enum OneOf_Image: Equatable, Sendable {
     /// The image is empty or was explicitly removed
     case removed(Common_Unit)
     /// The new updated image
@@ -618,7 +618,7 @@ public struct Common_DeltaImage: Sendable {
 /// Timespan (year 1970+) with milliseconds accuracy.
 ///
 /// Note: This message is invalid if `to` is smaller than `from`.
-public struct Common_Timespan: Sendable {
+public nonisolated struct Common_Timespan: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -635,7 +635,7 @@ public struct Common_Timespan: Sendable {
 }
 
 /// Container for a list of identities.
-public struct Common_Identities: Sendable {
+public nonisolated struct Common_Identities: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -649,7 +649,7 @@ public struct Common_Identities: Sendable {
 }
 
 /// Generic 2D resolution
-public struct Common_Resolution: Sendable {
+public nonisolated struct Common_Resolution: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -665,17 +665,17 @@ public struct Common_Resolution: Sendable {
 
 // MARK: - Code below here is support for the SwiftProtobuf runtime.
 
-fileprivate let _protobuf_package = "common"
+fileprivate nonisolated let _protobuf_package = "common"
 
-extension Common_CspFeatureMaskFlag: SwiftProtobuf._ProtoNameProviding {
+nonisolated extension Common_CspFeatureMaskFlag: SwiftProtobuf._ProtoNameProviding {
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0NONE\0\u{1}VOICE_MESSAGE_SUPPORT\0\u{1}GROUP_SUPPORT\0\u{2}\u{2}POLL_SUPPORT\0\u{2}\u{4}FILE_MESSAGE_SUPPORT\0\u{2}\u{8}O2O_AUDIO_CALL_SUPPORT\0\u{2}\u{10}O2O_VIDEO_CALL_SUPPORT\0\u{2} FORWARD_SECURITY_SUPPORT\0\u{2}@\u{1}GROUP_CALL_SUPPORT\0\u{2}@\u{2}EDIT_MESSAGE_SUPPORT\0\u{2}@\u{4}DELETE_MESSAGE_SUPPORT\0\u{2}@\u{8}REACTION_SUPPORT\0")
 }
 
-extension Common_CspE2eMessageType: SwiftProtobuf._ProtoNameProviding {
+nonisolated extension Common_CspE2eMessageType: SwiftProtobuf._ProtoNameProviding {
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0_INVALID_TYPE\0\u{1}TEXT\0\u{1}DEPRECATED_IMAGE\0\u{2}\u{e}LOCATION\0\u{2}\u{3}DEPRECATED_VIDEO\0\u{1}DEPRECATED_AUDIO\0\u{1}POLL_SETUP\0\u{1}POLL_VOTE\0\u{1}FILE\0\u{1}CONTACT_SET_PROFILE_PICTURE\0\u{1}CONTACT_DELETE_PROFILE_PICTURE\0\u{1}CONTACT_REQUEST_PROFILE_PICTURE\0\u{2}'GROUP_TEXT\0\u{1}GROUP_LOCATION\0\u{1}GROUP_IMAGE\0\u{1}GROUP_VIDEO\0\u{1}GROUP_AUDIO\0\u{1}GROUP_FILE\0\u{2}\u{4}GROUP_SETUP\0\u{1}GROUP_NAME\0\u{1}GROUP_LEAVE\0\u{2}\u{3}GROUP_CALL_START\0\u{1}GROUP_SET_PROFILE_PICTURE\0\u{1}GROUP_SYNC_REQUEST\0\u{1}GROUP_POLL_SETUP\0\u{1}GROUP_POLL_VOTE\0\u{1}GROUP_DELETE_PROFILE_PICTURE\0\u{2}\u{c}CALL_OFFER\0\u{1}CALL_ANSWER\0\u{1}CALL_ICE_CANDIDATE\0\u{1}CALL_HANGUP\0\u{1}CALL_RINGING\0\u{2}\u{1c}DELIVERY_RECEIPT\0\u{1}GROUP_DELIVERY_RECEIPT\0\u{1}REACTION\0\u{1}GROUP_REACTION\0\u{2}\u{d}TYPING_INDICATOR\0\u{1}EDIT_MESSAGE\0\u{1}DELETE_MESSAGE\0\u{1}GROUP_EDIT_MESSAGE\0\u{1}GROUP_DELETE_MESSAGE\0\u{2}\u{c}FORWARD_SECURITY_ENVELOPE\0\u{2}\\\u{1}EMPTY\0\u{1}WORK_SYNC_DELTA\0\u{1}WEB_SESSION_RESUME\0")
 }
 
-extension Common_Unit: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension Common_Unit: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".Unit"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap()
 
@@ -694,7 +694,7 @@ extension Common_Unit: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementati
   }
 }
 
-extension Common_Blob: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension Common_Blob: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".Blob"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}id\0\u{1}nonce\0\u{1}key\0\u{3}uploaded_at\0")
 
@@ -739,7 +739,7 @@ extension Common_Blob: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementati
   }
 }
 
-extension Common_BlobData: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension Common_BlobData: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".BlobData"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}id\0\u{1}data\0")
 
@@ -774,7 +774,7 @@ extension Common_BlobData: SwiftProtobuf.Message, SwiftProtobuf._MessageImplemen
   }
 }
 
-extension Common_Image: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension Common_Image: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".Image"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}type\0\u{1}blob\0")
 
@@ -813,11 +813,11 @@ extension Common_Image: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementat
   }
 }
 
-extension Common_Image.TypeEnum: SwiftProtobuf._ProtoNameProviding {
+nonisolated extension Common_Image.TypeEnum: SwiftProtobuf._ProtoNameProviding {
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0JPEG\0")
 }
 
-extension Common_GroupIdentity: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension Common_GroupIdentity: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".GroupIdentity"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}group_id\0\u{3}creator_identity\0")
 
@@ -852,7 +852,7 @@ extension Common_GroupIdentity: SwiftProtobuf.Message, SwiftProtobuf._MessageImp
   }
 }
 
-extension Common_DeltaImage: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension Common_DeltaImage: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".DeltaImage"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}removed\0\u{1}updated\0")
 
@@ -919,7 +919,7 @@ extension Common_DeltaImage: SwiftProtobuf.Message, SwiftProtobuf._MessageImplem
   }
 }
 
-extension Common_Timespan: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension Common_Timespan: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".Timespan"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}from\0\u{1}to\0")
 
@@ -954,7 +954,7 @@ extension Common_Timespan: SwiftProtobuf.Message, SwiftProtobuf._MessageImplemen
   }
 }
 
-extension Common_Identities: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension Common_Identities: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".Identities"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}identities\0")
 
@@ -984,7 +984,7 @@ extension Common_Identities: SwiftProtobuf.Message, SwiftProtobuf._MessageImplem
   }
 }
 
-extension Common_Resolution: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension Common_Resolution: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".Resolution"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}width\0\u{1}height\0")
 

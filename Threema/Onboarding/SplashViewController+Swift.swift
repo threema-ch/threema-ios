@@ -1,38 +1,21 @@
 import Foundation
-import SwiftUI
 import ThreemaFramework
 import UIKit
 
-extension SplashViewController: SetupAppDelegate {
-    @MainActor
-    func encryptedDataDetected() {
-        if SharedAppProvider.isSceneDelegateDevelopment {
-            /// In the coordinator flow, RS resolution is handled by OnboardingCoordinator
-            /// which calls showEncryptedDataDetected() directly. This path is unreachable.
-            assertionFailure("encryptedDataDetected should not be called in coordinator flow")
-            return
+extension UIViewController {
+    /// The view controller currently visible on top of this view controller, e.g. the modally
+    /// presented setup wizard, or `self` if nothing is presented.
+    ///
+    /// The splash view controller's own view is covered by the full screen setup wizard for the
+    /// whole second half of onboarding. Progress HUDs added to it are invisible and alerts
+    /// presented on it are dropped by UIKit, thus both have to go on the topmost view controller.
+    var topmostPresentedViewController: UIViewController {
+        var topmost: UIViewController = self
+
+        while let presented = topmost.presentedViewController, !presented.isBeingDismissed {
+            topmost = presented
         }
-        else {
-            let window = SharedAppProvider.window
-            let viewC = UIHostingController(rootView: RemoteSecretEncryptedDataView())
-            let navC = UINavigationController(rootViewController: viewC)
-            window?.rootViewController = navC
-        }
-    }
-    
-    func mismatchCancelled() {
-        assertionFailure("Should not be reached")
-    }
 
-    @objc func addAppSetupStepsLogger() {
-        LogManager.addLogger(for: .appSetupStepsFileLog)
-    }
-
-    @objc func removeAppSetupStepsLogger() {
-        LogManager.removeLogger(for: .appSetupStepsFileLog)
-    }
-
-    @objc func clearAppSetupStepsLoggerOutput() {
-        LogManager.clearLoggerOutput(for: .appSetupStepsFileLog)
+        return topmost
     }
 }

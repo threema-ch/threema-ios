@@ -86,7 +86,6 @@ final class AppearanceSettingsViewModel: ObservableObject {
 
     private var cancellables = Set<AnyCancellable>()
     private var settingsStore: SettingsStoreProtocol
-    private lazy var appDelegate = AppDelegate.shared()
 
     // MARK: - Lifecycle
 
@@ -183,7 +182,14 @@ final class AppearanceSettingsViewModel: ObservableObject {
     private func applyTheme(_ theme: Theme) {
         settingsStore.interfaceStyle = theme.getUserInterfaceStyle().rawValue
         Colors.theme = theme.getColorsTheme()
-        Colors.update(window: appDelegate?.window ?? UIWindow.appearance())
+
+        Task { @MainActor in
+            Colors.update(
+                window:
+                SharedAppProvider.window ?? UIWindow.appearance()
+            )
+        }
+
         NotificationPresenterWrapper.shared.colorChanged()
     }
 }

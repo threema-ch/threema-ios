@@ -3,6 +3,7 @@ use duplicate::duplicate_item;
 
 /// Exhausted the available sequence numbers.
 #[derive(Clone, Debug, thiserror::Error)]
+#[cfg_attr(test, derive(PartialEq))]
 #[error("Sequence number would overflow")]
 pub struct SequenceNumberOverflow;
 

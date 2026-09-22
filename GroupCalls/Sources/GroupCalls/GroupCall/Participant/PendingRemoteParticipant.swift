@@ -236,7 +236,7 @@ final class PendingRemoteParticipant: RemoteParticipant {
         let handshakeAuth = GroupCall_ParticipantToParticipant.Handshake.Auth.with {
             $0.pck = pckRemote
             $0.pcck = pcckRemote
-            $0.mediaKeys = mediaKeys
+            $0.deprecatedEarlyMediaKeys = mediaKeys
         }
         
         let handshakeAuthEnvelope = GroupCall_ParticipantToParticipant.Handshake.AuthEnvelope.with {
@@ -414,7 +414,7 @@ final class PendingRemoteParticipant: RemoteParticipant {
             throw GroupCallError.badMessage
         }
         
-        mediaKeys = authMessage.mediaKeys
+        mediaKeys = authMessage.deprecatedEarlyMediaKeys
     }
     
     // MARK: - Helper functions

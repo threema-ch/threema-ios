@@ -7,7 +7,8 @@ final class MockGroupCallBundleUtil: GroupCallBundleUtilProtocol {
         UIImage(systemName: "questionmark.square.dashed")!
     }
     
+    /// Returns the key itself, so that tests can assert which string was requested
     func localizedString(for key: String) -> String {
-        ""
+        key
     }
 }

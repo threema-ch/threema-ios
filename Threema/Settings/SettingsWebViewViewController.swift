@@ -39,7 +39,7 @@ class SettingsWebViewViewController: ThemedViewController {
     ///   - url: URL of the content
     ///   - title: Title of the controller
     ///   - allowsContentJavaScript: The default value of this property is false. If you change the value to true, the
-    /// web view execute JavaScript code referenced by the web content.
+    ///                              web view execute JavaScript code referenced by the web content.
     ///   - isSetupWizard: If true, it will set all to dark mode
     @objc init(
         url: URL? = nil,

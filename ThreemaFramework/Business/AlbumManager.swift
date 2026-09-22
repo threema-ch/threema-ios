@@ -3,7 +3,7 @@ import FileUtility
 import Photos
 import UIKit
 
-@objc public final class AlbumManager: NSObject {
+public final class AlbumManager: NSObject {
     
     public struct SaveMediaItem {
         let url: URL
@@ -13,7 +13,7 @@ import UIKit
     
     static let albumName = "Threema Media"
     
-    @objc public static let shared = AlbumManager()
+    public static let shared = AlbumManager()
     
     override private init() {
         super.init()
@@ -238,7 +238,7 @@ import UIKit
     }
     
     @available(*, deprecated, renamed: "saveMediaItem(_:)")
-    @objc public func save(image: UIImage) {
+    public func save(image: UIImage) {
         func saveIt(_ validAssets: PHAssetCollection) {
             PHPhotoLibrary.shared().performChanges({
                 let assetChangeRequest = PHAssetChangeRequest.creationRequestForAsset(from: image)
@@ -311,7 +311,7 @@ import UIKit
     }
     
     @available(*, deprecated, renamed: "saveMediaItem(_:)")
-    @objc public func saveMovieToLibrary(movieURL: URL, completionHandler: @escaping ((_ success: Bool) -> Void)) {
+    public func saveMovieToLibrary(movieURL: URL, completionHandler: @escaping ((_ success: Bool) -> Void)) {
         func saveIt(_ validAssets: PHAssetCollection) {
             PHPhotoLibrary.shared().performChanges({
                 

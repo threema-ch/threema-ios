@@ -17,7 +17,7 @@ let package = Package(
     ],
     dependencies: [
         .package(path: "../ThreemaEssentials"),
-        .package(url: "https://github.com/apple/swift-protobuf.git", from: "1.33.3"),
+        .package(url: "https://github.com/apple/swift-protobuf.git", exact: "1.38.1"),
     ],
     targets: [
         // Targets are the basic building blocks of a package. A target can define a module or a test suite.

@@ -1,17 +1,17 @@
 import Foundation
 import ThreemaMacros
 
-@objc public final class UIAlertTemplate: NSObject {
-    @objc public static func showAlert(
+public final class UIAlertTemplate: NSObject {
+    @objc public static func showOKAlert(
         owner: UIViewController,
         title: String?,
         message: String?,
         actionOk: ((UIAlertAction) -> Void)? = nil
     ) {
-        showAlert(owner: owner, title: title, message: message, titleOk: nil, actionOk: actionOk)
+        showOKAlert(owner: owner, title: title, message: message, titleOk: nil, actionOk: actionOk)
     }
     
-    @objc public static func showAlert(
+    @objc public static func showOKAlert(
         owner: UIViewController,
         title: String?,
         message: String?,

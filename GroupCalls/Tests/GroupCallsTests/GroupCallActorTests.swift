@@ -11,21 +11,8 @@ final class GroupCallActorTests: XCTestCase {
     fileprivate lazy var groupModel = GroupCallThreemaGroupModel(groupIdentity: groupIdentity, groupName: "TESTGROUP")
     fileprivate lazy var sfuBaseURL = URL(string: "sfu.threema.test")!
     
-    func testBasicInit() throws {
-        let dependencies = MockDependencies().create()
-        let gck = Data(repeating: 0x01, count: 32)
-        let groupCallActor = try! GroupCallActor(
-            localContactModel: localContactModel,
-            groupModel: groupModel,
-            sfuBaseURL: sfuBaseURL,
-            gck: gck,
-            dependencies: dependencies
-        )
-    }
-    
     func testBasicStillRunning() async throws {
         let dependencies = MockDependencies().create()
-        let groupIdentity = GroupIdentity(id: Data(repeating: 0x00, count: 8), creator: ThreemaIdentity("ECHOECHO"))
 
         let groupCallActor = try! GroupCallActor(
             localContactModel: localContactModel,
@@ -81,7 +68,6 @@ final class GroupCallActorTests: XCTestCase {
         let dependencies = MockDependencies().create()
 
         let gck = Data(repeating: 0x01, count: 32)
-        let groupIdentity = GroupIdentity(id: Data(repeating: 0x00, count: 8), creator: ThreemaIdentity("ECHOECHO"))
 
         let groupCallActor = try! GroupCallActor(
             localContactModel: localContactModel,

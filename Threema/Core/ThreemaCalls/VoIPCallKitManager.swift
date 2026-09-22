@@ -1,3 +1,4 @@
+import AudioSessionManager
 import CallKit
 import CocoaLumberjackSwift
 import Foundation
@@ -8,17 +9,28 @@ import ThreemaMacros
 protocol VoIPCallKitManagerDelegate: AnyObject {
     func currentCallPartnerIdentity() -> String
     func currentCallID() -> VoIPCallID
-    func setRTCAudio(_ audioSession: AVAudioSession)
-    func deactivateRTCAudio(_ audioSession: AVAudioSession)
+    func callKitDidActivateAudioSession(_ audioSession: AVAudioSession)
+    func callKitDidDeactivateAudioSession(_ audioSession: AVAudioSession)
 }
 
 final class VoIPCallKitManager: NSObject {
 
     weak var delegate: VoIPCallKitManagerDelegate?
-    
+
+    /// CallKit's activation callbacks go through the manager,
+    private let audioSessionManager: any AudioSessionManagerProtocol
+
     private let provider: CXProvider
     private let callController: CXCallController
     private let callIDService: CallIDService
+
+    /// Identity of the caller from the most recent `reportIncomingCall`. Available immediately
+    /// from the push payload — does not require the offer message or a `VoIPCallService`.
+    private var reportedCallPartnerIdentity: String?
+
+    /// ID of a call that was reported to CallKit and is ringing, but that the state machine does not
+    /// know about yet.
+    private(set) var reportedRingingCallID: VoIPCallID?
 
     private var answerAction: CXAnswerCallAction?
 
@@ -26,12 +38,28 @@ final class VoIPCallKitManager: NSObject {
     /// session after an interruption. The CXSetHeldCallAction handler skips mute/unmute logic.
     private(set) var isRestoringAudioSession = false
 
-    /// The call will be set to true if a call fails, ends, or is rejected by the application. If CallKit triggers one
-    /// of these actions, we will have a loop to wait until all information is loaded. This value will bypass the loop
-    /// to close CallKit directly.
+    /// Set while an end call action requested in `endCall(with:)` is pending, i.e. the call was already ended by the
+    /// app. CallKit reports every performed action, also our own, and that report must not end the call again.
     private var dismissCallKitDirectly = false
+    
+    private let isBusinessLayerUsable: () -> Bool
+    
+    private let businessLayerWaitTimeout: TimeInterval
 
-    override init() {
+    // MARK: - Lifecycle
+    
+    init(
+        audioSessionManager: any AudioSessionManagerProtocol = BusinessInjector.sharedAudioSessionManager,
+        isBusinessLayerUsable: @escaping (
+        ) -> Bool = {
+            RemoteSecretProvider.isRemoteSecretManagerSet && MyIdentityStore.shared().identity != nil
+        },
+        
+        businessLayerWaitTimeout: TimeInterval = 3.0
+    ) {
+        self.audioSessionManager = audioSessionManager
+        self.isBusinessLayerUsable = isBusinessLayerUsable
+        self.businessLayerWaitTimeout = businessLayerWaitTimeout
         self.provider = CXProvider(configuration: VoIPCallKitManager.providerConfiguration())
         self.callController = CXCallController()
         self.callIDService = CallIDService()
@@ -97,7 +125,7 @@ extension VoIPCallKitManager {
         completion: @escaping (Error?) -> Void
     ) {
         guard ThreemaEnvironment.supportsCallKit() else {
-            DDLogError("VoipCallService: [cid=\(callID.callID)]: CallKit is not supported in this environment.")
+            DDLogError("[Call:1to1:CallKit] [cid=\(callID)]: CallKit is not supported in this environment.")
             fatalError("VoIPCallKitManager is not supported in this environment.")
         }
         
@@ -114,38 +142,38 @@ extension VoIPCallKitManager {
         update.hasVideo = false
         update.localizedCallerName = callPartnerName ?? callPartnerIdentity
 
+        reportedCallPartnerIdentity = callPartnerIdentity
+        reportedRingingCallID = callID
+
         let (uuid, isNew) = callIDService.uuid(for: callID)
         if isNew {
-            DDLogNotice("VoipCallService: [cid=\(callID.callID)]: Report new incoming call -> (callUUUID=\(uuid)")
+            DDLogNotice("[Call:1to1:CallKit] [cid=\(callID)]: Report new incoming call -> (callUUUID=\(uuid)")
             provider.reportNewIncomingCall(with: uuid, update: update) { error in
                 if let error {
                     DDLogError(
-                        "CallKitManager: [cid=\(callID.callID)]: Report new incoming call failed (CallKit UUID: \(uuid): \(error)"
+                        "[Call:1to1:CallKit] [cid=\(callID)]: Report new incoming call failed (CallKit UUID: \(uuid): \(error)"
                     )
                 }
-                RTCAudioSession.sharedInstance().useManualAudio = true
                 completion(error)
             }
         }
         else if fromPush {
             // This is a safeguard to report the call anyways when we are reporting it via the NSE.
             DDLogNotice(
-                "VoipCallService: [cid=\(callID.callID)]: Push arrived after server connection, re-reporting call (callUUID=\(uuid))"
+                "[Call:1to1:CallKit] [cid=\(callID)]: Push arrived after server connection, re-reporting call (callUUID=\(uuid))"
             )
             provider.reportNewIncomingCall(with: uuid, update: update) { error in
                 if let error {
                     DDLogWarn(
-                        "CallKitManager: [cid=\(callID.callID)]: Re-report for push returned expected error (callUUID=\(uuid)): \(error)"
+                        "[Call:1to1:CallKit] [cid=\(callID)]: Re-report for push returned expected error (callUUID=\(uuid)): \(error)"
                     )
                 }
-                RTCAudioSession.sharedInstance().useManualAudio = true
                 completion(nil)
             }
         }
         else {
-            DDLogNotice("VoipCallService: [cid=\(callID.callID)]: Report incoming call -> (callUUUID=\(uuid)")
+            DDLogNotice("[Call:1to1:CallKit] [cid=\(callID)]: Report incoming call -> (callUUUID=\(uuid)")
             provider.reportCall(with: uuid, updated: update)
-            RTCAudioSession.sharedInstance().useManualAudio = true
             completion(nil)
         }
     }
@@ -156,7 +184,7 @@ extension VoIPCallKitManager {
         businessInjector: BusinessInjectorProtocol
     ) {
         guard ThreemaEnvironment.supportsCallKit() else {
-            DDLogError("VoipCallService: [cid=\(callID.callID)]: CallKit is not supported in this environment.")
+            DDLogError("[Call:1to1:CallKit] [cid=\(callID)]: CallKit is not supported in this environment.")
             fatalError("VoIPCallKitManager is not supported in this environment.")
         }
         
@@ -170,7 +198,7 @@ extension VoIPCallKitManager {
             
             if let error {
                 DDLogError(
-                    "CallKitManager: [cid=\(callID.callID)]: Start call action failed (CallKit UUID: \(uuid): \(error)"
+                    "[Call:1to1:CallKit] [cid=\(callID)]: Start call action failed (CallKit UUID: \(uuid): \(error)"
                 )
                 return
             }
@@ -190,7 +218,7 @@ extension VoIPCallKitManager {
     func callAccepted(with callID: VoIPCallID) {
         guard ThreemaEnvironment.supportsCallKit() else {
             assertionFailure()
-            DDLogWarn("VoipCallService: [cid=\(callID.callID)]: CallKit is not supported in this environment.")
+            DDLogWarn("[Call:1to1:CallKit] [cid=\(callID)]: CallKit is not supported in this environment.")
             return
         }
         
@@ -202,7 +230,7 @@ extension VoIPCallKitManager {
     func callConnected(with callID: VoIPCallID) {
         guard ThreemaEnvironment.supportsCallKit() else {
             assertionFailure()
-            DDLogWarn("VoipCallService: [cid=\(callID.callID)]: CallKit is not supported in this environment.")
+            DDLogWarn("[Call:1to1:CallKit] [cid=\(callID)]: CallKit is not supported in this environment.")
             return
         }
         
@@ -218,19 +246,29 @@ extension VoIPCallKitManager {
     
     func endCall(with callID: VoIPCallID) {
         guard ThreemaEnvironment.supportsCallKit() else {
-            DDLogWarn("VoipCallService: [cid=\(callID.callID)]: CallKit is not supported in this environment.")
+            DDLogWarn("[Call:1to1:CallKit] [cid=\(callID)]: CallKit is not supported in this environment.")
             return
         }
-        
-        dismissCallKitDirectly = true
+
+        reportedCallPartnerIdentity = nil
+        reportedRingingCallID = nil
         let (uuid, isNew) = callIDService.uuid(for: callID)
-        assert(!isNew)
+
+        guard !isNew else {
+            return
+        }
+
+        // Only set when the action is really requested, otherwise the next end call action of CallKit is skipped
+        dismissCallKitDirectly = true
+
         let action = CXEndCallAction(call: uuid)
         let transaction = CXTransaction(action: action)
         callController.request(transaction) { error in
             if let error {
+                self.dismissCallKitDirectly = false
+
                 DDLogError(
-                    "CallKitManager: [cid=\(callID.callID)]: End call action failed (CallKit UUID: \(uuid): \(error)"
+                    "[Call:1to1:CallKit] [cid=\(callID)]: End call action failed (CallKit UUID: \(uuid): \(error)"
                 )
             }
         }
@@ -239,7 +277,7 @@ extension VoIPCallKitManager {
     func timeoutCall(with callID: VoIPCallID) {
         guard ThreemaEnvironment.supportsCallKit() else {
             assertionFailure()
-            DDLogWarn("VoipCallService: [cid=\(callID.callID)]: CallKit is not supported in this environment.")
+            DDLogWarn("[Call:1to1:CallKit] [cid=\(callID)]: CallKit is not supported in this environment.")
             return
         }
         
@@ -250,7 +288,7 @@ extension VoIPCallKitManager {
         callController.request(transaction) { error in
             if let error {
                 DDLogError(
-                    "CallKitManager: [cid=\(callID.callID)]: Timeout call action failed (CallKit UUID: \(uuid): \(error)"
+                    "[Call:1to1:CallKit] [cid=\(callID)]: Timeout call action failed (CallKit UUID: \(uuid): \(error)"
                 )
             }
         }
@@ -260,7 +298,7 @@ extension VoIPCallKitManager {
     func startAndCancelCall(from localizedName: String, completion: @escaping () -> Void) {
         guard ThreemaEnvironment.supportsCallKit() else {
             assertionFailure()
-            DDLogWarn("VoipCallService: CallKit is not supported in this environment.")
+            DDLogWarn("[Call:1to1:CallKit] CallKit is not supported in this environment.")
             return
         }
         
@@ -299,7 +337,7 @@ extension VoIPCallKitManager {
         let (uuid, _) = callIDService.uuid(for: callID)
 
         DDLogNotice(
-            "CallKitManager: [cid=\(callID.callID)]: Requesting audio session reactivation via hold/unhold"
+            "[Call:1to1:CallKit] [cid=\(callID)]: Requesting audio session reactivation via hold/unhold"
         )
 
         // Temporarily enable holding so the hold action is accepted
@@ -318,7 +356,7 @@ extension VoIPCallKitManager {
             }
             if let error {
                 DDLogError(
-                    "CallKitManager: [cid=\(callID.callID)]: Hold action for audio restoration failed: \(error)"
+                    "[Call:1to1:CallKit] [cid=\(callID)]: Hold action for audio restoration failed: \(error)"
                 )
                 isRestoringAudioSession = false
                 return
@@ -338,7 +376,7 @@ extension VoIPCallKitManager {
                     // still be true. Reset it after a short delay instead.
                     if let error {
                         DDLogError(
-                            "CallKitManager: [cid=\(callID.callID)]: Unhold action for audio restoration failed: \(error)"
+                            "[Call:1to1:CallKit] [cid=\(callID)]: Unhold action for audio restoration failed: \(error)"
                         )
                         isRestoringAudioSession = false
                     }
@@ -370,7 +408,27 @@ extension VoIPCallKitManager {
             }
         }
     }
-    
+
+    func waitForBusinessLayer(callID: VoIPCallID) async -> Bool {
+        var totalWait = 0.0
+        let waitDuration = 0.1
+
+        while !isBusinessLayerUsable() {
+            if totalWait > businessLayerWaitTimeout {
+                return false
+            }
+
+            DDLogNotice(
+                "[Call:1to1:CallKit] [cid=\(callID)]: Waiting for the business layer, total wait time: \(totalWait)s"
+            )
+
+            try? await Task.sleep(seconds: waitDuration)
+            totalWait += waitDuration
+        }
+
+        return true
+    }
+
     private func removePendingActions(for callID: UUID) {
         let pendingActions = provider.pendingCallActions(of: CXCallAction.self, withCall: callID)
         guard let actionCallID = callIDService.callID(for: callID), !pendingActions.isEmpty else {
@@ -379,7 +437,7 @@ extension VoIPCallKitManager {
         
         for action in pendingActions {
             DDLogNotice(
-                "CallKitManager: [cid=\(actionCallID.callID)] Failing pending action \(action) for call with UUID \(callID)"
+                "[Call:1to1:CallKit] [cid=\(actionCallID)] Failing pending action \(action) for call with UUID \(callID)"
             )
             action.fail()
         }
@@ -392,14 +450,14 @@ extension VoIPCallKitManager: CXProviderDelegate {
     func providerDidReset(_ provider: CXProvider) {
         guard let callID = delegate?.currentCallID(),
               let callPartnerIdentity = delegate?.currentCallPartnerIdentity() else {
-            DDLogError("CallKitManager: Did not handle provider reset due to missing call state")
+            DDLogError("[Call:1to1:CallKit] Did not handle provider reset due to missing call state")
             return
         }
         
         let state = VoIPCallStateManager.shared.currentCallState()
         guard state == .incomingRinging || state == .calling || state == .reconnecting else {
             DDLogError(
-                "CallKitManager: [cid=\(callID.callID)]: Did not handle provider reset due to being in wrong call state: \(state.rawValue)"
+                "[Call:1to1:CallKit] [cid=\(callID)]: Did not handle provider reset due to being in wrong call state: \(state.rawValue)"
             )
             return
         }
@@ -411,8 +469,10 @@ extension VoIPCallKitManager: CXProviderDelegate {
             ServerConnector.shared().connectWait(initiator: .threemaCall)
             let userAction =
                 if VoIPCallStateManager.shared.currentCallState() == .incomingRinging {
+                    // Local CallKit provider did reset. Other devices might be able to pickup, so we do not send the
+                    // reject.
                     VoIPCallUserAction(
-                        action: .reject,
+                        action: .reject(sendMessage: false),
                         contactIdentity: callPartnerIdentity,
                         callID: callID,
                         completion: nil
@@ -426,7 +486,7 @@ extension VoIPCallKitManager: CXProviderDelegate {
                         completion: nil
                     )
                 }
-                    
+
             VoIPCallStateManager.shared.addActionToCallQueue(userAction)
         }
     }
@@ -437,7 +497,7 @@ extension VoIPCallKitManager: CXProviderDelegate {
             return
         }
 
-        DDLogNotice("CallKitManager: [cid=\(actionCallID.callID)]: Start call action")
+        DDLogNotice("[Call:1to1:CallKit] [cid=\(actionCallID)]: Start call action")
 
         assert(delegate?.currentCallID().callID == actionCallID.callID)
 
@@ -451,50 +511,53 @@ extension VoIPCallKitManager: CXProviderDelegate {
                 return
             }
 
-            DDLogNotice("CallKitManager: [cid=\(actionCallID)]: Answer call action")
+            DDLogNotice("[Call:1to1:CallKit] [cid=\(actionCallID)]: Answer call action")
 
-            // Since we have a suspension point during the launch of the app, but we need to report the call to call kit
-            // directly, there might be the case that the user answers the call, before all needed information is
-            // available. We there fore wait here for the info to be filled.
+            // The call partner identity is known from the push payload (stored at
+            // `reportIncomingCall` time), so we don't need the delegate for that.
+            // But we must still wait for the offer message to arrive and create the
+            // VoIPCallService — otherwise the accept action creates a fresh service
+            // with no offer and immediately fails with "Wrong state IDLE".
+            guard let contactIdentity = reportedCallPartnerIdentity else {
+                DDLogError(
+                    "[Call:1to1:CallKit] [cid=\(actionCallID)]: Fail answer call action, call partner identity not available"
+                )
+                action.fail()
+                return
+            }
+
             var totalWait = 0.0
             let waitDuration = 0.1
             let maxWaitDuration = 10.0
-            
-            while delegate?.currentCallPartnerIdentity() == nil || delegate?
-                .currentCallID() == nil {
+
+            while delegate?.currentCallPartnerIdentity() == nil || delegate?.currentCallID() == nil {
                 DDLogNotice(
-                    "CallKitManager: [cid=\(actionCallID.callID)]: Waiting for call info, total wait time: \(totalWait)s"
+                    "[Call:1to1:CallKit] [cid=\(actionCallID)]: Waiting for offer to arrive, total wait time: \(totalWait)s"
                 )
-                
+
                 try? await Task.sleep(seconds: waitDuration)
                 totalWait += waitDuration
-                
+
                 if totalWait > maxWaitDuration {
                     DDLogError(
-                        "CallKitManager: [cid=\(actionCallID.callID)]: Timeout waiting for call info. Failing call."
+                        "[Call:1to1:CallKit] [cid=\(actionCallID)]: Timeout waiting for offer. Failing call."
                     )
                     action.fail()
                     return
                 }
             }
 
-            guard let currentCallID = delegate?.currentCallID(),
-                  let contactIdentity = delegate?.currentCallPartnerIdentity(),
-                  currentCallID.callID == actionCallID.callID else {
-                DDLogError(
-                    "CallKitManager: [cid=\(actionCallID.callID)]: Fail answer call action, because the call ID or call partner identity is missing or current call ID is not equal to that action"
-                )
-                action.fail()
-                return
-            }
-            
+            let currentCallID = delegate?.currentCallID() ?? actionCallID
+
+            reportedRingingCallID = nil
+
             BackgroundTaskManager.shared.newBackgroundTask(
                 key: kAppVoIPBackgroundTask,
                 timeout: Int(kAppPushBackgroundTaskTime)
             ) {
                 ServerConnector.shared().connectWait(initiator: .threemaCall)
                 self.answerAction = action
-                
+
                 let action = VoIPCallUserAction(
                     action: .acceptCallKit,
                     contactIdentity: contactIdentity,
@@ -503,7 +566,7 @@ extension VoIPCallKitManager: CXProviderDelegate {
                         action.fulfill()
                     }
                 )
-                
+
                 VoIPCallStateManager.shared.addActionToCallQueue(action)
             }
         }
@@ -512,60 +575,46 @@ extension VoIPCallKitManager: CXProviderDelegate {
     func provider(_ provider: CXProvider, perform action: CXEndCallAction) {
         Task {
             guard let actionCallID = callIDService.callID(for: action.callUUID) else {
+                dismissCallKitDirectly = false
                 action.fulfill()
                 removePendingActions(for: action.callUUID)
                 return
             }
 
-            DDLogNotice("CallKitManager: [cid=\(actionCallID.callID)]: End call action")
+            DDLogNotice("[Call:1to1:CallKit] [cid=\(actionCallID)]: End call action")
 
-            // Since we have a suspension point during the launch of the app, but we need to report the call to call kit
-            // directly, there might be the case that the user declines the call, before all needed information is
-            // available. We there fore wait here for the info to be filled.
-            var totalWait = 0.0
-            let waitDuration = 0.1
-            let maxWaitDuration = 10.0
-            
-            while delegate?.currentCallPartnerIdentity() == nil || delegate?
-                .currentCallID() == nil, !dismissCallKitDirectly {
-                DDLogNotice(
-                    "CallKitManager: [cid=\(actionCallID.callID))]: Waiting for call info, total wait time: \(totalWait)s"
-                )
-                
-                try? await Task.sleep(seconds: waitDuration)
-                totalWait += waitDuration
-                
-                if totalWait > maxWaitDuration {
-                    DDLogError(
-                        "CallKitManager: [cid=\(actionCallID.callID)]: Timeout waiting for call info. Failing call."
-                    )
-                    self.dismissCallKitDirectly = false
-                    action.fulfill()
-                    removePendingActions(for: action.callUUID)
-                    return
-                }
+            guard !dismissCallKitDirectly else {
+                DDLogNotice("[Call:1to1:CallKit] [cid=\(actionCallID)]: End call action was requested by us")
+                dismissCallKitDirectly = false
+                action.fulfill()
+                removePendingActions(for: action.callUUID)
+                return
             }
-            
-            self.dismissCallKitDirectly = false
-            
-            guard let currentCallID = delegate?.currentCallID(),
-                  let callPartnerIdentity = delegate?.currentCallPartnerIdentity(),
-                  currentCallID.callID == actionCallID.callID else {
+
+            // Use the identity stored at reportIncomingCall time (from push payload).
+            // Falls back to the delegate (VoIPCallService) if available.
+            guard let contactIdentity = reportedCallPartnerIdentity
+                ?? delegate?.currentCallPartnerIdentity() else {
                 DDLogError(
-                    "CallKitManager: [cid=\(actionCallID.callID)]: Fulfill end call action, but call ID or call partner identity is missing or current call ID is not equal to that action"
+                    "[Call:1to1:CallKit] [cid=\(actionCallID)]: Fulfill end call action, but call partner identity not available"
                 )
+                dismissCallKitDirectly = false
                 action.fulfill()
                 removePendingActions(for: action.callUUID)
                 return
             }
-            
+            let currentCallID = delegate?.currentCallID() ?? actionCallID
+            dismissCallKitDirectly = false
+
+            let isDeclineOfReportedCall = reportedRingingCallID?.callID == currentCallID.callID
+            reportedRingingCallID = nil
+
             let state = VoIPCallStateManager.shared.currentCallState()
             switch state {
-            case .ended, .remoteEnded, .rejected, .rejectedBusy, .rejectedTimeout, .rejectedDisabled, .rejectedOffHours,
-                 .rejectedUnknown, .microphoneDisabled:
+            case .ended, .remoteEnded, .rejected, .rejectedTimeout, .rejectedUnknown, .microphoneDisabled:
                 let userAction = VoIPCallUserAction(
                     action: .end,
-                    contactIdentity: callPartnerIdentity,
+                    contactIdentity: contactIdentity,
                     callID: currentCallID,
                     completion: {
                         action.fulfill()
@@ -581,16 +630,31 @@ extension VoIPCallKitManager: CXProviderDelegate {
                 break
             }
             
+            guard await waitForBusinessLayer(callID: actionCallID) else {
+                DDLogError(
+                    "[Call:1to1:CallKit] [cid=\(actionCallID)]: No business layer, ending the call locally only"
+                )
+                action.fulfill()
+                removePendingActions(for: action.callUUID)
+                return
+            }
+
             BackgroundTaskManager.shared.newBackgroundTask(
                 key: kAppVoIPBackgroundTask,
                 timeout: Int(kAppPushBackgroundTaskTime)
             ) {
                 ServerConnector.shared().connectWait(initiator: .threemaCall)
+
+                let isDeclineWhileRinging = VoIPCallStateManager.shared.currentCallState() == .incomingRinging
+                    || isDeclineOfReportedCall
+
                 let userAction =
-                    if VoIPCallStateManager.shared.currentCallState() == .incomingRinging {
+                    if isDeclineWhileRinging {
+                        // User tapped end call in CallKit. We send the reject message, so the other devices stop
+                        // ringing.
                         VoIPCallUserAction(
-                            action: .reject,
-                            contactIdentity: callPartnerIdentity,
+                            action: .reject(sendMessage: true),
+                            contactIdentity: contactIdentity,
                             callID: currentCallID,
                             completion: {
                                 action.fulfill()
@@ -601,7 +665,7 @@ extension VoIPCallKitManager: CXProviderDelegate {
                     else {
                         VoIPCallUserAction(
                             action: .end,
-                            contactIdentity: callPartnerIdentity,
+                            contactIdentity: contactIdentity,
                             callID: currentCallID,
                             completion: {
                                 action.fulfill()
@@ -620,13 +684,13 @@ extension VoIPCallKitManager: CXProviderDelegate {
         assert(delegate?.currentCallID().callID == callID?.callID)
 
         DDLogNotice(
-            "CallKitManager: [cid=\(String(describing: callID?.callID))]: Muted call action, set muted: \(action.isMuted)"
+            "[Call:1to1:CallKit] [cid=\(String(describing: callID?.callID))]: Muted call action, set muted: \(action.isMuted)"
         )
 
         guard let callID = delegate?.currentCallID(),
               let callPartnerIdentity = delegate?.currentCallPartnerIdentity() else {
             DDLogError(
-                "CallKitManager: [cid=\(callID?.callID ?? "unknown")]: Fail mute call action due to missing call state"
+                "[Call:1to1:CallKit] [cid=\(callID?.callID ?? "unknown")]: Fail mute call action due to missing call state"
             )
             action.fail()
             return
@@ -656,7 +720,7 @@ extension VoIPCallKitManager: CXProviderDelegate {
         assert(delegate?.currentCallID().callID == callID?.callID)
 
         DDLogNotice(
-            "CallKitManager: [cid=\(String(describing: callID?.callID))]: Held call action, is on hold: \(action.isOnHold)"
+            "[Call:1to1:CallKit] [cid=\(String(describing: callID?.callID))]: Held call action, is on hold: \(action.isOnHold)"
         )
 
         // When restoring audio after an interruption, the hold/unhold cycle is only used
@@ -670,7 +734,7 @@ extension VoIPCallKitManager: CXProviderDelegate {
         guard let callID = delegate?.currentCallID(),
               let callPartnerIdentity = delegate?.currentCallPartnerIdentity() else {
             DDLogError(
-                "CallKitManager: [cid=\(callID?.callID ?? "unknown")]: Fail hold call action due to missing call state"
+                "[Call:1to1:CallKit] [cid=\(callID?.callID ?? "unknown")]: Fail hold call action due to missing call state"
             )
             action.fail()
             return
@@ -698,7 +762,7 @@ extension VoIPCallKitManager: CXProviderDelegate {
     func provider(_ provider: CXProvider, timedOutPerforming action: CXAction) {
         guard let callID = delegate?.currentCallID(),
               let callPartnerIdentity = delegate?.currentCallPartnerIdentity() else {
-            DDLogError("CallKitManager: Fail time out action due to missing call state")
+            DDLogError("[Call:1to1:CallKit] Fail time out action due to missing call state")
             action.fail()
             return
         }
@@ -710,8 +774,7 @@ extension VoIPCallKitManager: CXProviderDelegate {
             ServerConnector.shared().connectWait(initiator: .threemaCall)
             
             switch VoIPCallStateManager.shared.currentCallState() {
-            case .idle, .ended, .remoteEnded, .rejected, .rejectedBusy, .rejectedTimeout, .rejectedOffHours,
-                 .rejectedUnknown, .rejectedDisabled, .microphoneDisabled:
+            case .idle, .ended, .remoteEnded, .rejected, .rejectedTimeout, .rejectedUnknown, .microphoneDisabled:
                 action.fulfill()
                 
             case .sendOffer, .outgoingRinging, .sendAnswer, .receivedAnswer, .initializing, .calling, .reconnecting:
@@ -724,10 +787,11 @@ extension VoIPCallKitManager: CXProviderDelegate {
                     }
                 )
                 VoIPCallStateManager.shared.addActionToCallQueue(userAction)
-                
+
             case .receivedOffer, .incomingRinging:
+                // Local call ran into timeout. Other devices might be able to pickup, so we do not send the reject.
                 let userAction = VoIPCallUserAction(
-                    action: .rejectUnknown,
+                    action: .rejectUnknown(sendMessage: false),
                     contactIdentity: callPartnerIdentity,
                     callID: callID,
                     completion: {
@@ -741,13 +805,20 @@ extension VoIPCallKitManager: CXProviderDelegate {
     
     func provider(_ provider: CXProvider, didActivate audioSession: AVAudioSession) {
         let callID = delegate?.currentCallID()
-        DDLogNotice("CallKitManager: [cid=\(String(describing: callID?.callID))]: Did activate audio session")
-        delegate?.setRTCAudio(audioSession)
+        DDLogNotice("[Call:1to1:CallKit] [cid=\(String(describing: callID?.callID))]: Did activate audio session")
+
+        // WebRTC has to observe the activation before the outgoing dial tone touches the session.
+        audioSessionManager.sessionWasActivatedExternally(audioSession)
+
+        delegate?.callKitDidActivateAudioSession(audioSession)
     }
 
     func provider(_ provider: CXProvider, didDeactivate audioSession: AVAudioSession) {
         let callID = delegate?.currentCallID()
-        DDLogNotice("CallKitManager: [cid=\(String(describing: callID?.callID))]: Did deactivate audio session")
-        delegate?.deactivateRTCAudio(audioSession)
+        DDLogNotice("[Call:1to1:CallKit] [cid=\(String(describing: callID?.callID))]: Did deactivate audio session")
+
+        audioSessionManager.sessionWasDeactivatedExternally(audioSession)
+
+        delegate?.callKitDidDeactivateAudioSession(audioSession)
     }
 }

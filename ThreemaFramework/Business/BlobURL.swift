@@ -1,13 +1,13 @@
 import CocoaLumberjackSwift
 import Foundation
 
-@objc public final class BlobURL: NSObject {
+public final class BlobURL: NSObject {
     private let serverConnector: ServerConnectorProtocol
     private let userSettings: UserSettingsProtocol
     private let serverInfoProvider: ServerInfoProvider
     private let queue: DispatchQueue
     
-    @objc public init(
+    public init(
         serverConnector: ServerConnectorProtocol,
         userSettings: UserSettingsProtocol,
         serverInfoProvider: ServerInfoProvider,
@@ -44,13 +44,13 @@ import Foundation
         )
     }
     
-    @objc public func download(blobID: Data, origin: BlobOrigin, completionHandler: @escaping (URL?, Error?) -> Void) {
+    public func download(blobID: Data, origin: BlobOrigin, completionHandler: @escaping (URL?, Error?) -> Void) {
         genericBlobURL(blobID: blobID, origin: origin, extractURL: { blobServerInfo -> String in
             blobServerInfo.downloadURL
         }, completionHandler: completionHandler)
     }
     
-    @objc public func upload(
+    public func upload(
         origin: BlobOrigin,
         setPersistParam: Bool,
         completionHandler: @escaping (URL?, String?, Error?) -> Void
@@ -87,7 +87,7 @@ import Foundation
         }
     }
     
-    @objc public func done(blobID: Data, origin: BlobOrigin, completionHandler: @escaping (URL?, Error?) -> Void) {
+    public func done(blobID: Data, origin: BlobOrigin, completionHandler: @escaping (URL?, Error?) -> Void) {
         genericBlobURL(blobID: blobID, origin: origin, extractURL: { blobServerInfo -> String in
             blobServerInfo.doneURL
         }, completionHandler: completionHandler)

@@ -67,7 +67,7 @@ extension MyIdentityStore {
     public func removeIdentityUserDefaults() {
         KeychainKeyWrapper().deleteWrappingKey()
         DeviceCookieManager.deleteDeviceCookie()
-        
+
         // Delete / reset user settings
         let userDefaults = AppGroup.userDefaults()
 

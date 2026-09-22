@@ -2,13 +2,19 @@ import CocoaLumberjackSwift
 import FileUtility
 import Intents
 import Keychain
+import Sentry
 import SwiftUI
 import ThreemaEssentials
 import ThreemaFramework
 import ThreemaMacros
 
 struct DeveloperSettingsView: View {
-        
+
+    /// Launches the child-coordinator chain demo. Routed through
+    /// `SettingsCoordinator` so the demo pushes onto the settings tab's shared
+    /// navigation path (see `SettingsCoordinatorDemo`).
+    let onStartCoordinatorDemo: () -> Void
+
     // Multi-Device
     @State var allowSeveralDevices = UserSettings.shared().allowSeveralLinkedDevices
     @State private var showDebugDeviceJoin = false
@@ -16,6 +22,7 @@ struct DeveloperSettingsView: View {
     // Feature Flags
     @State var ipcCommunicationEnabled = UserSettings.shared().ipcCommunicationEnabled
     @State var distributionListsEnabled = UserSettings.shared().distributionListsEnabled
+    @State var backups2Enabled = UserSettings.shared().backups2Enabled
     
     // Group Calls
     @State var groupCallsDebugMessages = UserSettings.shared().groupCallsDebugMessages
@@ -27,6 +34,27 @@ struct DeveloperSettingsView: View {
 
     var body: some View {
         List {
+            Section {
+                #if DEBUG
+                    Toggle(isOn: $distributionListsEnabled) {
+                        Text(verbatim: "Enable Distribution Lists Feature")
+                    }
+                    .onChange(of: distributionListsEnabled) {
+                        UserSettings.shared().distributionListsEnabled = distributionListsEnabled
+                    }
+
+                    Toggle(isOn: $backups2Enabled) {
+                        Text(verbatim: "Enable Cross Platform Backup Feature")
+                    }
+                    .onChange(of: backups2Enabled) {
+                        UserSettings.shared().backups2Enabled = backups2Enabled
+                    }
+                #endif
+            }
+            header: {
+                Text(verbatim: "Feature Flags")
+            }
+
             Section {
                 HStack {
                     Text(verbatim: "Last sent FeatureMask")
@@ -41,7 +69,26 @@ struct DeveloperSettingsView: View {
             footer: {
                 Text(verbatim: "Does not refresh automatically.")
             }
-            
+
+            Section {
+                Button {
+                    onStartCoordinatorDemo()
+                } label: {
+                    HStack {
+                        Text(verbatim: "Coordinator Demo")
+                            .foregroundStyle(.primary)
+                        Spacer()
+                        Image(systemName: "chevron.forward")
+                            .font(.footnote.weight(.semibold))
+                            .foregroundStyle(.tertiary)
+                    }
+                    .contentShape(Rectangle())
+                }
+            }
+            header: {
+                Text(verbatim: "Coordinator")
+            }
+
             Section {
                 NavigationLink {
                     UIComponentsView()
@@ -97,6 +144,13 @@ struct DeveloperSettingsView: View {
             }
             
             Section {
+                HStack {
+                    Text(verbatim: "Is Leader (Reopen view to update)")
+                    Spacer()
+                    Text(verbatim: "\((ServerConnector.shared().isRolePromotedToLeader) ? "Yes" : "No")")
+                        .foregroundStyle(.secondary)
+                }
+                
                 Button {
                     showDebugDeviceJoin = true
                 } label: {
@@ -132,20 +186,6 @@ struct DeveloperSettingsView: View {
             }
             header: {
                 Text(verbatim: "Multi-Device")
-            }
-            
-            Section {
-                #if DEBUG
-                    Toggle(isOn: $distributionListsEnabled) {
-                        Text(verbatim: "Enable Distribution Lists Feature")
-                    }
-                    .onChange(of: distributionListsEnabled) {
-                        UserSettings.shared().distributionListsEnabled = distributionListsEnabled
-                    }
-                #endif
-            }
-            header: {
-                Text(verbatim: "Feature Flags")
             }
             
             Section {
@@ -271,12 +311,22 @@ struct DeveloperSettingsView: View {
             
             Section {
                 Button {
-                    exit(1)
+                    Sentry.SentrySDK.capture(message: "Test event from developer settings")
+                } label: {
+                    Text(verbatim: "Capture test Sentry event")
+                }
+
+                Button {
+                    Sentry.SentrySDK.crash()
                 } label: {
                     Text(verbatim: "Crash the app")
                 }
             } header: {
-                Text(verbatim: "Crash")
+                Text(verbatim: "Sentry")
+            } footer: {
+                Text(
+                    verbatim: "\"Capture test Sentry event\" runs the consent flow in-session. \"Crash the app\" only produces a report when run without the Xcode debugger attached: crash, then relaunch from the home screen."
+                )
             }
 
             #if DEBUG
@@ -309,6 +359,7 @@ struct DeveloperSettingsView: View {
                 } header: {
                     Text(verbatim: "Keychain")
                 }
+
             #endif
         }
         .navigationBarTitle(Text(verbatim: "Developer Settings"), displayMode: .inline)
@@ -318,7 +369,7 @@ struct DeveloperSettingsView: View {
                 DebugDeviceJoinView(
                     model: QRCodeScannerViewModel(
                         mode: .multiDeviceLink,
-                        audioSessionManager: AudioSessionManager(),
+                        audioSessionManager: BusinessInjector.ui.audioSessionManager,
                         systemFeedbackManager: SystemFeedbackManager(
                             deviceCapabilitiesManager: DeviceCapabilitiesManager(),
                             settingsStore: BusinessInjector.ui.settingsStore
@@ -334,7 +385,7 @@ struct DeveloperSettingsView: View {
 struct DevModeView_Previews: PreviewProvider {
     static var previews: some View {
         NavigationView {
-            DeveloperSettingsView()
+            DeveloperSettingsView(onStartCoordinatorDemo: { })
         }
     }
 }

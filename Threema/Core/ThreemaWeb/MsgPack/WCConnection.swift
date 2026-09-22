@@ -13,12 +13,12 @@ protocol WCConnectionDelegate: WCSession {
     func currentMessageQueue() -> WebMessageQueue
 }
 
-@objc public final class WCConnection: NSObject {
+final class WCConnection: NSObject {
     enum WebSocketCode: UInt16 {
         case closing = 1000
     }
     
-    public enum WCConnectionStopReason: Int {
+    enum WCConnectionStopReason: Int {
         case stop, delete, disable, replace, error, pause
     }
     
@@ -45,7 +45,7 @@ protocol WCConnectionDelegate: WCSession {
     private var connectionWaitTimer: Timer?
     private var pingInterval: UInt32 = 30
     
-    public init(delegate: WCSession) {
+    init(delegate: WCSession) {
         self.delegate = delegate
         
         self.webClientConnectionQueue = DispatchQueue(label: "ch.threema.webClientConnectionQueue", attributes: [])
@@ -56,7 +56,7 @@ protocol WCConnectionDelegate: WCSession {
 }
 
 extension WCConnection {
-    // MARK: public functions
+    // MARK: Functions
     
     func connect(authToken: Data?) {
         // Read Core Data properties on the current (correct) context before dispatching
@@ -617,73 +617,73 @@ extension WCConnection: WebConnectionContextDelegate {
     }
 }
 
-public enum JDI {
+enum JDI {
     // To Int
-    public static func ToInt(_ x: Int8) -> Int {
+    static func ToInt(_ x: Int8) -> Int {
         Int(x)
     }
 
-    public static func ToInt(_ x: Int32) -> Int {
+    static func ToInt(_ x: Int32) -> Int {
         Int(x)
     }
 
-    public static func ToInt(_ x: Int64) -> Int {
+    static func ToInt(_ x: Int64) -> Int {
         Int(truncatingIfNeeded: x)
     }
 
-    public static func ToInt(_ x: Int) -> Int {
+    static func ToInt(_ x: Int) -> Int {
         x
     }
 
-    public static func ToInt(_ x: UInt8) -> Int {
+    static func ToInt(_ x: UInt8) -> Int {
         Int(x)
     }
 
-    public static func ToInt(_ x: UInt32) -> Int {
+    static func ToInt(_ x: UInt32) -> Int {
         if MemoryLayout<Int>.size == MemoryLayout<Int32>.size {
             return Int(Int32(bitPattern: x)) // For 32-bit systems, non-authorized interpretation
         }
         return Int(x)
     }
 
-    public static func ToInt(_ x: UInt64) -> Int {
+    static func ToInt(_ x: UInt64) -> Int {
         Int(truncatingIfNeeded: x)
     }
 
-    public static func ToInt(_ x: UInt) -> Int {
+    static func ToInt(_ x: UInt) -> Int {
         Int(bitPattern: x)
     }
 
     // To UInt
-    public static func ToUInt(_ x: Int8) -> UInt {
+    static func ToUInt(_ x: Int8) -> UInt {
         UInt(bitPattern: Int(x)) // Extend sign bit, assume minus input significant
     }
 
-    public static func ToUInt(_ x: Int32) -> UInt {
+    static func ToUInt(_ x: Int32) -> UInt {
         UInt(truncatingIfNeeded: Int64(x)) // Extend sign bit, assume minus input significant
     }
 
-    public static func ToUInt(_ x: Int64) -> UInt {
+    static func ToUInt(_ x: Int64) -> UInt {
         UInt(truncatingIfNeeded: x)
     }
 
-    public static func ToUInt(_ x: Int) -> UInt {
+    static func ToUInt(_ x: Int) -> UInt {
         UInt(bitPattern: x)
     }
 
-    public static func ToUInt(_ x: UInt8) -> UInt {
+    static func ToUInt(_ x: UInt8) -> UInt {
         UInt(x)
     }
 
-    public static func ToUInt(_ x: UInt32) -> UInt {
+    static func ToUInt(_ x: UInt32) -> UInt {
         UInt(x)
     }
 
-    public static func ToUInt(_ x: UInt64) -> UInt {
+    static func ToUInt(_ x: UInt64) -> UInt {
         UInt(truncatingIfNeeded: x)
     }
 
-    public static func ToUInt(_ x: UInt) -> UInt {
+    static func ToUInt(_ x: UInt) -> UInt {
         x
     }
 }

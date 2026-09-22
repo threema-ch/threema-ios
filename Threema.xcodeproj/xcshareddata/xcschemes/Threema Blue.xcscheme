@@ -24,13 +24,34 @@
    </BuildAction>
    <TestAction
       buildConfiguration = "Debug"
-      selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
-      selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
+      selectedDebuggerIdentifier = ""
+      selectedLauncherIdentifier = "Xcode.IDEFoundation.Launcher.PosixSpawn"
       shouldUseLaunchSchemeArgsEnv = "YES">
+      <PostActions>
+         <ExecutionAction
+            ActionType = "Xcode.IDEStandardExecutionActionsCore.ExecutionActionType.ShellScriptAction">
+            <ActionContent
+               title = "Run Script"
+               scriptText = "&quot;$SRCROOT/Scripts/open_previews_folder.sh&quot;&#10;">
+               <EnvironmentBuildable>
+                  <BuildableReference
+                     BuildableIdentifier = "primary"
+                     BlueprintIdentifier = "2D5A1CCC24C9B5DF00F87DD0"
+                     BuildableName = "Threema Blue.app"
+                     BlueprintName = "Threema Blue"
+                     ReferencedContainer = "container:Threema.xcodeproj">
+                  </BuildableReference>
+               </EnvironmentBuildable>
+            </ActionContent>
+         </ExecutionAction>
+      </PostActions>
       <TestPlans>
          <TestPlanReference
             reference = "container:ThreemaTests/ThreemaBlueTestPlan.xctestplan"
             default = "YES">
+         </TestPlanReference>
+         <TestPlanReference
+            reference = "container:ThreemaPreviewsTests/ThreemaPreviewsTestPlan.xctestplan">
          </TestPlanReference>
       </TestPlans>
       <Testables>
@@ -78,6 +99,10 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "-FEATURE_DISTRIBUTION_LISTS_ENABLED 1"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "-FEATURE_BACKUPS_2_ENABLED 1"
             isEnabled = "NO">
          </CommandLineArgument>
       </CommandLineArguments>

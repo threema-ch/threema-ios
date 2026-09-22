@@ -1,22 +1,29 @@
 import Foundation
 import WebRTC
 
-@objc public final class VoIPCallIceCandidatesMessage: NSObject {
+public final class VoIPCallIceCandidatesMessage: NSObject {
     public let removed: Bool
     public let candidates: [RTCIceCandidate]
     public var contactIdentity: String!
     public let callID: VoIPCallID
     public var completion: (() -> Void)?
     
+    public let receivedAsReflected: Bool?
+    public let isOutgoing: Bool
+    
     public init(
         removed: Bool,
         candidates: [RTCIceCandidate],
         callID: VoIPCallID,
+        receivedAsReflected: Bool? = nil,
+        isOutgoing: Bool,
         completion: (() -> Void)?
     ) {
         self.removed = removed
         self.candidates = candidates
         self.callID = callID
+        self.receivedAsReflected = receivedAsReflected
+        self.isOutgoing = isOutgoing
         self.completion = completion
         super.init()
     }
@@ -39,7 +46,7 @@ extension VoIPCallIceCandidatesMessage: VoIPCallMessageProtocol {
         case ufrag
     }
     
-    public static func decodeAsObject<T>(_ dictionary: [AnyHashable: Any]) -> T where T: VoIPCallMessageProtocol {
+    public static func decodeAsObject<T>(_ dictionary: [AnyHashable: Any], receivedAsReflected: Bool, isOutgoing: Bool) -> T where T: VoIPCallMessageProtocol {
         let removed = dictionary[Keys.removed.rawValue] as! Bool
         let tmpCandidates = dictionary[Keys.candidates.rawValue] as? [[AnyHashable: Any]]
         var candidates = [RTCIceCandidate]()
@@ -60,6 +67,8 @@ extension VoIPCallIceCandidatesMessage: VoIPCallMessageProtocol {
             removed: removed,
             candidates: candidates,
             callID: callID,
+            receivedAsReflected: receivedAsReflected,
+            isOutgoing: isOutgoing,
             completion: nil
         ) as! T
     }

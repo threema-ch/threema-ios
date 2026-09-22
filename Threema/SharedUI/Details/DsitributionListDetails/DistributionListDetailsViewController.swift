@@ -40,7 +40,7 @@ final class DistributionListDetailsViewController: ThemedCodeModernGroupedTableV
     private let distributionList: DistributionList
     
     // Display style of the chosen mode
-    private let displayStyle: DetailsDisplayStyle
+    private let displayStyle: Details.DisplayStyle
     
     private lazy var entityManager = BusinessInjector.ui.entityManager
     
@@ -58,7 +58,7 @@ final class DistributionListDetailsViewController: ThemedCodeModernGroupedTableV
     init(
         for distributionList: DistributionList,
         displayMode: DistributionListDetailsDisplayMode = .default,
-        displayStyle: DetailsDisplayStyle = .default,
+        displayStyle: Details.DisplayStyle = .default,
         delegate: DetailsDelegate? = nil
     ) {
         self.displayStyle = displayStyle

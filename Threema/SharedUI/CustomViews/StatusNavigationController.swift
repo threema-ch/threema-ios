@@ -143,7 +143,7 @@ final class StatusNavigationController: UINavigationController {
         }
     }
     
-    @objc func updateNavigationBarContent() {
+    func updateNavigationBarContent() {
 
         guard !isEditing else {
             hideTitleView()
@@ -198,7 +198,7 @@ final class StatusNavigationController: UINavigationController {
             }
             // Web
             else if NavigationBarPromptHandler.isWebActive {
-                let vc = UIHostingController(rootView: ThreemaWebSettingsView())
+                let vc = UIHostingController(rootView: ThreemaWebSettingsView(showCloseButton: true))
                 showViewController(vc)
             }
             // Group Calls
@@ -215,7 +215,6 @@ final class StatusNavigationController: UINavigationController {
         }
         else {
             let modalVC = ModalNavigationController()
-            modalVC.showDoneButton = true
             modalVC.pushViewController(vc, animated: true)
             SharedAppProvider.currentTopViewController?.show(modalVC, sender: nil)
         }

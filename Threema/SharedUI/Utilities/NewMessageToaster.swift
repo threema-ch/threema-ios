@@ -3,7 +3,7 @@ import ThreemaFramework
 import ThreemaMacros
 import UIKit
 
-@objc final class NewMessageToaster: NSObject {
+final class NewMessageToaster {
 
     private let previewSetting: InAppPreviewSetting
     private let bannerPresenter: NotificationBannerPresenting
@@ -25,19 +25,7 @@ import UIKit
         self.pushSettingManager = pushSettingManager
         self.entityManager = entityManager
         self.notificationCenter = notificationCenter
-        super.init()
         registerObservers()
-    }
-
-    @objc override convenience init() {
-        let businessInjector = BusinessInjector.ui
-        self.init(
-            previewSetting: UserSettings.shared(),
-            bannerPresenter: DefaultNotificationBannerPresenter(),
-            pushSettingManager: businessInjector.pushSettingManager,
-            entityManager: businessInjector.entityManager,
-            notificationCenter: .default
-        )
     }
 
     deinit {

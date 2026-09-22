@@ -1,6 +1,6 @@
 import Foundation
 
-public enum PushSounds {
+enum PushSounds {
     static let all = [
         "none",
         "silent",

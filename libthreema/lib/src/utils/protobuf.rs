@@ -1,6 +1,6 @@
 //! Protobuf utilities and extensions.
 use duplicate::duplicate_item;
-use rand::Rng as _;
+use libthreema_dependencies::rand::{self, Rng as _};
 
 use crate::{protobuf, utils::debug::Name};
 

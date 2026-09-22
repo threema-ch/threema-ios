@@ -16,7 +16,7 @@ final class TaskExecutionSendAbstractMessage: TaskExecution, TaskExecutionProtoc
             return isMultiDeviceRegistered()
         }
         .then { doReflect -> Promise<Void> in
-            // Reflect message if is necessary
+            // Reflect message if necessary
             guard doReflect, MediatorMessageProtocol.doReflectMessage(Int32(task.message.type())) else {
                 return Promise()
             }

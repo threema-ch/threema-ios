@@ -1,3 +1,4 @@
+import AudioSessionManagerTestHelper
 import Foundation
 @testable import GroupCalls
 
@@ -19,6 +20,8 @@ final class MockDependencies {
         return self
     }
     
+    let mockAudioSessionManager = MockAudioSessionManager()
+
     func create() -> Dependencies {
         Dependencies(
             groupCallsHTTPClientAdapter: mockHTTPClient ?? MockHTTPClient(),
@@ -31,7 +34,8 @@ final class MockDependencies {
             groupCallParticipantInfoFetcher: mockGroupCallParticipantInfoFetcher,
             groupCallSessionHelper: mockGroupCallSessionHelper,
             groupCallBundleUtil: mockGroupCallBundleUtil,
-            isRunningForScreenshots: false
+            isRunningForScreenshots: false,
+            audioSessionManager: mockAudioSessionManager
         )
     }
 }

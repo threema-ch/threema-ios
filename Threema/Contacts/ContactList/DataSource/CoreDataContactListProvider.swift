@@ -15,46 +15,47 @@ class CoreDataContactListProvider<Entity: NSObject, BusinessEntity: NSObject>: N
     private var subscriptions: Set<AnyCancellable> = .init()
     private let entityResolver: (Entity) -> BusinessEntity?
     private let entityFetcher: EntityFetcher
+    private let makeFetchedResultsController: () -> NSFetchedResultsController<NSFetchRequestResult>
     private var fetchedResultsController: NSFetchedResultsController<NSFetchRequestResult>
     
     // MARK: - Lifecycle
     
     init(
         entityFetcher: EntityFetcher = BusinessInjector.ui.entityManager.entityFetcher,
-        fetchedResultsController: NSFetchedResultsController<NSFetchRequestResult>,
+        fetchedResultsController makeFetchedResultsController: @escaping ()
+            -> NSFetchedResultsController<NSFetchRequestResult>,
         entityResolver: @escaping (Entity) -> BusinessEntity?
     ) {
         self.entityFetcher = entityFetcher
         self.entityResolver = entityResolver
-        self.fetchedResultsController = fetchedResultsController
+        self.makeFetchedResultsController = makeFetchedResultsController
+        self.fetchedResultsController = makeFetchedResultsController()
         self.snapshotSubject = .init(ContactListSnapshot())
         super.init()
         fetchedResultsController.delegate = self
         try? fetchedResultsController.performFetch()
-        
+
         BusinessInjector.ui
             .settingsStore
             .blacklist
             .publisher
             .sink(receiveValue: { [weak self] _ in
-                guard self != nil else {
+                guard let self else {
                     return
                 }
                 try? fetchedResultsController.performFetch()
             })
             .store(in: &subscriptions)
-        
-        UserSettings.shared()
-            .publisher(for: \.hideStaleContacts)
-            .sink { [weak self] _ in
-                guard let self else {
-                    return
-                }
-                self.fetchedResultsController = fetchedResultsController
-                fetchedResultsController.delegate = self
-                try? fetchedResultsController.performFetch()
-            }
-            .store(in: &subscriptions)
+
+        let userSettings: UserSettings = UserSettings.shared()
+        Publishers.Merge(
+            userSettings.publisher(for: \.hideStaleContacts).dropFirst().map { _ in () },
+            userSettings.publisher(for: \.sortOrderFirstName).dropFirst().map { _ in () }
+        )
+        .sink { [weak self] in
+            self?.recreateFetchedResultsController()
+        }
+        .store(in: &subscriptions)
     }
     
     deinit {
@@ -74,6 +75,30 @@ class CoreDataContactListProvider<Entity: NSObject, BusinessEntity: NSObject>: N
     
     private func convert(_ snapshot: NSDiffableDataSourceSnapshotReference) -> ContactListSnapshot {
         snapshot as ContactListSnapshot
+    }
+
+    private func recreateFetchedResultsController() {
+        let controller = makeFetchedResultsController()
+        controller.delegate = self
+        fetchedResultsController = controller
+
+        try? controller.performFetch()
+
+        // `performFetch()` does not call the delegate, thus the new content is published here
+        snapshotSubject.send(snapshot(of: controller))
+    }
+
+    private func snapshot(of controller: NSFetchedResultsController<NSFetchRequestResult>) -> ContactListSnapshot {
+        var snapshot = ContactListSnapshot()
+
+        for section in controller.sections ?? [] {
+            snapshot.appendSections([section.name])
+
+            let objectIDs = (section.objects as? [NSManagedObject] ?? []).map(\.objectID)
+            snapshot.appendItems(objectIDs, toSection: section.name)
+        }
+
+        return snapshot
     }
     
     // MARK: - NSFetchedResultsControllerDelegate

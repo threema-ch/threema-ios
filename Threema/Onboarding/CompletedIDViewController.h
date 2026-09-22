@@ -5,10 +5,6 @@
 
 @protocol CompletedIDDelegate <NSObject>
 
-// Legacy method for non-coordinator flow
--(void)completedIDSetup;
-
-@optional
 // New method for coordinator flow - passes configuration
 -(void)completedIDSetupWithConfiguration:(SetupConfiguration *)setupConfiguration;
 
@@ -48,6 +44,10 @@
 @property (weak, nonatomic) IBOutlet UIImageView *mailImageView;
 
 - (IBAction)finishAction:(id)sender;
+
+/// Re-enables the "Finish" button and the wizard controls after a failed setup completion, so the
+/// user can try again.
+- (void)resetCompletionProcess;
 
 @property (weak) id<CompletedIDDelegate> delegate;
 

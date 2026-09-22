@@ -205,8 +205,9 @@ extension MessageForwardingBottomView: ChatTextViewDelegate {
     import ThreemaEssentials
 
     #Preview("Message Forwarding Input View") {
-        UserDefaults.standard.set(["en"], forKey: "AppleLanguages")
-        return PreviewViewControllerRepresentable().ignoresSafeArea(.all)
+        // Change preview language
+        // UserDefaults.standard.set(["de"], forKey: "AppleLanguages")
+        PreviewViewControllerRepresentable().ignoresSafeArea(.all)
     }
 
     struct PreviewViewControllerRepresentable: UIViewControllerRepresentable {

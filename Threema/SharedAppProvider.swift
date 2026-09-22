@@ -3,53 +3,23 @@ import os
 import UIKit
 
 /// Centralized accessor for app-level shared state (window, top view controller,
-/// tab bar controller, lifecycle flags, etc). Routes between the legacy
-/// `AppDelegate`-owned hierarchy and the `SceneDelegate` / `RootCoordinator`
-/// hierarchy gated by `SCENE_DELEGATE_ROOT_COORDINATOR_DEVELOPMENT`.
-///
-/// Call sites should depend on this type rather than reaching into
-/// `AppDelegate.shared()` directly — the latter crashes under the scene flow
-/// because `UIApplication.shared.delegate` is an app delegate for the scene
-/// life cycle instead of the `AppDelegate`.
+/// tab bar controller, lifecycle flags, etc) owned by the `SceneDelegate` /
+/// `RootCoordinator` hierarchy.
 @MainActor
 enum SharedAppProvider {
-    
-    /// Compile time flag, thus it needs no isolation
-    nonisolated static var isSceneDelegateDevelopment: Bool {
-        #if SCENE_DELEGATE_ROOT_COORDINATOR_DEVELOPMENT
-            return true
-        #else
-            return false
-        #endif
-    }
 
     // MARK: - Navigation
 
     static var tabBarController: UITabBarController? {
-        if isSceneDelegateDevelopment {
-            SceneDelegate.current?.rootCoordinator?.tabBarController
-        }
-        else {
-            AppDelegate.shared()?.tabBarController()
-        }
+        SceneDelegate.current?.rootCoordinator?.tabBarController
     }
 
     static var currentTopViewController: UIViewController? {
-        if isSceneDelegateDevelopment {
-            SceneDelegate.current?.currentTopViewController
-        }
-        else {
-            AppDelegate.shared()?.currentTopViewController()
-        }
+        SceneDelegate.current?.currentTopViewController
     }
 
     static var window: UIWindow? {
-        if isSceneDelegateDevelopment {
-            SceneDelegate.current?.window
-        }
-        else {
-            AppDelegate.shared()?.window
-        }
+        SceneDelegate.current?.window
     }
 
     // MARK: - Lifecycle
@@ -60,23 +30,13 @@ enum SharedAppProvider {
     }
 
     static var isAppLocked: Bool {
-        if isSceneDelegateDevelopment {
-            SceneDelegate.current?.isAppLocked == true
-        }
-        else {
-            AppDelegate.shared()?.isAppLocked == true
-        }
+        SceneDelegate.current?.isAppLocked == true
     }
 
     // MARK: - Coordinator access
 
     static var appCoordinator: AppCoordinator? {
-        if isSceneDelegateDevelopment {
-            SceneDelegate.current?.rootCoordinator?.appCoordinator
-        }
-        else {
-            AppDelegate.shared()?.appCoordinator as? AppCoordinator
-        }
+        SceneDelegate.current?.rootCoordinator?.appCoordinator
     }
 
     static func execute(_ closure: (AppCoordinator) -> Void) {
@@ -91,41 +51,21 @@ enum SharedAppProvider {
     // MARK: - License
 
     static var isPresentingEnterLicense: Bool {
-        if isSceneDelegateDevelopment {
-            SceneDelegate.current?.isPresentingEnterLicense == true
-        }
-        else {
-            AppDelegate.shared()?.isPresentingEnterLicense() == true
-        }
+        SceneDelegate.current?.isPresentingEnterLicense == true
     }
 
     static var isPresentingKeyGeneration: Bool {
-        if isSceneDelegateDevelopment {
-            SceneDelegate.current?.isPresentingKeyGeneration == true
-        }
-        else {
-            AppDelegate.shared()?.isPresentingKeyGeneration() == true
-        }
+        SceneDelegate.current?.isPresentingKeyGeneration == true
     }
 
     static func presentIDBackupRestore() {
-        if isSceneDelegateDevelopment {
-            SceneDelegate.current?.presentIDBackupRestore()
-        }
-        else {
-            AppDelegate.shared()?.presentIDBackupRestore()
-        }
+        SceneDelegate.current?.presentIDBackupRestore()
     }
 
     // MARK: - Passcode
 
     static func presentPasscodeView() {
-        if isSceneDelegateDevelopment {
-            SceneDelegate.current?.presentPasscodeView()
-        }
-        else {
-            AppDelegate.shared()?.presentPasscodeView()
-        }
+        SceneDelegate.current?.presentPasscodeView()
     }
 
     // MARK: - Class-level bridges
@@ -156,20 +96,10 @@ enum SharedAppProvider {
 
     static var orientationLock: UIInterfaceOrientationMask {
         get {
-            if isSceneDelegateDevelopment {
-                SceneDelegate.current?.orientationLock ?? .all
-            }
-            else {
-                AppDelegate.shared()?.orientationLock ?? .all
-            }
+            SceneDelegate.current?.orientationLock ?? .all
         }
         set {
-            if isSceneDelegateDevelopment {
-                SceneDelegate.current?.orientationLock = newValue
-            }
-            else {
-                AppDelegate.shared()?.orientationLock = newValue
-            }
+            SceneDelegate.current?.orientationLock = newValue
         }
     }
 }

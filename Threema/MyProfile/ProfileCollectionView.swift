@@ -46,6 +46,10 @@ final class ProfileCollectionView: UICollectionView, UICollectionViewDelegate {
                   let dataSource = dataSource as? ProfileCollectionViewDataSource,
                   let row = ProfileCollectionViewDataSource.Row.row(for: destination),
                   let index = dataSource.indexPathForItem(row) else {
+                // Nothing is shown anymore: clear a stale highlight.
+                indexPathsForSelectedItems?.forEach {
+                    deselectItem(at: $0, animated: false)
+                }
                 return
             }
 

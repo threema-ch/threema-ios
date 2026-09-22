@@ -144,7 +144,7 @@ final class TaskExecutionReceiveMessage: TaskExecution, TaskExecutionProtocol {
                !self.frameworkInjector.userSettings.blacklist.contains(fromIdentity),
                self.frameworkInjector.userSettings.enableThreemaCall,
                self.frameworkInjector.pushSettingManager.canMasterDndSendPush(),
-               AVAudioApplication.shared.recordPermission == .granted || ProcessInfoHelper
+               RecordPermission.isGranted || ProcessInfoHelper
                .isRunningForTests {
                 // In the context of Framework tests, setting the permission is not feasible.
                 // Consequently, we must disregard this guard.

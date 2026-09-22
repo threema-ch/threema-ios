@@ -11,7 +11,7 @@ extension EntityFetcher {
         fetchEntities(entityName: "Contact", predicate: nil)
     }
     
-    @objc public func gatewayContactEntities() -> [ContactEntity]? {
+    public func gatewayContactEntities() -> [ContactEntity]? {
         fetchEntities(entityName: "Contact", predicate: .contactIsGateway)
     }
 
@@ -93,7 +93,26 @@ extension EntityFetcher {
         
         return identities
     }
-    
+
+    /// Count existing contacts for given identities.
+    /// - Parameter identities: Identities to look up
+    func countExisting(of identities: [ThreemaIdentity]) throws -> Int {
+        guard !identities.isEmpty else {
+            return 0
+        }
+
+        let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "Contact")
+        fetchRequest.predicate = .contactsWithIdentity(of: identities.map(\.rawValue))
+        fetchRequest.resultType = .countResultType
+        let result = try fetchRequest.execute()
+        return if result.count == 1, let count = result[0] as? Int {
+            count
+        }
+        else {
+            0
+        }
+    }
+
     /// Tries to fetch a `ContactEntity` that has the ID of the local user
     /// - Returns: The entity if it exists
     public func ownIdentityContactEntity(myIdentity: String?) -> ContactEntity? {

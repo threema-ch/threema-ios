@@ -19,7 +19,8 @@ public protocol MDMSetupProtocol {
 
     func disableIDExport() -> Bool
     func disableWorkDirectory() -> Bool
-    
+    func disableScreenshots() -> Bool
+
     func applyThreemaMdm(_ workData: [AnyHashable: Any]?, sendForce: Bool)
 }
 
@@ -49,6 +50,7 @@ extension MDMSetup: MDMSetupProtocol { /* already conforming */ }
 
         var mockDisableIDExport = false
         var mockDisableWorkDirectory = false
+        var mockDisableScreenShots = false
 
         public init() { /* no-op */ }
 
@@ -85,7 +87,9 @@ extension MDMSetup: MDMSetupProtocol { /* already conforming */ }
         public func disableIDExport() -> Bool { mockDisableIDExport }
         
         public func disableWorkDirectory() -> Bool { mockDisableWorkDirectory }
-        
+
+        public func disableScreenshots() -> Bool { mockDisableScreenShots }
+
         public func applyThreemaMdm(_ workData: [AnyHashable: Any]?, sendForce: Bool) {
             // No-op for mock - override in test subclasses if needed
         }

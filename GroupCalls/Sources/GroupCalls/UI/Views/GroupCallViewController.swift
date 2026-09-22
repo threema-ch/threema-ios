@@ -6,7 +6,10 @@ protocol GroupCallViewControllerDelegate: AnyObject {
 }
 
 public final class GroupCallViewController: UIViewController {
-    
+
+    /// Called when the view controller is dismissed (minimized or ended).
+    public var onDismiss: (() -> Void)?
+
     // MARK: - Subviews
     
     private lazy var toolbar: GroupCallToolbar = {
@@ -72,9 +75,14 @@ public final class GroupCallViewController: UIViewController {
         addGestureRecognizer()
     }
     
+    override public func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        onDismiss?()
+    }
+
     override public func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        
+
         UIApplication.shared.isIdleTimerDisabled = true
 
         updateCollectionViewLayout()

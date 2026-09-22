@@ -9,7 +9,7 @@ extension Colors {
         .white
     }
     
-    @objc public class var textInverted: UIColor {
+    public class var textInverted: UIColor {
         switch theme {
         case .light:
             .white
@@ -22,23 +22,11 @@ extension Colors {
         .primary
     }
     
-    @objc public class var textMentionMe: UIColor {
-        textInverted
-    }
-    
-    @objc public class var textMentionMeOwnMessage: UIColor {
-        textInverted
-    }
-    
-    @objc public class var textMentionMeOverviewMessage: UIColor {
-        textInverted
-    }
-    
     @objc public class var textWizardLink: UIColor {
         .primary
     }
     
-    @objc public class var textProminentButton: UIColor {
+    public class var textProminentButton: UIColor {
         switch TargetManager.current {
         case .threema, .green:
             .prominentButtonTextPrivate

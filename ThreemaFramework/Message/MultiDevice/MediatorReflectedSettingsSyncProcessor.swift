@@ -2,7 +2,7 @@ import Foundation
 import PromiseKit
 import ThreemaProtocols
 
-class MediatorReflectedSettingsSyncProcessor {
+final class MediatorReflectedSettingsSyncProcessor {
 
     private let frameworkInjector: FrameworkInjectorProtocol
 

@@ -11,7 +11,7 @@
     /// No setup done
     case notSetup = 10
     
-    /// An identity was added (through creation or a restore)
+    /// An identity was stored in keychain and should be used (through creation or a restore)
     case identityAdded = 20
     
     /// The identity setup is complete

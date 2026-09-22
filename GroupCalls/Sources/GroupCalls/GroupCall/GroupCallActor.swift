@@ -21,6 +21,7 @@ actor GroupCallActor: Sendable {
     var tokenRefreshed = false
     var failedCounter = 0
     let startMessageReceiveDate: Date
+    let peekTimeout: TimeInterval
     var isChosenCall = false
     var isNew = false
     
@@ -130,6 +131,7 @@ actor GroupCallActor: Sendable {
         gck: Data,
         protocolVersion: UInt32 = 1,
         startMessageReceiveDate: Date = Date(),
+        peekTimeout: TimeInterval = ProtocolDefines.peekTimeout,
         actorDelegate: GroupCallActorManagerDelegate? = nil,
         dependencies: Dependencies
     ) throws {
@@ -164,7 +166,8 @@ actor GroupCallActor: Sendable {
         )
         
         self.startMessageReceiveDate = startMessageReceiveDate
-        
+        self.peekTimeout = peekTimeout
+
         (self.uiActionQueue, self.uiActionContinuation) = AsyncStream<GroupCallUIAction>.makeStream()
         (self.uiQueue, self.uiContinuation) = AsyncStream<GroupCallUIEvent>.makeStream()
     }
@@ -241,21 +244,26 @@ actor GroupCallActor: Sendable {
             return .running
         }
         
-        /// **Protocol Step: Periodic Refresh** 3.2. Peek the call via a SfuHttpRequest.Peek request. If this does not
-        /// result in a response within 5s, remove call from calls and abort the peek-call sub-steps.
+        /// **Protocol Step: Group Call Peek Steps** 4. Peek the call via a SfuHttpRequest.Peek request. If this does
+        /// not result in a response within 15s, abort these steps and return that the status is unknown.
         let task = Task {
             try await self.sfuHTTPConnection.peek()
         }
         
-        let intermediateResult = try await Task.timeout(task, 5)
-        
+        let intermediateResult = try await Task.timeout(task, peekTimeout)
         switch intermediateResult {
         case let .error(error):
             if let error {
                 if case GroupCallError.invalidToken = error {
                     return .invalidToken
                 }
-                throw error
+                if error is CancellationError {
+                    throw error
+                }
+                /// **Protocol Step: Group Call Peek Steps** 5. If the server could not be reached, the status is
+                /// failed. The call is kept and handled by the failed-counter path.
+                DDLogWarn("[GroupCall] [PeriodicCleanup] Peek for call with id \(callID) failed: \(error)")
+                return .invalid
             }
             else {
                 return .invalid
@@ -307,9 +315,14 @@ actor GroupCallActor: Sendable {
             DDLogNotice(
                 "[GroupCall] [PeriodicCleanup] Invalid Request for call with id \(callID)"
             )
-            await updateButtonAndBanner(hide: true)
-            return .ended
-            
+            return .invalid
+
+        case .failed:
+            DDLogNotice(
+                "[GroupCall] [PeriodicCleanup] Peek failed for call with id \(callID)"
+            )
+            return .invalid
+
         case .needsTokenRefresh:
             return .invalidToken
             

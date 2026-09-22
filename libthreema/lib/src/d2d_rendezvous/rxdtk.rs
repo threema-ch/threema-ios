@@ -1,18 +1,22 @@
 //! Rendezvous Initiator/Responder Device Transport Key (RIDTK/RRDTK) utilities.
-use blake2::digest::Mac as _;
+use libthreema_dependencies::crypto::{
+    blake2b, chacha20, consts,
+    digest::{FixedOutput as _, Mac as _},
+    generic_array,
+};
 use libthreema_macros::concat_fixed_bytes;
 
 use super::{EphemeralTransportKey, RendezvousAuthenticationKey, RendezvousPathHash, rxdak, rxdxk};
-use crate::crypto::{
-    blake2b::Blake2bMac256, chacha20, consts::U32, digest::FixedOutput as _, generic_array::GenericArray,
-};
 
 #[inline]
-fn derive_stk(ak: &RendezvousAuthenticationKey, etk: &EphemeralTransportKey) -> GenericArray<u8, U32> {
+fn derive_stk(
+    ak: &RendezvousAuthenticationKey,
+    etk: &EphemeralTransportKey,
+) -> generic_array::GenericArray<u8, consts::U32> {
     // Derive STK from AK and ETK
     let key: [u8; 64] = concat_fixed_bytes!(ak.0, etk.0.to_bytes());
-    let mut stk = GenericArray::default();
-    Blake2bMac256::new_with_salt_and_personal(Some(&key), b"st", b"3ma-rendezvous")
+    let mut stk = generic_array::GenericArray::default();
+    blake2b::Blake2bMac256::new_with_salt_and_personal(Some(&key), b"st", b"3ma-rendezvous")
         .expect("Blake2bMac256 failed")
         .finalize_into(&mut stk);
     stk
@@ -22,18 +26,22 @@ fn derive_stk(ak: &RendezvousAuthenticationKey, etk: &EphemeralTransportKey) -> 
 fn derive_keys(
     ak: &RendezvousAuthenticationKey,
     etk: &EphemeralTransportKey,
-) -> (chacha20::Key, chacha20::Key, GenericArray<u8, U32>) {
+) -> (
+    chacha20::Key,
+    chacha20::Key,
+    generic_array::GenericArray<u8, consts::U32>,
+) {
     // Derive STK from AK and ETK
     let stk = derive_stk(ak, etk);
 
     // Derive RIDTK, RRDTK and RPH
-    let ridtk = Blake2bMac256::new_with_salt_and_personal(Some(&stk), b"ridt", b"3ma-rendezvous")
+    let ridtk = blake2b::Blake2bMac256::new_with_salt_and_personal(Some(&stk), b"ridt", b"3ma-rendezvous")
         .expect("Blake2bMac256 failed")
         .finalize_fixed();
-    let rrdtk = Blake2bMac256::new_with_salt_and_personal(Some(&stk), b"rrdt", b"3ma-rendezvous")
+    let rrdtk = blake2b::Blake2bMac256::new_with_salt_and_personal(Some(&stk), b"rrdt", b"3ma-rendezvous")
         .expect("Blake2bMac256 failed")
         .finalize_fixed();
-    let rph = Blake2bMac256::new_with_salt_and_personal(None, b"ph", b"3ma-rendezvous")
+    let rph = blake2b::Blake2bMac256::new_with_salt_and_personal(None, b"ph", b"3ma-rendezvous")
         .expect("Blake2bMac256 failed")
         .chain_update(stk)
         .finalize_fixed();

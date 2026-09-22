@@ -40,7 +40,7 @@ final class ImagePreviewCollectionViewCell: ScreenWidthSizedCell, UIScrollViewDe
         imageView
     }
     
-    @objc func tapTwice(gesture: UIGestureRecognizer) {
+    @objc private func tapTwice(gesture: UIGestureRecognizer) {
         if scrollView.zoomScale > scrollView.minimumZoomScale {
             scrollView.setZoomScale(scrollView.minimumZoomScale, animated: true)
         }
@@ -230,7 +230,7 @@ final class ImagePreviewCollectionViewCell: ScreenWidthSizedCell, UIScrollViewDe
         )
     }
     
-    @objc func handleTap(_ gesture: UITapGestureRecognizer) {
+    @objc private func handleTap(_ gesture: UITapGestureRecognizer) {
         DispatchQueue.main.async {
             self.togglePlaying()
         }
@@ -256,7 +256,7 @@ final class ImagePreviewCollectionViewCell: ScreenWidthSizedCell, UIScrollViewDe
         isPlaying = !isPlaying
     }
     
-    @objc func pauseVideo() {
+    @objc private func pauseVideo() {
         animatedImageView?.stopAnimating()
         gifPlayImageView.isHidden = false
     }

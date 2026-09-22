@@ -14,7 +14,7 @@ extension ContactEntity {
         workContact?.boolValue ?? false
     }
     
-    @objc public var isActive: Bool {
+    public var isActive: Bool {
         contactState == .active
     }
     
@@ -30,7 +30,7 @@ extension ContactEntity {
     public var isBlocked: Bool {
         // User settings should only be used for fast access to this settings. Use `SettingsStore`
         // otherwise to automatically synchronize the setting when multi-device is enabled.
-        UserSettings.shared().blacklist.contains(identity as Any)
+        UserSettings.shared().blacklist.contains(identity)
     }
     
     /// INPerson used for Intents

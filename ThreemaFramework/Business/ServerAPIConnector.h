@@ -78,4 +78,6 @@ enum IdentityState {
 
 - (void)obtainAuthTokenOnCompletion:(void(^)(NSString *authToken))onCompletion onError:(void(^)(NSError *error))onError;
 
+- (void)reportSpamForSenderWithIdentity:(nonnull NSString *)senderIdentity andNickname:(nullable NSString *)senderNickname withStore:(nonnull id<MyIdentityStoreProtocol>)identityStore onCompletion:(void(^_Nonnull)(void))onCompletion onError:(void(^_Nonnull)( NSError * _Nullable error))onError;
+
 @end

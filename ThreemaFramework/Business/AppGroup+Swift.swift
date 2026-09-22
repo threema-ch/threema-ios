@@ -2,6 +2,15 @@ import CocoaLumberjackSwift
 import Foundation
 
 extension AppGroup {
+
+    public static func setMeActiveUnlessIPC(userSettings: any UserSettingsProtocol = UserSettings.shared()) {
+        guard !userSettings.ipcCommunicationEnabled else {
+            return
+        }
+
+        setMeActive()
+    }
+
     @objc static func refreshDirtyObjects() {
         guard RemoteSecretProvider.isRemoteSecretManagerSet else {
             DDLogWarn(
@@ -21,5 +30,13 @@ extension AppGroup {
         // Because of different processes of the Notification Extension (adding dirty objects)
         // and the App (refresh and remove dirty objects) it's not guaranteed that a dirty object has been refreshed.
         persistenceManager.dirtyObjectManager.refreshDirtyObjects(reset: false)
+    }
+}
+
+// MARK: - AppGroupType + CustomStringConvertible
+
+extension AppGroupType: CustomStringConvertible {
+    public var description: String {
+        AppGroup.name(for: self)
     }
 }

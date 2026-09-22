@@ -2,7 +2,7 @@ import Coordinator
 import Foundation
 import ThreemaMacros
 
-public enum ThreemaTab: Int, CaseIterable {
+enum ThreemaTab: Int, CaseIterable {
     case contacts
     case conversations
     case profile
@@ -34,11 +34,11 @@ public enum ThreemaTab: Int, CaseIterable {
         }
     }
     
-    public var tabBarItem: UITabBarItem {
+    var tabBarItem: UITabBarItem {
         UITabBarItem(title: title, image: image, tag: rawValue)
     }
     
-    public init(_ destination: Destination.AppDestination) {
+    init(_ destination: Destination.AppDestination) {
         switch destination {
         case .contacts:
             self = .contacts
@@ -52,15 +52,15 @@ public enum ThreemaTab: Int, CaseIterable {
     }
 }
 
-public final class ThreemaTabBarController: UITabBarController {
+final class ThreemaTabBarController: UITabBarController {
     
-    // MARK: - Public properties
+    // MARK: - Properties
     
-    public var selectedThreemaTab: ThreemaTab {
+    var selectedThreemaTab: ThreemaTab {
         ThreemaTab(rawValue: selectedIndex) ?? .conversations
     }
-    
-    public func navigationController(
+
+    func navigationController(
         for tab: ThreemaTab
     ) -> UINavigationController? {
         guard let viewControllers, viewControllers.count > tab.rawValue else {

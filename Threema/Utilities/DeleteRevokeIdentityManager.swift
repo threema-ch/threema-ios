@@ -4,28 +4,15 @@ import Foundation
 import Keychain
 import UserNotifications
 
-public final class DeleteRevokeIdentityManager: NSObject {
+public enum DeleteRevokeIdentityManager {
     
     enum DeleteRevokeIdentityManagerError: Error {
         case revocationFailed
     }
-
-    @available(
-        swift,
-        obsoleted: 1.0,
-        renamed: "deleteLocalDataWithoutBusinessReady()",
-        message: "Only use from Objective-C"
-    )
-    @objc static func deleteLocalDataWithoutBusinessReadyObjC(completion: @escaping () -> Void) {
-        Task { @MainActor in
-            await deleteLocalDataWithoutBusinessReady()
-            completion()
-        }
-    }
     
     /// Since business might no be available in all cases (e.g. when entering the passcode), and we need
     /// to delete all data, we cannot remove everything that would make use of business.
-    static func deleteLocalDataWithoutBusinessReady() async {
+    static func deleteLocalDataWithoutBusinessReady() {
         // Files
         UserDefaults.resetStandardUserDefaults()
         FileUtility.shared.removeItemsInAllDirectories(appGroupID: AppGroup.groupID())

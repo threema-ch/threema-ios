@@ -25,7 +25,7 @@ final class ThreemaSafeDashboardViewModel {
             "info.circle"
         }
 
-    let backupDateLabel = #localize("safe_last_backup")
+    let backupDateLabel = #localize("last_backup")
     let learnMoreButtonTitle = #localize("safe_learn_more_button_title")
     let serverNameLabel = #localize("safe_server_name")
     let serverSectionHeader = #localize("server").uppercased()

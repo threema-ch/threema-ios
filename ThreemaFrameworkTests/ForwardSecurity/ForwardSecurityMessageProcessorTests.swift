@@ -1500,23 +1500,68 @@ private final class FSMessageSenderMock: MessageSenderProtocol {
     }
     
     // Empty implementations for protocol conformance
-    func sendBallotMessage(for ballot: BallotEntity) { }
-    func sendBallotVoteMessage(for ballot: BallotEntity) { }
-    func sendBaseMessage(with objectID: NSManagedObjectID, to receivers: MessageSenderReceivers) async { }
-    func sendDeleteMessage(with objectID: NSManagedObjectID, receiversExcluded: [Contact]?) throws { }
-    func sendEditMessage(with objectID: NSManagedObjectID, rawText: String, receiversExcluded: [Contact]?) throws { }
+    func sendBallotMessage(for ballot: BallotEntity) {
+        // no-op
+    }
+    
+    func sendBallotVoteMessage(for ballot: BallotEntity) {
+        // no-op
+    }
+    
+    func sendBaseMessage(with objectID: NSManagedObjectID, to receivers: MessageSenderReceivers) async {
+        // no-op
+    }
+    
+    func sendDeleteMessage(with objectID: NSManagedObjectID, receiversExcluded: [Contact]?) throws {
+        // no-op
+    }
+    
+    func sendEditMessage(with objectID: NSManagedObjectID, rawText: String, receiversExcluded: [Contact]?) throws {
+        // no-op
+    }
+    
     func sendReaction(
         to objectID: NSManagedObjectID,
         reaction: EmojiVariant
-    ) async throws -> ReactionsManager.ReactionSendingResult { .error }
-    func sendDeliveryReceipt(for abstractMessage: AbstractMessage) -> PromiseKit.Promise<Void> { Promise() }
-    func sendTypingIndicator(typing: Bool, toIdentity: ThreemaIdentity) { }
-    func sendReadReceipt(for messages: [BaseMessageEntity], toIdentity: ThreemaIdentity) async { }
-    func sendReadReceipt(for messages: [BaseMessageEntity], toGroupIdentity: GroupIdentity) async { }
-    func doSendReadReceipt(to contactEntity: ContactEntity?) -> Bool { false }
-    func doSendReadReceipt(to conversation: ConversationEntity) -> Bool { false }
-    func doSendTypingIndicator(to contact: ContactEntity?) -> Bool { false }
-    func doSendTypingIndicator(to conversation: ConversationEntity) -> Bool { false }
+    ) async throws -> ReactionsManager.ReactionSendingResult {
+        .error
+    }
+    
+    func sendDeliveryReceipt(for abstractMessage: AbstractMessage) -> PromiseKit.Promise<Void> {
+        Promise()
+    }
+    
+    func sendTypingIndicator(typing: Bool, toIdentity: ThreemaIdentity) {
+        // no-op
+    }
+    
+    func sendReadReceipt(for messages: [BaseMessageEntity], toIdentity: ThreemaIdentity) async {
+        // no-op
+    }
+    
+    func sendReadReceipt(for messages: [BaseMessageEntity], toGroupIdentity: GroupIdentity) async {
+        // no-op
+    }
+    
+    func doSendReadReceipt(to contactEntity: ContactEntity?) -> Bool {
+        false
+    }
+    
+    func doSendReadReceipt(to conversation: ConversationEntity) -> Bool {
+        false
+    }
+    
+    func doSendTypingIndicator(to contact: ContactEntity?) -> Bool {
+        false
+    }
+    
+    func doSendTypingIndicator(to conversation: ConversationEntity) -> Bool {
+        false
+    }
+    
+    func sendTransactionRequiredCallMessage(abstractMessage: AbstractMessage, callID: ThreemaFramework.VoIPCallID) {
+        // no-op
+    }
 }
 
 private class FSTaskManagerMock: TaskManagerProtocol {

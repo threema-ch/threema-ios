@@ -59,6 +59,7 @@ mod external_crate_false_positives_cli_feature {
 uniffi::setup_scaffolding!();
 
 /// Compiled low-level protobuf messages.
+// TODO(LIB-184): Remove public visibility
 #[allow(
     clippy::all,
     clippy::pedantic,
@@ -80,6 +81,11 @@ pub mod protobuf {
         include!(concat!(env!("OUT_DIR"), "/csp_e2e.rs"));
     }
 
+    /// Data backup messages.
+    pub mod data_backup {
+        include!(concat!(env!("OUT_DIR"), "/data_backup.rs"));
+    }
+
     /// Device to Device Protocol messages.
     pub mod d2d {
         include!(concat!(env!("OUT_DIR"), "/d2d.rs"));
@@ -88,6 +94,11 @@ pub mod protobuf {
     /// Device to Mediator Protocol messages.
     pub mod d2m {
         include!(concat!(env!("OUT_DIR"), "/d2m.rs"));
+    }
+
+    /// Device join protocol messages.
+    pub mod d2d_join {
+        include!(concat!(env!("OUT_DIR"), "/d2d_join.rs"));
     }
 
     /// Data synchronisation messages
@@ -107,7 +118,7 @@ pub mod protobuf {
 }
 
 pub mod bindings;
-#[cfg(feature = "cli")]
+#[cfg(any(test, feature = "cli"))]
 pub mod cli;
 pub mod common;
 pub mod crypto;
@@ -115,9 +126,11 @@ pub mod csp;
 pub mod csp_e2e;
 pub mod d2d_rendezvous;
 pub mod d2m;
+pub mod data_backup;
 pub mod https;
 pub mod id_backup;
 pub mod model;
+pub mod provider;
 pub mod remote_secret;
 pub mod utils;
 pub mod work;

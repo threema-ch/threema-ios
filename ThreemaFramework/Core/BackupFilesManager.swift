@@ -2,21 +2,19 @@ import CocoaLumberjackSwift
 import FileUtility
 import Foundation
 
-@objc public final class BackupFilesManager: NSObject {
+public final class BackupFilesManager {
 
     private let fileUtility: FileUtilityProtocol
 
-    @objc override public init() {
+    public init() {
         self.fileUtility = FileUtility.shared
-        super.init()
     }
 
     init(fileUtility: FileUtilityProtocol) {
         self.fileUtility = fileUtility
-        super.init()
     }
 
-    @objc public func setIsExcludedFromBackup(exclude: Bool) {
+    public func setIsExcludedFromBackup(exclude: Bool) {
         let fileAndDirectoryNames = [
             DatabaseManager.databaseFileName,
             DatabaseManager.databaseSupportPath,

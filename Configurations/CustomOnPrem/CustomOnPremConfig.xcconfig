@@ -18,6 +18,9 @@ PRESET_OPPF_URL = onprem.custom.com
 /// Define a custom URL scheme for your app
 APP_URL_SCHEME = customonprem
 
+/// A static app identifier is used to verify the app for an OPPF request.
+OPPF_APP_IDENTIFIER = 
+
 /// Declare the use of encryption to streamline the app submission process
 
 // Accent Color
@@ -32,8 +35,6 @@ SUPPORT_FAQ_URL =
 // Use $(SLASH) for the first of double slashes
 // Example: https:$(SLASH)/three.ma/md
 DEVICE_JOIN_DOWNLOAD_URL =
-
-
 
 /// Target Manager Key
 /// Do NOT change the TARGET_MANAGER_KEY !!!

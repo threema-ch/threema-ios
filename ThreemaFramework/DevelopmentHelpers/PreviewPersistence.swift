@@ -4,25 +4,33 @@
     import ThreemaEssentials
 
     /// Create an in-memory Core Data stack, used for working with sample data in Swift UI Previews.
-    struct PreviewPersistence {
+    public struct PreviewPersistence {
+        public let persistenceContainer: NSPersistentContainer
+        public let entityManager: EntityManager
+        public let context: NSManagedObjectContext
 
-        let persistenceContainer: NSPersistentContainer = {
+        public init() {
             let modelName = "ThreemaData"
             let modelURL = BundleUtil.url(forResource: modelName, withExtension: "momd")!
             let managedObjectModel = NSManagedObjectModel(contentsOf: modelURL)!
-            let container = NSPersistentContainer(name: modelName, managedObjectModel: managedObjectModel)
-            container.persistentStoreDescriptions.first!.url = URL(fileURLWithPath: "/dev/null")
-            container.loadPersistentStores { _, error in
+            persistenceContainer = NSPersistentContainer(name: modelName, managedObjectModel: managedObjectModel)
+            persistenceContainer.persistentStoreDescriptions.first!.url = URL(fileURLWithPath: "/dev/null")
+            persistenceContainer.loadPersistentStores { _, error in
                 if let error {
                     assertionFailure(error.localizedDescription)
                 }
             }
-            container.viewContext.automaticallyMergesChangesFromParent = true
-            container.viewContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
-            return container
-        }()
+            persistenceContainer.viewContext.automaticallyMergesChangesFromParent = true
+            persistenceContainer.viewContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
 
-        var context: NSManagedObjectContext { persistenceContainer.viewContext }
+            context = persistenceContainer.viewContext
+            entityManager = EntityManager(
+                databaseContext: DatabaseContext(
+                    persistentStoreCoordinator: persistenceContainer.persistentStoreCoordinator
+                ),
+                isRemoteSecretEnabled: false
+            )
+        }
     }
 
 #endif

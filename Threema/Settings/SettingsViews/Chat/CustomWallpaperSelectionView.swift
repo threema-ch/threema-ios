@@ -115,8 +115,8 @@ struct CustomWallpaperSelectionView: View {
     }
 }
 
-public final class CustomWallpaperSelectionViewController {
-    public func customWallpaperSelectionView(
+final class CustomWallpaperSelectionViewController {
+    func customWallpaperSelectionView(
         conversationID: NSManagedObjectID,
         onDismiss: @escaping () -> Void
     ) -> UIViewController {

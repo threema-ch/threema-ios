@@ -94,6 +94,15 @@
         public func backupIdentity(withPassword password: String) -> String? { nil }
     
         public func sendUpdateWorkInfoStatus() -> Bool { false }
+
+        public func restore(
+            fromBackup myIdentity: String,
+            withSecretKey mySecretKey: Data,
+            onCompletion: @escaping () -> Void,
+            onError: @escaping (any Error) -> Void
+        ) {
+            onCompletion()
+        }
     }
 
 #endif

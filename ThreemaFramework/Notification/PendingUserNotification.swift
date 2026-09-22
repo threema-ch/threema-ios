@@ -126,6 +126,7 @@ extension PendingUserNotification {
 
         let businessInjector = BusinessInjector(forBackgroundProcess: true)
         let intentCreator = IntentCreator(
+            myIdentity: businessInjector.profileStore.profile.myIdentity,
             userSettings: businessInjector.userSettings,
             entityManager: businessInjector.entityManager
         )

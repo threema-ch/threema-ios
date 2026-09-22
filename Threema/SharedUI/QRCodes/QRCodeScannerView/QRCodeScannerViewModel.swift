@@ -1,3 +1,4 @@
+import AudioSessionManager
 import Observation
 import ThreemaEssentials
 import ThreemaMacros
@@ -34,9 +35,9 @@ final class QRCodeScannerViewModel {
         let message: String
     }
 
-    let audioSessionManager: AudioSessionManagerProtocol
-    let systemFeedbackManager: SystemFeedbackManagerProtocol
-    let systemPermissionsManager: SystemPermissionsManagerProtocol
+    let audioSessionManager: (any AudioSessionManagerProtocol)?
+    let systemFeedbackManager: any SystemFeedbackManagerProtocol
+    let systemPermissionsManager: any SystemPermissionsManagerProtocol
 
     var onCompletion: ((QRCodeResult) -> Void)?
     var onCancel: (() -> Void)?
@@ -52,9 +53,9 @@ final class QRCodeScannerViewModel {
 
     init(
         mode: QRCodeDecodeMode,
-        audioSessionManager: AudioSessionManagerProtocol,
-        systemFeedbackManager: SystemFeedbackManagerProtocol,
-        systemPermissionsManager: SystemPermissionsManagerProtocol
+        audioSessionManager: (any AudioSessionManagerProtocol)?,
+        systemFeedbackManager: any SystemFeedbackManagerProtocol,
+        systemPermissionsManager: any SystemPermissionsManagerProtocol
     ) {
         self.mode = mode
         self.audioSessionManager = audioSessionManager
@@ -131,7 +132,7 @@ final class QRCodeScannerViewModel {
     // MARK: - Helpers
 
     private func updateTitleAndSubtitle() {
-        title = #localize("qr_code_scanner_title")
+        title = #localize("scan_qr_code_title")
 
         switch mode {
         case .identity:

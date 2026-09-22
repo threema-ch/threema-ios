@@ -20,7 +20,7 @@ let package = Package(
     ],
     dependencies: [
         .package(path: "../ThreemaEssentials"),
-        .package(url: "https://github.com/CocoaLumberjack/CocoaLumberjack.git", exact: "3.8.5"),
+        .package(url: "https://github.com/CocoaLumberjack/CocoaLumberjack.git", exact: "3.9.1"),
     ],
     targets: [
         .target(

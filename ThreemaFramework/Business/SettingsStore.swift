@@ -55,14 +55,15 @@ public final class SettingsStore: SettingsStoreInternalProtocol, SettingsStorePr
         // Privacy Settings
         self.syncContacts = userSettings.syncContacts
         self.blacklist = Set<String>(userSettings.blacklist.array as? [String] ?? [])
-        self.syncExclusionList = userSettings.syncExclusionList as? [String] ?? []
+        self.syncExclusionList = userSettings.syncExclusionList
         self.blockUnknown = userSettings.blockUnknown
         self.allowOutgoingDonations = userSettings.allowOutgoingDonations
         self.sendReadReceipts = userSettings.sendReadReceipts
         self.sendTypingIndicator = userSettings.sendTypingIndicator
         self.choosePOI = userSettings.enablePoi
         self.hidePrivateChats = userSettings.hidePrivateChats
-        
+        self.allowScreenshot = userSettings.allowScreenshot
+
         // Notifications
         self.inAppSounds = userSettings.inAppSounds
         self.inAppVibrate = userSettings.inAppVibrate
@@ -213,7 +214,7 @@ public final class SettingsStore: SettingsStoreInternalProtocol, SettingsStorePr
     
     @Published public var syncExclusionList: [String] {
         didSet {
-            guard userSettings.syncExclusionList as? [String] != syncExclusionList else {
+            guard userSettings.syncExclusionList != syncExclusionList else {
                 return
             }
             syncAndSave()
@@ -281,7 +282,16 @@ public final class SettingsStore: SettingsStoreInternalProtocol, SettingsStorePr
             }
         }
     }
-    
+
+    @Published public var allowScreenshot: Bool {
+        didSet {
+            guard userSettings.allowScreenshot != allowScreenshot else {
+                return
+            }
+            syncAndSave()
+        }
+    }
+
     // MARK: Notifications
 
     @Published public var inAppSounds: Bool {
@@ -653,6 +663,12 @@ public final class SettingsStore: SettingsStoreInternalProtocol, SettingsStorePr
             userSettings.enableThreemaGroupCalls = newValue
             enableThreemaGroupCalls = newValue
         }
+
+        if syncSettings.hasScreenshotPolicy {
+            let newValue = syncSettings.screenshotPolicy == .allowScreenshot
+            userSettings.allowScreenshot = newValue
+            allowScreenshot = newValue
+        }
     }
     
     /// Saves made changes
@@ -716,7 +732,7 @@ public final class SettingsStore: SettingsStoreInternalProtocol, SettingsStorePr
             hasChanges = true
         }
 
-        if userSettings.syncExclusionList as? [String] != syncExclusionList {
+        if userSettings.syncExclusionList != syncExclusionList {
             syncSettings.excludeFromSyncIdentities.identities = syncExclusionList
             hasChanges = true
         }
@@ -735,7 +751,12 @@ public final class SettingsStore: SettingsStoreInternalProtocol, SettingsStorePr
             syncSettings.groupCallPolicy = enableThreemaGroupCalls ? .allowGroupCall : .denyGroupCall
             hasChanges = true
         }
-        
+
+        if userSettings.allowScreenshot != allowScreenshot {
+            syncSettings.screenshotPolicy = allowScreenshot ? .allowScreenshot : .denyScreenshot
+            hasChanges = true
+        }
+
         guard hasChanges else {
             isSyncing(false, failed: false)
             NotificationPresenterWrapper().present(type: .settingsSyncSuccess)
@@ -863,7 +884,7 @@ public final class SettingsStore: SettingsStoreInternalProtocol, SettingsStorePr
 
         compareAndAssign(&userSettings.blockUnknown, blockUnknown)
         
-        if userSettings.syncExclusionList as? [String] ?? [] != syncExclusionList {
+        if userSettings.syncExclusionList != syncExclusionList {
             userSettings.syncExclusionList = syncExclusionList
         }
         
@@ -871,7 +892,8 @@ public final class SettingsStore: SettingsStoreInternalProtocol, SettingsStorePr
         compareAndAssign(&userSettings.sendTypingIndicator, sendTypingIndicator)
         compareAndAssign(&userSettings.enablePoi, choosePOI)
         compareAndAssign(&userSettings.hidePrivateChats, hidePrivateChats)
-        
+        compareAndAssign(&userSettings.allowScreenshot, allowScreenshot)
+
         // Notifications
         compareAndAssign(&userSettings.inAppSounds, inAppSounds)
         compareAndAssign(&userSettings.inAppVibrate, inAppVibrate)
@@ -944,11 +966,12 @@ public final class SettingsStore: SettingsStoreInternalProtocol, SettingsStorePr
         compareAndAssign(&syncContacts, userSettings.syncContacts)
         compareAndAssign(&blacklist, Set<String>(userSettings.blacklist.array as? [String] ?? []))
         compareAndAssign(&blockUnknown, userSettings.blockUnknown)
-        compareAndAssign(&syncExclusionList, userSettings.syncExclusionList as? [String] ?? [])
+        compareAndAssign(&syncExclusionList, userSettings.syncExclusionList)
         compareAndAssign(&sendReadReceipts, userSettings.sendReadReceipts)
         compareAndAssign(&sendTypingIndicator, userSettings.sendTypingIndicator)
         compareAndAssign(&choosePOI, userSettings.enablePoi)
         compareAndAssign(&hidePrivateChats, userSettings.hidePrivateChats)
+        compareAndAssign(&allowScreenshot, userSettings.allowScreenshot)
 
         // Notifications
         compareAndAssign(&inAppSounds, userSettings.inAppSounds)

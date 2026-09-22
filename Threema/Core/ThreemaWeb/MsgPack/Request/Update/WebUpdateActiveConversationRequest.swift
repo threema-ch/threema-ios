@@ -41,7 +41,7 @@ final class WebUpdateActiveConversationRequest: WebAbstractMessage {
         }
 
         DispatchQueue.main.async {
-            let notificationManager = NotificationManager()
+            let notificationManager = NotificationManager(businessInjector: BusinessInjector.ui)
             notificationManager.updateUnreadMessagesCount()
         }
 

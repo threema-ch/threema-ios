@@ -15,7 +15,9 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 #endif
 
 NSString * const kFeatureDistributionListsEnabled = @"FEATURE_DISTRIBUTION_LISTS_ENABLED";
+NSString * const kFeatureBackups2Enabled = @"FEATURE_BACKUPS_2_ENABLED";
 NSString * const kPreferenceInterfaceStyleKey = @"PREFERENCE_INTERFACE_STYLE";
+NSString * const kPreferenceAllowScreenshotKey = @"AllowScreenshot";
 
 typedef NS_ENUM(NSInteger, ThreemaAudioMessagePlaySpeed) {
     ThreemaAudioMessagePlaySpeedHalf = 0,
@@ -50,6 +52,7 @@ typedef NS_ENUM(NSInteger, ThreemaAudioMessagePlaySpeed) {
 @synthesize blockUnknown;
 @synthesize enablePoi;
 @synthesize allowOutgoingDonations;
+@synthesize allowScreenshot;
 
 @synthesize inAppSounds;
 @synthesize inAppVibrate;
@@ -129,6 +132,7 @@ typedef NS_ENUM(NSInteger, ThreemaAudioMessagePlaySpeed) {
 @synthesize ipcCommunicationEnabled;
 @synthesize ipcSecretPrefix;
 @synthesize distributionListsEnabled;
+@synthesize backups2Enabled;
 
 @synthesize didShowIdentityThisDeviceOnly;
 
@@ -210,6 +214,7 @@ static UserSettings *instance;
                                         @"large", @"ImageSize",
                                         @"high", @"VideoQuality",
                                         [NSNumber numberWithBool:NO],  @"AutoSaveMedia",
+                                        [NSNumber numberWithBool:NO], kPreferenceAllowScreenshotKey,
                                         [NSNumber numberWithBool:NO], @"DisableBigEmojis",
                                         [NSNumber numberWithBool:YES], @"SendMessageFeedback",
                                         [NSNumber numberWithBool:YES], @"ShowProfilePictures",
@@ -263,6 +268,7 @@ static UserSettings *instance;
                                         [NSData data], @"IPCSecretPrefix",
                                         [NSNumber numberWithUnsignedInteger:[TargetManagerObjC isBusinessApp] ? WallpaperTypeEmpty : WallpaperTypeThreema], @"WallpaperType",
                                         [NSNumber numberWithBool:NO], kFeatureDistributionListsEnabled,
+                                        [NSNumber numberWithBool:NO], kFeatureBackups2Enabled,
                                         [NSNumber numberWithInteger: [TargetManagerObjC isBusinessApp] ? UserInterfacePreferenceDark : UserInterfacePreferenceSystem], kPreferenceInterfaceStyleKey, // Default Dark mode for Business App
                                      nil];
                                      //Keys `EvaluatedPolicyDomainStateApp` and `EvaluatedPolicyDomainStateShareExtension` are intentionally not set, since we need them to be `nil` the first time.
@@ -270,10 +276,6 @@ static UserSettings *instance;
         [defaults registerDefaults:appDefaults];
 
         [self initFromUserDefaults];
-
-        #ifndef SCENE_DELEGATE_ROOT_COORDINATOR_DEVELOPMENT
-            [self migrateUserInterfaceStyleStoringKey];
-        #endif
     }
     return self;
 }
@@ -303,6 +305,7 @@ static UserSettings *instance;
     imageSize = [defaults stringForKey:@"ImageSize"];
     videoQuality = [defaults stringForKey:@"VideoQuality"];
     autoSaveMedia = [defaults boolForKey:@"AutoSaveMedia"];
+    allowScreenshot = [defaults boolForKey:kPreferenceAllowScreenshotKey];
 
     disableBigEmojis = [defaults boolForKey:@"DisableBigEmojis"];
     sendMessageFeedback = [defaults boolForKey:@"SendMessageFeedback"];
@@ -409,8 +412,11 @@ static UserSettings *instance;
         [defaults removeObjectForKey:@"NewNavigationEnabled"];
     }
 
+    /// Feature flags are stored in the Developer Settings. A launch argument in the scheme is in the
+    /// argument domain, which is searched first, and thus overrides the stored value for that launch.
     distributionListsEnabled = [defaults boolForKey:kFeatureDistributionListsEnabled];
-    
+    backups2Enabled = [defaults boolForKey:kFeatureBackups2Enabled];
+
     if ([ThreemaEnvironment env] != EnvironmentTypeAppStore) {
         ipcCommunicationEnabled = [defaults boolForKey:@"IPCEnabled"];
     }
@@ -428,37 +434,6 @@ static UserSettings *instance;
     [defaults synchronize];
 }
 
-#ifndef SCENE_DELEGATE_ROOT_COORDINATOR_DEVELOPMENT
-- (void) migrateUserInterfaceStyleStoringKey {
-    NSString *darkThemeKey = @"DarkTheme";
-    NSString *useSystemThemeKey = @"UseSystemTheme";
-
-    // Only migrate if the old values still exist.
-    if ([defaults objectForKey:darkThemeKey] != nil && [defaults objectForKey:useSystemThemeKey] != nil) {
-        BOOL darkTheme = [defaults boolForKey:darkThemeKey];
-        BOOL useSystemTheme = [defaults boolForKey:useSystemThemeKey];
-
-        UserInterfacePreference newPreference;
-
-        if (useSystemTheme) {
-            newPreference = UserInterfacePreferenceSystem;
-        } else if (darkTheme) {
-            newPreference = UserInterfacePreferenceDark;
-        } else {
-            newPreference = UserInterfacePreferenceLight;
-        }
-
-        self.interfaceStyle = newPreference;
-
-        // Remove values stored in the old keys
-        [defaults removeObjectForKey:darkThemeKey];
-        [defaults removeObjectForKey:useSystemThemeKey];
-
-        [defaults synchronize];
-    }
-}
-#endif
-
 - (void)setSendReadReceipts:(BOOL)newSendReadReceipts {
     sendReadReceipts = newSendReadReceipts;
     DDLogNotice(@"Read receipts bug: set flag to %@", newSendReadReceipts ? @"true" : @"false");
@@ -474,13 +449,13 @@ static UserSettings *instance;
     [defaults synchronize];
 }
 
-- (void)setSyncExclusionList:(NSArray *)newSyncExclusionList {
+- (void)setSyncExclusionList:(NSArray <NSString *>*)newSyncExclusionList {
     syncExclusionList = newSyncExclusionList;
     [defaults setObject:syncExclusionList forKey:@"SyncExclusionList"];
     [defaults synchronize];
 }
 
-- (void)setBlacklist:(NSOrderedSet *)newBlacklist {
+- (void)setBlacklist:(NSOrderedSet<NSString *> *)newBlacklist {
     blacklist = newBlacklist;
     [defaults setObject:blacklist.array forKey:@"Blacklist"];
     [defaults synchronize];
@@ -519,6 +494,12 @@ static UserSettings *instance;
 - (void)setAllowOutgoingDonations:(BOOL)newAllowOutgoingDonations {
     allowOutgoingDonations = newAllowOutgoingDonations;
     [defaults setBool:allowOutgoingDonations forKey:@"AllowOutgoingDonations"];
+    [defaults synchronize];
+}
+
+- (void)setAllowScreenshot:(BOOL)newAllowScreenshot {
+    allowScreenshot = newAllowScreenshot;
+    [defaults setBool:allowScreenshot forKey:kPreferenceAllowScreenshotKey];
     [defaults synchronize];
 }
 
@@ -963,6 +944,12 @@ static UserSettings *instance;
 - (void)setDistributionListsEnabled:(BOOL)newValue {
     distributionListsEnabled = newValue;
     [defaults setBool:distributionListsEnabled forKey:kFeatureDistributionListsEnabled];
+    [defaults synchronize];
+}
+
+- (void)setBackups2Enabled:(BOOL)newValue {
+    backups2Enabled = newValue;
+    [defaults setBool:backups2Enabled forKey:kFeatureBackups2Enabled];
     [defaults synchronize];
 }
 

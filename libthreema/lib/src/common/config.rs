@@ -4,21 +4,19 @@ use std::{collections::HashMap, sync::LazyLock};
 
 #[cfg(any(test, feature = "cli"))]
 use anyhow;
-use data_encoding::BASE64;
 use duplicate::duplicate_item;
 use educe::Educe;
+use libthreema_dependencies::{crypto::ed25519, data_encoding::BASE64};
 use regex::{Captures, Regex};
 use serde::Deserialize;
-use strum::EnumString;
 use tracing::warn;
 
 use super::{
-    BlobId, ChatServerGroup,
+    ChatServerGroup,
     keys::{DeviceGroupPathKey, PublicKey},
 };
 use crate::{
-    common::ThreemaId,
-    crypto::ed25519,
+    common::{BlobId, ThreemaId},
     model::contact::PredefinedContact,
     utils::{
         debug::debug_str_redacted,
@@ -216,7 +214,7 @@ impl BaseUrl {
         if !url.0.ends_with('/') {
             return Err(UrlError::InvalidBaseUrl("Missing trailing slash"));
         }
-        Ok(BaseUrl(url))
+        Ok(Self(url))
     }
 
     #[inline]
@@ -421,7 +419,7 @@ mod device_group_id_template_url {
 }
 
 mod blob_id_template_url {
-    use data_encoding::HEXLOWER_PERMISSIVE;
+    use libthreema_dependencies::data_encoding::HEXLOWER_PERMISSIVE;
 
     use crate::common::{BlobId, config::Url};
 
@@ -443,7 +441,7 @@ mod blob_id_template_url {
 }
 
 mod device_group_id_and_blob_id_template_url {
-    use data_encoding::HEXLOWER_PERMISSIVE;
+    use libthreema_dependencies::data_encoding::HEXLOWER_PERMISSIVE;
 
     use crate::common::{
         BlobId,
@@ -500,9 +498,9 @@ impl ChatServerAddress {
     ///
     /// If the internal placeholder could not be replaced.
     #[must_use]
-    pub fn addresses(&self, server_group: ChatServerGroup) -> Vec<(String, u16)> {
+    pub fn addresses(&self, server_group: &ChatServerGroup) -> Vec<(String, u16)> {
         let hostname = map_placeholders(&self.hostname, |key| match key {
-            Self::PREFIX_8 => Some(format!("{:x}", server_group.0)),
+            Self::PREFIX_8 => Some(server_group.0.clone()),
             _ => None,
         });
         self.ports.iter().map(|port| (hostname.clone(), *port)).collect()
@@ -597,8 +595,8 @@ impl WorkServerBaseUrl {
 pub struct GatewayAvatarBaseServerUrl(HttpsBaseUrl);
 impl GatewayAvatarBaseServerUrl {
     #[expect(dead_code, reason = "Will use later")]
-    pub(crate) fn path(&self, threema_id: ThreemaId) -> String {
-        self.0.0.path(format_args!("{threema_id}"))
+    pub(crate) fn path(&self, identity: ThreemaId) -> String {
+        self.0.0.path(format_args!("{identity}"))
     }
 }
 
@@ -762,7 +760,7 @@ impl TryFrom<String> for url_type {
 }
 
 /// Version of an OnPrem configuration.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, EnumString)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, strum::EnumString)]
 #[cfg_attr(feature = "uniffi", derive(uniffi::Enum))]
 #[cfg_attr(
     feature = "wasm",
@@ -1514,7 +1512,7 @@ impl From<ConfigEnvironment> for Config {
         match environment {
             ConfigEnvironment::Sandbox => Self::sandbox(),
             ConfigEnvironment::Production => Self::production(),
-            ConfigEnvironment::OnPrem(config) => Config::from(*config),
+            ConfigEnvironment::OnPrem(config) => Self::from(*config),
         }
     }
 }

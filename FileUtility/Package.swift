@@ -16,7 +16,7 @@ let package = Package(
         .library(name: "FileUtilityTestHelper", targets: ["FileUtilityTestHelper"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/CocoaLumberjack/CocoaLumberjack.git", exact: "3.8.5"),
+        .package(url: "https://github.com/CocoaLumberjack/CocoaLumberjack.git", exact: "3.9.1"),
     ],
     targets: [
         .target(

@@ -436,30 +436,6 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
 
         try await syncAndSendBlobMessage(with: fileMessageObjectID)
     }
-    
-    @available(swift, obsoleted: 1.0, message: "Only use from Objective-C") @objc public func sendBlobMessage(
-        for item: URLSenderItem,
-        inConversationWithID conversationID: NSManagedObjectID,
-        correlationID: String?,
-        webRequestID: String?,
-        completion: ((Error?) -> Void)?
-    ) {
-        Task {
-            do {
-                try await sendBlobMessage(
-                    for: item,
-                    in: conversationID,
-                    correlationID: correlationID,
-                    webRequestID: webRequestID
-                )
-                completion?(nil)
-            }
-            catch {
-                DDLogError("Could not create message and sync blobs due to: \(error)")
-                completion?(error)
-            }
-        }
-    }
 
     // MARK: - LocationMessage
 
@@ -653,7 +629,7 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
 
     // MARK: - BallotMessage
 
-    @objc public func sendBallotMessage(for ballot: BallotEntity) {
+    public func sendBallotMessage(for ballot: BallotEntity) {
         guard BallotMessageEncoder.passesSanityCheck(ballot) else {
             DDLogError("Ballot did not pass sanity check. Do not send.")
             return
@@ -708,7 +684,7 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
         }
     }
 
-    @objc public func sendBallotVoteMessage(for ballot: BallotEntity) {
+    public func sendBallotVoteMessage(for ballot: BallotEntity) {
         guard BallotMessageEncoder.passesSanityCheck(ballot) else {
             DDLogError("Ballot did not pass sanity check. Do not send.")
             return
@@ -748,6 +724,17 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
         }
     }
 
+    // MARK: - Transaction required call
+    
+    public func sendTransactionRequiredCallMessage(abstractMessage: AbstractMessage, callID: VoIPCallID) {
+        taskManager.add(
+            taskDefinition: TaskDefinitionSendCallOfferAnswerMessage(
+                message: abstractMessage,
+                callID: callID
+            )
+        )
+    }
+    
     // MARK: - Generic sending
 
     public func sendMessage(abstractMessage: AbstractMessage, isPersistent: Bool, completion: (() -> Void)?) {
@@ -1421,7 +1408,7 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
             .typingIndicator == .send
     }
 
-    @objc public func doSendTypingIndicator(to conversation: ConversationEntity) -> Bool {
+    public func doSendTypingIndicator(to conversation: ConversationEntity) -> Bool {
         guard !conversation.isGroup else {
             return false
         }
@@ -1481,9 +1468,12 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
                         return
                     }
 
+                    let myIdentity = ThreemaIdentity(self.myIdentityStore.identity)
+
                     if conversation.isGroup,
                        let group = backgroundGroupManager.getGroup(conversation: conversation) {
                         _ = IntentCreator(
+                            myIdentity: myIdentity,
                             userSettings: self.userSettings,
                             entityManager: backgroundEntityManager
                         )
@@ -1499,6 +1489,7 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
                             return
                         }
                         _ = IntentCreator(
+                            myIdentity: myIdentity,
                             userSettings: self.userSettings,
                             entityManager: backgroundEntityManager
                         )

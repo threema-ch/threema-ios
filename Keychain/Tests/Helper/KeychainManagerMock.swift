@@ -29,6 +29,12 @@ public final class KeychainManagerMock: KeychainManagerProtocol, @unchecked Send
     
     @Atomic
     public private(set) var storeLicenseCalls = [String]()
+
+    @Atomic
+    public private(set) var storeDataBackupRecoveryKeyCalls = [Data]()
+
+    @Atomic
+    public private(set) var deleteDataBackupRecoveryKeyCalls = 0
     
     @Atomic
     public private(set) var migrateToDowngradeCalls = 0
@@ -40,7 +46,10 @@ public final class KeychainManagerMock: KeychainManagerProtocol, @unchecked Send
     public private(set) var migrateToVersion1Calls = 0
 
     private static let remoteSecretInfo = SendableRemoteSecretInfo()
-    
+
+    @Atomic
+    public var dataBackupRecoveryKey: Data?
+
     public init() {
         // no-op
     }
@@ -149,6 +158,10 @@ public final class KeychainManagerMock: KeychainManagerProtocol, @unchecked Send
         nil
     }
 
+    public static func loadUnencryptedLicense() throws -> ThreemaLicense? {
+        nil
+    }
+
     public func loadLicense() throws -> ThreemaLicense? {
         nil
     }
@@ -183,6 +196,20 @@ public final class KeychainManagerMock: KeychainManagerProtocol, @unchecked Send
 
     public func deleteThreemaSafeServer() throws {
         // no-op
+    }
+
+    public func loadDataBackupRecoveryKey() throws -> Data? {
+        dataBackupRecoveryKey
+    }
+
+    public func storeDataBackupRecoveryKey(_ key: Data) throws {
+        dataBackupRecoveryKey = key
+        $storeDataBackupRecoveryKeyCalls.append(key)
+    }
+
+    public func deleteDataBackupRecoveryKey() throws {
+        dataBackupRecoveryKey = nil
+        deleteDataBackupRecoveryKeyCalls += 1
     }
 
     public func migrateToDowngrade() throws {

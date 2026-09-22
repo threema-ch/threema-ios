@@ -2,11 +2,11 @@ import CocoaLumberjackSwift
 import Foundation
 import TipKit
 
-@objc public final class TipKitManager: NSObject {
+public enum TipKitManager {
  
     // MARK: - Lifecycle
 
-    @objc public static func configureTips() {
+    public static func configureTips() {
         do {
             // Check for reset
             if UserSettings.shared().resetTipKitOnNextLaunch {

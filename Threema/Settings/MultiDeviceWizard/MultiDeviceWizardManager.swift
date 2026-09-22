@@ -1,15 +1,15 @@
 import Foundation
 import SwiftUI
 
-final class MultiDeviceWizardManager: NSObject {
+final class MultiDeviceWizardManager {
     
-    @objc static let shared = MultiDeviceWizardManager()
+    static let shared = MultiDeviceWizardManager()
     
     private var wizardVM: MultiDeviceWizardViewModel
     private var wizardView: MultiDeviceWizardView
     private var hostingController: UIHostingController<MultiDeviceWizardView>
 
-    @objc override private init() {
+    private init() {
         self.wizardVM = MultiDeviceWizardViewModel()
         self.wizardView = MultiDeviceWizardView(wizardVM: wizardVM)
         self.hostingController = UIHostingController(rootView: wizardView)
@@ -27,17 +27,17 @@ final class MultiDeviceWizardManager: NSObject {
         navigationVC.present(hostingController, animated: true)
     }
 
-    @objc func wizardViewController() -> UIViewController {
+    func wizardViewController() -> UIViewController {
         hostingController
     }
     
-    @objc func continueWizard() {
+    func continueWizard() {
         Task { @MainActor in
             wizardVM.advanceState(.identity)
         }
     }
 
-    @objc func continueLinking() {
+    func continueLinking() {
         wizardVM.startLinking()
     }
 }

@@ -2,11 +2,11 @@ import SwiftUI
 import ThreemaFramework
 
 /// A view component that renders an emoji picker interface.
-public struct EmojiPicker: View {
+struct EmojiPicker: View {
     @StateObject var model: ReactionModel
     @State var toolbarVisible = true
     
-    public var body: some View {
+    var body: some View {
         ItemList(toolbarVisible: $toolbarVisible)
             .emojiToolbar(isVisible: $toolbarVisible)
             .skinTonePicker()

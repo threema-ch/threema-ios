@@ -5,22 +5,27 @@ import SwiftUI
 import ThreemaFramework
 import ThreemaMacros
 
-final class ProfileCoordinator: NSObject, Coordinator, CurrentDestinationHolderProtocol {
+final class ProfileCoordinator: NSObject, Coordinator {
 
     // MARK: - Internal destination
 
-    enum InternalDestination: Equatable {
+    enum InternalDestination: Hashable {
+        // Actions and modals (never part of the navigation path)
         case editProfile
         case scanQRCode
         case qrCode
-        case shareID(sourceView: UIView)
+        case shareID
         case workAvailabilityStatus
-        case backups
         case revocationPassword
-        case linkPhone
-        case linkMail
         case publicKey
         case revokeDelete
+
+        // Path destinations
+        case backups
+        /// Threema Safe dashboard, always shown on top of `.backups`
+        case threemaSafe
+        case linkPhone
+        case linkMail
     }
 
     // MARK: - Coordinator
@@ -30,8 +35,6 @@ final class ProfileCoordinator: NSObject, Coordinator, CurrentDestinationHolderP
         rootNavigationController
     }
 
-    var currentDestination: InternalDestination?
-
     // MARK: - Routers
 
     private weak var presentingViewController: ThreemaSplitViewController?
@@ -39,7 +42,8 @@ final class ProfileCoordinator: NSObject, Coordinator, CurrentDestinationHolderP
     private let shareActivityRouter: any ShareActivityRouterProtocol
     private let modalRouter: any ModalRouterProtocol
     private let passcodeRouter: any PasscodeRouterProtocol
-    
+    private let router = NavigationRouter()
+
     private lazy var mdmSetup = MDMSetup()
     private lazy var appFlavor = AppFlavorService()
     private lazy var safeConfigManager = SafeConfigManager()
@@ -54,7 +58,7 @@ final class ProfileCoordinator: NSObject, Coordinator, CurrentDestinationHolderP
         let traitCollection = self?.presentingViewController?.traitCollection
         return traitCollection?.horizontalSizeClass == .compact
     }
-    
+
     private var canAddContact: Bool {
         if TargetManager.isBusinessApp {
             mdmSetup?.disableAddContact() == false
@@ -82,11 +86,11 @@ final class ProfileCoordinator: NSObject, Coordinator, CurrentDestinationHolderP
 
     private lazy var cellProvider: ProfileCollectionViewDataSource.CellProvider = {
         [weak self] collectionView, indexPath, item in
-        
+
         guard let self else {
             return nil
         }
-        
+
         if item == .header {
             let cell: ProfileCollectionViewHeaderCell = collectionView.dequeueCell(for: indexPath)
             cell.backgroundConfiguration = .clear()
@@ -101,32 +105,32 @@ final class ProfileCoordinator: NSObject, Coordinator, CurrentDestinationHolderP
             ) as? UICollectionViewListCell else {
                 return nil
             }
-            
+
             var content = UIListContentConfiguration.valueCell()
             content.text = item.title
-            
+
             if item.isDestructive {
                 content.textProperties.color = .systemRed
             }
-            
+
             if item.isInteractionDisabled {
                 content.textProperties.color = .secondaryLabel
             }
             let indicator = UICellAccessory.disclosureIndicator()
             cell.accessories = [indicator]
-            
+
             if let text = item.accessoryText {
                 content.secondaryText = text
             }
-            
+
             if let accessibilityIdentifier = item.accessibilityIdentifier {
                 cell.accessibilityIdentifier = accessibilityIdentifier
             }
-            
+
             if item == .workAvailabilityStatus {
                 let manager = businessInjector.workAvailabilityStatusManager
                 let category = manager.ownStatus().category
-                
+
                 // Only show label for status other than `.none`
                 if category != .none {
                     let attachment = NSTextAttachment()
@@ -141,7 +145,7 @@ final class ProfileCoordinator: NSObject, Coordinator, CurrentDestinationHolderP
 
                     let attributedText = NSMutableAttributedString(attachment: attachment)
                     attributedText.append(NSAttributedString(string: " \(category.localizedDescription)"))
-                    
+
                     content.secondaryAttributedText = attributedText
                 }
             }
@@ -166,12 +170,6 @@ final class ProfileCoordinator: NSObject, Coordinator, CurrentDestinationHolderP
     }()
 
     private(set) lazy var rootNavigationController = StatusNavigationController()
-
-    private lazy var navigationDestinationResetter = NavigationDestinationResetter(
-        rootViewController: profileViewController,
-        splitViewController: presentingViewController,
-        destinationHolder: self.eraseToAnyDestinationHolder()
-    )
 
     private lazy var safeStore = SafeStore(
         safeConfigManager: safeConfigManager,
@@ -201,13 +199,15 @@ final class ProfileCoordinator: NSObject, Coordinator, CurrentDestinationHolderP
         self.shareActivityRouter = shareActivityRouter
         self.modalRouter = modalRouter
         self.passcodeRouter = passcodeRouter
+        super.init()
+
+        router.delegate = self
+        router.forwardDelegate = self
     }
 
     // MARK: - Presentation
 
     func start() {
-        rootNavigationController.delegate = navigationDestinationResetter
-
         /// Due to this coordinator's rootViewController being part of a
         /// `UITabViewController`, it's not needed to present anything here.
         /// The rootViewController is added by to the `UITabViewController`'s
@@ -216,82 +216,251 @@ final class ProfileCoordinator: NSObject, Coordinator, CurrentDestinationHolderP
             [profileViewController],
             animated: false
         )
-        
+
         setupNavigationBarItems()
         observeIncomingSync()
     }
 
-    func show(_ destination: InternalDestination) {
-        guard currentDestination != destination else {
-            return
+    func finish() {
+        router.unbind()
+        cancellables.removeAll()
+        for child in childCoordinators {
+            child.finish()
         }
+        childCoordinators.removeAll()
+    }
 
+    func show(_ destination: InternalDestination) {
         switch destination {
         case .editProfile:
             showEditProfile()
-            
+
         case .scanQRCode:
             showScanner()
-            
+
         case .qrCode:
             showQRCode()
 
-        case let .shareID(sourceView):
-            shareID(sourceView: sourceView)
-            
+        case .shareID:
+            shareID(from: nil)
+
         case .workAvailabilityStatus:
             showWorkAvailabilityStatus()
 
-        case .backups:
-            showBackups()
-
         case .revocationPassword:
             showPasswordForRevocation()
-
-        case .linkPhone:
-            showLinkedPhoneNumber()
-
-        case .linkMail:
-            showLinkMail()
 
         case .publicKey:
             showPublicKey()
 
         case .revokeDelete:
             showRevokeDelete()
-        }
 
-        // We do not update the current destination for modals
-        switch destination {
-        case .editProfile, .scanQRCode, .qrCode, .shareID, .workAvailabilityStatus, .revocationPassword, .publicKey,
-             .revokeDelete:
-            break
-            
-        case .backups, .linkPhone, .linkMail:
-            currentDestination = destination
-        }
+        case .backups:
+            // Already inside the authenticated backups area (backups itself or a
+            // screen on top of it): navigate without asking for the passcode again.
+            if path.first == .backups {
+                setPath([.backups], animated: true)
+                return
+            }
 
-        profileViewController.updateSelection()
+            // Guard-then-mutate: the path only changes after authentication
+            // succeeded, so cancelling requires no rollback.
+            passcodeRouter.requireAuthenticationIfNeeded(onSuccess: { [weak self] in
+                self?.setPath([.backups], animated: true)
+            })
+
+        case .threemaSafe:
+            // Already shown: don't ask for the passcode again.
+            guard path != [.backups, .threemaSafe] else {
+                return
+            }
+
+            passcodeRouter.requireAuthenticationIfNeeded(onSuccess: { [weak self] in
+                self?.setPath([.backups, .threemaSafe], animated: true)
+            })
+
+        case .linkPhone, .linkMail:
+            setPath([destination], animated: true)
+        }
     }
-    
+
     func navigateToThreemaSafe() {
-        show(.backups)
-        showBackups(.threemaSafe)
+        show(.threemaSafe)
     }
 
     func dismiss() {
         presentingViewController?.presentedViewController?.dismiss(animated: true)
     }
 
+    // MARK: - Router binding
+
+    /// Hooks for `ThreemaSplitViewNavigationManager` to activate/deactivate this
+    /// tab's router when tab selection or the size class changes.
+    var routerHandle: RouterManagedTabHandle {
+        RouterManagedTabHandle(
+            deactivate: { [weak self] in
+                self?.router.unbind()
+            },
+            activateCompact: { [weak self] in
+                self?.bindCompact()
+            },
+            activateRegular: { [weak self] navigationController in
+                self?.bindRegular(into: navigationController)
+            },
+            reauthenticateProtectedDestinations: { [weak self] in
+                guard
+                    let self,
+                    path.first == .backups
+                else {
+                    return
+                }
+                // The backups area stays in place behind the prompt; cancelling
+                // clears it. (With no passcode set this succeeds immediately.)
+                passcodeRouter.requireAuthenticationIfNeeded(
+                    onCancel: { [weak self] in
+                        self?.setPath([], animated: false)
+                    },
+                    onSuccess: { }
+                )
+            },
+            releaseMaterializedScreens: { [weak self] in
+                guard
+                    let self,
+                    !router.isBound
+                else {
+                    return
+                }
+                router.releaseMaterializedScreens()
+                // The tab's own navigation controller retains the compact stack
+                // even while inactive — reset it to the root; the next
+                // activation re-materializes the stack from the path.
+                rootNavigationController.setViewControllers(
+                    [profileViewController],
+                    animated: false
+                )
+            }
+        )
+    }
+
+    /// Collapsed width: the whole stack lives in the tab's own navigation
+    /// controller, rooted in the profile screen.
+    private func bindCompact() {
+        router.bind(
+            to: rootNavigationController,
+            rootViewController: profileViewController
+        ) { [weak self] destination in
+            self?.makeScreen(destination)
+        }
+
+        scheduleSelectionSync()
+    }
+
+    /// Regular width: the stack renders in the secondary column, rooted in a
+    /// placeholder (the profile screen stays in the primary column). An empty path
+    /// shows just the placeholder.
+    private func bindRegular(into navigationController: UINavigationController) {
+        router.bind(
+            to: navigationController,
+            rootViewController: ThreemaLogoViewController(rootView: ThreemaLogoView()),
+            rootMode: .placeholder
+        ) { [weak self] destination in
+            self?.makeScreen(destination)
+        }
+
+        scheduleSelectionSync()
+    }
+
+    /// While the collapse/expand transition that triggered a (re)bind is running,
+    /// the size class still reports the old value and the appearance callbacks
+    /// fired during it clear the list selection. Re-derive the selection once the
+    /// transition has settled.
+    private func scheduleSelectionSync() {
+        DispatchQueue.main.async { [weak self] in
+            self?.profileViewController.updateSelection()
+        }
+    }
+
+    // MARK: - Screen construction
+
+    private func makeScreen(_ destination: AnyHashable) -> UIViewController? {
+        guard let destination = destination as? InternalDestination else {
+            return nil
+        }
+
+        switch destination {
+        case .backups:
+            return makeBackupsScreen()
+
+        case .threemaSafe:
+            return makeThreemaSafeScreen()
+
+        case .linkPhone:
+            return UIHostingController(rootView: LinkPhoneNumberDeciderView())
+
+        case .linkMail:
+            return UIHostingController(rootView: LinkEmailDeciderView())
+
+        case .editProfile, .scanQRCode, .qrCode, .shareID, .workAvailabilityStatus,
+             .revocationPassword, .publicKey, .revokeDelete:
+            // Actions and modals never materialize as path screens.
+            return nil
+        }
+    }
+
+    private func makeBackupsScreen() -> UIViewController? {
+        guard let mdmSetup = MDMSetup() else {
+            return nil
+        }
+
+        let model = BackupsViewModel(
+            appFlavor: AppFlavorService(),
+            mdmSetup: mdmSetup,
+            safeManager: safeManager
+        )
+
+        let cancellable = model.routePublisher.sink { [weak self] route in
+            switch route {
+            case .threemaSafe:
+                // Same guarded flow (skip when already shown, authenticate
+                // otherwise) as entering Threema Safe from anywhere else.
+                self?.show(.threemaSafe)
+            case .idExport:
+                self?.showPasswordForIDExport()
+            }
+        }
+        cancellables.insert(cancellable)
+
+        return UIHostingController(rootView: BackupsView(model: model))
+    }
+
+    private func makeThreemaSafeScreen() -> UIViewController? {
+        guard let mdmSetup = MDMSetup() else {
+            return nil
+        }
+
+        let model = ThreemaSafeDashboardViewModel(
+            appFlavor: appFlavor,
+            myIdentityStore: BusinessInjector.ui.myIdentityStore,
+            mdmSetup: mdmSetup,
+            notificationCenter: NotificationCenter.default,
+            safeConfigManager: safeConfigManager,
+            safeManager: safeManager,
+            safeStore: safeStore
+        )
+
+        return UIHostingController(rootView: ThreemaSafeDashboardView(model: model))
+    }
+
     // MARK: - Private functions
 
     private var cancellables: Set<AnyCancellable> = []
-    
+
     private func showEditProfile() {
         if businessInjector.userSettings.enableMultiDevice,
            businessInjector.serverConnector.connectionState != .loggedIn,
            let presentingViewController {
-            UIAlertTemplate.showAlert(
+            UIAlertTemplate.showOKAlert(
                 owner: presentingViewController,
                 title: #localize("not_connected_for_edit_profile_title"),
                 message: #localize("not_connected_for_edit_profile_message")
@@ -302,17 +471,17 @@ final class ProfileCoordinator: NSObject, Coordinator, CurrentDestinationHolderP
             modalRouter.present(viewController)
         }
     }
-    
+
     private func showScanner() {
         MainActor.assumeIsolated { [weak self] in
             guard let self else {
                 return
             }
-            
+
             if canAddContact {
                 let viewModel = QRCodeScannerViewModel(
                     mode: .identity,
-                    audioSessionManager: AudioSessionManager(),
+                    audioSessionManager: BusinessInjector.ui.audioSessionManager,
                     systemFeedbackManager: SystemFeedbackManager(
                         deviceCapabilitiesManager: deviceCapabilitiesManager,
                         settingsStore: businessInjector.settingsStore
@@ -333,8 +502,8 @@ final class ProfileCoordinator: NSObject, Coordinator, CurrentDestinationHolderP
                 guard let presentingViewController else {
                     return
                 }
-                
-                UIAlertTemplate.showAlert(
+
+                UIAlertTemplate.showOKAlert(
                     owner: presentingViewController,
                     title: "",
                     message: #localize("disabled_by_device_policy")
@@ -342,7 +511,7 @@ final class ProfileCoordinator: NSObject, Coordinator, CurrentDestinationHolderP
             }
         }
     }
-    
+
     @MainActor
     private func handleScannerResult(_ result: QRCodeScannerViewModel.QRCodeResult) {
         switch result {
@@ -362,7 +531,7 @@ final class ProfileCoordinator: NSObject, Coordinator, CurrentDestinationHolderP
                     guard let verifiedContact else {
                         return
                     }
-                    
+
                     let name = Notification.Name(kNotificationShowContact)
                     let userInfo = [kKeyContact: verifiedContact]
                     NotificationCenter.default.post(
@@ -376,8 +545,8 @@ final class ProfileCoordinator: NSObject, Coordinator, CurrentDestinationHolderP
             let viewController = UIHostingController(rootView: rootView)
 
             // Push onto the scanner's modal navigation controller
-            if let modalNavigationController = presentingViewController?
-                .presentedViewController as? UINavigationController {
+            if let modalNavigationController =
+                presentingViewController?.presentedViewController as? UINavigationController {
                 modalNavigationController.pushViewController(viewController, animated: true)
             }
             else {
@@ -399,7 +568,10 @@ final class ProfileCoordinator: NSObject, Coordinator, CurrentDestinationHolderP
         modalRouter.present(vc)
     }
 
-    private func shareID(sourceView: UIView) {
+    /// Presents the share-ID sheet. This is an action, not a destination:
+    /// it does not change the navigation path.
+    /// - Parameter sourceView: Popover anchor for regular size classes.
+    func shareID(from sourceView: UIView?) {
         let shareText = String.localizedStringWithFormat(
             #localize("profile_share_id_text"),
             TargetManager.localizedAppName
@@ -420,61 +592,6 @@ final class ProfileCoordinator: NSObject, Coordinator, CurrentDestinationHolderP
         let rootView = WorkAvailabilityStatusView(model: model)
         let vc = UIHostingController(rootView: rootView)
         modalRouter.present(vc)
-    }
-    
-    private func showBackups(_ additionalRoute: BackupsViewModel.Route? = nil) {
-        MainActor.assumeIsolated { [weak self] in
-            self?.passcodeRouter.requireAuthenticationIfNeeded { [weak self] in
-                guard let self, let mdmSetup = MDMSetup() else {
-                    return
-                }
-                let model = BackupsViewModel(
-                    appFlavor: AppFlavorService(),
-                    mdmSetup: mdmSetup,
-                    safeManager: safeManager
-                )
-                let rootView = BackupsView(model: model)
-                let vc = UIHostingController(rootView: rootView)
-                presentingViewController?.show(vc, sender: nil)
-
-                let cancellable = model.routePublisher.sink { [weak self] route in
-                    switch route {
-                    case .threemaSafe: self?.showThreemaSafe()
-                    case .idExport: self?.showPasswordForIDExport()
-                    }
-                }
-
-                cancellables.insert(cancellable)
-
-                /// If an `additionalRoute` is available, forward it to the
-                /// view model, so it can be properly displayed.
-                additionalRoute.map(model.routePublisher.send)
-            }
-        }
-    }
-
-    private func showThreemaSafe() {
-        MainActor.assumeIsolated { [weak self] in
-            self?.passcodeRouter.requireAuthenticationIfNeeded { [weak self] in
-                guard let self, let mdmSetup = MDMSetup() else {
-                    return
-                }
-
-                let model = ThreemaSafeDashboardViewModel(
-                    appFlavor: appFlavor,
-                    myIdentityStore: BusinessInjector.ui.myIdentityStore,
-                    mdmSetup: mdmSetup,
-                    notificationCenter: NotificationCenter.default,
-                    safeConfigManager: safeConfigManager,
-                    safeManager: safeManager,
-                    safeStore: safeStore
-                )
-
-                let rootView = ThreemaSafeDashboardView(model: model)
-                let vc = UIHostingController(rootView: rootView)
-                presentingViewController?.viewControllers.last?.show(vc, sender: nil)
-            }
-        }
     }
 
     private func showPasswordForIDExport() {
@@ -515,16 +632,6 @@ final class ProfileCoordinator: NSObject, Coordinator, CurrentDestinationHolderP
         })
     }
 
-    private func showLinkedPhoneNumber() {
-        let vc = UIHostingController(rootView: LinkPhoneNumberDeciderView())
-        presentingViewController?.show(vc, sender: self)
-    }
-
-    private func showLinkMail() {
-        let vc = UIHostingController(rootView: LinkEmailDeciderView())
-        presentingViewController?.show(vc, sender: self)
-    }
-
     private func showPublicKey() {
         let identityStore = businessInjector.myIdentityStore
         let view = PublicKeyView(identity: identityStore.identity, publicKey: identityStore.publicKey) { [weak self] in
@@ -542,7 +649,7 @@ final class ProfileCoordinator: NSObject, Coordinator, CurrentDestinationHolderP
     private func showRevokeDelete() {
         guard !passcodeRouter.isPasscodeRequired() else {
             if let presentingViewController {
-                UIAlertTemplate.showAlert(
+                UIAlertTemplate.showOKAlert(
                     owner: presentingViewController,
                     title: #localize("delete_identity_passcode_title"),
                     message: #localize("delete_identity_passcode_message")
@@ -562,15 +669,15 @@ final class ProfileCoordinator: NSObject, Coordinator, CurrentDestinationHolderP
         vc.modalPresentationStyle = .overFullScreen
         modalRouter.rootViewController.present(vc, animated: true)
     }
-    
+
     private func setupNavigationBarItems() {
         let leftBarButtonItem = UIBarButtonItem.editButton(target: self, selector: #selector(editProfile))
         profileViewController.navigationItem.leftBarButtonItem = leftBarButtonItem
         
-        guard deviceCapabilitiesManager.supportsRecordingVideo else {
+        guard deviceCapabilitiesManager.hasVideoCaptureDevice else {
             return
         }
-        
+
         let rightBarButtonItem = UIBarButtonItem(
             image: UIImage(systemName: "qrcode.viewfinder"),
             style: .plain,
@@ -579,7 +686,7 @@ final class ProfileCoordinator: NSObject, Coordinator, CurrentDestinationHolderP
         )
         profileViewController.navigationItem.rightBarButtonItem = rightBarButtonItem
     }
-    
+
     private func observeIncomingSync() {
         appEnvironment.profileSyncPublisher
             .sink { [weak self] _ in
@@ -587,18 +694,18 @@ final class ProfileCoordinator: NSObject, Coordinator, CurrentDestinationHolderP
             }
             .store(in: &cancellables)
     }
-    
+
     @objc private func editProfile() {
         show(.editProfile)
     }
-    
+
     @objc private func scanQRCode() {
         show(.scanQRCode)
     }
-    
+
     private func incomingSync() {
         collectionView.reloadData()
-        
+
         NotificationPresenterWrapper.shared.present(
             type: NotificationPresenterType(
                 notificationText: #localize("incoming_profile_sync_title"),
@@ -606,6 +713,47 @@ final class ProfileCoordinator: NSObject, Coordinator, CurrentDestinationHolderP
             ),
             subtitle: #localize("incoming_profile_sync_message")
         )
+    }
+}
+
+// MARK: - PathCoordinator
+
+extension ProfileCoordinator: PathCoordinator {
+
+    /// Derived from the router — there is no separate state to keep in sync.
+    var path: [InternalDestination] {
+        router.path.compactMap { $0 as? InternalDestination }
+    }
+
+    func setPath(_ path: [InternalDestination], animated: Bool) {
+        router.setPath(path.map { AnyHashable($0) }, animated: animated)
+        profileViewController.updateSelection()
+    }
+}
+
+// MARK: - NavigationRouterDelegate
+
+extension ProfileCoordinator: NavigationRouterDelegate {
+
+    /// The user popped (back button, swipe, tab re-tap pop-to-root): the path is
+    /// already trimmed, only the list highlight needs a refresh.
+    func router(_ router: NavigationRouter, didPopTo path: [AnyHashable]) {
+        profileViewController.updateSelection()
+    }
+}
+
+// MARK: - UINavigationControllerDelegate
+
+extension ProfileCoordinator: UINavigationControllerDelegate {
+
+    /// Forwarded by the router (which owns the delegate slot while bound) to keep
+    /// the status navigation bar content up to date.
+    func navigationController(
+        _ navigationController: UINavigationController,
+        didShow viewController: UIViewController,
+        animated: Bool
+    ) {
+        (navigationController as? StatusNavigationController)?.updateNavigationBarContent()
     }
 }
 

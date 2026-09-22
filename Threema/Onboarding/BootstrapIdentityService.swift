@@ -1,6 +1,7 @@
 import CocoaLumberjackSwift
 import Foundation
 import Keychain
+import ThreemaEssentials
 import ThreemaFramework
 
 @MainActor
@@ -11,13 +12,9 @@ final class BootstrapIdentityService {
     private let bootstrapKeychainManager: BootstrapKeychainManagerProtocol
     private let bootstrapBackupStore: BootstrapBackupStoreProtocol
     private let appLaunchManager: AppLaunchManagerProtocol
-
-    var hasExistingIdentity: Bool {
-        bootstrapIdentityStore.isValidIdentity
-    }
     
-    var currentIdentity: String? {
-        bootstrapIdentityStore.identity
+    var currentIdentity: ThreemaIdentity? {
+        bootstrapKeychainManager.currentIdentity
     }
     
     var hasDataOnDevice: Bool {
@@ -26,10 +23,6 @@ final class BootstrapIdentityService {
     
     var isDatabaseEncrypted: Bool {
         appLaunchManager.isDatabaseEncrypted
-    }
-    
-    var hasRemoteSecret: Bool {
-        bootstrapKeychainManager.hasRemoteSecret
     }
     
     init(

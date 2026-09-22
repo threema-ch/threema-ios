@@ -10,7 +10,7 @@ public final class EntityDestroyer: NSObject {
     }
     
     /// Relative to app data (group container) path.
-    public static let externalDataBinPath = "_EXTERNAL_DATA_BIN"
+    static let externalDataBinPath = "_EXTERNAL_DATA_BIN"
 
     private let objCnx: ThreemaManagedObjectContext
     private let isRemoteSecretEnabled: Bool
@@ -456,7 +456,7 @@ public final class EntityDestroyer: NSObject {
         }
     #endif
 
-    @objc public func delete(distributionListEntity: DistributionListEntity) {
+    public func delete(distributionListEntity: DistributionListEntity) {
         delete(entity: distributionListEntity)
     }
 

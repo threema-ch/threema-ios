@@ -3,92 +3,24 @@ import Foundation
 import GroupCalls
 import ThreemaMacros
 
-final class GroupCallUIHelper: NSObject {
-    @objc func setGlobalGroupCallsManagerSingletonUIDelegate() {
-        GlobalGroupCallManagerSingleton.shared.uiDelegate = self
-    }
-}
-
-// MARK: - GroupCallManagerSingletonUIDelegate
-
-extension GroupCallUIHelper: GroupCallManagerSingletonUIDelegate {
-    private var isAppLocked: Bool {
-        MainActor.assumeIsolated {
-            SharedAppProvider.isAppLocked
-        }
-    }
-    
-    func showViewController(_ viewController: GroupCallViewController) {
-        Task { @MainActor in
-            guard SharedAppProvider.alertViewShown == nil else {
-                DDLogError("[GroupCall] Do not show GroupCallViewController because an alert is being presented.")
-                return
-            }
-            SharedAppProvider.currentTopViewController?.present(viewController, animated: true)
-        }
-    }
-    
-    @MainActor
-    func showAlert(for groupCallError: GroupCallErrorProtocol) {
-        guard let currentTopViewController = SharedAppProvider.currentTopViewController else {
-            DDLogError("`SharedAppProvider.currentTopViewController` not available.")
-            return
-        }
-        
-        Task { @MainActor in
-            UIAlertTemplate.showAlert(
-                owner: currentTopViewController,
-                title: BundleUtil.localizedString(forKey: groupCallError.alertTitleKey),
-                message: BundleUtil.localizedString(forKey: groupCallError.alertMessageKey)
-            )
-        }
-    }
-    
-    @MainActor
-    func showGroupCallFullAlert(maxParticipants: Int?, onOK: @escaping () -> Void) {
-        let title = #localize("group_call_alert_full_title")
-        let message =
-            if let maxParticipants {
-                String.localizedStringWithFormat(#localize("group_call_alert_full_message_count"), maxParticipants)
-            }
-            else {
-                #localize("group_call_alert_full_message")
-            }
-        
-        Task { @MainActor in
-            guard let currentTopViewController = SharedAppProvider.currentTopViewController else {
-                DDLogError("`SharedAppProvider.currentTopViewController` not available.")
-                return
-            }
-            
-            UIAlertTemplate.showAlert(
-                owner: currentTopViewController,
-                title: title,
-                message: message
-            ) { _ in
-                onOK()
-            }
-        }
-    }
-    
-    func newBannerForStartGroupCall(
+enum GroupCallUIHelper {
+    static func newBannerForStartGroupCall(
         conversationManagedObjectID: NSManagedObjectID,
         title: String,
         body: String,
         identifier: String
     ) {
-        // No toast if disabled or passcode showing
-        if !UserSettings.shared().inAppPreview ||
-            isAppLocked {
+        // No toast if disabled
+        if !UserSettings.shared().inAppPreview {
             return
         }
-        
+
         let businessInjector = BusinessInjector.ui
 
         if !businessInjector.pushSettingManager.canMasterDndSendPush() {
             return
         }
-        
+
         guard businessInjector.entityManager.performAndWait({
             if let conversation = businessInjector.entityManager.entityFetcher
                 .managedObject(with: conversationManagedObjectID) as? ConversationEntity {

@@ -21,7 +21,7 @@ final class IntroQuestionViewHelper: NSObject, IntroQuestionDelegate {
     
     func showAlert(_ text: String, title: String? = nil) {
         if alert == nil {
-            alert = NibUtil.loadViewFromNib(withName: "IntroQuestionView") as? IntroQuestionView
+            alert = Bundle.main.loadNibNamed("IntroQuestionView", owner: nil, options: nil)?.first as? IntroQuestionView
             alert?.showOnlyOkButton = true
             alert?.delegate = self
             alert?.frame = rect(alert!.frame, centerIn: parent.view.frame, round: true)
@@ -39,7 +39,7 @@ final class IntroQuestionViewHelper: NSObject, IntroQuestionDelegate {
     
     func showConfirm(_ text: String, noButtonLabel: String? = nil, yesButtonLabel: String? = nil) {
         if confirm == nil {
-            confirm = NibUtil.loadViewFromNib(withName: "IntroQuestionView") as? IntroQuestionView
+            confirm = Bundle.main.loadNibNamed("IntroQuestionView", owner: nil, options: nil)?.first as? IntroQuestionView
             confirm?.delegate = self
             confirm?.frame = rect(confirm!.frame, centerIn: parent.view.frame, round: true)
 

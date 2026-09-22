@@ -74,6 +74,7 @@ impl From<HttpsEndpointError> for TimeoutCause {
             | HttpsEndpointError::NotFound
             | HttpsEndpointError::InvalidCredentials
             | HttpsEndpointError::ChallengeExpired
+            | HttpsEndpointError::InvalidChallenge
             | HttpsEndpointError::InvalidChallengeResponse
             | HttpsEndpointError::UnexpectedStatus(_)
             | HttpsEndpointError::DecodingFailed(_)
@@ -225,8 +226,8 @@ enum StorageState {
 impl StorageState {
     fn n_failed_attempts_max(&self) -> u16 {
         match self {
-            StorageState::Locked => N_FAILED_ATTEMPTS_MAX_WHILE_LOCKED,
-            StorageState::Unlocked {
+            Self::Locked => N_FAILED_ATTEMPTS_MAX_WHILE_LOCKED,
+            Self::Unlocked {
                 n_failed_attempts_max,
                 ..
             } => *n_failed_attempts_max,

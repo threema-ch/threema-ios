@@ -8,7 +8,7 @@ use crate::{
         CspE2eProtocolError, ReflectId,
         reflect::{ReflectInstruction, ReflectPayload, ReflectResponse, ReflectSubtask},
     },
-    protobuf::{self},
+    protobuf,
 };
 
 /// 1. Let `reflect-ids` be the list of all reflect IDs of `reflect_messages` that do not have the _ephemeral_
@@ -32,11 +32,11 @@ pub struct CommitTransactionResponse {
     /// Acknowledgements for reflected messages.
     pub acknowledged_reflect_ids: Vec<ReflectId>,
 
-    /// The transaction has been comitted successfully.
+    /// The transaction has been committed successfully.
     pub commit_transaction_ack: protobuf::d2m::CommitTransactionAck,
 }
 
-/// Subtask for committing a transaction and waiting until it has been comitted.
+/// Subtask for committing a transaction and waiting until it has been committed.
 #[derive(Debug, Name)]
 pub(crate) struct CommitTransactionSubtask(ReflectSubtask);
 impl CommitTransactionSubtask {

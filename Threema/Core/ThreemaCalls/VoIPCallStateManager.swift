@@ -4,6 +4,7 @@ import Collections
 import Foundation
 import ThreemaFramework
 import ThreemaMacros
+import UIKit
 import UserNotifications
 
 final class VoIPCallStateManager: NSObject {
@@ -17,20 +18,31 @@ final class VoIPCallStateManager: NSObject {
     private let callQueueQueue = DispatchQueue(label: "ch.threema.VoIPCallStateManager.callQueueQueue")
     private let callServiceQueue = DispatchQueue(label: "ch.threema.VoIPCallStateManager.callServiceQueue")
 
+    private let endedDelay = 5.0
+
     private var callService: VoIPCallService? {
         didSet {
             if let callService {
-                DDLogNotice("VoipCallService: [cid=\(callService.callID.callID)]: Created new call service")
+                DDLogNotice("[Call:1to1:StateManager] [cid=\(callService.callID)]: Created new call service")
             }
             else if let oldValue {
-                DDLogNotice("VoipCallService: [cid=\(oldValue.callID.callID)]: Removed call service")
+                DDLogNotice("[Call:1to1:StateManager] [cid=\(oldValue.callID)]: Removed call service")
             }
         }
     }
 
+    var onCallFinished: (() -> Void)?
+    var onCallAnswered: ((String) -> Void)?
+    var onCallConnected: (() -> Void)?
+    var onCallViewHidden: (() -> Void)?
+
+    /// Provides the view controller to present the 1-1 call view on (the new coordinator flow's
+    /// `CallWindow` root). `nil` (legacy flow) falls back to the key window's root.
+    var callViewPresenterProvider: (() -> UIViewController?)?
+
     // MARK: - Lifecycle
 
-    @objc override required init() {
+    override required init() {
         self.callKitManager = VoIPCallKitManager()
         super.init()
     }
@@ -50,7 +62,7 @@ final class VoIPCallStateManager: NSObject {
     }
 
     /// Present the CallViewController
-    @objc func presentCallViewController() {
+    func presentCallViewController() {
         callService?.presentCallViewController()
     }
 
@@ -77,11 +89,11 @@ final class VoIPCallStateManager: NSObject {
             completion: onCompletion
         )
         DDLogNotice(
-            "VoipCallService: [cid=\(callID.callID)]: Handle new call with \(callee), we are the caller"
+            "[Call:1to1:StateManager] [cid=\(callID)]: Handle new call with \(callee), we are the caller"
         )
         
         DDLogNotice(
-            "VoipCallService: [cid=\(callID.callID)]: Enqueuing start call action"
+            "[Call:1to1:StateManager] [cid=\(callID)]: Enqueuing start call action"
         )
         
         addElementToCallQueue(action)
@@ -95,11 +107,11 @@ final class VoIPCallStateManager: NSObject {
     /// - parameter completion: Completion block
     func incomingCallOffer(offer: VoIPCallOfferMessage, identity: String, completion: (() -> Void)?) {
         DDLogNotice(
-            "VoipCallService: [cid=\(offer.callID.callID)]: Handle new call with \(identity), we are the callee"
+            "[Call:1to1:StateManager] [cid=\(offer.callID)]: Handle new call with \(identity), we are the callee"
         )
 
         DDLogNotice(
-            "VoipCallService: [cid=\(offer.callID.callID)]: Call offer received from \(identity)"
+            "[Call:1to1:StateManager] [cid=\(offer.callID)]: Call offer received from \(identity)"
         )
 
         BackgroundTaskManager.shared.newBackgroundTask(
@@ -108,7 +120,7 @@ final class VoIPCallStateManager: NSObject {
         ) {
             offer.completion = completion
             offer.contactIdentity = identity
-            DDLogNotice("VoipCallService: [cid=\(offer.callID.callID)]: Enqueuing call offer message")
+            DDLogNotice("[Call:1to1:StateManager] [cid=\(offer.callID)]: Enqueuing call offer message")
             self.addElementToCallQueue(offer)
         }
     }
@@ -123,7 +135,7 @@ final class VoIPCallStateManager: NSObject {
         completion: @escaping () -> Void
     ) {
         DDLogNotice(
-            "VoipCallService: [cid=\(answer.callID.callID)]: Call answer received from \(identity): \(answer.description())"
+            "[Call:1to1:StateManager] [cid=\(answer.callID)]: Call answer received from \(identity): \(answer.description())"
         )
 
         BackgroundTaskManager.shared.newBackgroundTask(
@@ -132,7 +144,7 @@ final class VoIPCallStateManager: NSObject {
         ) {
             answer.completion = completion
             answer.contactIdentity = identity
-            DDLogNotice("VoipCallService: [cid=\(answer.callID.callID)]: Enqueuing call answer message")
+            DDLogNotice("[Call:1to1:StateManager] [cid=\(answer.callID)]: Enqueuing call answer message")
             self.addElementToCallQueue(answer)
         }
     }
@@ -141,14 +153,14 @@ final class VoIPCallStateManager: NSObject {
     /// - parameter ringing: VoIPCallRingingMessage
     func incomingCallRinging(ringing: VoIPCallRingingMessage) {
         DDLogNotice(
-            "VoipCallService: [cid=\(ringing.callID.callID)]: Call ringing message received from \(ringing.contactIdentity ?? "?")"
+            "[Call:1to1:StateManager] [cid=\(ringing.callID)]: Call ringing message received from \(ringing.contactIdentity ?? "?")"
         )
 
         BackgroundTaskManager.shared.newBackgroundTask(
             key: kAppVoIPBackgroundTask,
             timeout: Int(kAppPushBackgroundTaskTime)
         ) {
-            DDLogNotice("VoipCallService: [cid=\(ringing.callID.callID)]: Enqueuing call ringing message")
+            DDLogNotice("[Call:1to1:StateManager] [cid=\(ringing.callID)]: Enqueuing call ringing message")
             self.addElementToCallQueue(ringing)
         }
     }
@@ -163,7 +175,7 @@ final class VoIPCallStateManager: NSObject {
         completion: (() -> Void)?
     ) {
         DDLogNotice(
-            "VoipCallService: [cid=\(candidates.callID.callID)]: Call ICE candidate message received from \(identity) (\(candidates.candidates.count) candidates)"
+            "[Call:1to1:StateManager] [cid=\(candidates.callID)]: Call ICE candidate message received from \(identity) (\(candidates.candidates.count) candidates)"
         )
 
         BackgroundTaskManager.shared.newBackgroundTask(
@@ -172,7 +184,7 @@ final class VoIPCallStateManager: NSObject {
         ) {
             candidates.completion = completion
             candidates.contactIdentity = identity
-            DDLogNotice("VoipCallService: [cid=\(candidates.callID.callID)]: Enqueuing ICE candidate message")
+            DDLogNotice("[Call:1to1:StateManager] [cid=\(candidates.callID)]: Enqueuing ICE candidate message")
             self.addElementToCallQueue(candidates)
         }
     }
@@ -181,14 +193,14 @@ final class VoIPCallStateManager: NSObject {
     /// - parameter hangup: VoIPCallHangupMessage
     func incomingCallHangup(hangup: VoIPCallHangupMessage) {
         DDLogNotice(
-            "VoipCallService: [cid=\(hangup.callID.callID)]: Call hangup message received from \(hangup.contactIdentity ?? "?")"
+            "[Call:1to1:StateManager] [cid=\(hangup.callID)]: Call hangup message received from \(hangup.contactIdentity ?? "?")"
         )
 
         BackgroundTaskManager.shared.newBackgroundTask(
             key: kAppVoIPBackgroundTask,
             timeout: Int(kAppPushBackgroundTaskTime)
         ) {
-            DDLogNotice("VoipCallService: [cid=\(hangup.callID.callID)]: Enqueuing hangup message")
+            DDLogNotice("[Call:1to1:StateManager] [cid=\(hangup.callID)]: Enqueuing hangup message")
             self.addElementToCallQueue(hangup)
         }
     }
@@ -233,11 +245,15 @@ final class VoIPCallStateManager: NSObject {
                     }
 
                     self.callServiceQueue.async {
-                        // If another call already running, send reject busy
-                        if let callService = self.callService, callService.callID.callID != callID.callID {
+                        // If another call already running (1-to-1 or group), reject call
+                        if let callService = self.callService, callService.callID.callID != callID.callID
+                            || NavigationBarPromptHandler.isGroupCallActive {
                             self.callKitManager.endCall(with: callID)
+                            
+                            // We are in a different call already. Other devices might be able to pickup, so we do not
+                            // send the reject.
                             let action = VoIPCallUserAction(
-                                action: .rejectBusy,
+                                action: .reject(sendMessage: false),
                                 contactIdentity: callPartnerIdentity,
                                 callID: callID,
                                 completion: { }
@@ -248,7 +264,7 @@ final class VoIPCallStateManager: NSObject {
                                 timeout: Int(kAppPushBackgroundTaskTime)
                             ) {
                                 DDLogNotice(
-                                    "VoipCallService: [cid=\(callID.callID)]: Another call is active. Enqueuing reject message"
+                                    "[Call:1to1:StateManager] [cid=\(callID)]: Another call is active. Enqueuing reject message"
                                 )
                                 self.addElementToCallQueue(action)
                             }
@@ -275,7 +291,7 @@ final class VoIPCallStateManager: NSObject {
 
         guard element is VoIPCallUserAction || element is VoIPCallMessageProtocol else {
             DDLogError(
-                "[CallStateManager] Tried to add element that is not VoIPCallUserAction or VoIPCallMessageProtocol to callQueue: \(element)"
+                "[Call:StateManager] Tried to add element that is not VoIPCallUserAction or VoIPCallMessageProtocol to callQueue: \(element)"
             )
             assertionFailure()
             return
@@ -294,25 +310,45 @@ final class VoIPCallStateManager: NSObject {
         let element = callQueueQueue.sync {
             callQueue.popFirst()
         }
-        if let element, let contactIdentity = element.contactIdentity {
-            callServiceQueue.async {
-                if self.callService == nil {
-                    DDLogNotice("VoipCallStateManager: [cid=\(element.callID.callID)]: Initialize VoIPCallService")
-                    self.callService = VoIPCallService(
-                        callPartnerIdentity: contactIdentity,
-                        callID: element.callID,
-                        delegate: self,
-                        callKitManager: self.callKitManager
-                    )
-                }
-                self.callService?.processCallQueueElement(element)
+        
+        guard let element,
+              let contactIdentity = element.contactIdentity
+        else {
+            return
+        }
+        
+        callServiceQueue.async {
+            if self.callService == nil {
+                DDLogNotice("[Call:1to1:StateManager] [cid=\(element.callID)]: Initialize VoIPCallService")
+                self.callService = VoIPCallService(
+                    callPartnerIdentity: contactIdentity,
+                    callID: element.callID,
+                    delegate: self,
+                    callKitManager: self.callKitManager
+                )
             }
+            self.callService?.processCallQueueElement(element)
         }
     }
 
     private func resetCallService() {
         callServiceQueue.async {
             self.callService = nil
+        }
+    }
+
+    /// Release the connection that was claimed for the call
+    ///
+    /// Delayed, because after a disconnect no further (VoIP) messages of this call are processed. A new call claims
+    /// the connection before its state leaves `idle` (it waits for the connection first), thus the service and not
+    /// the state decides whether the claim is still needed.
+    private func releaseConnectionAfterDelay() {
+        DispatchQueue.main.asyncAfter(deadline: .now() + endedDelay) { [weak self] in
+            guard let self, callService == nil else {
+                return
+            }
+
+            ServerConnector.shared().disconnect(initiator: .threemaCall)
         }
     }
 }
@@ -331,8 +367,40 @@ extension VoIPCallStateManager: VoIPCallServiceDelegate {
     }
 
     func callFinished() {
-        DDLogNotice("[CallStateManager] Call finished, resetting service")
+        DDLogNotice("[Call:StateManager] Call finished, resetting service")
+        // `onCallFinished` drives UI (`CallCoordinator.finish`), must run on main.
+        // Must be async: callers may originate from the main thread via
+        // LocalNetworkPermissionChecker → WebRTC, so DispatchQueue.main.sync would deadlock.
+        DispatchQueue.main.async {
+            self.onCallFinished?()
+        }
         resetCallService()
+        releaseConnectionAfterDelay()
         processNextElementInCallQueue()
+    }
+
+    func callReadyForPresentation(callPartnerIdentity: String) {
+        // Invoked from the WebRTC signaling thread (SetRemoteDescription completion). `onCallAnswered`
+        // builds the call UI (`CallWindow`/`UIWindow`), which must run on main — else NSInternalInconsistency.
+        // Must be async: the call chain originates on the main thread (LocalNetworkPermissionChecker
+        // dispatches its completion to DispatchQueue.main), so DispatchQueue.main.sync would deadlock.
+        DispatchQueue.main.async {
+            self.onCallAnswered?(callPartnerIdentity)
+        }
+    }
+
+    func callDidConnect() {
+        // `onCallConnected` drives UI (call activity), must run on main.
+        // Must be async: callers may originate from the main thread via
+        // LocalNetworkPermissionChecker → WebRTC, so DispatchQueue.main.sync would deadlock.
+        DispatchQueue.main.async {
+            self.onCallConnected?()
+        }
+    }
+
+    func callViewPresentingViewController() -> UIViewController? {
+        MainActor.assumeIsolated {
+            self.callViewPresenterProvider?()
+        }
     }
 }

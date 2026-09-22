@@ -4,8 +4,8 @@ import NotificationBannerSwift
 import ThreemaFramework
 import ThreemaMacros
 
-final class NotificationBannerHelper: NSObject {
-    @objc class func newBanner(baseMessage: BaseMessageEntity) {
+enum NotificationBannerHelper {
+    static func newBanner(baseMessage: BaseMessageEntity) {
         DispatchQueue.main.async {
             // Reload CoreData object because of concurrency problem
             let businessInjector = BusinessInjector.ui
@@ -87,7 +87,8 @@ final class NotificationBannerHelper: NSObject {
             banner.duration = 3.0
             banner.applyStyling(cornerRadius: 8)
             banner.subtitleLabel?.numberOfLines = 2
-            
+            banner.overrideUserInterfaceStyle = Colors.themeUserInterfaceStyle
+
             if let groupID = message.conversation.groupID {
                 banner.identifier = groupID.hexEncodedString()
             }
@@ -125,14 +126,16 @@ final class NotificationBannerHelper: NSObject {
             let shadowEdgeInsets = UIEdgeInsets(top: 8, left: 2, bottom: 0, right: 2)
             if Colors.theme == .dark {
                 banner.show(
+                    on: SceneDelegate.current?.keyWindowCurrentTopViewController,
                     shadowColor: Colors.shadowNotification,
                     shadowOpacity: 0.5,
                     shadowBlurRadius: 7,
-                    shadowEdgeInsets: shadowEdgeInsets
+                    shadowEdgeInsets: shadowEdgeInsets,
                 )
             }
             else {
                 banner.show(
+                    on: SceneDelegate.current?.keyWindowCurrentTopViewController,
                     shadowColor: Colors.shadowNotification,
                     shadowOpacity: 1.0,
                     shadowBlurRadius: 10,
@@ -142,16 +145,20 @@ final class NotificationBannerHelper: NSObject {
         }
     }
 
-    private class func getThumbnailAudio() -> UIImageView? {
+    private static func getThumbnailAudio() -> UIImageView? {
         let image = UIImage(
             systemName: "mic.fill",
             withConfiguration: UIImage.SymbolConfiguration(textStyle: .body)
         )?
-            .withTintColor(.label, renderingMode: .alwaysOriginal)
-        return getThumbnail(for: image, contentMode: .center)
+            .withRenderingMode(.alwaysTemplate)
+        let thumbnailImageView = getThumbnail(for: image, contentMode: .center)
+        // Tinting the image itself would bake in the color resolved for the ambient interface style. Tinting the image
+        // view instead resolves it in the banner's interface style.
+        thumbnailImageView?.tintColor = .label
+        return thumbnailImageView
     }
 
-    private class func getThumbnail(
+    private static func getThumbnail(
         for image: UIImage?,
         contentMode: UIView.ContentMode = .scaleAspectFill
     ) -> UIImageView? {
@@ -160,7 +167,7 @@ final class NotificationBannerHelper: NSObject {
         return thumbnailImageView
     }
 
-    class func newBannerForStartGroupCall(
+    static func newBannerForStartGroupCall(
         conversationManagedObjectID: NSManagedObjectID,
         title: String,
         body: String,
@@ -196,6 +203,9 @@ final class NotificationBannerHelper: NSObject {
             colors: CustomBannerColors(),
             sideViewSize: 50.0
         )
+        // See `newBanner(baseMessage:)`
+        banner.overrideUserInterfaceStyle = Colors.themeUserInterfaceStyle
+
         banner.identifier = identifier
         banner.transparency = 0.9
         banner.duration = 3.0
@@ -245,7 +255,7 @@ final class NotificationBannerHelper: NSObject {
         }
     }
         
-    @objc class func dismissAllNotifications() {
+    static func dismissAllNotifications() {
         DispatchQueue.main.async {
             NotificationBannerQueue.default.dismissAllForced()
         }
@@ -254,7 +264,7 @@ final class NotificationBannerHelper: NSObject {
     /// Dismiss and remove all the banners for the contact (Threema Identity of contact) or the identity of the group
     /// (GroupID as hex)
     /// - Parameter identifier: Threema ID or GroupID as hex
-    @objc class func dismissAllNotifications(for identifier: String) {
+    static func dismissAllNotifications(for identifier: String) {
         DispatchQueue.main.async {
             let banners = NotificationBannerQueue.default.banners
             for banner in banners {

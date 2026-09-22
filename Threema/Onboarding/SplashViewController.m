@@ -2,7 +2,6 @@
 #import <QuartzCore/QuartzCore.h>
 #import "RandomSeedViewController.h"
 #import <MBProgressHUD/MBProgressHUD.h>
-#import "AppDelegate.h"
 #import "UIDefines.h"
 #import "ConfirmIDViewController.h"
 #import "PickNicknameViewController.h"
@@ -33,14 +32,12 @@
 @property RestoreOptionBackupViewController *restoreOptionBackupViewController;
 @property RestoreSafeViewController *restoreSafeViewController;
 @property RestoreIdentityViewController *restoreIdentityViewController;
+@property (weak) CompletedIDViewController *completedIDViewController;
 
 @property IntroQuestionView *acceptPrivacyPolicyQuestionView;
 @property IntroQuestionView *existingBackupQuestionView;
 @property IntroQuestionView *existingIdQuestionView;
 
-@property NSString *idBackup;
-
-@property BOOL triggeredSetup;
 @property BOOL isRestoreOptionBackupDisplayed;
 
 @property (assign) BOOL hasDataOnDevice;
@@ -49,7 +46,6 @@
 
 @implementation SplashViewController {
     MDMSetup *mdmSetup;
-    BOOL didWorkApiFetch;
     BOOL shouldSkipSetup;
     UINavigationController *privacyPolicyNavigationController;
 }
@@ -59,7 +55,6 @@
     self = [super initWithCoder:coder];
     if (self) {
         mdmSetup = [MDMSetup new];
-        didWorkApiFetch = NO;
         shouldSkipSetup = NO;
     }
     return self;
@@ -120,7 +115,7 @@
     _setupTitleLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"setup_title_text"], TargetManagerObjC.appName];
     
     [_setupButton setTitle:[BundleUtil localizedStringForKey:@"setup_threema"] forState:UIControlStateNormal];
-    [_restoreButton setTitle:[BundleUtil localizedStringForKey:@"restore_id"] forState:UIControlStateNormal];
+    [_restoreButton setTitle:[BundleUtil localizedStringForKey:@"restore_backup_sentence"] forState:UIControlStateNormal];
     
     if (TargetManagerObjC.isOnPrem) {
         _privacyPolicyInfo.hidden = true;
@@ -202,87 +197,16 @@
 
     _threemaLogoView.frame = CGRectMake((self.view.safeAreaLayoutGuide.layoutFrame.size.width - _threemaLogoView.frame.size.width)/2, self.view.safeAreaLayoutGuide.layoutFrame.origin.y + 26.0, _threemaLogoView.frame.size.width, _threemaLogoView.frame.size.height);
     
-    [self checkLicenseAndThreemaMDM];
+    [self.delegate splashViewControllerDidAppear:self];
 }
 
-- (void)checkLicenseAndThreemaMDM {
-    if (didWorkApiFetch == NO) {
-        if ([[LicenseStore sharedLicenseStore] isValid] == NO) {
-            [self performLicenseCheck];
-        }
-        else {
-            WorkDataThreemaMDMFetcherObjCBridge* fetcher = [[WorkDataThreemaMDMFetcherObjCBridge alloc] initWithLicenseStore:[LicenseStore sharedLicenseStore]];
-            [fetcher checkUpdateThreemaMDMWithCompletionHandler:^(NSError * _Nullable error) {
-                if (error == nil) {
-                    // Reload MDM parameter, could be changed after work data fetch
-                    [mdmSetup loadIDCreationValues];
-                    [mdmSetup loadRenewableValues];
-                [[[AppDelegate sharedAppDelegate]window]makeSecure];
-                    didWorkApiFetch = YES;
-                    
-                    [self presentUI];
-                } else {
-                    NSString *title = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"work_data_fetch_failed_title"], TargetManagerObjC.appName];
-                    NSString *message = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"work_data_fetch_failed_message"], TargetManagerObjC.appName];
-                    [UIAlertTemplate showAlertWithOwner:self title:title message:message actionOk:^(UIAlertAction *action __unused)  {
-                        exit(0);
-                    }];
-                    return;
-                }
-            }];
-        }
-    }
-    else {
-        [self presentUI];
-    }
-}
-
-- (void)presentUI {
-    _restoreButton.hidden = [mdmSetup disableBackups];
-
-    if ([mdmSetup isSafeRestoreForce]) {
-        [self showRestoreSafeViewController: [self hasDataOnDevice]];
-        [self slideOut:self fromRightToLeft:YES onCompletion:nil];
-        [self slideIn:_restoreSafeViewController fromLeftToRight:YES  onCompletion:nil];
-        
-    } else if ([mdmSetup hasIDBackup] && AppSetup.isCompleted == false) {
-        // TODO: (IOS-4531) This will run a full Safe restore again even if the restore completed and only the steps for `.identitySetupComplete` (i.e. app setup steps) are left to run
-        [self restoreIDFromMDM];
-        
-    } else if (AppSetup.shouldDirectlyShowSetupWizard) {
-        SetupApp *setupApp = [[SetupApp alloc]
-                              initWithDelegate: self
-                              licenseStore:[LicenseStore sharedLicenseStore]
-                              myIdentityStore:[MyIdentityStore sharedMyIdentityStore]
-                              mdmSetup:self->mdmSetup
-                              hasPreexistingData: [self hasDataOnDevice]
-        ];
-        
-        // TODO: RootCoordinator: We need to sort this out.
-        // With the `SplashViewControllerDelegate`, we could delegate this.
-        [setupApp setupRemoteSecretAndKeychainWithCompletionHandler:^(RemoteSecretAndKeychainObjC * _Nullable remoteSecretAndKeychain, NSError * _Nullable error) {
-            if (error != nil || remoteSecretAndKeychain == nil) {
-                DDLogError(@"Failed to directly show setup wizard: %@", error);
-                // TODO: (IOS-5426) Improve error handling
-                NSString *title = @"Restoring Identity Failed";
-                NSString *message = @"Please close or delete app and try again.";
-                [UIAlertTemplate showAlertWithOwner:self title:title message:message actionOk:^(UIAlertAction *action __unused)  {
-                    exit(EXIT_FAILURE);
-                }];
-                return;
-            }
-
-            [self presentPageViewControllerWithRemoteSecretAndKeychain:remoteSecretAndKeychain];
-        }];
-        
-    } else {
-        [self checkRefreshStoreReceipt];
-        [self showPrivacyControls];
-    }
+- (void)setRestoreButtonHidden:(BOOL)hidden {
+    _restoreButton.hidden = hidden;
 }
 
 - (void)showPrivacyControls {
-    
+    [self checkRefreshStoreReceipt];
+
     CGRect privacyTargetRect;
     
     if (MAX([UIScreen mainScreen].bounds.size.height, [UIScreen mainScreen].bounds.size.width) <= 480) {
@@ -317,77 +241,21 @@
         NSString *title = [BundleUtil localizedStringForKey:@"multi_device_linked_id_missing_title"];
         NSString *message =[NSString stringWithFormat:[BundleUtil localizedStringForKey:@"multi_device_linked_id_missing_message"], TargetManagerObjC.appName];
         NSString *linkButton = [BundleUtil localizedStringForKey:@"multi_device_linked_id_missing_reset_button"];
-        [UIAlertTemplate showAlertWithOwner:self title:title message:message titleOk:linkButton actionOk:^(UIAlertAction * _Nonnull action) {
+        [UIAlertTemplate showOKAlertWithOwner:self title:title message:message titleOk:linkButton actionOk:^(UIAlertAction * _Nonnull action) {
             [[UIApplication sharedApplication] openURL:[ThreemaURLProviderObjC getURL:ThreemaURLProviderTypeMultiDeviceReset] options:@{} completionHandler:nil];
         }];
     }
 }
 
-- (void)restoreIDFromMDM {
-    [self setAcceptPrivacyPolicyValues:AcceptPrivacyPolicyVariantImplicitly];
-    [mdmSetup restoreIDBackupOnCompletion:^{
-        SetupApp *setupApp = [[SetupApp alloc]
-                              initWithDelegate: self
-                              licenseStore:[LicenseStore sharedLicenseStore]
-                              myIdentityStore:[MyIdentityStore sharedMyIdentityStore]
-                              mdmSetup:self->mdmSetup
-                              hasPreexistingData: [self hasDataOnDevice]
-        ];
-        // TODO: RootCoordinator: We need to sort this out.
-        // With the `SplashViewControllerDelegate`, we could delegate this.
-        [setupApp setupRemoteSecretAndKeychainWithCompletionHandler:^(RemoteSecretAndKeychainObjC * _Nullable remoteSecretAndKeychain, NSError * _Nullable error) {
-            if (error != nil || remoteSecretAndKeychain == nil) {
-                // TODO: (IOS-5426) Improve error handling & localize it
-                DDLogError(@"Failed to setup identity: %@", error);
-                NSString *title = @"Creating New Identity Failed";
-                NSString *message = @"Please close app and try again.";
-                [UIAlertTemplate showAlertWithOwner:self title:title message:message actionOk:^(UIAlertAction *action __unused)  {
-                    exit(EXIT_FAILURE);
-                }];
-                return;
-            }
-
-            [[LicenseStore sharedLicenseStore] performUpdateWorkInfo];
-
-            [MBProgressHUD hideHUDForView:self.view animated:YES];
-
-            [self presentPageViewControllerWithRemoteSecretAndKeychain:remoteSecretAndKeychain];
-        }];
-    } onError:^(NSError *error) {
-        _restoreIdentityViewController = [self.storyboard instantiateViewControllerWithIdentifier:@"RestoreIdentityViewController"];
-        _restoreIdentityViewController.delegate = self;
-        _restoreIdentityViewController.backupData = mdmSetup.idBackup;
-        _restoreIdentityViewController.passwordData = mdmSetup.idBackupPassword;
-        [_restoreIdentityViewController setup];
-
-        [self slideOut:self fromRightToLeft:YES onCompletion:nil];
-        [self slideIn:_restoreIdentityViewController fromLeftToRight:YES onCompletion:^{
-            // Make sure controls are visible
-            _privacyView.alpha = 1.0;
-            _privacyView.hidden = NO;
-            _privacyView.frame = [self rect:_privacyView.frame centerIn:self.view.frame round:NO];
-
-            // Show error message
-            [_restoreIdentityViewController handleError:error];
-        }];
+- (void)showWorkDataFetchFailedAlert {
+    NSString *title = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"work_data_fetch_failed_title"], TargetManagerObjC.appName];
+    NSString *message = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"work_data_fetch_failed_message"], TargetManagerObjC.appName];
+    [UIAlertTemplate showOKAlertWithOwner:self title:title message:message actionOk:^(UIAlertAction *action __unused)  {
+        exit(0);
     }];
 }
 
-- (void)performLicenseCheck {
-    LicenseStore *licenseStore = [LicenseStore sharedLicenseStore];
-    [licenseStore performLicenseCheckWithCompletion:^(BOOL success) {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            if (success) {
-                [self checkLicenseAndThreemaMDM];
-            } else {
-                // present anyway, to also fail early if there is no network connection
-                [self presentLicenseViewController];
-            }
-        });
-    }];
-}
-
-- (void)presentLicenseViewController {
+- (void)showLicenseViewController {
     BOOL showInfoView = false;
     LicenseStore *licenseStore = [LicenseStore sharedLicenseStore];
     // In Custom OnPrem Apps, the Threema Private info view is not displayed. Additionally, the view is not shown when one of the fields (username, password, or URL) is already set.    
@@ -426,6 +294,7 @@
     CompletedIDViewController *completedVc = [self.storyboard instantiateViewControllerWithIdentifier:@"CompletedIDViewController"];
     completedVc.delegate = self;
     completedVc.setupConfiguration = setupConfiguration;
+    _completedIDViewController = completedVc;
 
     OnboardingPageViewController *pageVc = [self.storyboard instantiateViewControllerWithIdentifier:@"OnboardingPageViewController"];
 
@@ -481,20 +350,6 @@
     }];
 }
 
-- (void)presentPageViewControllerWithRemoteSecretAndKeychain:(nonnull RemoteSecretAndKeychainObjC *)remoteSecretAndKeychain {
-    SetupConfiguration *setupConfiguration = [[SetupConfiguration alloc] initWithRemoteSecretAndKeychain:remoteSecretAndKeychain mdm:mdmSetup];
-    
-    [self presentPageViewControllerWithSetupConfiguration:setupConfiguration];
-}
-
-- (void)showApplicationUI {
-#if SCENE_DELEGATE_ROOT_COORDINATOR_DEVELOPMENT
-    return;
-#else
-    [[AppDelegate sharedAppDelegate] completedIDSetup];
-#endif
-}
-
 - (void)contactSupport:(NSString *)errorCode {
     MFMailComposeViewController *mailController = [[MFMailComposeViewController alloc] init];
     mailController.mailComposeDelegate = self;
@@ -522,7 +377,7 @@
 - (void)showIDBackupQuestion {
     
     if (_existingBackupQuestionView == nil) {
-        _existingBackupQuestionView = (IntroQuestionView *)[NibUtil loadViewFromNibWithName:@"IntroQuestionView"];
+        _existingBackupQuestionView = (IntroQuestionView *)[[(NSBundle *)[NSBundle mainBundle] loadNibNamed:@"IntroQuestionView" owner:nil options:nil] firstObject];
         _existingBackupQuestionView.tag = 1;
         _existingBackupQuestionView.questionLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"backup_found_message"], TargetManagerObjC.localizedAppName];
         _existingBackupQuestionView.delegate = self;
@@ -538,12 +393,12 @@
     [self hideMessageView:_existingBackupQuestionView];
 }
 
-- (void)showIDExistsQuestion {
+- (void)showIDExistsQuestionForIdentity:(nonnull NSString *)identity {
     
     if (_existingIdQuestionView == nil) {
-        _existingIdQuestionView = (IntroQuestionView *)[NibUtil loadViewFromNibWithName:@"IntroQuestionView"];
+        _existingIdQuestionView = (IntroQuestionView *)[[(NSBundle *)[NSBundle mainBundle] loadNibNamed:@"IntroQuestionView" owner:nil options:nil] firstObject];
         _existingIdQuestionView.tag = 2;
-        _existingIdQuestionView.questionLabel.text = [[NSString alloc] initWithFormat:[BundleUtil localizedStringForKey:@"id_exists"], TargetManagerObjC.localizedAppName, [[MyIdentityStore sharedMyIdentityStore] identity]];
+        _existingIdQuestionView.questionLabel.text = [NSString localizedStringWithFormat:[BundleUtil localizedStringForKey:@"id_exists"], TargetManagerObjC.localizedAppName, identity];
         _existingIdQuestionView.delegate = self;
         _existingIdQuestionView.frame = [self rect:_existingIdQuestionView.frame centerIn:self.view.frame round:YES];
         
@@ -558,14 +413,6 @@
 }
 
 #pragma mark - manage views
-
-- (void)showSetupViewController {
-    _randomSeedViewController = [self.storyboard instantiateViewControllerWithIdentifier:@"RandomSeedViewController"];
-    _randomSeedViewController.delegate = self;
-    [_randomSeedViewController setup];
-
-    [self setAcceptPrivacyPolicyValues:AcceptPrivacyPolicyVariantExplicitly];
-}
 
 - (void)showRestoreOptionDataViewController {
     _restoreOptionDataViewController = [self.storyboard instantiateViewControllerWithIdentifier:@"RestoreOptionDataViewController"];
@@ -595,10 +442,8 @@
 }
 
 - (void)showRestoreIdentityViewController {
-    _triggeredSetup = NO;
-    
     _isRestoreOptionBackupDisplayed = ([self.childViewControllers count] > 0 && [self.childViewControllers[0] isKindOfClass:[RestoreOptionBackupViewController class]]) != 0 ? YES : NO;
-    
+
     if (_isRestoreOptionBackupDisplayed) {
         [self showRestoreIdentityViewController:nil];
         [self slideOut:_restoreOptionBackupViewController fromRightToLeft:YES onCompletion:nil];
@@ -608,6 +453,10 @@
         [self slideOut:self fromRightToLeft:YES onCompletion:nil];
         [self slideIn:_restoreIdentityViewController fromLeftToRight:YES onCompletion:nil];
     }
+}
+
+- (void)slideOutRestoreOptionBackupViewController {
+    [self slideOut:_restoreOptionBackupViewController fromRightToLeft:YES onCompletion:nil];
 }
 
 - (void)slideIn:(UIViewController *)child fromLeftToRight:(BOOL)toRight onCompletion:(void(^)(void))onCompletion {
@@ -674,103 +523,12 @@
     }];
 }
 
-- (void)createIdentity {    
-    if (self.view != nil) {
-        [MBProgressHUD showHUDAddedTo:self.view animated:YES];
-    }
-    
-    [[[ServerAPIConnector alloc] init] createIdentityWithStore:[MyIdentityStore sharedMyIdentityStore] onCompletion:^(MyIdentityStore *store) {
-        SetupApp *setupApp = [[SetupApp alloc]
-                              initWithDelegate: self
-                              licenseStore:[LicenseStore sharedLicenseStore]
-                              myIdentityStore:[MyIdentityStore sharedMyIdentityStore]
-                              mdmSetup:self->mdmSetup
-                              hasPreexistingData: [self hasDataOnDevice]
-        ];
-        // TODO: RootCoordinator: We need to sort this out.
-        // With the `SplashViewControllerDelegate`, we could delegate this.
-        [setupApp setupRemoteSecretAndKeychainWithCompletionHandler:^(RemoteSecretAndKeychainObjC * _Nullable remoteSecretAndKeychain, NSError * _Nullable error) {
-            if (error != nil || remoteSecretAndKeychain == nil) {
-                // TODO: (IOS-5426) Improve error handling & localize it
-                DDLogError(@"Failed to setup identity: %@", error);
-                NSString *title = @"Creating New Identity Failed";
-                NSString *message = @"Please close app and try again.";
-                [UIAlertTemplate showAlertWithOwner:self title:title message:message actionOk:^(UIAlertAction *action __unused)  {
-                    exit(EXIT_FAILURE);
-                }];
-                return;
-            }
-
-            [[LicenseStore sharedLicenseStore] performUpdateWorkInfo];
-
-            [MBProgressHUD hideHUDForView:self.view animated:YES];
-
-            [self presentPageViewControllerWithRemoteSecretAndKeychain:remoteSecretAndKeychain];
-        }];
-    } onError:^(NSError *error) {
-        [MBProgressHUD hideHUDForView:self.view animated:YES];
-        UIAlertController *errAlert = [UIAlertController alertControllerWithTitle:error.localizedDescription message:error.localizedFailureReason preferredStyle:UIAlertControllerStyleAlert];
-        [errAlert addAction:[UIAlertAction actionWithTitle:[BundleUtil localizedStringForKey:@"try_again"] style:UIAlertActionStyleDefault handler:^(__unused UIAlertAction * action) {
-            [self createIdentity];
-        }]];
-        if (TargetManagerObjC.isBusinessApp) {
-            [errAlert addAction:[UIAlertAction actionWithTitle:[BundleUtil localizedStringForKey:@"enter_license_enter_new_credentials"] style:UIAlertActionStyleDefault handler:^(__unused UIAlertAction * action) {
-                [self cancelPressed];
-                [self presentLicenseViewController];
-            }]];
-            if([MFMailComposeViewController canSendMail]) {
-                [errAlert addAction:[UIAlertAction actionWithTitle:[BundleUtil localizedStringForKey:@"contact_support"] style:UIAlertActionStyleDefault handler:^(__unused UIAlertAction * action) {
-                    [self cancelPressed];
-                    [self contactSupport:error.localizedDescription];
-                }]];
-            }
-        } else {
-            if([MFMailComposeViewController canSendMail]) {
-                [errAlert addAction:[UIAlertAction actionWithTitle:[BundleUtil localizedStringForKey:@"contact_support"] style:UIAlertActionStyleDefault handler:^(__unused UIAlertAction * action) {
-                    [self cancelPressed];
-                    [self contactSupport:error.localizedDescription];
-                }]];
-            }
-        }
-        [[[AppDelegate sharedAppDelegate] currentTopViewController] presentViewController:errAlert animated:YES completion:nil];
-    }];
-}
-
 - (void)setAcceptPrivacyPolicyValues:(int)variant {
     [[UserSettings sharedUserSettings] setAcceptedPrivacyPolicyDate:[NSDate date]];
     [[UserSettings sharedUserSettings] setAcceptedPrivacyPolicyVariant:variant];
 }
 
 #pragma mark - Private
-
-- (NSString *)getIDBackup {
-    NSString *backupData = [IdentityBackupStore loadIdentityBackup];
-    if (backupData != nil && [IdentityBackupStore isValidBackupFormat:backupData]) {
-        return backupData;
-    }
-
-    return nil;
-}
-
-- (BOOL)checkForIDBackup {
-    _idBackup = [self getIDBackup];
-
-    if (_idBackup) {
-        [self showIDBackupQuestion];
-        return YES;
-    }
-
-    return NO;
-}
-
-- (BOOL)checkForIDExists {
-    // Because we load an existing identity at `viewDidLoad` we know here if there is still a valid identity in the keychain
-    if ([MyIdentityStore.sharedMyIdentityStore isValidIdentity]) {
-        [self showIDExistsQuestion];
-        return YES;
-    }
-    return NO;
-}
 
 - (void)checkRefreshStoreReceipt {
     if (TargetManagerObjC.isBusinessApp) {
@@ -788,28 +546,10 @@
 #pragma mark - IBActions
 
 - (IBAction)setupAction:(id)sender {
-    #if SCENE_DELEGATE_ROOT_COORDINATOR_DEVELOPMENT
     __weak typeof(self) weakSelf = self;
     [self.delegate splashViewControllerDidTapSetup:self completionHandler:^{
         [weakSelf devSetup];
     }];
-    return;
-    #endif
-    
-    _triggeredSetup = YES;
-    
-    // Check for ID Export, if is business app or if Threema and has no existing ID
-    if (TargetManagerObjC.isBusinessApp || (!TargetManagerObjC.isBusinessApp && ![self checkForIDExists])) {
-        if ([self checkForIDBackup] == NO) {
-            [self showSetupViewController];
-            [self slideOut:self fromRightToLeft:YES onCompletion:nil];
-            
-            __weak typeof(self) weakSelf = self;
-            [self slideIn:_randomSeedViewController fromLeftToRight:YES onCompletion:^(void){
-                [weakSelf devSetup];
-            }];
-        }
-    }
 }
 
 - (BOOL)isDevSetup {
@@ -842,41 +582,13 @@
 }
 
 - (IBAction)restoreAction:(id)sender {
-    #if SCENE_DELEGATE_ROOT_COORDINATOR_DEVELOPMENT
     [self.delegate splashViewControllerDidTapRestore:self];
-    return;
-    #endif
-    
-    [self startRestore];
-}
-
--(void)startRestore {
-    _triggeredSetup = NO;
-    
-    if ([mdmSetup isSafeRestoreDisable]) {
-        if ([self checkForIDBackup] == NO) {
-            [self showRestoreIdentityViewController:nil];
-            [self slideOut:self fromRightToLeft:YES onCompletion:nil];
-            [self slideIn:_restoreIdentityViewController fromLeftToRight:YES onCompletion:nil];
-        }
-    } else {
-        if ([self hasDataOnDevice] == YES) {
-            [self showRestoreOptionDataViewController];
-            [self slideOut:self fromRightToLeft:YES onCompletion:nil];
-            [self slideIn:_restoreOptionDataViewController fromLeftToRight:YES onCompletion:nil];
-        } else {
-            [self showRestoreOptionBackupViewController];
-            [self slideOut:self fromRightToLeft:YES onCompletion:nil];
-            [self slideIn:_restoreOptionBackupViewController fromLeftToRight:YES onCompletion:nil];
-        }
-    }
 }
 
 
 #pragma mark - IntroQuestionViewDelegate
 
 - (void)selectedYes:(IntroQuestionView *)sender {
-    #if SCENE_DELEGATE_ROOT_COORDINATOR_DEVELOPMENT
     if (sender.tag == 1) {
         // ID Backup question - Yes = use backup
         [self hideIDBackupQuestion];
@@ -887,44 +599,9 @@
         [self hideIDExistsQuestion];
         [self.delegate splashViewController:self didAnswerIDExistsQuestion:YES];
     }
-    return;
-    #endif
-    
-    if (sender.tag == 1) {
-        [self hideIDBackupQuestion];
-
-        [self showRestoreIdentityViewController:_idBackup];
-        [self slideOut:self fromRightToLeft:YES onCompletion:nil];
-        [self slideIn:_restoreIdentityViewController fromLeftToRight:YES onCompletion:nil];
-    }
-    else if (sender.tag == 2) {
-        // Use identity that already exists in keychain
-        
-        [self hideIDExistsQuestion];
-        
-        SetupApp *setupApp = [[SetupApp alloc]
-                              initWithDelegate: self
-                              licenseStore:[LicenseStore sharedLicenseStore]
-                              myIdentityStore:[MyIdentityStore sharedMyIdentityStore]
-                              mdmSetup:self->mdmSetup
-                              hasPreexistingData: [self hasDataOnDevice]
-        ];
-        
-        // TODO: RootCoordinator: We need to sort this out.
-        // With the `SplashViewControllerDelegate`, we could delegate this.
-        [setupApp setupRemoteSecretAndKeychainWithCompletionHandler:^(RemoteSecretAndKeychainObjC * _Nullable remoteSecretAndKeychain, NSError * _Nullable error) {
-            if (error != nil || remoteSecretAndKeychain == nil) {
-                DDLogError(@"Failed to directly show setup wizard: %@", error);
-                exit(EXIT_FAILURE);
-            }
-
-            [self presentPageViewControllerWithRemoteSecretAndKeychain:remoteSecretAndKeychain];
-        }];
-    }
 }
 
 - (void)selectedNo:(IntroQuestionView *)sender {
-    #if SCENE_DELEGATE_ROOT_COORDINATOR_DEVELOPMENT
     if (sender.tag == 1) {
         // ID Backup question - No = don't use backup
         [self hideIDBackupQuestion];
@@ -934,34 +611,6 @@
         // ID Exists question - No = create new
         [self hideIDExistsQuestion];
         [self.delegate splashViewController:self didAnswerIDExistsQuestion:NO];
-    }
-    return;
-    #endif
-    
-    if (sender.tag == 1) {
-        [self hideIDBackupQuestion];
-
-        if (_triggeredSetup) {
-            [self showSetupViewController];
-            [self slideOut:self fromRightToLeft:YES onCompletion:nil];
-            [self slideIn:_randomSeedViewController fromLeftToRight:YES onCompletion:nil];
-        } else {
-            [self showRestoreIdentityViewController:nil];
-            [self slideOut:self fromRightToLeft:YES onCompletion:nil];
-            [self slideIn:_restoreIdentityViewController fromLeftToRight:YES onCompletion:nil];
-        }
-    }
-    else if (sender.tag == 2) {
-        // User wants new ID
-        
-        [self hideIDExistsQuestion];
-        
-        // Remove all keychain items
-        [KeychainManager deleteAllItemsAndReturnError:(NSError * _Nullable __autoreleasing * _Nullable) {}];
-
-        [self showSetupViewController];
-        [self slideOut:self fromRightToLeft:YES onCompletion:nil];
-        [self slideIn:_randomSeedViewController fromLeftToRight:YES onCompletion:nil];
     }
 }
 
@@ -973,112 +622,17 @@
 #pragma mark - RandomSeedViewControllerDelegate
 
 - (void)generatedRandomSeed:(NSData *)seed {
-    #if SCENE_DELEGATE_ROOT_COORDINATOR_DEVELOPMENT
     [self.delegate splashViewController:self didGenerateRandomSeed:seed];
-    return;
-    #endif
-    
-    [[MyIdentityStore sharedMyIdentityStore] generateKeyPairWithSeed:seed];
-
-    [self createIdentity];
 }
 
 #pragma mark - CompletedIDDelegate
 
 - (void)completedIDSetupWithConfiguration:(SetupConfiguration *)setupConfiguration {
-    #if SCENE_DELEGATE_ROOT_COORDINATOR_DEVELOPMENT
     [self.delegate splashViewController:self didCompleteIDSetupWith:setupConfiguration completionHandler:^(void){}];
-    return;
-    #endif
-    
-    [self completedIDSetupInternal];
-}
-
-// Legacy method for restore flows that don't have a SetupConfiguration
-- (void)completedIDSetup {
-    #if SCENE_DELEGATE_ROOT_COORDINATOR_DEVELOPMENT
-    // For coordinator flow, create an empty configuration for restore scenarios
-    SetupConfiguration *setupConfiguration = [[SetupConfiguration alloc] initWithRemoteSecretAndKeychain:nil mdm:mdmSetup];
-    [self.delegate splashViewController:self didCompleteIDSetupWith:setupConfiguration completionHandler:^(void){}];
-    return;
-    #endif
-    
-    [self completedIDSetupInternal];
-}
-
-- (void)completedIDSetupInternal {
-    // Delete decrypted backup data from application documents folder
-    [[FileUtility new] deleteIfExistsAt:[[[FileUtility new] appDocumentsDirectory] URLByAppendingPathComponent:@"safe-backup.json"]];
-    
-    // The App Setup Steps should be called as the last step of the onboarding and if they fail they need to be retried.
-    // We log the steps (incl. retries) to a separate file in the document directory such that this can be requested in
-    // support inquiries.
-
-    [self clearAppSetupStepsLoggerOutput];
-    [self addAppSetupStepsLogger];
-
-    [self runWorkDataUpdateWithCompletion:^{
-        [self runAppSetupStepsWithCompletion:^{
-            [self removeAppSetupStepsLogger];
-
-            // The setup is only completed if the App Setup Steps are successfully completed
-            [AppSetup setState:AppSetupStateComplete];
-                        
-            [self showApplicationUI];
-            
-            // Delete log file again
-            [self clearAppSetupStepsLoggerOutput];
-        }];
-    }];
-}
-
-/// Run the work data update
-/// - Parameter onCompletion: Called when update succeeds and fails
-- (void)runWorkDataUpdateWithCompletion:(nonnull void(^)(void))onCompletion {
-    [[AppDelegate sharedAppDelegate] setIsWorkContactsLoading:true];
-    WorkDataFetcherObjCBridge* fetcher = [WorkDataFetcherObjCBridge new];
-    [fetcher updateWorkDataWithForce:YES completionHandler:^(NSError * _Nullable error) {
-        [[AppDelegate sharedAppDelegate] setIsWorkContactsLoading:false];
-        onCompletion();
-    }];
-};
-
-/// Run the App Setup Steps and show a retry alert if they fail
-/// - Parameter onCompletion: Called when App Setup Steps are successfully completed
-- (void)runAppSetupStepsWithCompletion:(nonnull void(^)(void))onCompletion {
-    if ([AppDelegate sharedAppDelegate].currentTopViewController.view) {
-        [MBProgressHUD showHUDAddedTo:[AppDelegate sharedAppDelegate].currentTopViewController.view animated:YES];
-    }
-
-    AppSetupStepsObjC *appSetupSteps = [[AppSetupStepsObjC alloc] init];
-    [appSetupSteps runWithCompletionHandler:^(NSError * _Nullable error) {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            if ([AppDelegate sharedAppDelegate].currentTopViewController.view) {
-                [MBProgressHUD hideHUDForView:[AppDelegate sharedAppDelegate].currentTopViewController.view animated:YES];
-            }
-            
-            if (error != nil) {
-                DDLogError(@"App Setup Steps failed: %@", error);
-                UIViewController *currentTopViewController = [[AppDelegate sharedAppDelegate] currentTopViewController];
-                [UIAlertTemplate showAlertWithOwner:currentTopViewController title:[BundleUtil localizedStringForKey:@"app_setup_steps_failed_title"] message:[BundleUtil localizedStringForKey:@"app_setup_steps_failed_message"] titleOk:[BundleUtil localizedStringForKey:@"try_again"] actionOk:^(UIAlertAction * _Nonnull action) {
-                    DDLogNotice(@"Retry App Setup Steps...");
-                    [self runAppSetupStepsWithCompletion:onCompletion];
-                }];
-            }
-            else {
-                onCompletion();
-            }
-        });
-    }];
 }
 
 - (void)cancelPressed {
-    #if SCENE_DELEGATE_ROOT_COORDINATOR_DEVELOPMENT
     [self.delegate splashViewControllerDidCancelIDCreation:self];
-    return;
-    #endif
-    
-    [self cancelIDCreation];
 }
 
 - (void)cancelIDCreation {
@@ -1091,24 +645,13 @@
 - (void)optionDataKeepLocal {
     _restoreOptionDataViewController.delegate = nil;
     
-    #if SCENE_DELEGATE_ROOT_COORDINATOR_DEVELOPMENT
     [self.delegate splashViewController:self didSelectRestoreOption:RestoreOptionKeepLocalData];
-    return;
-    #endif
-    [self showRestoreOptionBackupViewController];
-    [self slideOut:_restoreOptionDataViewController fromRightToLeft:YES onCompletion:nil];
-    [self slideIn:_restoreOptionBackupViewController fromLeftToRight:YES onCompletion:nil];
 }
 
 - (void)optionDataCancelled {
     _restoreOptionDataViewController.delegate = nil;
     
-    #if SCENE_DELEGATE_ROOT_COORDINATOR_DEVELOPMENT
     [self.delegate splashViewControllerDidCancelRestore:self];
-    return;
-    #endif
-    [self slideOut:_restoreOptionDataViewController fromRightToLeft:NO onCompletion:nil];
-    [self slideIn:self fromLeftToRight:NO onCompletion:nil];
 }
 
 #pragma mark - RestoreOptionBackupViewControllerDelegate
@@ -1116,60 +659,29 @@
 - (void)restoreSafe {
     _restoreOptionBackupViewController.delegate = nil;
     
-    #if SCENE_DELEGATE_ROOT_COORDINATOR_DEVELOPMENT
     [self.delegate splashViewController:self didSelectRestoreOption:RestoreOptionSafe];
-    return;
-    #endif
-    [self showRestoreSafeViewController:NO];
-    [self slideOut:_restoreOptionBackupViewController fromRightToLeft:YES onCompletion:nil];
-    [self slideIn:_restoreSafeViewController fromLeftToRight:YES  onCompletion:nil];
+}
+
+- (void)restoreLocalBackup {
+    [self.delegate splashViewController:self didSelectRestoreOption:RestoreOptionLocalBackup];
 }
 
 - (void)restoreIdentityFromSafe {
     _restoreOptionBackupViewController.delegate = nil;
     
-    #if SCENE_DELEGATE_ROOT_COORDINATOR_DEVELOPMENT
     [self.delegate splashViewController:self didSelectRestoreOption:RestoreOptionSafeIdentityOnly];
-    return;
-    #endif
-    [self showRestoreSafeViewController:YES];
-    [self slideOut:_restoreOptionBackupViewController fromRightToLeft:YES onCompletion:nil];
-    [self slideIn:_restoreSafeViewController fromLeftToRight:YES  onCompletion:nil];
 }
 
 - (void)restoreIdentity {
     _restoreOptionBackupViewController.delegate = nil;
     
-    #if SCENE_DELEGATE_ROOT_COORDINATOR_DEVELOPMENT
     [self.delegate splashViewController:self didSelectRestoreOption:RestoreOptionIdBackup];
-    return;
-    #endif
-    [self slideOut:_restoreOptionBackupViewController fromRightToLeft:YES onCompletion:nil];
-
-    _isRestoreOptionBackupDisplayed = YES;
-
-    if ([self checkForIDBackup] == NO) {
-        [self showRestoreIdentityViewController:nil];
-        [self slideIn:_restoreIdentityViewController fromLeftToRight:YES onCompletion:nil];
-    }
 }
 
 - (void)restoreCancelled {
     _restoreOptionBackupViewController.delegate = nil;
     
-    #if SCENE_DELEGATE_ROOT_COORDINATOR_DEVELOPMENT
     [self.delegate splashViewControllerDidCancelRestoreOptionBackup:self];
-    return;
-    #endif
-    _isRestoreOptionBackupDisplayed = NO;
-    [self slideOut:_restoreOptionBackupViewController fromRightToLeft:NO onCompletion:nil];
-
-    if ([self hasDataOnDevice]) {
-        [self showRestoreOptionDataViewController];
-        [self slideIn:_restoreOptionDataViewController fromLeftToRight:NO onCompletion:nil];
-    } else {
-        [self slideIn:self fromLeftToRight:NO  onCompletion:nil];
-    }
 }
 
 #pragma mark - RestoreSafeViewControllerDelegate
@@ -1177,30 +689,9 @@
 - (void)restoreSafeCancelledWithShowLocalDataInfo:(BOOL)showLocalDataInfo {
     _restoreSafeViewController.delegate = nil;
     
-    #if SCENE_DELEGATE_ROOT_COORDINATOR_DEVELOPMENT
     [self.delegate splashViewControllerDidCancelRestoreSafe:self];
-    return;
-    #endif
-    [self showRestoreOptionBackupViewController];
-    [self slideOut:_restoreSafeViewController fromRightToLeft:NO onCompletion:nil];
-    [self slideIn:_restoreOptionBackupViewController fromLeftToRight:NO onCompletion:nil];
-    
-    if (showLocalDataInfo) {
-        [self restoreCancelled];
-    }
 }
 
-- (void)restoreSafeDone {
-    _restoreSafeViewController.delegate = nil;
-    
-    #if SCENE_DELEGATE_ROOT_COORDINATOR_DEVELOPMENT
-    [self.delegate splashViewControllerDidCompleteRestore:self];
-    return;
-    #endif
-    [self completedIDSetup];
-}
-
-#if SCENE_DELEGATE_ROOT_COORDINATOR_DEVELOPMENT
 - (void)restoreSafeViewController:(RestoreSafeViewController *)viewController
             didRequestRestoreWith:(NSString *)identity
                          password:(NSString *)password {
@@ -1209,68 +700,27 @@
                                identity:identity
                                password:password];
 }
-#endif
 
 #pragma mark - RestoreIdentityViewControllerDelegate
 
 - (void)restoreIdentityCancelled {
     _restoreIdentityViewController.delegate = nil;
     
-    #if SCENE_DELEGATE_ROOT_COORDINATOR_DEVELOPMENT
     [self.delegate splashViewControllerDidCancelRestoreIdentity:self];
-    return;
-    #endif
-    
-    [self slideOut:_restoreIdentityViewController fromRightToLeft:NO onCompletion:nil];
-
-    if (!_triggeredSetup && _isRestoreOptionBackupDisplayed) {
-        [self showRestoreOptionBackupViewController];
-        [self slideIn:_restoreOptionBackupViewController fromLeftToRight:NO onCompletion:nil];
-    } else if (!_isRestoreOptionBackupDisplayed) {
-        [self slideIn:self fromLeftToRight:NO onCompletion:nil];
-    }
 }
 
 - (void)restoreIdentityDone {
     _restoreIdentityViewController.delegate = nil;
     
-    #if SCENE_DELEGATE_ROOT_COORDINATOR_DEVELOPMENT
-    [self.delegate splashViewControllerDidCompleteRestore:self];
-    return;
-    #endif
-    
-    SetupApp *setupApp = [[SetupApp alloc]
-                          initWithDelegate: self
-                          licenseStore:[LicenseStore sharedLicenseStore]
-                            myIdentityStore:[MyIdentityStore sharedMyIdentityStore]
-                          mdmSetup:self->mdmSetup
-                          hasPreexistingData:[self hasDataOnDevice]
-    ];
-    
-    // TODO: RootCoordinator: We need to sort this out.
-    // With the `SplashViewControllerDelegate`, we could delegate this.
-    [setupApp setupRemoteSecretAndKeychainWithCompletionHandler:^(RemoteSecretAndKeychainObjC * _Nullable remoteSecretAndKeychain, NSError * _Nullable error) {
-        if (error != nil|| remoteSecretAndKeychain == nil ) {
-            exit(EXIT_FAILURE);
-        }
-
-        // We always show the rest of the setup because the ID configuration is deleted before the restoration. This
-        // is due to the fact that the restored ID might be different than the one used with the previous configuration
-        [self presentPageViewControllerWithRemoteSecretAndKeychain:remoteSecretAndKeychain];
-    }];
+    [self.delegate splashViewControllerDidCompleteRestoreIdentity:self];
 }
 
 #pragma mark - EnterLicenseDelegate
 
 - (void)licenseConfirmed {
     [self dismissViewControllerAnimated:YES completion:nil];
-    
-    #if SCENE_DELEGATE_ROOT_COORDINATOR_DEVELOPMENT
+
     [self.delegate splashViewControllerDidConfirmLicense:self];
-    return;
-    #endif
-    
-    [self checkLicenseAndThreemaMDM];
 }
 
 #pragma mark - ZSWTappableLabel delegate
@@ -1334,6 +784,14 @@
     [self slideOut:current fromRightToLeft:YES onCompletion:nil];
     [self slideIn:_restoreIdentityViewController fromLeftToRight:YES onCompletion:^{
         if (error != nil) {
+            if (_privacyView.hidden) {
+                // We can get here without the splash controls ever having been shown (MDM ID backup
+                // restore). Make sure the privacy policy text is visible in that case.
+                _privacyView.alpha = 1.0;
+                _privacyView.hidden = NO;
+                _privacyView.frame = [self rect:_privacyView.frame centerIn:self.view.frame round:NO];
+            }
+
             [_restoreIdentityViewController handleError:error];
         }
     }];
@@ -1353,6 +811,25 @@
     UIViewController *current = [self currentVisibleViewController];
     [self slideOut:current fromRightToLeft:YES onCompletion:nil];
     [self slideIn:_restoreOptionBackupViewController fromLeftToRight:YES onCompletion:nil];
+}
+
+- (void)navigateToViewController:(UIViewController *)viewController {
+    [self navigateToViewController:viewController fromRightToLeft:YES];
+}
+
+- (void)navigateBackToViewController:(UIViewController *)viewController {
+    [self navigateToViewController:viewController fromRightToLeft:NO];
+}
+
+- (void)navigateToViewController:(UIViewController *)viewController fromRightToLeft:(BOOL)toLeft {
+    // `slideIn:` only animates the horizontal position and keeps the size the view already has.
+    // Storyboard view controllers bring their size along, programmatically created ones (e.g. a
+    // UIHostingController) start out at zero and would slide in invisible without this.
+    viewController.view.frame = self.view.bounds;
+
+    UIViewController *current = [self currentVisibleViewController];
+    [self slideOut:current fromRightToLeft:toLeft onCompletion:nil];
+    [self slideIn:viewController fromLeftToRight:toLeft onCompletion:nil];
 }
 
 - (void)navigateToRestoreSafeViewController:(BOOL)identityOnly {
@@ -1395,6 +872,10 @@
 
 - (void)hideLoadingHUD {
     [MBProgressHUD hideHUDForView:self.view animated:YES];
+}
+
+- (void)resetIDSetupCompletion {
+    [_completedIDViewController resetCompletionProcess];
 }
 
 - (void)showIdentityCreationError:(NSError *)error {

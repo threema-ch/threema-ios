@@ -81,7 +81,7 @@ struct QRCodeScannerView: View {
             QRCodeScannerView(
                 model: QRCodeScannerViewModel(
                     mode: mode,
-                    audioSessionManager: .null,
+                    audioSessionManager: nil,
                     systemFeedbackManager: .null,
                     systemPermissionsManager: .alwaysAllows
                 )

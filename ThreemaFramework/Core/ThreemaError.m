@@ -3,11 +3,11 @@
 
 @implementation ThreemaError
 
-+ (NSError*)threemaError:(NSString*)message {
++ (nonnull NSError*)threemaError:(nullable NSString*)message {
     return [self threemaError:message withCode:ThreemaProtocolErrorGeneralError];
 }
 
-+ (NSError*)threemaError:(NSString*)message withCode:(NSInteger)code {
++ (nonnull NSError*)threemaError:(nullable NSString*)message withCode:(NSInteger)code {
     NSString *errorMessage = message;
     if (errorMessage == nil) {
         errorMessage = @"";

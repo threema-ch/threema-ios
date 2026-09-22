@@ -1,17 +1,16 @@
+use libthreema_dependencies::crypto::{
+    aead::AeadInPlace as _,
+    cipher::KeyInit as _,
+    digest::{self, Mac as _},
+    salsa20, x25519,
+};
 use libthreema_macros::concat_fixed_bytes;
-use tracing::{debug, warn};
+use tracing::{debug, info};
 
 use crate::{
     common::{
         Nonce,
         keys::{ClientKey, PublicKey},
-    },
-    crypto::{
-        aead::{self, AeadInPlace as _},
-        cipher::KeyInit as _,
-        digest::{MAC_256_LENGTH, Mac as _},
-        salsa20::XSalsa20Poly1305,
-        x25519,
     },
     csp::{
         ClientCookie, ClientSequenceNumber, Cookie, CspProtocolContext, CspProtocolError,
@@ -36,7 +35,7 @@ fn create_nonce(cookie: Cookie, sequence_number: SequenceNumberValue<u64>) -> No
 
 /// Decrypt an incoming `server-challenge-response`.
 ///
-/// Try all permanent server keys of `context`, and returns an error iff none of them could be used
+/// Try all permanent server keys of `context`, and returns an error if none of them could be used
 /// to decrypt the `server-challenge-response`.
 pub(super) fn decrypt_server_challenge_response(
     context: &CspProtocolContext,
@@ -48,46 +47,36 @@ pub(super) fn decrypt_server_challenge_response(
     // Compute the nonce once. Secure because we use different public keys for the same nonce.
     let nonce = create_nonce(server_cookie.0, server_sequence_number.0.get_and_increment()?);
 
-    // Try to decrypt the server challenge response with all available permanent server keys
+    // Try to decrypt the server challenge response with all available permanent server keys.
     for permanent_server_key in &context.permanent_server_keys {
-        match try_decrypt_server_challenge_response_with_public_key(
-            &permanent_server_key.0,
-            temporary_client_key,
-            &nonce,
-            &mut server_challenge_response_box,
-        ) {
+        let cipher = salsa20::XSalsa20Poly1305::new(
+            temporary_client_key
+                .0
+                .diffie_hellman_hsalsa20(&permanent_server_key.0)
+                .ok_or(CspProtocolError::InvalidParameter(
+                    "Non-contributory permanent public server key",
+                ))?
+                .as_bytes()
+                .into(),
+        );
+        match cipher.decrypt_in_place((&nonce).into(), &[], &mut server_challenge_response_box) {
             Ok(()) => {
                 debug!(?permanent_server_key, "Selected permanent server key");
                 return Ok((*permanent_server_key, server_challenge_response_box));
             },
             Err(_) => {
-                warn!(mismatching_permanent_server_key = ?permanent_server_key,
-                    "Decrypting server challenge box with server public key failed. \
+                info!(mismatching_permanent_server_key = ?permanent_server_key,
+                    "Decrypting server-challenge-response with server public key failed. \
                      Trying next one (if any)."
                 );
             },
         }
     }
 
-    // None of the permanent server keys was able to decrypt the challenge response
+    // None of the permanent server keys was able to decrypt the challenge response.
     Err(CspProtocolError::DecryptionFailed {
         name: ServerChallengeResponse::NAME,
     })
-}
-
-/// Decrypt an incoming `server-challenge-response` in-place for a given public key.
-fn try_decrypt_server_challenge_response_with_public_key(
-    permanent_server_key: &x25519_dalek::PublicKey,
-    temporary_client_key: &TemporaryClientKey,
-    nonce: &Nonce,
-    server_challenge_response_box: &mut Vec<u8>,
-) -> Result<(), aead::Error> {
-    let server_hello_cipher = XSalsa20Poly1305::new(
-        x25519::SharedSecretHSalsa20::from(temporary_client_key.0.diffie_hellman(permanent_server_key))
-            .as_bytes()
-            .into(),
-    );
-    server_hello_cipher.decrypt_in_place(nonce.into(), &[], server_challenge_response_box)
 }
 
 struct VouchCipher {
@@ -100,19 +89,21 @@ impl VouchCipher {
         client_key: &ClientKey,
         permanent_server_key: &PublicKey,
         server_cookie: &ServerCookie,
-    ) -> [u8; MAC_256_LENGTH] {
+    ) -> Option<[u8; digest::MAC_256_LENGTH]> {
         // Obtain the CSP authentication secret (aka _vouch key_)
         let vouch_key =
-            client_key.derive_csp_authentication_key(permanent_server_key, &self.temporary_server_key.0);
+            client_key.derive_csp_authentication_key(permanent_server_key, &self.temporary_server_key.0)?;
 
         // Compute the vouch from the vouch key and server_cookie || temporary_client_key_public
-        vouch_key
-            .0
-            .chain_update(server_cookie.0.0)
-            .chain_update(self.temporary_client_key_public.as_bytes())
-            .finalize()
-            .into_bytes()
-            .into()
+        Some(
+            vouch_key
+                .0
+                .chain_update(server_cookie.0.0)
+                .chain_update(self.temporary_client_key_public.as_bytes())
+                .finalize()
+                .into_bytes()
+                .into(),
+        )
     }
 }
 
@@ -121,7 +112,7 @@ pub(super) struct SessionCipher {
     client_sequence_number: ClientSequenceNumber,
     server_cookie: ServerCookie,
     server_sequence_number: ServerSequenceNumber,
-    cipher: XSalsa20Poly1305,
+    cipher: salsa20::XSalsa20Poly1305,
 }
 impl SessionCipher {
     /// Encrypt outgoing data in-place.
@@ -169,26 +160,26 @@ impl LoginCipher {
         server_cookie: ServerCookie,
         server_sequence_number: ServerSequenceNumber,
         temporary_server_key: TemporaryServerKey,
-    ) -> Self {
+    ) -> Option<Self> {
         let temporary_client_key_public = x25519::PublicKey::from(&temporary_client_key.0);
-        let session_key = x25519::SharedSecretHSalsa20::from(
-            temporary_client_key.0.diffie_hellman(&temporary_server_key.0.0),
-        );
+        let session_key = temporary_client_key
+            .0
+            .diffie_hellman_hsalsa20(&temporary_server_key.0.0)?;
         let session_cipher = SessionCipher {
             client_cookie,
             client_sequence_number,
             server_cookie,
             server_sequence_number,
-            cipher: XSalsa20Poly1305::new(session_key.as_bytes().into()),
+            cipher: salsa20::XSalsa20Poly1305::new(session_key.as_bytes().into()),
         };
         let vouch_cipher = VouchCipher {
             temporary_server_key,
             temporary_client_key_public,
         };
-        Self {
+        Some(Self {
             vouch_cipher,
             session_cipher,
-        }
+        })
     }
 
     /// Dissolve the cipher, returning the wrapped [`SessionCipher`].
@@ -202,7 +193,7 @@ impl LoginCipher {
         &self,
         client_key: &ClientKey,
         permanent_server_key: &PublicKey,
-    ) -> [u8; MAC_256_LENGTH] {
+    ) -> Option<[u8; digest::MAC_256_LENGTH]> {
         self.vouch_cipher.vouch_session(
             client_key,
             permanent_server_key,
@@ -231,7 +222,7 @@ pub(super) struct LoginAckCipher {
 }
 impl LoginAckCipher {
     /// Create the cipher needed to decrypt `login-ack` contents.
-    pub(super) fn new(session_cipher: SessionCipher) -> LoginAckCipher {
+    pub(super) fn new(session_cipher: SessionCipher) -> Self {
         Self { session_cipher }
     }
 
@@ -264,5 +255,156 @@ impl PayloadCipher {
     #[inline]
     pub(super) fn decrypt_payload(&mut self, payload: Vec<u8>) -> Result<Vec<u8>, CspProtocolError> {
         self.0.decrypt(IncomingPayload::NAME, payload)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use assert_matches::assert_matches;
+    use derive_builder::Builder;
+    use libthreema_dependencies::crypto::{aead::Aead as _, cipher::KeyInit as _, salsa20, x25519};
+    use rstest::rstest;
+
+    use crate::{
+        common::keys::PublicKey,
+        csp::{
+            Cookie, CspProtocolError, SequenceNumberU64, ServerChallengeResponse, ServerCookie,
+            ServerSequenceNumber, TemporaryClientKey, cipher::create_nonce,
+            decrypt_server_challenge_response, tests::ContextBuilder,
+        },
+        utils::{debug::Name as _, sequence_numbers::SequenceNumberValue},
+    };
+
+    #[derive(Builder)]
+    #[builder(pattern = "owned")]
+    struct ServerChallengeResponseTestContext {
+        #[builder(default = "x25519::StaticSecret::from([1; x25519::KEY_LENGTH])")]
+        temporary_server_key: x25519::StaticSecret,
+
+        #[builder(default = "TemporaryClientKey(x25519::StaticSecret::from([2; x25519::KEY_LENGTH]))")]
+        temporary_client_key: TemporaryClientKey,
+
+        #[builder(default = "ServerCookie(Cookie([1; Cookie::LENGTH]))")]
+        server_cookie: ServerCookie,
+
+        #[builder(default = "1")]
+        server_sequence_number: u64,
+
+        #[builder(default = b"so ein quatsch".to_vec())]
+        server_challenge_response: Vec<u8>,
+    }
+    impl ServerChallengeResponseTestContext {
+        fn temporary_server_key_public(&self) -> PublicKey {
+            PublicKey(x25519::PublicKey::from(&self.temporary_server_key))
+        }
+
+        fn server_sequence_number(&self) -> ServerSequenceNumber {
+            ServerSequenceNumber(SequenceNumberU64::new(self.server_sequence_number))
+        }
+
+        fn create_server_challenge_response(&self) -> Vec<u8> {
+            let cipher = salsa20::XSalsa20Poly1305::new(
+                self.temporary_server_key
+                    .diffie_hellman_hsalsa20(&x25519::PublicKey::from(&self.temporary_client_key.0))
+                    .unwrap()
+                    .as_bytes()
+                    .into(),
+            );
+            let nonce = create_nonce(
+                self.server_cookie.0,
+                SequenceNumberValue(self.server_sequence_number),
+            );
+            cipher
+                .encrypt((&nonce).into(), self.server_challenge_response.as_slice())
+                .unwrap()
+        }
+    }
+
+    #[rstest]
+    #[case(vec![PublicKey::from([1; PublicKey::LENGTH])])]
+    #[case(vec![PublicKey::from([1; PublicKey::LENGTH]), PublicKey::from([2; PublicKey::LENGTH])])]
+    fn server_challenge_response_invalid_mismatching_permanent_server_keys(
+        #[case] permanent_server_keys: Vec<PublicKey>,
+    ) {
+        let server_challenge_response_context = ServerChallengeResponseTestContextBuilder::default()
+            .build()
+            .unwrap();
+        let csp_context = ContextBuilder::default()
+            .with_permanent_server_keys(permanent_server_keys)
+            .build();
+
+        // Decrypting the challenge response should fail after trying all of them.
+        let result = decrypt_server_challenge_response(
+            &csp_context,
+            &server_challenge_response_context.temporary_client_key,
+            &server_challenge_response_context.server_cookie,
+            &mut server_challenge_response_context.server_sequence_number(),
+            server_challenge_response_context.create_server_challenge_response(),
+        );
+        assert_matches!(
+            result,
+            Err(CspProtocolError::DecryptionFailed {
+                name: ServerChallengeResponse::NAME,
+            })
+        );
+    }
+
+    #[rstest]
+    #[case(vec![PublicKey::from([0; PublicKey::LENGTH])])]
+    #[case(vec![PublicKey::from([1; PublicKey::LENGTH]), PublicKey::from([0; PublicKey::LENGTH])])]
+    fn server_challenge_response_invalid_non_contributory_permanent_server_key(
+        #[case] permanent_server_keys: Vec<PublicKey>,
+    ) {
+        let server_challenge_response_context = ServerChallengeResponseTestContextBuilder::default()
+            .build()
+            .unwrap();
+        let csp_context = ContextBuilder::default()
+            .with_permanent_server_keys(permanent_server_keys)
+            .build();
+
+        // Decrypting the challenge response should fail because the key is non-contributory.
+        let result = decrypt_server_challenge_response(
+            &csp_context,
+            &server_challenge_response_context.temporary_client_key,
+            &server_challenge_response_context.server_cookie,
+            &mut server_challenge_response_context.server_sequence_number(),
+            server_challenge_response_context.create_server_challenge_response(),
+        );
+        assert_eq!(
+            result,
+            Err(CspProtocolError::InvalidParameter(
+                "Non-contributory permanent public server key"
+            ))
+        );
+    }
+
+    #[test]
+    fn server_challenge_response_valid() {
+        let server_challenge_response_context = ServerChallengeResponseTestContextBuilder::default()
+            .build()
+            .unwrap();
+        let csp_context = ContextBuilder::default()
+            .with_permanent_server_keys(vec![
+                server_challenge_response_context.temporary_server_key_public(),
+            ])
+            .build();
+
+        // Decrypting the challenge response should be successful.
+        let (selected_permanent_server_key, server_challenge_response) = decrypt_server_challenge_response(
+            &csp_context,
+            &server_challenge_response_context.temporary_client_key,
+            &server_challenge_response_context.server_cookie,
+            &mut server_challenge_response_context.server_sequence_number(),
+            server_challenge_response_context.create_server_challenge_response(),
+        )
+        .unwrap();
+        assert_eq!(
+            selected_permanent_server_key,
+            server_challenge_response_context.temporary_server_key_public()
+        );
+        assert_eq!(
+            server_challenge_response,
+            server_challenge_response_context.server_challenge_response
+        );
     }
 }

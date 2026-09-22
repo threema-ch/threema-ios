@@ -20,7 +20,7 @@ final class BootstrapContainer {
     let bootstrapWorkDataFetcher: any BootstrapWorkDataFetcherProtocol
     let bootstrapContactStore: any BootstrapContactStoreProtocol
     let bootstrapPhoneNumberNormalizer: any PhoneNumberNormalizerProtocol
-    let bootstrapMDM: any BootstrapMDMSetupProtocol
+    let flavorService: any AppFlavorServiceProtocol
     
     // MARK: - Initialization
     
@@ -36,7 +36,7 @@ final class BootstrapContainer {
         bootstrapContactStore: any BootstrapContactStoreProtocol,
         bootstrapWorkDataFetcher: any BootstrapWorkDataFetcherProtocol,
         bootstrapPhoneNumberNormalizer: any PhoneNumberNormalizerProtocol,
-        bootstrapMDM: any BootstrapMDMSetupProtocol
+        flavorService: any AppFlavorServiceProtocol
     ) {
         self.appLaunchManager = appLaunchManager
         self.bootstrapUserSettings = bootstrapUserSettings
@@ -49,7 +49,7 @@ final class BootstrapContainer {
         self.bootstrapWorkDataFetcher = bootstrapWorkDataFetcher
         self.bootstrapContactStore = bootstrapContactStore
         self.bootstrapPhoneNumberNormalizer = bootstrapPhoneNumberNormalizer
-        self.bootstrapMDM = bootstrapMDM
+        self.flavorService = flavorService
     }
 }
 
@@ -69,9 +69,11 @@ extension BootstrapContainer {
             bootstrapKeychainManager: BootstrapKeychainManagerAdapter(),
             bootstrapBackupStore: BootstrapBackupStoreAdapter(),
             bootstrapContactStore: BootstrapContactStoreAdapter(),
-            bootstrapWorkDataFetcher: BootstrapWorkDataFetcherAdapter(),
+            bootstrapWorkDataFetcher: BootstrapWorkDataFetcherAdapter(makeFetcher: {
+                WorkDataThreemaMDMFetcher(licenseStore: LicenseStore.shared())
+            }),
             bootstrapPhoneNumberNormalizer: PhoneNumberNormalizer(),
-            bootstrapMDM: BootstrapMDMAdapter(mdmSetup: MDMSetup())
+            flavorService: AppFlavorService()
         )
     }
 }

@@ -196,16 +196,12 @@ extension JoinedRemoteParticipant {
             )
             return .none
         
-        case .encryptedAdminEnvelope:
-            DDLogNotice("[GroupCall] Received an encryptedAdminEnvelope, which is not yet supported, so ignoring it")
+        case .moderatorEnvelope:
+            DDLogNotice("[GroupCall] Received an moderatorEnvelope, which is not yet supported, so ignoring it")
             return .none
        
         case let .rekey(mediaKeys):
             return handleRekey(with: mediaKeys)
-       
-        case .holdState:
-            DDLogNotice("[GroupCall] Received a holdState, which is not yet supported, so ignoring it")
-            return .none
         }
     }
 }
@@ -395,11 +391,13 @@ extension JoinedRemoteParticipant {
     ) throws {
         DDLogNotice("[GroupCall] Participant \(participantID) \(#function)")
         
-        guard mediaKey.epoch < UInt8.max else {
+        // The epoch wraps back to 0 after 255 and the ratchet counter is capped at 255, thus 255 is a valid value for
+        // both of them.
+        guard mediaKey.epoch <= UInt32(UInt8.max) else {
             throw GroupCallError.localProtocolViolation
         }
-        
-        guard mediaKey.ratchetCounter < UInt8.max else {
+
+        guard mediaKey.ratchetCounter <= UInt32(UInt8.max) else {
             throw GroupCallError.localProtocolViolation
         }
         

@@ -1,9 +1,11 @@
+import AudioSessionManager
 import Foundation
 import Keychain
 import RemoteSecretProtocol
 
 public protocol BusinessInjectorProtocol: AnyObject {
     var runsInBackground: Bool { get }
+    var audioSessionManager: any AudioSessionManagerProtocol { get }
     var contactStore: any ContactStoreProtocol { get }
     var conversationStore: any ConversationStoreProtocol { get }
     var entityManager: EntityManager { get }

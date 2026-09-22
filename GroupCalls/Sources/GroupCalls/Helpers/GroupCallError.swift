@@ -115,3 +115,8 @@ public enum GroupCallRemoteContextError: Error, GroupCallErrorProtocol {
     case missingVideoTrackOnReceiver
     case invalidVideoTrackType
 }
+
+public enum GroupCallStartError: Error, GroupCallErrorProtocol {
+    case disabled
+    case noOneSupports
+}

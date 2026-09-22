@@ -91,6 +91,8 @@ struct Connecting: GroupCallState {
         ///   `SfuToParticipant.Hello` message via the associated data channel. Let
         ///   `hello` be that message.
         
+        await connectionContext.startAudio()
+
         connectionContext.createLocalMediaSenders()
         
         try await connectionContext.createAndApplyInitialOfferAndAnswer()
@@ -127,7 +129,7 @@ struct Connecting: GroupCallState {
         try await mapLocalTransceivers()
         
         // swiftformat:disable:next acronyms
-        let participantIDs = envelope.participantIds
+        let participantIDs = envelope.deprecatedParticipantIds
         
         /// **Protocol Step: Group Call Join Steps**
         /// 6. If the `hello.participants` contains less than 4 items, set the initial

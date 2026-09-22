@@ -60,6 +60,7 @@ final class ContactListContainerViewControllerFactory {
             searchResultsController: {
                 ContactListSearchResultsViewController(
                     delegate: contactListSearchResultsDelegate,
+                    businessInjector: self.businessInjector,
                     dataSourceFactory: { tableView in
                         ContactListSearchDataSource(
                             tableView: tableView,

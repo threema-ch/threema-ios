@@ -651,7 +651,7 @@ message DistributionList {
   // distribution list is the list of its members.
   optional string name = 2;
 
-  // Unix-ish timestamp in milliseconds when the group has been created
+  // Unix-ish timestamp in milliseconds when the distribution list has been created
   //
   // Required towards a new device and for a new distribution list. Optional
   // for an existing distribution list.
@@ -786,16 +786,18 @@ message Settings {
   }
   optional ScreenshotPolicy screenshot_policy = 7;
 
-  // Keyboard data collection policy (e.g. for personalised suggestions)
+  // Deprecated keyboard data collection policy (e.g. for personalised
+  // suggestions)
   //
-  // Required towards a new device. Optional otherwise.
-  enum KeyboardDataCollectionPolicy {
+  // Required towards a new device until the field has been phased out. Optional
+  // for an existing contact.
+  enum DeprecatedKeyboardDataCollectionPolicy {
     // Allow keyboard input data to be collected
     ALLOW_DATA_COLLECTION = 0;
     // Deny collecting of keyboard input data
     DENY_DATA_COLLECTION = 1;
   }
-  optional KeyboardDataCollectionPolicy keyboard_data_collection_policy = 8;
+  optional DeprecatedKeyboardDataCollectionPolicy deprecated_keyboard_data_collection_policy = 8 [deprecated = true];
 
   // List of Threema IDs whose messages are blocked
   //

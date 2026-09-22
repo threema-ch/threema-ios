@@ -11,7 +11,7 @@ use crate::{
     common::{D2xDeviceId, keys::DeviceGroupTransactionScopeCipher, task::TaskLoop},
     crypto::aead::AeadRandomNonceAhead as _,
     csp_e2e::{CspE2eProtocolError, CspE2eProtocolInternalErrorCause, D2xContext},
-    protobuf::{self},
+    protobuf,
     utils::{debug::Name as _, time::Duration},
 };
 
@@ -203,7 +203,7 @@ impl State {
 
                     // Transaction is obsolete now, so abort it by committing immediately
                     PreconditionVerdict::Abort => {
-                        info!("Commiting obsolete transaction due to precondition abort");
+                        info!("Committing obsolete transaction due to precondition abort");
                         let (commit_transaction_task, commit_transaction_instruction) =
                             CommitTransactionSubtask::new(vec![]);
                         (

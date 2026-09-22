@@ -3,8 +3,8 @@ import Foundation
 public final class CompanyDirectoryContact: NSObject, Sendable {
     public let id: String
     public let pk: Data
-    @objc public let first: String?
-    @objc public let last: String?
+    public let first: String?
+    public let last: String?
     public let csi: String?
     public let jobTitle: String?
     public let department: String?

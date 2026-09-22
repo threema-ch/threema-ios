@@ -3,7 +3,7 @@ import Foundation
 import ThreemaEssentials
 import ThreemaProtocols
 
-class ForwardSecurityStatusSender: ForwardSecurityStatusListener {
+final class ForwardSecurityStatusSender: ForwardSecurityStatusListener {
     
     private let entityManager: EntityManager
     

@@ -5,11 +5,11 @@ import ThreemaEssentials
 import ThreemaMacros
 
 /// Used to fetch info from database to create participants in group calls
-public final class GroupCallParticipantInfoFetcher: GroupCallParticipantInfoFetcherProtocol {
+final class GroupCallParticipantInfoFetcher: GroupCallParticipantInfoFetcherProtocol {
     
     // MARK: - Properties
 
-    public static let shared = GroupCallParticipantInfoFetcher()
+    static let shared = GroupCallParticipantInfoFetcher()
     
     private let businessInjector = BusinessInjector()
     

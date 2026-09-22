@@ -261,15 +261,19 @@ extension ChatViewThumbnailDisplayMessageTableViewCell: ChatViewMessageActions {
             
             switch message.fileMessageType {
             case .image, .animatedImage:
-                UIPasteboard.general.image = UIImage(data: data)
+                guard let image = UIImage(data: data) else {
+                    NotificationPresenterWrapper.shared.present(type: .copyError)
+                    break
+                }
+                UIPasteboard.general.set(image: image, sensitiveContent: .messageContent)
                 NotificationPresenterWrapper.shared.present(type: .copySuccess)
-                
+
             case .video:
                 guard let uti = message.blobUTTypeIdentifier else {
                     NotificationPresenterWrapper.shared.present(type: .copyError)
                     break
                 }
-                UIPasteboard.general.setData(data, forPasteboardType: uti)
+                UIPasteboard.general.set(data: data, forPasteboardType: uti, sensitiveContent: .messageContent)
                 NotificationPresenterWrapper.shared.present(type: .copySuccess)
                 
             default:

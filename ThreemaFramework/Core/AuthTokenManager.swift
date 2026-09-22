@@ -1,7 +1,7 @@
 import Foundation
 
 /// Obtains and manages authentication tokens for access to OnPrem servers.
-public final class AuthTokenManager: NSObject {
+public final class AuthTokenManager {
     public typealias AuthTokenCompletionHandler = (String?, Error?) -> Void
 
     private var authToken: String?
@@ -11,11 +11,11 @@ public final class AuthTokenManager: NSObject {
     
     private static let authTokenManager = AuthTokenManager()
     
-    @objc public static func shared() -> AuthTokenManager {
+    public static func shared() -> AuthTokenManager {
         authTokenManager
     }
     
-    @objc public func obtainToken(completionHandler: @escaping AuthTokenCompletionHandler) {
+    public func obtainToken(completionHandler: @escaping AuthTokenCompletionHandler) {
         if !TargetManager.isOnPrem {
             completionHandler(nil, nil)
             return

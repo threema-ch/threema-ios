@@ -6,7 +6,11 @@ rename_exe = "swiftformat"
 no_app = true  # Skip SwiftFormat.for.Xcode.app.zip, use swiftformat.zip instead
 
 [tools]
-rust = "1.94"
+rust = "1.96"
+# Registry short name rather than a hand-written `github:` spec: SwiftLint's release assets are not laid out
+# like SwiftFormat's (`portable_swiftlint.zip`, plus a `.pkg`), and the registry knows which to take per
+# platform. Pin whatever `mise ls-remote swiftlint` reports as current.
+swiftlint = "0.65.0"
 
 #-- Settings --#
 [settings]
@@ -86,6 +90,12 @@ description = "Run SwiftFormat on project (pass --lint for check-only mode)"
 usage = 'flag "--lint" help="Check formatting without modifying files"'
 run = 'mise exec -- swiftformat . --config .swiftformat --swift-version $(cat .swift-version) ${usage_lint:+--lint}'
 
+#- Lint -#
+
+[tasks.lint]
+description = "Run SwiftLint (audio session ownership only, see .swiftlint.yml)"
+run = 'mise exec -- swiftlint lint --config .swiftlint.yml --strict --quiet'
+
 #-- WebRTC --#
 
 [tasks.webrtc]
@@ -138,11 +148,12 @@ run = """
   echo 'Update of submodules'
   mise run update-submodules
 {% endif %}
+
 # Sync Rust version
 VERSION=$(awk -F'"' '/channel/ {print $2}' libthreema/rust-toolchain.toml)
 CURRENT=$(awk -F'"' '/^rust =/ {print $2}' mise.toml)
 if [ "$VERSION" != "$CURRENT" ]; then
-    sed -i'' -e 's/^rust = ".*"/rust = "'"$VERSION"'"/' mise.toml
+    sed -i '' -e 's/^rust = ".*"/rust = "'"$VERSION"'"/' mise.toml
     mise trust $PWD/mise.toml
     mise install rust
     mise use rust@$VERSION
@@ -150,6 +161,21 @@ if [ "$VERSION" != "$CURRENT" ]; then
 else
     mise use rust@$VERSION
     echo "Rust version matches $VERSION"
+fi
+
+# Sync UniFFI version to script tests
+UNIFFI_VERSION=$(awk -F'"' '/uniffi.*version/ {print $2; exit}' libthreema/tools/uniffi-bindgen/Cargo.toml)
+if [ -n "$UNIFFI_VERSION" ]; then
+    TEST_LIB_CARGO="scripts/BuildRustLibrary/Tests/BuildRustLibraryScriptTests/rust-library/lib/Cargo.toml"
+    TEST_BINDGEN_CARGO="scripts/BuildRustLibrary/Tests/BuildRustLibraryScriptTests/rust-library/uniffi-bindgen/Cargo.toml"
+    CURRENT_UNIFFI=$(awk -F'"' '/uniffi.*version/ {print $2; exit}' "$TEST_LIB_CARGO")
+    if [ "$UNIFFI_VERSION" != "$CURRENT_UNIFFI" ]; then
+        sed -i '' -e 's/uniffi = { version = "[^"]*"/uniffi = { version = "'"$UNIFFI_VERSION"'"/' "$TEST_LIB_CARGO"
+        sed -i '' -e 's/uniffi = { version = "[^"]*"/uniffi = { version = "'"$UNIFFI_VERSION"'"/' "$TEST_BINDGEN_CARGO"
+        echo "UniFFI version updated to $UNIFFI_VERSION"
+    else
+        echo "UniFFI version matches $UNIFFI_VERSION"
+    fi
 fi
 
 xcrun --sdk macosx ./scripts/BuildRustLibrary/Sources/BuildRustLibraryScript/main.swift \

@@ -52,13 +52,13 @@ import SwiftProtobuf
 // incompatible with the version of SwiftProtobuf to which you are linking.
 // Please ensure that you are building against the same version of the API
 // that was used to generate this file.
-fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAPIVersionCheck {
+fileprivate nonisolated struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAPIVersionCheck {
   struct _2: SwiftProtobuf.ProtobufAPIVersion_2 {}
   typealias Version = _2
 }
 
 /// _Read_ receipt policy (when an unread message has been read)
-public enum D2dSync_ReadReceiptPolicy: SwiftProtobuf.Enum, Swift.CaseIterable {
+public nonisolated enum D2dSync_ReadReceiptPolicy: SwiftProtobuf.Enum, Swift.CaseIterable {
   public typealias RawValue = Int
 
   /// Send _read_ receipt when an unread message has been read
@@ -97,7 +97,7 @@ public enum D2dSync_ReadReceiptPolicy: SwiftProtobuf.Enum, Swift.CaseIterable {
 }
 
 /// Typing indicator policy (signal _currently typing_)
-public enum D2dSync_TypingIndicatorPolicy: SwiftProtobuf.Enum, Swift.CaseIterable {
+public nonisolated enum D2dSync_TypingIndicatorPolicy: SwiftProtobuf.Enum, Swift.CaseIterable {
   public typealias RawValue = Int
 
   /// Send _typing_ indicator when a message is being composed
@@ -136,7 +136,7 @@ public enum D2dSync_TypingIndicatorPolicy: SwiftProtobuf.Enum, Swift.CaseIterabl
 }
 
 /// Availability status category.
-public enum D2dSync_WorkAvailabilityStatusCategory: SwiftProtobuf.Enum, Swift.CaseIterable {
+public nonisolated enum D2dSync_WorkAvailabilityStatusCategory: SwiftProtobuf.Enum, Swift.CaseIterable {
   public typealias RawValue = Int
 
   /// None (i.e. no (un)availability).
@@ -181,7 +181,7 @@ public enum D2dSync_WorkAvailabilityStatusCategory: SwiftProtobuf.Enum, Swift.Ca
 }
 
 /// Visibility of a conversation.
-public enum D2dSync_ConversationVisibility: SwiftProtobuf.Enum, Swift.CaseIterable {
+public nonisolated enum D2dSync_ConversationVisibility: SwiftProtobuf.Enum, Swift.CaseIterable {
   public typealias RawValue = Int
 
   /// Appears normally in the list of conversations
@@ -226,7 +226,7 @@ public enum D2dSync_ConversationVisibility: SwiftProtobuf.Enum, Swift.CaseIterab
 }
 
 /// Category of a conversation.
-public enum D2dSync_ConversationCategory: SwiftProtobuf.Enum, Swift.CaseIterable {
+public nonisolated enum D2dSync_ConversationCategory: SwiftProtobuf.Enum, Swift.CaseIterable {
   public typealias RawValue = Int
 
   /// No specific (default) category
@@ -277,7 +277,7 @@ public enum D2dSync_ConversationCategory: SwiftProtobuf.Enum, Swift.CaseIterable
 /// Note 2: Supplying a description with `WorkAvailabilityStatusCategory.NONE` is
 /// bogus and will be treated as `WorkAvailabilityStatusCategory.NONE` without a
 /// description.
-public struct D2dSync_WorkAvailabilityStatus: Sendable {
+public nonisolated struct D2dSync_WorkAvailabilityStatus: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -302,7 +302,7 @@ public struct D2dSync_WorkAvailabilityStatus: Sendable {
 /// for the first time, modified, or removed.
 ///
 /// Note: MDM parameters are always transmitted fully, not as delta updates.
-public struct D2dSync_MdmParameters: Sendable {
+public nonisolated struct D2dSync_MdmParameters: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -321,7 +321,7 @@ public struct D2dSync_MdmParameters: Sendable {
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public enum ParameterPrecedence: SwiftProtobuf.Enum, Swift.CaseIterable {
+  public nonisolated enum ParameterPrecedence: SwiftProtobuf.Enum, Swift.CaseIterable {
     public typealias RawValue = Int
 
     /// On conflict, parameters defined by Threema App Configuration take
@@ -361,7 +361,7 @@ public struct D2dSync_MdmParameters: Sendable {
   }
 
   /// A single MDM parameter.
-  public struct Parameter: Sendable {
+  public nonisolated struct Parameter: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
@@ -397,7 +397,7 @@ public struct D2dSync_MdmParameters: Sendable {
 
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public enum OneOf_Value: Equatable, Sendable {
+    public nonisolated enum OneOf_Value: Equatable, Sendable {
       /// String parameter
       case stringValue(String)
       /// Integer parameter
@@ -414,7 +414,7 @@ public struct D2dSync_MdmParameters: Sendable {
 }
 
 /// Threema Work credentials for authentication towards Work APIs.
-public struct D2dSync_ThreemaWorkCredentials: Sendable {
+public nonisolated struct D2dSync_ThreemaWorkCredentials: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -431,7 +431,7 @@ public struct D2dSync_ThreemaWorkCredentials: Sendable {
 }
 
 /// The user's profile.
-public struct D2dSync_UserProfile: Sendable {
+public nonisolated struct D2dSync_UserProfile: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -486,9 +486,9 @@ public struct D2dSync_UserProfile: Sendable {
 
   /// Availability status of the user.
   ///
-  /// Shall not be present in the _Consumer_ flavour.
+  /// Shall not be present in the _Consumer_ or _Green_ flavour.
   ///
-  /// Always optional in the _Work_ flavour.
+  /// Always optional in the _Work_, _Blue_ or _OnPrem_ flavour.
   public var workAvailabilityStatus: D2dSync_WorkAvailabilityStatus {
     get {_workAvailabilityStatus ?? D2dSync_WorkAvailabilityStatus()}
     set {_workAvailabilityStatus = newValue}
@@ -503,7 +503,7 @@ public struct D2dSync_UserProfile: Sendable {
   /// Profile picture share policy
   ///
   /// Required towards a new device. Optional otherwise.
-  public struct ProfilePictureShareWith: Sendable {
+  public nonisolated struct ProfilePictureShareWith: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
@@ -542,7 +542,7 @@ public struct D2dSync_UserProfile: Sendable {
 
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public enum OneOf_Policy: Equatable, Sendable {
+    public nonisolated enum OneOf_Policy: Equatable, Sendable {
       /// Don't share
       case nobody(Common_Unit)
       /// Share with everyone
@@ -564,7 +564,7 @@ public struct D2dSync_UserProfile: Sendable {
   ///
   /// When the user has cleared all of its identity links, this message is
   /// present but `links` contains zero items.
-  public struct IdentityLinks: Sendable {
+  public nonisolated struct IdentityLinks: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
@@ -575,7 +575,7 @@ public struct D2dSync_UserProfile: Sendable {
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
     /// Threema ID link.
-    public struct IdentityLink: Sendable {
+    public nonisolated struct IdentityLink: Sendable {
       // SwiftProtobuf.Message conformance is added in an extension below. See the
       // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
       // methods supported on all messages.
@@ -608,7 +608,7 @@ public struct D2dSync_UserProfile: Sendable {
       public var unknownFields = SwiftProtobuf.UnknownStorage()
 
       /// Identity link type
-      public enum OneOf_Type: Equatable, Sendable {
+      public nonisolated enum OneOf_Type: Equatable, Sendable {
         /// Linked with a verified telephone number (E.164 format without leading
         /// `+`)
         case phoneNumber(String)
@@ -633,7 +633,7 @@ public struct D2dSync_UserProfile: Sendable {
 }
 
 /// Threema contact.
-public struct D2dSync_Contact: @unchecked Sendable {
+public nonisolated struct D2dSync_Contact: @unchecked Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -818,9 +818,9 @@ public struct D2dSync_Contact: @unchecked Sendable {
   /// were applied) from a _Work Sync_, a _Work Contacts_, or a _Work Directory_
   /// endpoint.
   ///
-  /// Shall not be present in the _Consumer_ flavour.
+  /// Shall not be present in the _Consumer_ or _Green_ flavour.
   ///
-  /// Always optional in the _Work_ flavour.
+  /// Always optional in the _Work_, _Blue_ or _OnPrem_ flavour.
   public var workLastFullSyncAt: UInt64 {
     get {_storage._workLastFullSyncAt ?? 0}
     set {_uniqueStorage()._workLastFullSyncAt = newValue}
@@ -832,9 +832,9 @@ public struct D2dSync_Contact: @unchecked Sendable {
 
   /// Availability status of the contact.
   ///
-  /// Shall not be present in the _Consumer_ flavour.
+  /// Shall not be present in the _Consumer_ or _Green_ flavour.
   ///
-  /// Always optional in the _Work_ flavour.
+  /// Always optional in the _Work_, _Blue_ or _OnPrem_ flavour.
   public var workAvailabilityStatus: D2dSync_WorkAvailabilityStatus {
     get {_storage._workAvailabilityStatus ?? D2dSync_WorkAvailabilityStatus()}
     set {_uniqueStorage()._workAvailabilityStatus = newValue}
@@ -918,7 +918,7 @@ public struct D2dSync_Contact: @unchecked Sendable {
   /// `WorkVerificationLevel` of `WORK_SUBSCRIPTION_VERIFIED` virtually raises
   /// the verification level to `SERVER_VERIFIED`. However, the contact
   /// verification level takes precedence if it is `FULLY_VERIFIED`.
-  public enum VerificationLevel: SwiftProtobuf.Enum, Swift.CaseIterable {
+  public nonisolated enum VerificationLevel: SwiftProtobuf.Enum, Swift.CaseIterable {
     public typealias RawValue = Int
 
     /// Unverified, public key has been obtained from the server
@@ -971,7 +971,7 @@ public struct D2dSync_Contact: @unchecked Sendable {
   ///
   /// Note: When not using a Threema Work client, the Threema Work verification
   /// level must always be `NONE`.
-  public enum WorkVerificationLevel: SwiftProtobuf.Enum, Swift.CaseIterable {
+  public nonisolated enum WorkVerificationLevel: SwiftProtobuf.Enum, Swift.CaseIterable {
     public typealias RawValue = Int
 
     /// The user does not use Threema Work or the contact is not in the same
@@ -1014,7 +1014,7 @@ public struct D2dSync_Contact: @unchecked Sendable {
   ///
   /// Required towards a new device and for a new contact. Optional for an
   /// existing contact.
-  public enum IdentityType: SwiftProtobuf.Enum, Swift.CaseIterable {
+  public nonisolated enum IdentityType: SwiftProtobuf.Enum, Swift.CaseIterable {
     public typealias RawValue = Int
 
     /// Regular contact (uses the regular Threema app)
@@ -1056,7 +1056,7 @@ public struct D2dSync_Contact: @unchecked Sendable {
   ///
   /// Required towards a new device and for a new contact. Optional for an
   /// existing contact.
-  public enum AcquaintanceLevel: SwiftProtobuf.Enum, Swift.CaseIterable {
+  public nonisolated enum AcquaintanceLevel: SwiftProtobuf.Enum, Swift.CaseIterable {
     public typealias RawValue = Int
 
     /// The contact was explicitly added by the user, the Work subscription
@@ -1110,7 +1110,7 @@ public struct D2dSync_Contact: @unchecked Sendable {
   ///
   /// Required towards a new device and for a new contact. Optional for an
   /// existing contact.
-  public enum ActivityState: SwiftProtobuf.Enum, Swift.CaseIterable {
+  public nonisolated enum ActivityState: SwiftProtobuf.Enum, Swift.CaseIterable {
     public typealias RawValue = Int
 
     /// The ID is active (used recently and not deleted).
@@ -1170,7 +1170,7 @@ public struct D2dSync_Contact: @unchecked Sendable {
   ///
   /// These states are strict monotonic. When a downgrade is being detected,
   /// log the incident and ignore the update.
-  public enum SyncState: SwiftProtobuf.Enum, Swift.CaseIterable {
+  public nonisolated enum SyncState: SwiftProtobuf.Enum, Swift.CaseIterable {
     public typealias RawValue = Int
 
     /// The contact data has not been imported and has not been edited by the
@@ -1222,7 +1222,7 @@ public struct D2dSync_Contact: @unchecked Sendable {
   ///
   /// Required towards a new device and for a new contact. Optional for an
   /// existing contact.
-  public struct ReadReceiptPolicyOverride: Sendable {
+  public nonisolated struct ReadReceiptPolicyOverride: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
@@ -1249,7 +1249,7 @@ public struct D2dSync_Contact: @unchecked Sendable {
 
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public enum OneOf_Override: Equatable, Sendable {
+    public nonisolated enum OneOf_Override: Equatable, Sendable {
       /// Apply the _read_ receipt policy specified in the settings
       case `default`(Common_Unit)
       /// Apply the following _read_ receipt policy
@@ -1264,7 +1264,7 @@ public struct D2dSync_Contact: @unchecked Sendable {
   ///
   /// Required towards a new device and for a new contact. Optional for an
   /// existing contact.
-  public struct TypingIndicatorPolicyOverride: Sendable {
+  public nonisolated struct TypingIndicatorPolicyOverride: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
@@ -1291,7 +1291,7 @@ public struct D2dSync_Contact: @unchecked Sendable {
 
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public enum OneOf_Override: Equatable, Sendable {
+    public nonisolated enum OneOf_Override: Equatable, Sendable {
       /// Apply the typing indicator policy specified in the settings
       case `default`(Common_Unit)
       /// Apply the following typing indicator policy
@@ -1306,7 +1306,7 @@ public struct D2dSync_Contact: @unchecked Sendable {
   ///
   /// Required towards a new device and for a new contact. Optional for an
   /// existing contact.
-  public struct NotificationTriggerPolicyOverride: Sendable {
+  public nonisolated struct NotificationTriggerPolicyOverride: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
@@ -1334,7 +1334,7 @@ public struct D2dSync_Contact: @unchecked Sendable {
 
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public enum OneOf_Override: Equatable, Sendable {
+    public nonisolated enum OneOf_Override: Equatable, Sendable {
       /// Apply the trigger policy specified in the settings (i.e. trigger on
       /// every _conversation_ message).
       case `default`(Common_Unit)
@@ -1343,7 +1343,7 @@ public struct D2dSync_Contact: @unchecked Sendable {
 
     }
 
-    public struct Policy: Sendable {
+    public nonisolated struct Policy: Sendable {
       // SwiftProtobuf.Message conformance is added in an extension below. See the
       // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
       // methods supported on all messages.
@@ -1365,7 +1365,7 @@ public struct D2dSync_Contact: @unchecked Sendable {
       public var unknownFields = SwiftProtobuf.UnknownStorage()
 
       /// Apply the following notification trigger policy
-      public enum NotificationTriggerPolicy: SwiftProtobuf.Enum, Swift.CaseIterable {
+      public nonisolated enum NotificationTriggerPolicy: SwiftProtobuf.Enum, Swift.CaseIterable {
         public typealias RawValue = Int
 
         /// Never trigger a notification message.
@@ -1409,7 +1409,7 @@ public struct D2dSync_Contact: @unchecked Sendable {
   ///
   /// Required towards a new device and for a new contact until the field has
   /// been phased out. Optional for an existing contact.
-  public struct DeprecatedNotificationSoundPolicyOverride: Sendable {
+  public nonisolated struct DeprecatedNotificationSoundPolicyOverride: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
@@ -1426,7 +1426,7 @@ public struct D2dSync_Contact: @unchecked Sendable {
 
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public enum OneOf_Override: Equatable, Sendable {
+    public nonisolated enum OneOf_Override: Equatable, Sendable {
       case `default`(Common_Unit)
 
     }
@@ -1440,7 +1440,7 @@ public struct D2dSync_Contact: @unchecked Sendable {
 }
 
 /// Threema contacts associated to a group.
-public struct D2dSync_Group: Sendable {
+public nonisolated struct D2dSync_Group: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -1581,7 +1581,7 @@ public struct D2dSync_Group: Sendable {
   ///
   /// Required towards a new device and for a new group. Optional for an
   /// existing group.
-  public enum UserState: SwiftProtobuf.Enum, Swift.CaseIterable {
+  public nonisolated enum UserState: SwiftProtobuf.Enum, Swift.CaseIterable {
     public typealias RawValue = Int
 
     /// The user is a member (or creator) of the group.
@@ -1632,7 +1632,7 @@ public struct D2dSync_Group: Sendable {
   ///
   /// Required towards a new device and for a new group. Optional for an
   /// existing group.
-  public struct NotificationTriggerPolicyOverride: Sendable {
+  public nonisolated struct NotificationTriggerPolicyOverride: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
@@ -1660,7 +1660,7 @@ public struct D2dSync_Group: Sendable {
 
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public enum OneOf_Override: Equatable, Sendable {
+    public nonisolated enum OneOf_Override: Equatable, Sendable {
       /// Apply the trigger policy specified in the settings (i.e. trigger on
       /// every _conversation_ message).
       case `default`(Common_Unit)
@@ -1669,7 +1669,7 @@ public struct D2dSync_Group: Sendable {
 
     }
 
-    public struct Policy: Sendable {
+    public nonisolated struct Policy: Sendable {
       // SwiftProtobuf.Message conformance is added in an extension below. See the
       // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
       // methods supported on all messages.
@@ -1691,7 +1691,7 @@ public struct D2dSync_Group: Sendable {
       public var unknownFields = SwiftProtobuf.UnknownStorage()
 
       /// Apply the following notification trigger policy
-      public enum NotificationTriggerPolicy: SwiftProtobuf.Enum, Swift.CaseIterable {
+      public nonisolated enum NotificationTriggerPolicy: SwiftProtobuf.Enum, Swift.CaseIterable {
         public typealias RawValue = Int
 
         /// Only trigger a notification if mentioned in a _conversation_ message.
@@ -1741,7 +1741,7 @@ public struct D2dSync_Group: Sendable {
   ///
   /// Required towards a new device and for a new group until the field has
   /// been phased out. Optional for an existing group.
-  public struct DeprecatedNotificationSoundPolicyOverride: Sendable {
+  public nonisolated struct DeprecatedNotificationSoundPolicyOverride: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
@@ -1758,7 +1758,7 @@ public struct D2dSync_Group: Sendable {
 
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public enum OneOf_Override: Equatable, Sendable {
+    public nonisolated enum OneOf_Override: Equatable, Sendable {
       case `default`(Common_Unit)
 
     }
@@ -1781,7 +1781,7 @@ public struct D2dSync_Group: Sendable {
 }
 
 /// Threema contacts associated to a distribution list.
-public struct D2dSync_DistributionList: Sendable {
+public nonisolated struct D2dSync_DistributionList: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -1887,7 +1887,7 @@ public struct D2dSync_DistributionList: Sendable {
 ///
 /// 1. For each setting that is being included by this message, run the
 ///    associated steps of the setting and apply the modified setting.
-public struct D2dSync_Settings: Sendable {
+public nonisolated struct D2dSync_Settings: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -2021,7 +2021,7 @@ public struct D2dSync_Settings: Sendable {
   /// Contact synchronisation policy
   ///
   /// Required towards a new device. Optional otherwise.
-  public enum ContactSyncPolicy: SwiftProtobuf.Enum, Swift.CaseIterable {
+  public nonisolated enum ContactSyncPolicy: SwiftProtobuf.Enum, Swift.CaseIterable {
     public typealias RawValue = Int
 
     /// Not synced
@@ -2062,7 +2062,7 @@ public struct D2dSync_Settings: Sendable {
   /// Unknown contacts policy
   ///
   /// Required towards a new device. Optional otherwise.
-  public enum UnknownContactPolicy: SwiftProtobuf.Enum, Swift.CaseIterable {
+  public nonisolated enum UnknownContactPolicy: SwiftProtobuf.Enum, Swift.CaseIterable {
     public typealias RawValue = Int
 
     /// Allowed to contact the user
@@ -2103,7 +2103,7 @@ public struct D2dSync_Settings: Sendable {
   /// Threema 1:1 Call policy
   ///
   /// Required towards a new device. Optional otherwise.
-  public enum O2oCallPolicy: SwiftProtobuf.Enum, Swift.CaseIterable {
+  public nonisolated enum O2oCallPolicy: SwiftProtobuf.Enum, Swift.CaseIterable {
     public typealias RawValue = Int
 
     /// Allow creating/receiving Threema 1:1 Calls
@@ -2146,7 +2146,7 @@ public struct D2dSync_Settings: Sendable {
   /// Required towards a new device. Optional otherwise.
   ///
   /// Note: This is only relevant for 1:1 calls.
-  public enum O2oCallConnectionPolicy: SwiftProtobuf.Enum, Swift.CaseIterable {
+  public nonisolated enum O2oCallConnectionPolicy: SwiftProtobuf.Enum, Swift.CaseIterable {
     public typealias RawValue = Int
 
     /// Allow direct (peer-to-peer) connections for Threema 1:1 Calls
@@ -2187,7 +2187,7 @@ public struct D2dSync_Settings: Sendable {
   /// Threema 1:1 Call video (stream) policy.
   ///
   /// Required towards a new device. Optional otherwise.
-  public enum O2oCallVideoPolicy: SwiftProtobuf.Enum, Swift.CaseIterable {
+  public nonisolated enum O2oCallVideoPolicy: SwiftProtobuf.Enum, Swift.CaseIterable {
     public typealias RawValue = Int
 
     /// Allow sending and receiving video streams in Threema 1:1 Calls.
@@ -2228,7 +2228,7 @@ public struct D2dSync_Settings: Sendable {
   /// Threema Group Call policy
   ///
   /// Required towards a new device. Optional otherwise.
-  public enum GroupCallPolicy: SwiftProtobuf.Enum, Swift.CaseIterable {
+  public nonisolated enum GroupCallPolicy: SwiftProtobuf.Enum, Swift.CaseIterable {
     public typealias RawValue = Int
 
     /// Allow creating/receiving Threema Group Calls
@@ -2269,7 +2269,7 @@ public struct D2dSync_Settings: Sendable {
   /// Screenshot policy
   ///
   /// Required towards a new device. Optional otherwise.
-  public enum ScreenshotPolicy: SwiftProtobuf.Enum, Swift.CaseIterable {
+  public nonisolated enum ScreenshotPolicy: SwiftProtobuf.Enum, Swift.CaseIterable {
     public typealias RawValue = Int
 
     /// Allow taking screenshots
@@ -2310,7 +2310,7 @@ public struct D2dSync_Settings: Sendable {
   /// Keyboard data collection policy (e.g. for personalised suggestions)
   ///
   /// Required towards a new device. Optional otherwise.
-  public enum KeyboardDataCollectionPolicy: SwiftProtobuf.Enum, Swift.CaseIterable {
+  public nonisolated enum KeyboardDataCollectionPolicy: SwiftProtobuf.Enum, Swift.CaseIterable {
     public typealias RawValue = Int
 
     /// Allow keyboard input data to be collected
@@ -2366,29 +2366,29 @@ public struct D2dSync_Settings: Sendable {
 
 // MARK: - Code below here is support for the SwiftProtobuf runtime.
 
-fileprivate let _protobuf_package = "d2d_sync"
+fileprivate nonisolated let _protobuf_package = "d2d_sync"
 
-extension D2dSync_ReadReceiptPolicy: SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2dSync_ReadReceiptPolicy: SwiftProtobuf._ProtoNameProviding {
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0SEND_READ_RECEIPT\0\u{1}DONT_SEND_READ_RECEIPT\0")
 }
 
-extension D2dSync_TypingIndicatorPolicy: SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2dSync_TypingIndicatorPolicy: SwiftProtobuf._ProtoNameProviding {
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0SEND_TYPING_INDICATOR\0\u{1}DONT_SEND_TYPING_INDICATOR\0")
 }
 
-extension D2dSync_WorkAvailabilityStatusCategory: SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2dSync_WorkAvailabilityStatusCategory: SwiftProtobuf._ProtoNameProviding {
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0NONE\0\u{1}UNAVAILABLE\0\u{1}BUSY\0")
 }
 
-extension D2dSync_ConversationVisibility: SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2dSync_ConversationVisibility: SwiftProtobuf._ProtoNameProviding {
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0NORMAL\0\u{1}ARCHIVED\0\u{1}PINNED\0")
 }
 
-extension D2dSync_ConversationCategory: SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2dSync_ConversationCategory: SwiftProtobuf._ProtoNameProviding {
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0DEFAULT\0\u{1}PROTECTED\0")
 }
 
-extension D2dSync_WorkAvailabilityStatus: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2dSync_WorkAvailabilityStatus: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".WorkAvailabilityStatus"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}category\0\u{1}description\0")
 
@@ -2423,7 +2423,7 @@ extension D2dSync_WorkAvailabilityStatus: SwiftProtobuf.Message, SwiftProtobuf._
   }
 }
 
-extension D2dSync_MdmParameters: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2dSync_MdmParameters: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".MdmParameters"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}external_parameters\0\u{3}threema_parameters\0\u{3}parameter_precedence\0")
 
@@ -2463,11 +2463,11 @@ extension D2dSync_MdmParameters: SwiftProtobuf.Message, SwiftProtobuf._MessageIm
   }
 }
 
-extension D2dSync_MdmParameters.ParameterPrecedence: SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2dSync_MdmParameters.ParameterPrecedence: SwiftProtobuf._ProtoNameProviding {
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0THREEMA\0\u{1}EXTERNAL\0")
 }
 
-extension D2dSync_MdmParameters.Parameter: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2dSync_MdmParameters.Parameter: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = D2dSync_MdmParameters.protoMessageName + ".Parameter"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}string_value\0\u{3}boolean_value\0\u{3}integer_value\0")
 
@@ -2536,7 +2536,7 @@ extension D2dSync_MdmParameters.Parameter: SwiftProtobuf.Message, SwiftProtobuf.
   }
 }
 
-extension D2dSync_ThreemaWorkCredentials: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2dSync_ThreemaWorkCredentials: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".ThreemaWorkCredentials"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}username\0\u{1}password\0")
 
@@ -2571,7 +2571,7 @@ extension D2dSync_ThreemaWorkCredentials: SwiftProtobuf.Message, SwiftProtobuf._
   }
 }
 
-extension D2dSync_UserProfile: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2dSync_UserProfile: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".UserProfile"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}nickname\0\u{3}profile_picture\0\u{3}profile_picture_share_with\0\u{3}identity_links\0\u{3}work_availability_status\0")
 
@@ -2625,7 +2625,7 @@ extension D2dSync_UserProfile: SwiftProtobuf.Message, SwiftProtobuf._MessageImpl
   }
 }
 
-extension D2dSync_UserProfile.ProfilePictureShareWith: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2dSync_UserProfile.ProfilePictureShareWith: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = D2dSync_UserProfile.protoMessageName + ".ProfilePictureShareWith"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}nobody\0\u{1}everyone\0\u{3}allow_list\0")
 
@@ -2709,7 +2709,7 @@ extension D2dSync_UserProfile.ProfilePictureShareWith: SwiftProtobuf.Message, Sw
   }
 }
 
-extension D2dSync_UserProfile.IdentityLinks: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2dSync_UserProfile.IdentityLinks: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = D2dSync_UserProfile.protoMessageName + ".IdentityLinks"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}links\0")
 
@@ -2739,7 +2739,7 @@ extension D2dSync_UserProfile.IdentityLinks: SwiftProtobuf.Message, SwiftProtobu
   }
 }
 
-extension D2dSync_UserProfile.IdentityLinks.IdentityLink: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2dSync_UserProfile.IdentityLinks.IdentityLink: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = D2dSync_UserProfile.IdentityLinks.protoMessageName + ".IdentityLink"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}phone_number\0\u{1}email\0\u{1}description\0")
 
@@ -2801,7 +2801,7 @@ extension D2dSync_UserProfile.IdentityLinks.IdentityLink: SwiftProtobuf.Message,
   }
 }
 
-extension D2dSync_Contact: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2dSync_Contact: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".Contact"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}identity\0\u{3}public_key\0\u{3}created_at\0\u{3}first_name\0\u{3}last_name\0\u{1}nickname\0\u{3}verification_level\0\u{3}identity_type\0\u{3}acquaintance_level\0\u{3}activity_state\0\u{3}conversation_category\0\u{3}conversation_visibility\0\u{3}sync_state\0\u{3}contact_defined_profile_picture\0\u{3}user_defined_profile_picture\0\u{3}read_receipt_policy_override\0\u{3}typing_indicator_policy_override\0\u{3}feature_mask\0\u{3}notification_trigger_policy_override\0\u{3}deprecated_notification_sound_policy_override\0\u{3}work_verification_level\0\u{4}\u{5}work_last_full_sync_at\0\u{3}work_availability_status\0")
 
@@ -3025,31 +3025,31 @@ extension D2dSync_Contact: SwiftProtobuf.Message, SwiftProtobuf._MessageImplemen
   }
 }
 
-extension D2dSync_Contact.VerificationLevel: SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2dSync_Contact.VerificationLevel: SwiftProtobuf._ProtoNameProviding {
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0UNVERIFIED\0\u{1}SERVER_VERIFIED\0\u{1}FULLY_VERIFIED\0")
 }
 
-extension D2dSync_Contact.WorkVerificationLevel: SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2dSync_Contact.WorkVerificationLevel: SwiftProtobuf._ProtoNameProviding {
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0NONE\0\u{1}WORK_SUBSCRIPTION_VERIFIED\0")
 }
 
-extension D2dSync_Contact.IdentityType: SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2dSync_Contact.IdentityType: SwiftProtobuf._ProtoNameProviding {
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0REGULAR\0\u{1}WORK\0")
 }
 
-extension D2dSync_Contact.AcquaintanceLevel: SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2dSync_Contact.AcquaintanceLevel: SwiftProtobuf._ProtoNameProviding {
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0DIRECT\0\u{1}GROUP_OR_DELETED\0")
 }
 
-extension D2dSync_Contact.ActivityState: SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2dSync_Contact.ActivityState: SwiftProtobuf._ProtoNameProviding {
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0ACTIVE\0\u{1}INACTIVE\0\u{1}INVALID\0")
 }
 
-extension D2dSync_Contact.SyncState: SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2dSync_Contact.SyncState: SwiftProtobuf._ProtoNameProviding {
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0INITIAL\0\u{1}IMPORTED\0\u{1}CUSTOM\0")
 }
 
-extension D2dSync_Contact.ReadReceiptPolicyOverride: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2dSync_Contact.ReadReceiptPolicyOverride: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = D2dSync_Contact.protoMessageName + ".ReadReceiptPolicyOverride"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}default\0\u{1}policy\0")
 
@@ -3111,7 +3111,7 @@ extension D2dSync_Contact.ReadReceiptPolicyOverride: SwiftProtobuf.Message, Swif
   }
 }
 
-extension D2dSync_Contact.TypingIndicatorPolicyOverride: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2dSync_Contact.TypingIndicatorPolicyOverride: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = D2dSync_Contact.protoMessageName + ".TypingIndicatorPolicyOverride"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}default\0\u{1}policy\0")
 
@@ -3173,7 +3173,7 @@ extension D2dSync_Contact.TypingIndicatorPolicyOverride: SwiftProtobuf.Message, 
   }
 }
 
-extension D2dSync_Contact.NotificationTriggerPolicyOverride: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2dSync_Contact.NotificationTriggerPolicyOverride: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = D2dSync_Contact.protoMessageName + ".NotificationTriggerPolicyOverride"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}default\0\u{1}policy\0")
 
@@ -3240,7 +3240,7 @@ extension D2dSync_Contact.NotificationTriggerPolicyOverride: SwiftProtobuf.Messa
   }
 }
 
-extension D2dSync_Contact.NotificationTriggerPolicyOverride.Policy: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2dSync_Contact.NotificationTriggerPolicyOverride.Policy: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = D2dSync_Contact.NotificationTriggerPolicyOverride.protoMessageName + ".Policy"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}policy\0\u{3}expires_at\0")
 
@@ -3279,11 +3279,11 @@ extension D2dSync_Contact.NotificationTriggerPolicyOverride.Policy: SwiftProtobu
   }
 }
 
-extension D2dSync_Contact.NotificationTriggerPolicyOverride.Policy.NotificationTriggerPolicy: SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2dSync_Contact.NotificationTriggerPolicyOverride.Policy.NotificationTriggerPolicy: SwiftProtobuf._ProtoNameProviding {
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0NEVER\0")
 }
 
-extension D2dSync_Contact.DeprecatedNotificationSoundPolicyOverride: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2dSync_Contact.DeprecatedNotificationSoundPolicyOverride: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = D2dSync_Contact.protoMessageName + ".DeprecatedNotificationSoundPolicyOverride"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}default\0")
 
@@ -3329,7 +3329,7 @@ extension D2dSync_Contact.DeprecatedNotificationSoundPolicyOverride: SwiftProtob
   }
 }
 
-extension D2dSync_Group: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2dSync_Group: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".Group"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}group_identity\0\u{1}name\0\u{3}created_at\0\u{3}conversation_category\0\u{3}conversation_visibility\0\u{3}user_state\0\u{3}profile_picture\0\u{3}member_identities\0\u{3}notification_trigger_policy_override\0\u{3}deprecated_notification_sound_policy_override\0")
 
@@ -3408,11 +3408,11 @@ extension D2dSync_Group: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementa
   }
 }
 
-extension D2dSync_Group.UserState: SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2dSync_Group.UserState: SwiftProtobuf._ProtoNameProviding {
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0MEMBER\0\u{1}KICKED\0\u{1}LEFT\0")
 }
 
-extension D2dSync_Group.NotificationTriggerPolicyOverride: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2dSync_Group.NotificationTriggerPolicyOverride: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = D2dSync_Group.protoMessageName + ".NotificationTriggerPolicyOverride"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}default\0\u{1}policy\0")
 
@@ -3479,7 +3479,7 @@ extension D2dSync_Group.NotificationTriggerPolicyOverride: SwiftProtobuf.Message
   }
 }
 
-extension D2dSync_Group.NotificationTriggerPolicyOverride.Policy: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2dSync_Group.NotificationTriggerPolicyOverride.Policy: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = D2dSync_Group.NotificationTriggerPolicyOverride.protoMessageName + ".Policy"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}policy\0\u{3}expires_at\0")
 
@@ -3518,11 +3518,11 @@ extension D2dSync_Group.NotificationTriggerPolicyOverride.Policy: SwiftProtobuf.
   }
 }
 
-extension D2dSync_Group.NotificationTriggerPolicyOverride.Policy.NotificationTriggerPolicy: SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2dSync_Group.NotificationTriggerPolicyOverride.Policy.NotificationTriggerPolicy: SwiftProtobuf._ProtoNameProviding {
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0MENTIONED\0\u{1}NEVER\0")
 }
 
-extension D2dSync_Group.DeprecatedNotificationSoundPolicyOverride: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2dSync_Group.DeprecatedNotificationSoundPolicyOverride: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = D2dSync_Group.protoMessageName + ".DeprecatedNotificationSoundPolicyOverride"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}default\0")
 
@@ -3568,7 +3568,7 @@ extension D2dSync_Group.DeprecatedNotificationSoundPolicyOverride: SwiftProtobuf
   }
 }
 
-extension D2dSync_DistributionList: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2dSync_DistributionList: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".DistributionList"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}distribution_list_id\0\u{1}name\0\u{3}created_at\0\u{3}conversation_category\0\u{3}conversation_visibility\0\u{3}member_identities\0")
 
@@ -3627,7 +3627,7 @@ extension D2dSync_DistributionList: SwiftProtobuf.Message, SwiftProtobuf._Messag
   }
 }
 
-extension D2dSync_Settings: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2dSync_Settings: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".Settings"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}contact_sync_policy\0\u{3}unknown_contact_policy\0\u{3}read_receipt_policy\0\u{3}typing_indicator_policy\0\u{3}o2o_call_policy\0\u{3}o2o_call_connection_policy\0\u{3}screenshot_policy\0\u{3}keyboard_data_collection_policy\0\u{3}blocked_identities\0\u{3}exclude_from_sync_identities\0\u{3}group_call_policy\0\u{3}o2o_call_video_policy\0")
 
@@ -3716,34 +3716,34 @@ extension D2dSync_Settings: SwiftProtobuf.Message, SwiftProtobuf._MessageImpleme
   }
 }
 
-extension D2dSync_Settings.ContactSyncPolicy: SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2dSync_Settings.ContactSyncPolicy: SwiftProtobuf._ProtoNameProviding {
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0NOT_SYNCED\0\u{1}SYNC\0")
 }
 
-extension D2dSync_Settings.UnknownContactPolicy: SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2dSync_Settings.UnknownContactPolicy: SwiftProtobuf._ProtoNameProviding {
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0ALLOW_UNKNOWN\0\u{1}BLOCK_UNKNOWN\0")
 }
 
-extension D2dSync_Settings.O2oCallPolicy: SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2dSync_Settings.O2oCallPolicy: SwiftProtobuf._ProtoNameProviding {
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0ALLOW_O2O_CALL\0\u{1}DENY_O2O_CALL\0")
 }
 
-extension D2dSync_Settings.O2oCallConnectionPolicy: SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2dSync_Settings.O2oCallConnectionPolicy: SwiftProtobuf._ProtoNameProviding {
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0ALLOW_DIRECT_CONNECTION\0\u{1}REQUIRE_RELAYED_CONNECTION\0")
 }
 
-extension D2dSync_Settings.O2oCallVideoPolicy: SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2dSync_Settings.O2oCallVideoPolicy: SwiftProtobuf._ProtoNameProviding {
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0ALLOW_VIDEO\0\u{1}DENY_VIDEO\0")
 }
 
-extension D2dSync_Settings.GroupCallPolicy: SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2dSync_Settings.GroupCallPolicy: SwiftProtobuf._ProtoNameProviding {
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0ALLOW_GROUP_CALL\0\u{1}DENY_GROUP_CALL\0")
 }
 
-extension D2dSync_Settings.ScreenshotPolicy: SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2dSync_Settings.ScreenshotPolicy: SwiftProtobuf._ProtoNameProviding {
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0ALLOW_SCREENSHOT\0\u{1}DENY_SCREENSHOT\0")
 }
 
-extension D2dSync_Settings.KeyboardDataCollectionPolicy: SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2dSync_Settings.KeyboardDataCollectionPolicy: SwiftProtobuf._ProtoNameProviding {
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0ALLOW_DATA_COLLECTION\0\u{1}DENY_DATA_COLLECTION\0")
 }

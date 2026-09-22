@@ -3,7 +3,7 @@ import Foundation
 import SwiftProtobuf
 import ThreemaProtocols
 
-@objc public final class WorkSyncDeltaMessage: AbstractMessage {
+public final class WorkSyncDeltaMessage: AbstractMessage {
     public var decoded: CspE2e_WorkSyncDelta?
     
     override public func type() -> UInt8 {

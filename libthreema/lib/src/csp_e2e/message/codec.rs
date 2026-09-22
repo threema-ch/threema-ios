@@ -1,16 +1,16 @@
 //! Trait and implementations to encode/decode CSP E2E messages.
 use core::str::{FromStr as _, Split, Utf8Error};
 
-use rand::Rng as _;
+use libthreema_dependencies::rand::{self, Rng as _};
 use tracing::warn;
 
 use crate::{
     common::{GroupIdentity, MessageId, ThreemaId},
-    model::message::{
-        ContactMessageBody, DeliveryReceiptMessage, DeliveryReceiptType, DistributionListMessageBody,
-        GroupMessageBody, IncomingGroupMessageBody, IncomingMessageBody, LegacyReactionMessage,
-        LegacyReactionType, LocationMessage, OutgoingContactMessageBody, OutgoingDistributionListMessageBody,
-        OutgoingGroupMessageBody, OutgoingMessageBody, TextMessage, WebSessionResumeMessage,
+    csp_e2e::message::{
+        ContactMessageBody, DeliveryReceiptMessage, DeliveryReceiptType, DistributionListMessage,
+        DistributionListMessageBody, GroupMessage, GroupMessageBody, IncomingMessageBody,
+        LegacyReactionMessage, LegacyReactionType, LocationMessage, OutgoingContactMessage,
+        OutgoingMessageBody, TextMessage, WebSessionResumeMessage,
     },
     protobuf::common::CspE2eMessageType,
     utils::{
@@ -99,20 +99,16 @@ impl InternalCspMessageDecoder for ProtocolDeliveryReceiptMessage {
 
         // Attempt to decode as a delivery receipt, fall back to a legacy reaction.
         if let Some(receipt_type) = DeliveryReceiptType::from_repr(receipt_type) {
-            return Ok(ProtocolDeliveryReceiptMessage::DeliveryReceipt(
-                DeliveryReceiptMessage {
-                    receipt_type,
-                    message_ids: Self::decode_message_ids(reader)?,
-                },
-            ));
+            return Ok(Self::DeliveryReceipt(DeliveryReceiptMessage {
+                receipt_type,
+                message_ids: Self::decode_message_ids(reader)?,
+            }));
         }
         if let Some(reaction_type) = LegacyReactionType::from_repr(receipt_type) {
-            return Ok(ProtocolDeliveryReceiptMessage::LegacyReaction(
-                LegacyReactionMessage {
-                    reaction_type,
-                    message_ids: Self::decode_message_ids(reader)?,
-                },
-            ));
+            return Ok(Self::LegacyReaction(LegacyReactionMessage {
+                reaction_type,
+                message_ids: Self::decode_message_ids(reader)?,
+            }));
         }
 
         Err(CspMessageDecodeError::InvalidMessage(format!(
@@ -144,6 +140,18 @@ impl InternalCspMessageDecoder for TextMessage {
 impl InternalCspMessageEncoder for TextMessage {
     fn encode_into(&self, writer: &mut impl ByteWriter) -> Result<(), ByteWriterError> {
         writer.write(self.text.as_bytes())
+    }
+}
+
+impl InternalCspMessageEncoder for ContactMessageBody {
+    fn encode_into(&self, writer: &mut impl ByteWriter) -> Result<(), ByteWriterError> {
+        match self {
+            Self::Text(message) => message.encode_into(writer),
+            Self::Location(message) => message.encode_into(writer),
+            Self::DeliveryReceipt(message) => message.encode_into(writer),
+            Self::LegacyReaction(message) => message.encode_into(writer),
+            Self::WebSessionResume(message) => message.encode_into(writer),
+        }
     }
 }
 
@@ -191,12 +199,12 @@ impl InternalCspMessageDecoder for LocationMessage {
         let address = address.map(|address| address.replace("\\n", "\n"));
 
         // Done serving this exquisite menu.
-        Ok(LocationMessage {
+        Ok(Self {
             latitude,
             longitude,
             accuracy_m,
-            name,
-            address,
+            name: name.unwrap_or_default(),
+            address: address.unwrap_or_default(),
         })
     }
 }
@@ -212,22 +220,19 @@ impl InternalCspMessageEncoder for LocationMessage {
         }
 
         // Write name and address (if any).
-        match (
-            &self.name,
-            self.address.as_ref().map(|address| address.replace('\n', "\\n")),
-        ) {
-            (None, None) => {},
-            (None, Some(address)) => {
+        match (self.name.as_ref(), self.address.replace('\n', "\\n").as_ref()) {
+            ("", "") => {},
+            ("", address) => {
                 writer.write("\n".as_bytes())?;
                 writer.write(address.as_bytes())?;
             },
-            (Some(name), None) => {
+            (name, "") => {
                 warn!(
                     name,
                     "Discarding name in location message without an associated address"
                 );
             },
-            (Some(name), Some(address)) => {
+            (name, address) => {
                 writer.write("\n".as_bytes())?;
                 writer.write(name.as_bytes())?;
                 writer.write("\n".as_bytes())?;
@@ -317,13 +322,13 @@ impl CspMessageDecoder for IncomingMessageBody {
             CspE2eMessageType::GroupText => {
                 let group_identity = IncomingMessageBodyExtension::decode_group_member_header(&mut reader)?;
                 let body = GroupMessageBody::Text(TextMessage::decode(&mut reader)?);
-                Self::Group(IncomingGroupMessageBody { group_identity, body })
+                Self::Group(GroupMessage { group_identity, body })
             },
 
             CspE2eMessageType::GroupLocation => {
                 let group_identity = IncomingMessageBodyExtension::decode_group_member_header(&mut reader)?;
                 let body = GroupMessageBody::Location(LocationMessage::decode(&mut reader)?);
-                Self::Group(IncomingGroupMessageBody { group_identity, body })
+                Self::Group(GroupMessage { group_identity, body })
             },
 
             CspE2eMessageType::GroupDeliveryReceipt => {
@@ -338,7 +343,7 @@ impl CspMessageDecoder for IncomingMessageBody {
                         GroupMessageBody::LegacyReaction(legacy_reaction)
                     },
                 };
-                Self::Group(IncomingGroupMessageBody { group_identity, body })
+                Self::Group(GroupMessage { group_identity, body })
             },
 
             // TODO(LIB-16): Decode the rest.
@@ -355,8 +360,17 @@ impl CspMessageDecoder for IncomingMessageBody {
     }
 }
 
-struct OutgoingGroupMessageBodyExtension;
-impl OutgoingGroupMessageBodyExtension {
+impl InternalCspMessageEncoder for IncomingMessageBody {
+    fn encode_into(&self, writer: &mut impl ByteWriter) -> Result<(), ByteWriterError> {
+        match self {
+            Self::Contact(contact_message_body) => contact_message_body.encode_into(writer),
+            Self::Group(group_message_body) => group_message_body.encode_into(writer),
+        }
+    }
+}
+
+struct GroupMessageBodyExtension;
+impl GroupMessageBodyExtension {
     #[inline]
     #[expect(unused, reason = "TODO(LIB-53)")]
     fn encode_group_creator_header_into(
@@ -376,51 +390,38 @@ impl OutgoingGroupMessageBodyExtension {
     }
 }
 
-impl InternalCspMessageEncoder for OutgoingGroupMessageBody {
+impl InternalCspMessageEncoder for GroupMessage {
     /// Encode the group message with its respective header (either `group-creator-container` or
     /// `group-member-container`).
     fn encode_into(&self, writer: &mut impl ByteWriter) -> Result<(), ByteWriterError> {
         match &self.body {
             GroupMessageBody::Text(message) => {
-                OutgoingGroupMessageBodyExtension::encode_group_member_header_into(
-                    &self.group_identity,
-                    writer,
-                )?;
+                GroupMessageBodyExtension::encode_group_member_header_into(&self.group_identity, writer)?;
                 message.encode_into(writer)?;
             },
             GroupMessageBody::Location(message) => {
-                OutgoingGroupMessageBodyExtension::encode_group_member_header_into(
-                    &self.group_identity,
-                    writer,
-                )?;
+                GroupMessageBodyExtension::encode_group_member_header_into(&self.group_identity, writer)?;
                 message.encode_into(writer)?;
             },
             GroupMessageBody::LegacyReaction(message) => {
-                OutgoingGroupMessageBodyExtension::encode_group_member_header_into(
-                    &self.group_identity,
-                    writer,
-                )?;
+                GroupMessageBodyExtension::encode_group_member_header_into(&self.group_identity, writer)?;
                 message.encode_into(writer)?;
             },
+            #[expect(clippy::unimplemented, reason = "LIB-143")]
+            GroupMessageBody::GroupSetup(_) => unimplemented!(),
         }
         Ok(())
     }
 }
 
-impl InternalCspMessageEncoder for OutgoingContactMessageBody {
+impl InternalCspMessageEncoder for OutgoingContactMessage {
     /// Encode the 1:1 message.
     fn encode_into(&self, writer: &mut impl ByteWriter) -> Result<(), ByteWriterError> {
-        match &self.body {
-            ContactMessageBody::Text(message) => message.encode_into(writer),
-            ContactMessageBody::Location(message) => message.encode_into(writer),
-            ContactMessageBody::DeliveryReceipt(message) => message.encode_into(writer),
-            ContactMessageBody::LegacyReaction(message) => message.encode_into(writer),
-            ContactMessageBody::WebSessionResume(message) => message.encode_into(writer),
-        }
+        self.body.encode_into(writer)
     }
 }
 
-impl InternalCspMessageEncoder for OutgoingDistributionListMessageBody {
+impl InternalCspMessageEncoder for DistributionListMessage {
     /// Encode the distribution list message.
     ///
     /// Note: This behaves identical to the respective 1:1 message.
@@ -441,9 +442,9 @@ impl CspMessageEncoder for OutgoingMessageBody {
         let data_length = {
             let offset = writer.offset();
             match self {
-                OutgoingMessageBody::Contact(body) => body.encode_into(writer),
-                OutgoingMessageBody::DistributionList(body) => body.encode_into(writer),
-                OutgoingMessageBody::Group(body) => body.encode_into(writer),
+                Self::Contact(body) => body.encode_into(writer),
+                Self::DistributionList(body) => body.encode_into(writer),
+                Self::Group(body) => body.encode_into(writer),
             }?;
             writer
                 .offset()

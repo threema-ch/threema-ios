@@ -1,7 +1,9 @@
 @preconcurrency
 import AVFoundation
 
+import AudioSessionManager
 import CocoaLumberjackSwift
+import ThreemaFramework
 import ThreemaMacros
 import UIKit
 
@@ -13,9 +15,9 @@ final class QRCodeCameraViewController: UIViewController {
 
     // MARK: - Private properties
 
-    private let audioSessionManager: AudioSessionManagerProtocol
-    private let systemFeedbackManager: SystemFeedbackManagerProtocol
-    private let systemPermissionsManager: SystemPermissionsManagerProtocol
+    private let audioSessionManager: (any AudioSessionManagerProtocol)?
+    private let systemFeedbackManager: any SystemFeedbackManagerProtocol
+    private let systemPermissionsManager: any SystemPermissionsManagerProtocol
 
     private var captureSession: AVCaptureSession?
     private var isRunning = false
@@ -24,12 +26,15 @@ final class QRCodeCameraViewController: UIViewController {
     private var initialPinchZoom: CGFloat = 1.0
     private var videoDevice: AVCaptureDevice?
 
+    /// The scanner's claim, held only while the capture session runs.
+    private var audioSessionClaim: AudioSessionClaim?
+
     // MARK: - Lifecycle
 
     init(
-        audioSessionManager: AudioSessionManagerProtocol,
-        systemFeedbackManager: SystemFeedbackManagerProtocol,
-        systemPermissionsManager: SystemPermissionsManagerProtocol
+        audioSessionManager: (any AudioSessionManagerProtocol)?,
+        systemFeedbackManager: any SystemFeedbackManagerProtocol,
+        systemPermissionsManager: any SystemPermissionsManagerProtocol
     ) {
         self.audioSessionManager = audioSessionManager
         self.systemFeedbackManager = systemFeedbackManager
@@ -92,11 +97,11 @@ final class QRCodeCameraViewController: UIViewController {
         guard !isRunning, let captureSession else {
             return
         }
-        audioSessionManager.setAmbientAudioActive(true)
         Task.detached {
             captureSession.startRunning()
         }
         isRunning = true
+        acquireAudioSessionClaim()
     }
 
     func stopRunning() {
@@ -104,15 +109,48 @@ final class QRCodeCameraViewController: UIViewController {
             return
         }
         captureSession?.stopRunning()
-        audioSessionManager.setAmbientAudioActive(false)
+        releaseAudioSessionClaim()
         isRunning = false
+    }
+
+    // MARK: - Audio session claim
+
+    private func acquireAudioSessionClaim() {
+        // `nil` during onboarding, which has no `BusinessInjector` to take a manager from
+        guard audioSessionClaim == nil, let manager = audioSessionManager else {
+            return
+        }
+
+        Task { [weak self] in
+            guard let claim = try? await manager.acquire(.ambient) else {
+                return
+            }
+
+            guard let self, isRunning else {
+                await manager.release(claim)
+                return
+            }
+
+            audioSessionClaim = claim
+        }
+    }
+
+    private func releaseAudioSessionClaim() {
+        guard let claim = audioSessionClaim, let manager = audioSessionManager else {
+            return
+        }
+        audioSessionClaim = nil
+
+        Task {
+            await manager.release(claim)
+        }
     }
 
     // MARK: - Private types
 
     private struct ScannedCode {
         let value: String?
-        let bezierPath: UIBezierPath
+        let bezierPath: UIBezierPath?
     }
 
     // MARK: - Helpers
@@ -248,28 +286,43 @@ final class QRCodeCameraViewController: UIViewController {
 
     private func getFirstCodeFromMetadata(_ metadataObjects: [AVMetadataObject]) -> ScannedCode? {
         let code: ScannedCode? = metadataObjects
-            .compactMap { previewLayer.transformedMetadataObject(for: $0) }
             .compactMap { $0 as? AVMetadataMachineReadableCodeObject }
-            .compactMap { object in
-                let points = object.corners
-                guard let firstPoint = points.first else {
+            .compactMap { object -> ScannedCode? in
+                // Read the decoded payload from the original metadata object. `transformedMetadataObject(for:)`
+                // converts the geometry into preview-layer coordinates, but with some capture sources (e.g. the
+                // RocketSim simulator camera) the transformed object comes back without a `stringValue`.
+                guard let value = object.stringValue else {
                     return nil
                 }
-                let bezierPath = UIBezierPath()
-                bezierPath.move(to: firstPoint)
-                for point in points.dropFirst() {
-                    bezierPath.addLine(to: point)
-                }
-                bezierPath.close()
-                return ScannedCode(value: object.stringValue, bezierPath: bezierPath)
+                // The transformed object is only used to draw the highlight overlay in layer coordinates; fall
+                // back to the original corners (which may be empty) so a missing highlight never drops the scan.
+                let transformed = previewLayer.transformedMetadataObject(for: object) as? AVMetadataMachineReadableCodeObject
+                let corners = transformed?.corners ?? object.corners
+                return ScannedCode(value: value, bezierPath: bezierPath(for: corners))
             }
             .first
         return code
     }
 
+    private func bezierPath(for corners: [CGPoint]) -> UIBezierPath? {
+        guard let firstPoint = corners.first else {
+            return nil
+        }
+        let bezierPath = UIBezierPath()
+        bezierPath.move(to: firstPoint)
+        for point in corners.dropFirst() {
+            bezierPath.addLine(to: point)
+        }
+        bezierPath.close()
+        return bezierPath
+    }
+
     private func addCornersPathLayer(from code: ScannedCode) {
+        guard let bezierPath = code.bezierPath else {
+            return
+        }
         let layer = CAShapeLayer()
-        layer.path = code.bezierPath.cgPath
+        layer.path = bezierPath.cgPath
         layer.lineWidth = 2.0
         layer.strokeColor = UIColor.blue.cgColor
         layer.fillColor = UIColor.blue.withAlphaComponent(0.5).cgColor

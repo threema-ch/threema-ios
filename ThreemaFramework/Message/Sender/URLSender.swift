@@ -1,7 +1,7 @@
 import CocoaLumberjackSwift
 import Foundation
 
-@objc public final class URLSender: NSObject {
+public final class URLSender: NSObject {
     
     /// Sends the file from url as a file message
     /// - Parameters:

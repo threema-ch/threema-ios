@@ -542,7 +542,7 @@ extension ConversationExporter {
             errorCode
         )
         
-        UIAlertTemplate.showAlert(owner: viewController!, title: title, message: message, actionOk: nil)
+        UIAlertTemplate.showOKAlert(owner: viewController!, title: title, message: message, actionOk: nil)
     }
     
     /// Shows an alert indicating that there is not enough storage
@@ -560,7 +560,7 @@ extension ConversationExporter {
             free
         )
             
-        UIAlertTemplate.showAlert(owner: viewController!, title: title, message: message, actionOk: nil)
+        UIAlertTemplate.showOKAlert(owner: viewController!, title: title, message: message, actionOk: nil)
     }
     
     /// Presents the password request UI
@@ -620,7 +620,7 @@ extension ConversationExporter {
         return activityViewController
     }
     
-    @objc func progressHUDCancelPressed() {
+    @objc private func progressHUDCancelPressed() {
         DispatchQueue.main.async {
             self.cancelled = true
             self.cancelProgressHud()

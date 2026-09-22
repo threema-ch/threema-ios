@@ -2,7 +2,7 @@ import Foundation
 import SwiftUI
 import ThreemaMacros
 
-class SettingsCollectionViewDataSource: UICollectionViewDiffableDataSource<
+final class SettingsCollectionViewDataSource: UICollectionViewDiffableDataSource<
     SettingsCollectionViewDataSource.Section,
     SettingsCollectionViewDataSource.Row
 > {
@@ -17,8 +17,10 @@ class SettingsCollectionViewDataSource: UICollectionViewDiffableDataSource<
         
         switch item {
             
-        case .betaFeedback, .developer, .privacy, .appearance, .notifications, .chat, .media, .storage, .passcode,
-             .calls, .desktop, .web, .rate, .invite, .channel, .support, .policy, .tos, .license, .advanced:
+        case .betaFeedback, .developer, .privacy, .appearance, .notifications, .chat, .media,
+             .storage, .passcode,
+             .calls, .desktop, .web, .rate, .invite, .channel, .support, .policy, .tos, .license, .advanced,
+             .backups:
             let cell: SettingsCollectionViewCell = collectionView.dequeueCell(for: indexPath)
             cell.rowType = item
             return cell
@@ -202,7 +204,7 @@ class SettingsCollectionViewDataSource: UICollectionViewDiffableDataSource<
             
         case .developer:
             coordinator.show(.developer)
-            
+
         case .privacy:
             coordinator.show(.privacy)
             
@@ -217,7 +219,10 @@ class SettingsCollectionViewDataSource: UICollectionViewDiffableDataSource<
             
         case .media:
             coordinator.show(.media)
-            
+
+        case .backups:
+            coordinator.show(.backups(.center))
+
         case .storage:
             coordinator.show(.storage)
             
@@ -249,10 +254,7 @@ class SettingsCollectionViewDataSource: UICollectionViewDiffableDataSource<
             rateSelected()
             
         case .invite:
-            guard let sourceView = collectionView?.cellForItem(at: indexPath) as? UICollectionViewCell else {
-                return
-            }
-            coordinator.show(.invite(sourceView: sourceView))
+            coordinator.showInviteActivity(from: collectionView?.cellForItem(at: indexPath))
             
         case .channel:
             coordinator.show(.channel)

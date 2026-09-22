@@ -1,3 +1,4 @@
+import AudioSessionManager
 import Foundation
 
 /// Collection of various dependencies needed for the group calls SPM package
@@ -12,32 +13,36 @@ public struct Dependencies: @unchecked Sendable {
     
     // MARK: - Internal Properties
     
-    let groupCallsHTTPClientAdapter: GroupCallHTTPClientAdapterProtocol
-    let httpHelper: GroupCallSFUTokenFetchAdapterProtocol
-    let groupCallCrypto: GroupCallCryptoProtocol
-    let groupCallDateFormatter: GroupCallDateFormatterProtocol
-    let userSettings: GroupCallUserSettingsProtocol
-    let groupCallSystemMessageAdapter: GroupCallSystemMessageAdapterProtocol
-    let notificationPresenterWrapper: NotificationPresenterWrapperProtocol
-    let groupCallParticipantInfoFetcher: GroupCallParticipantInfoFetcherProtocol
-    let groupCallSessionHelper: GroupCallSessionHelperProtocol
-    let groupCallBundleUtil: GroupCallBundleUtilProtocol
+    let groupCallsHTTPClientAdapter: any GroupCallHTTPClientAdapterProtocol
+    let httpHelper: any GroupCallSFUTokenFetchAdapterProtocol
+    let groupCallCrypto: any GroupCallCryptoProtocol
+    let groupCallDateFormatter: any GroupCallDateFormatterProtocol
+    let userSettings: any GroupCallUserSettingsProtocol
+    let groupCallSystemMessageAdapter: any GroupCallSystemMessageAdapterProtocol
+    let notificationPresenterWrapper: any NotificationPresenterWrapperProtocol
+    let groupCallParticipantInfoFetcher: any GroupCallParticipantInfoFetcherProtocol
+    let groupCallSessionHelper: any GroupCallSessionHelperProtocol
+    let groupCallBundleUtil: any GroupCallBundleUtilProtocol
     let isRunningForScreenshots: Bool
+
+    /// The one owner of the process-wide audio session.
+    let audioSessionManager: any AudioSessionManagerProtocol
 
     // MARK: - Lifecycle
     
     public init(
-        groupCallsHTTPClientAdapter: GroupCallHTTPClientAdapterProtocol,
-        httpHelper: GroupCallSFUTokenFetchAdapterProtocol,
-        groupCallCrypto: GroupCallCryptoProtocol,
-        groupCallDateFormatter: GroupCallDateFormatterProtocol,
-        userSettings: GroupCallUserSettingsProtocol,
-        groupCallSystemMessageAdapter: GroupCallSystemMessageAdapterProtocol,
-        notificationPresenterWrapper: NotificationPresenterWrapperProtocol,
-        groupCallParticipantInfoFetcher: GroupCallParticipantInfoFetcherProtocol,
-        groupCallSessionHelper: GroupCallSessionHelperProtocol,
-        groupCallBundleUtil: GroupCallBundleUtilProtocol,
-        isRunningForScreenshots: Bool
+        groupCallsHTTPClientAdapter: any GroupCallHTTPClientAdapterProtocol,
+        httpHelper: any GroupCallSFUTokenFetchAdapterProtocol,
+        groupCallCrypto: any GroupCallCryptoProtocol,
+        groupCallDateFormatter: any GroupCallDateFormatterProtocol,
+        userSettings: any GroupCallUserSettingsProtocol,
+        groupCallSystemMessageAdapter: any GroupCallSystemMessageAdapterProtocol,
+        notificationPresenterWrapper: any NotificationPresenterWrapperProtocol,
+        groupCallParticipantInfoFetcher: any GroupCallParticipantInfoFetcherProtocol,
+        groupCallSessionHelper: any GroupCallSessionHelperProtocol,
+        groupCallBundleUtil: any GroupCallBundleUtilProtocol,
+        isRunningForScreenshots: Bool,
+        audioSessionManager: any AudioSessionManagerProtocol
     ) {
         self.groupCallsHTTPClientAdapter = groupCallsHTTPClientAdapter
         self.httpHelper = httpHelper
@@ -50,5 +55,6 @@ public struct Dependencies: @unchecked Sendable {
         self.groupCallSessionHelper = groupCallSessionHelper
         self.groupCallBundleUtil = groupCallBundleUtil
         self.isRunningForScreenshots = isRunningForScreenshots
+        self.audioSessionManager = audioSessionManager
     }
 }

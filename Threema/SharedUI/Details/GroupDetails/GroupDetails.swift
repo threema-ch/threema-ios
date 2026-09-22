@@ -1,10 +1,9 @@
-/// When we ditch `objc` move this into the `GroupDetails` name space and remove `Int`
-@objc enum GroupDetailsDisplayMode: Int {
-    case `default`
-    case conversation
-}
-
 enum GroupDetails {
+    enum DisplayMode {
+        case `default`
+        case conversation
+    }
+    
     enum Section {
         case members
         case creator

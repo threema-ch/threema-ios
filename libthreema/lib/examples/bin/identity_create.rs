@@ -2,10 +2,9 @@
 #![expect(unused_crate_dependencies, reason = "Example triggered false positive")]
 #![expect(clippy::print_stdout, reason = "Examples are allowed to print")]
 
-use clap::Parser;
-use data_encoding::HEXLOWER_PERMISSIVE;
+use clap::{ArgAction, Parser};
 use libthreema::{
-    cli::{CommonConfig, CommonConfigOptions},
+    cli::config::{CommonConfig, CommonConfigOptions},
     common::ClientInfo,
     csp_e2e::identity::create::{
         CreateIdentityContext, CreateIdentityLoop, CreateIdentityResponse, CreateIdentityResult,
@@ -14,6 +13,7 @@ use libthreema::{
     https::cli::https_client_builder,
     utils::logging::init_stderr_logging,
 };
+use libthreema_dependencies::data_encoding::HEXLOWER_PERMISSIVE;
 use tracing::Level;
 
 #[derive(Parser)]
@@ -21,6 +21,11 @@ use tracing::Level;
 struct CreateIdentityCommand {
     #[command(flatten)]
     config: CommonConfigOptions,
+
+    /// Turn on debugging information.
+    /// Use -v -vv to control log level.
+    #[arg(short, action = ArgAction::Count)]
+    verbose: u8,
 }
 
 async fn run_create_identity(
@@ -42,14 +47,19 @@ async fn run_create_identity(
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
+    // Parse arguments for command
+    let arguments = CreateIdentityCommand::parse();
+
     // Configure logging
-    init_stderr_logging(Level::TRACE);
+    let log_level = match arguments.verbose {
+        1 => Level::DEBUG,
+        2 => Level::TRACE,
+        _ => Level::INFO,
+    };
+    init_stderr_logging(log_level);
 
     // Create HTTP client
     let http_client = https_client_builder().build()?;
-
-    // Parse arguments for command
-    let arguments = CreateIdentityCommand::parse();
     let config = CommonConfig::from_options(&http_client, arguments.config).await?;
 
     // Create identity
@@ -71,7 +81,7 @@ async fn main() -> anyhow::Result<()> {
         "--client-key {}",
         HEXLOWER_PERMISSIVE.encode(client_key.as_bytes())
     );
-    println!("--csp-server-group {server_group}");
+    println!("--csp-server-group {}", server_group.as_str());
     Ok(())
 }
 

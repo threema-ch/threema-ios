@@ -164,11 +164,13 @@ static void observerCallback(void);
 
 + (void)migrateDefaults:(NSUserDefaults *)userDefaults {
     NSUserDefaults *oldDefaults = [NSUserDefaults standardUserDefaults];
-    
-    for (NSString *key in oldDefaults.dictionaryRepresentation.keyEnumerator) {
-        id object = [oldDefaults objectForKey:key];
-        
-        [userDefaults setObject:object forKey:key];
+
+    // Only the values the app actually stored: `dictionaryRepresentation` would also migrate the
+    // launch arguments set in the scheme (e.g. feature flags)
+    NSDictionary *oldValues = [oldDefaults persistentDomainForName:[[NSBundle mainBundle] bundleIdentifier]];
+
+    for (NSString *key in oldValues) {
+        [userDefaults setObject:oldValues[key] forKey:key];
     }
     
     [userDefaults setBool:YES forKey:KEY_DID_MIGRATION_CHECK];
@@ -203,6 +205,7 @@ static void observerCallback(void);
         case AppGroupTypeApp: return @"App";
         case AppGroupTypeShareExtension: return @"ShareExtension";
         case AppGroupTypeNotificationExtension: return @"NotificationExtension";
+        case AppGroupTypeNone: return @"None";
         default:
             NSAssert(NO, @"Unknown App Group type");
             return @"Unknown";

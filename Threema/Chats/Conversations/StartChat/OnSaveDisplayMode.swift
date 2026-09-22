@@ -1,4 +1,4 @@
-@objc enum OnSaveDisplayMode: Int {
+enum OnSaveDisplayMode: Int {
     case showDetails
     case showChat
 }

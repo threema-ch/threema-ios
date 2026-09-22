@@ -18,13 +18,13 @@ enum TurnServerError: Error {
 enum VoIPIceServerSource {
     private static var cachedTurnServers: TurnServerInfo?
     
-    public static func prefetchIceServers() {
+    static func prefetchIceServers() {
         obtainIceServers(dualStack: false) { _ in
             // ignored
         }
     }
     
-    public static func obtainIceServers(
+    static func obtainIceServers(
         dualStack: Bool,
         completion: @escaping (Swift.Result<RTCIceServer, Error>) -> Void
     ) {

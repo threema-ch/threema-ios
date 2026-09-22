@@ -1,4 +1,6 @@
+import CocoaLumberjackSwift
 import Keychain
+import ThreemaEssentials
 import ThreemaFramework
 
 // MARK: - BootstrapKeychainManagerProtocol
@@ -6,7 +8,7 @@ import ThreemaFramework
 @MainActor
 protocol BootstrapKeychainManagerProtocol {
     var isKeychainLocked: Bool { get }
-    var hasRemoteSecret: Bool { get }
+    var currentIdentity: ThreemaIdentity? { get }
     func deleteAllItems() throws
 }
 
@@ -19,8 +21,14 @@ final class BootstrapKeychainManagerAdapter: BootstrapKeychainManagerProtocol {
         KeychainManager.isKeychainLocked
     }
 
-    var hasRemoteSecret: Bool {
-        KeychainManager.hasRemoteSecretInStore()
+    var currentIdentity: ThreemaIdentity? {
+        do {
+            return try KeychainManager.loadThreemaIdentity()
+        }
+        catch {
+            DDLogError("Failed to load Threema ID from keychain: \(error)")
+            return nil
+        }
     }
 
     func deleteAllItems() throws {

@@ -2,7 +2,7 @@ import CocoaLumberjackSwift
 import FileUtility
 import Foundation
 
-@objc public final class URLSenderItemCreator: NSObject {
+public final class URLSenderItemCreator: NSObject {
     
     public static func getSenderItem(for url: URL, maxSize: ImageSenderItemSize?) -> URLSenderItem? {
         if !URLSenderItemCreator.validate(url: url) {
@@ -37,7 +37,7 @@ import Foundation
     /// if it conforms to isMovieMimeType or isImageMimeType.
     /// - Parameter url: The url at which the file is stored
     /// - Returns: An url sender item if one can be created
-    @objc public static func getSenderItem(for url: URL) -> URLSenderItem? {
+    public static func getSenderItem(for url: URL) -> URLSenderItem? {
         URLSenderItemCreator.getSenderItem(for: url, maxSize: nil)
     }
     

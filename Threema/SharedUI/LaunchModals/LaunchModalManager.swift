@@ -13,16 +13,14 @@ final class LaunchModalManager {
         case notificationReminder
         case notificationTypeSelection
         case safeSetupInfo
+        case showIdentityThisDeviceOnly
         case remoteSecretActivate
         case remoteSecretDeactivate
-        case showIdentityThisDeviceOnly
     }
 
     // MARK: - Public properties
 
     static let shared = LaunchModalManager()
-
-    var isBeingDisplayed = false
 
     // MARK: - Private properties
 
@@ -71,17 +69,22 @@ final class LaunchModalManager {
         return topViewController
     }
     
-    private var didCheckLocalNetworkForOnPrem = false
+    private var isBeingDisplayed = false
+    
+    // Ensure that remote secret reminder and local network check is only shown once
+    private var didShowRemoteSecretReminder = false
+    private var didCheckLocalNetwork = false
 
     // MARK: - Public methods
 
     /// Checks if there is a launch view that needs to be displayed and does so modally if there is one
     func checkLaunchModals() {
-        guard !isBeingDisplayed else {
-            return
-        }
-
         Task {
+            guard !isBeingDisplayed else {
+                DDLogNotice("Skip checking for launch modals as one is already shown")
+                return
+            }
+            
             isBeingDisplayed = true
 
             guard let modalType = await resolveModalType() else {
@@ -107,14 +110,14 @@ final class LaunchModalManager {
             case .notificationTypeSelection:
                 showNotificationTypeSelection()
 
+            case .showIdentityThisDeviceOnly:
+                showIdentityThisDeviceOnly()
+                
             case .remoteSecretActivate:
                 showRemoteSecret(type: .activate)
 
             case .remoteSecretDeactivate:
                 showRemoteSecret(type: .deactivate)
-                
-            case .showIdentityThisDeviceOnly:
-                showIdentityThisDeviceOnly()
             }
         }
     }
@@ -139,28 +142,28 @@ final class LaunchModalManager {
         else if checkSafeInfo() {
             return .safeSetupInfo
         }
+        else if checkCanShowIdentityThisDeviceOnly() {
+            return .showIdentityThisDeviceOnly
+        }
         else if checkRemoteSecretActivate() {
             return .remoteSecretActivate
         }
         else if checkRemoteSecretDeactivate() {
             return .remoteSecretDeactivate
         }
-        else if checkCanShowIdentityThisDeviceOnly() {
-            return .showIdentityThisDeviceOnly
-        }
-        else if checkMicForOnPrem() {
+        else if RecordPermission.access == .undetermined {
             // We ask mic permission to improve the UX for calls
-            await AVAudioApplication.requestRecordPermission()
+            await RecordPermission.requestPermission()
             didDismiss()
             return nil
         }
         // Check this always as last
-        else if checkNetworkForOnPrem() {
+        else if didCheckLocalNetwork == false {
             // We ask for local network permission to improve the UX for calls
             LocalNetworkPermissionChecker().checkLocalNetworkPermission { _ in
                 // no-op
             }
-            didCheckLocalNetworkForOnPrem = true
+            didCheckLocalNetwork = true
             didDismiss()
             return nil
         }
@@ -168,6 +171,8 @@ final class LaunchModalManager {
             return nil
         }
     }
+    
+    // MARK: Checks
 
     private func checkForceMDMSafeBackup() -> Bool {
         if !safeManager.isActivated, mdmSetup.isSafeBackupForce(), mdmSetup.safePassword() == nil {
@@ -190,11 +195,13 @@ final class LaunchModalManager {
     }
     
     private func checkRemoteSecretActivate() -> Bool {
-        mdmSetup.enableRemoteSecret() && !remoteSecretManager.isRemoteSecretEnabled
+        (didShowRemoteSecretReminder == false) &&
+            (mdmSetup.enableRemoteSecret() && remoteSecretManager.isRemoteSecretEnabled == false)
     }
     
     private func checkRemoteSecretDeactivate() -> Bool {
-        !mdmSetup.enableRemoteSecret() && remoteSecretManager.isRemoteSecretEnabled
+        (didShowRemoteSecretReminder == false) &&
+            (mdmSetup.enableRemoteSecret() == false && remoteSecretManager.isRemoteSecretEnabled)
     }
     
     private func checkCanShowIdentityThisDeviceOnly() -> Bool {
@@ -210,19 +217,9 @@ final class LaunchModalManager {
                 .disableSystemBackups()
         )
     }
-
-    private func checkMicForOnPrem() -> Bool {
-        TargetManager.isOnPrem && AVAudioApplication.shared.recordPermission == .undetermined
-    }
     
-    private func checkNetworkForOnPrem() -> Bool {
-        guard TargetManager.isOnPrem else {
-            return false
-        }
-        
-        return didCheckLocalNetworkForOnPrem == false
-    }
-
+    // MARK: Show modal
+    
     private func didDismiss() {
         isBeingDisplayed = false
         checkLaunchModals()
@@ -244,6 +241,12 @@ final class LaunchModalManager {
 
         topViewController.present(navC, animated: true)
 
+        model.onCancel = { [weak self] in
+            self?.topViewController.dismiss(animated: true) { [weak self] in
+                self?.didDismiss()
+            }
+        }
+        
         model.onFinish = { [weak self] in
             self?.topViewController.dismiss(animated: true) { [weak self] in
                 self?.didDismiss()
@@ -268,31 +271,41 @@ final class LaunchModalManager {
 
         model.onConfirm = { [weak self] in
             self?.topViewController.dismiss(animated: false) { [weak self] in
-                self?.isBeingDisplayed = false
                 self?.showThreemaSafePasswordScreen()
             }
         }
     }
 
     private func showNotificationReminder() {
-        let vc = UIHostingController(rootView: NotificationReminderView())
+        let notificationReminderView = NotificationReminderView { [weak self] in
+            self?.didDismiss()
+        }
+        let vc = UIHostingController(rootView: notificationReminderView)
         topViewController.present(vc, animated: true)
     }
 
     private func showNotificationTypeSelection() {
-        let vc = UIHostingController(rootView: NotificationTypeSelectionView())
+        let notificationTypeSelectionView = NotificationTypeSelectionView { [weak self] in
+            self?.didDismiss()
+        }
+        let vc = UIHostingController(rootView: notificationTypeSelectionView)
         topViewController.present(vc, animated: true)
     }
 
     private func showRemoteSecret(type: RemoteSecretActivateDeactivateViewModel.ViewType) {
-        let model = RemoteSecretActivateDeactivateViewModel(type: type)
+        let model = RemoteSecretActivateDeactivateViewModel(type: type) { [weak self] in
+            self?.didShowRemoteSecretReminder = true
+            self?.didDismiss()
+        }
         let view = RemoteSecretActivateDeactivateView(viewModel: model)
         let vc = UIHostingController(rootView: view)
         topViewController.present(vc, animated: true)
     }
 
     private func showIdentityThisDeviceOnly() {
-        let view = IdentityThisDeviceOnlyDecisionView(businessInjector: BusinessInjector.ui)
+        let view = IdentityThisDeviceOnlyDecisionView(businessInjector: BusinessInjector.ui) { [weak self] in
+            self?.didDismiss()
+        }
         let vc = UIHostingController(rootView: view)
         topViewController.present(vc, animated: true)
     }

@@ -24,7 +24,7 @@ struct DeviceJoinScanQRCodeView: View {
         self._path = path
         let model = QRCodeScannerViewModel(
             mode: .multiDeviceLink,
-            audioSessionManager: AudioSessionManager(),
+            audioSessionManager: BusinessInjector.ui.audioSessionManager,
             systemFeedbackManager: SystemFeedbackManager(
                 deviceCapabilitiesManager: DeviceCapabilitiesManager(),
                 settingsStore: BusinessInjector.ui.settingsStore

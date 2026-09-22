@@ -1,13 +1,5 @@
-/// When we remove `objc` move this into the `Details` name space and remove `Int`
-@objc public enum DetailsDisplayStyle: Int {
-    case `default`
-    case preview
-}
-
 /// Delegate for details
-///
-/// When we remove `objc` check if we can move this into the `Details` name space
-@objc public protocol DetailsDelegate: AnyObject {
+public protocol DetailsDelegate: AnyObject {
     /// Called when the details view controller did disappear
     func detailsDidDisappear()
     
@@ -23,6 +15,11 @@
 }
 
 public enum Details {
+    
+    public enum DisplayStyle {
+        case `default`
+        case preview
+    }
 
     public struct Action: Hashable {
         public typealias Action = (UIView) -> Void

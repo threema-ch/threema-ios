@@ -1,7 +1,7 @@
 import Foundation
 import WebRTC
 
-@objc public final class VoIPCallOfferMessage: NSObject {
+public final class VoIPCallOfferMessage: NSObject {
     public var offer: RTCSessionDescription?
     public var contactIdentity: String!
     public var completion: (() -> Void)?
@@ -10,11 +10,16 @@ import WebRTC
     var features: [String: Any?]?
     public var isVideoAvailable: Bool
     
+    public let receivedAsReflected: Bool?
+    public let isOutgoing: Bool
+    
     public init(
         offer: RTCSessionDescription?,
         features: [String: Any?]?,
         isVideoAvailable: Bool,
         callID: VoIPCallID,
+        receivedAsReflected: Bool? = nil,
+        isOutgoing: Bool,
         completion: (() -> Void)?
     ) {
         self.offer = offer
@@ -22,6 +27,9 @@ import WebRTC
         self.features = features
         self.isVideoAvailable = isVideoAvailable
         self.callID = callID
+        self.receivedAsReflected = receivedAsReflected
+        self.isOutgoing = isOutgoing
+        
         super.init()
     }
 }
@@ -40,7 +48,11 @@ extension VoIPCallOfferMessage: VoIPCallMessageProtocol {
         case generateJson(error: Error)
     }
 
-    public static func decodeAsObject<T>(_ dictionary: [AnyHashable: Any]) -> T where T: VoIPCallMessageProtocol {
+    public static func decodeAsObject<T>(
+        _ dictionary: [AnyHashable: Any],
+        receivedAsReflected: Bool,
+        isOutgoing: Bool
+    ) -> T where T: VoIPCallMessageProtocol {
         var tmpOffer: RTCSessionDescription?
         if let offerKey = dictionary[VoIPCallOfferMessage.kOfferKey] {
             tmpOffer = RTCSessionDescription.description(from: offerKey as! [AnyHashable: Any])
@@ -60,6 +72,8 @@ extension VoIPCallOfferMessage: VoIPCallMessageProtocol {
             features: tmpFeatures,
             isVideoAvailable: isVideoAvailable,
             callID: callID,
+            receivedAsReflected: receivedAsReflected,
+            isOutgoing: isOutgoing,
             completion: nil
         ) as! T
     }

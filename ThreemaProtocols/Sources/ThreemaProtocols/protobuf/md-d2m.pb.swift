@@ -29,13 +29,13 @@ import SwiftProtobuf
 // incompatible with the version of SwiftProtobuf to which you are linking.
 // Please ensure that you are building against the same version of the API
 // that was used to generate this file.
-fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAPIVersionCheck {
+fileprivate nonisolated struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAPIVersionCheck {
   struct _2: SwiftProtobuf.ProtobufAPIVersion_2 {}
   typealias Version = _2
 }
 
 /// D2M protocol versions.
-public enum D2m_ProtocolVersion: SwiftProtobuf.Enum, Swift.CaseIterable {
+public nonisolated enum D2m_ProtocolVersion: SwiftProtobuf.Enum, Swift.CaseIterable {
   public typealias RawValue = Int
 
   /// Initial D2M protocol version (alpha, may break).
@@ -68,7 +68,7 @@ public enum D2m_ProtocolVersion: SwiftProtobuf.Enum, Swift.CaseIterable {
 }
 
 /// Policy determining the device slot's lifetime.
-public enum D2m_DeviceSlotExpirationPolicy: SwiftProtobuf.Enum, Swift.CaseIterable {
+public nonisolated enum D2m_DeviceSlotExpirationPolicy: SwiftProtobuf.Enum, Swift.CaseIterable {
   public typealias RawValue = Int
 
   /// The device slot should be removed shortly after the device
@@ -109,7 +109,7 @@ public enum D2m_DeviceSlotExpirationPolicy: SwiftProtobuf.Enum, Swift.CaseIterab
 }
 
 /// Device registration state on the mediator server.
-public enum D2m_DeviceSlotState: SwiftProtobuf.Enum, Swift.CaseIterable {
+public nonisolated enum D2m_DeviceSlotState: SwiftProtobuf.Enum, Swift.CaseIterable {
   public typealias RawValue = Int
 
   /// A new device slot has been allocated for the device (i.e. the device's
@@ -156,7 +156,7 @@ public enum D2m_DeviceSlotState: SwiftProtobuf.Enum, Swift.CaseIterable {
 ///
 /// Type: n/a
 /// Direction: Client -> Server
-public struct D2m_ClientUrlInfo: Sendable {
+public nonisolated struct D2m_ClientUrlInfo: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -177,7 +177,7 @@ public struct D2m_ClientUrlInfo: Sendable {
 ///
 /// Type: 0x10
 /// Direction: Client <-- Server
-public struct D2m_ServerHello: Sendable {
+public nonisolated struct D2m_ServerHello: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -201,7 +201,7 @@ public struct D2m_ServerHello: Sendable {
 ///
 /// Type: 0x11
 /// Direction: Client --> Server
-public struct D2m_ClientHello: Sendable {
+public nonisolated struct D2m_ClientHello: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -247,7 +247,7 @@ public struct D2m_ClientHello: Sendable {
 
   /// Policy to be applied in case the device id is not registered on the server
   /// and all device slots have been exhausted.
-  public enum DeviceSlotsExhaustedPolicy: SwiftProtobuf.Enum, Swift.CaseIterable {
+  public nonisolated enum DeviceSlotsExhaustedPolicy: SwiftProtobuf.Enum, Swift.CaseIterable {
     public typealias RawValue = Int
 
     /// Terminate the connection
@@ -292,7 +292,7 @@ public struct D2m_ClientHello: Sendable {
 ///
 /// Type: 0x12
 /// Direction: Client <-- Server
-public struct D2m_ServerInfo: Sendable {
+public nonisolated struct D2m_ServerInfo: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -336,7 +336,7 @@ public struct D2m_ServerInfo: Sendable {
 ///
 /// Type: 0x20
 /// Direction: Client <-- Server
-public struct D2m_ReflectionQueueDry: Sendable {
+public nonisolated struct D2m_ReflectionQueueDry: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -351,7 +351,7 @@ public struct D2m_ReflectionQueueDry: Sendable {
 ///
 /// Type: 0x21
 /// Direction: Client <-- Server
-public struct D2m_RolePromotedToLeader: Sendable {
+public nonisolated struct D2m_RolePromotedToLeader: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -365,7 +365,7 @@ public struct D2m_RolePromotedToLeader: Sendable {
 ///
 /// Type: 0x30
 /// Direction: Client --> Server
-public struct D2m_GetDevicesInfo: Sendable {
+public nonisolated struct D2m_GetDevicesInfo: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -379,7 +379,7 @@ public struct D2m_GetDevicesInfo: Sendable {
 ///
 /// Type: 0x31
 /// Direction: Client <-- Server
-public struct D2m_DevicesInfo: Sendable {
+public nonisolated struct D2m_DevicesInfo: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -389,7 +389,7 @@ public struct D2m_DevicesInfo: Sendable {
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
   /// Device id to (augmented) device info map of all devices.
-  public struct AugmentedDeviceInfo: Sendable {
+  public nonisolated struct AugmentedDeviceInfo: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
@@ -427,7 +427,7 @@ public struct D2m_DevicesInfo: Sendable {
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
     /// Connection state
-    public enum OneOf_ConnectionState: Equatable, Sendable {
+    public nonisolated enum OneOf_ConnectionState: Equatable, Sendable {
       /// Unix-ish timestamp in milliseconds containing the most recent login
       /// time of the device. Only set if device is currently connected.
       case connectedSince(UInt64)
@@ -447,7 +447,7 @@ public struct D2m_DevicesInfo: Sendable {
 ///
 /// Type: 0x32
 /// Direction: Client --> Server
-public struct D2m_DropDevice: Sendable {
+public nonisolated struct D2m_DropDevice: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -465,7 +465,7 @@ public struct D2m_DropDevice: Sendable {
 ///
 /// Type: 0x33
 /// Direction: Client <-- Server
-public struct D2m_DropDeviceAck: Sendable {
+public nonisolated struct D2m_DropDeviceAck: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -482,7 +482,7 @@ public struct D2m_DropDeviceAck: Sendable {
 ///
 /// Type: 0x34
 /// Direction: Client --> Server
-public struct D2m_SetSharedDeviceData: Sendable {
+public nonisolated struct D2m_SetSharedDeviceData: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -504,7 +504,7 @@ public struct D2m_SetSharedDeviceData: Sendable {
 ///
 /// Type: 0x40
 /// Direction: Client --> Server
-public struct D2m_BeginTransaction: Sendable {
+public nonisolated struct D2m_BeginTransaction: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -528,7 +528,7 @@ public struct D2m_BeginTransaction: Sendable {
 ///
 /// Type: 0x41
 /// Direction: Client <-- Server
-public struct D2m_BeginTransactionAck: Sendable {
+public nonisolated struct D2m_BeginTransactionAck: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -542,7 +542,7 @@ public struct D2m_BeginTransactionAck: Sendable {
 ///
 /// Type: 0x42
 /// Direction: Client --> Server
-public struct D2m_CommitTransaction: Sendable {
+public nonisolated struct D2m_CommitTransaction: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -557,7 +557,7 @@ public struct D2m_CommitTransaction: Sendable {
 ///
 /// Type: 0x43
 /// Direction: Client <-- Server
-public struct D2m_CommitTransactionAck: Sendable {
+public nonisolated struct D2m_CommitTransactionAck: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -572,7 +572,7 @@ public struct D2m_CommitTransactionAck: Sendable {
 ///
 /// Type: 0x44
 /// Direction: Client <-- Server
-public struct D2m_TransactionRejected: Sendable {
+public nonisolated struct D2m_TransactionRejected: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -599,7 +599,7 @@ public struct D2m_TransactionRejected: Sendable {
 ///
 /// Type: 0x45
 /// Direction: Client <-- Server
-public struct D2m_TransactionEnded: Sendable {
+public nonisolated struct D2m_TransactionEnded: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -619,21 +619,21 @@ public struct D2m_TransactionEnded: Sendable {
 
 // MARK: - Code below here is support for the SwiftProtobuf runtime.
 
-fileprivate let _protobuf_package = "d2m"
+fileprivate nonisolated let _protobuf_package = "d2m"
 
-extension D2m_ProtocolVersion: SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2m_ProtocolVersion: SwiftProtobuf._ProtoNameProviding {
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0V0\0")
 }
 
-extension D2m_DeviceSlotExpirationPolicy: SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2m_DeviceSlotExpirationPolicy: SwiftProtobuf._ProtoNameProviding {
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0VOLATILE\0\u{1}PERSISTENT\0")
 }
 
-extension D2m_DeviceSlotState: SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2m_DeviceSlotState: SwiftProtobuf._ProtoNameProviding {
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0NEW\0\u{1}EXISTING\0")
 }
 
-extension D2m_ClientUrlInfo: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2m_ClientUrlInfo: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".ClientUrlInfo"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}device_group_id\0\u{4}\u{2}server_group\0\u{c}\u{2}\u{1}")
 
@@ -668,7 +668,7 @@ extension D2m_ClientUrlInfo: SwiftProtobuf.Message, SwiftProtobuf._MessageImplem
   }
 }
 
-extension D2m_ServerHello: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2m_ServerHello: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".ServerHello"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}version\0\u{1}esk\0\u{1}challenge\0")
 
@@ -708,7 +708,7 @@ extension D2m_ServerHello: SwiftProtobuf.Message, SwiftProtobuf._MessageImplemen
   }
 }
 
-extension D2m_ClientHello: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2m_ClientHello: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".ClientHello"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}version\0\u{1}response\0\u{3}device_id\0\u{3}device_slots_exhausted_policy\0\u{3}device_slot_expiration_policy\0\u{3}encrypted_device_info\0\u{3}expected_device_slot_state\0")
 
@@ -768,11 +768,11 @@ extension D2m_ClientHello: SwiftProtobuf.Message, SwiftProtobuf._MessageImplemen
   }
 }
 
-extension D2m_ClientHello.DeviceSlotsExhaustedPolicy: SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2m_ClientHello.DeviceSlotsExhaustedPolicy: SwiftProtobuf._ProtoNameProviding {
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0REJECT\0\u{1}DROP_LEAST_RECENT\0")
 }
 
-extension D2m_ServerInfo: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2m_ServerInfo: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".ServerInfo"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}max_device_slots\0\u{3}device_slot_state\0\u{3}encrypted_shared_device_data\0\u{3}current_time\0\u{3}reflection_queue_length\0")
 
@@ -822,7 +822,7 @@ extension D2m_ServerInfo: SwiftProtobuf.Message, SwiftProtobuf._MessageImplement
   }
 }
 
-extension D2m_ReflectionQueueDry: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2m_ReflectionQueueDry: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".ReflectionQueueDry"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap()
 
@@ -841,7 +841,7 @@ extension D2m_ReflectionQueueDry: SwiftProtobuf.Message, SwiftProtobuf._MessageI
   }
 }
 
-extension D2m_RolePromotedToLeader: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2m_RolePromotedToLeader: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".RolePromotedToLeader"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap()
 
@@ -860,7 +860,7 @@ extension D2m_RolePromotedToLeader: SwiftProtobuf.Message, SwiftProtobuf._Messag
   }
 }
 
-extension D2m_GetDevicesInfo: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2m_GetDevicesInfo: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".GetDevicesInfo"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap()
 
@@ -879,7 +879,7 @@ extension D2m_GetDevicesInfo: SwiftProtobuf.Message, SwiftProtobuf._MessageImple
   }
 }
 
-extension D2m_DevicesInfo: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2m_DevicesInfo: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".DevicesInfo"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}augmented_device_info\0")
 
@@ -909,7 +909,7 @@ extension D2m_DevicesInfo: SwiftProtobuf.Message, SwiftProtobuf._MessageImplemen
   }
 }
 
-extension D2m_DevicesInfo.AugmentedDeviceInfo: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2m_DevicesInfo.AugmentedDeviceInfo: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = D2m_DevicesInfo.protoMessageName + ".AugmentedDeviceInfo"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}encrypted_device_info\0\u{3}connected_since\0\u{3}device_slot_expiration_policy\0\u{3}last_disconnect_at\0")
 
@@ -971,7 +971,7 @@ extension D2m_DevicesInfo.AugmentedDeviceInfo: SwiftProtobuf.Message, SwiftProto
   }
 }
 
-extension D2m_DropDevice: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2m_DropDevice: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".DropDevice"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}device_id\0")
 
@@ -1001,7 +1001,7 @@ extension D2m_DropDevice: SwiftProtobuf.Message, SwiftProtobuf._MessageImplement
   }
 }
 
-extension D2m_DropDeviceAck: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2m_DropDeviceAck: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".DropDeviceAck"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}device_id\0")
 
@@ -1031,7 +1031,7 @@ extension D2m_DropDeviceAck: SwiftProtobuf.Message, SwiftProtobuf._MessageImplem
   }
 }
 
-extension D2m_SetSharedDeviceData: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2m_SetSharedDeviceData: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".SetSharedDeviceData"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}encrypted_shared_device_data\0")
 
@@ -1061,7 +1061,7 @@ extension D2m_SetSharedDeviceData: SwiftProtobuf.Message, SwiftProtobuf._Message
   }
 }
 
-extension D2m_BeginTransaction: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2m_BeginTransaction: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".BeginTransaction"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}encrypted_scope\0\u{1}ttl\0")
 
@@ -1096,7 +1096,7 @@ extension D2m_BeginTransaction: SwiftProtobuf.Message, SwiftProtobuf._MessageImp
   }
 }
 
-extension D2m_BeginTransactionAck: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2m_BeginTransactionAck: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".BeginTransactionAck"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap()
 
@@ -1115,7 +1115,7 @@ extension D2m_BeginTransactionAck: SwiftProtobuf.Message, SwiftProtobuf._Message
   }
 }
 
-extension D2m_CommitTransaction: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2m_CommitTransaction: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".CommitTransaction"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap()
 
@@ -1134,7 +1134,7 @@ extension D2m_CommitTransaction: SwiftProtobuf.Message, SwiftProtobuf._MessageIm
   }
 }
 
-extension D2m_CommitTransactionAck: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2m_CommitTransactionAck: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".CommitTransactionAck"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap()
 
@@ -1153,7 +1153,7 @@ extension D2m_CommitTransactionAck: SwiftProtobuf.Message, SwiftProtobuf._Messag
   }
 }
 
-extension D2m_TransactionRejected: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2m_TransactionRejected: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".TransactionRejected"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}device_id\0\u{3}encrypted_scope\0")
 
@@ -1188,7 +1188,7 @@ extension D2m_TransactionRejected: SwiftProtobuf.Message, SwiftProtobuf._Message
   }
 }
 
-extension D2m_TransactionEnded: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2m_TransactionEnded: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".TransactionEnded"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}device_id\0\u{3}encrypted_scope\0")
 

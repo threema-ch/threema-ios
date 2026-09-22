@@ -38,7 +38,7 @@ public final class DistributionList: NSObject {
         }
     }
 
-    @objc public var attributedDisplayName: NSAttributedString {
+    public var attributedDisplayName: NSAttributedString {
         let attributeString = NSMutableAttributedString(string: displayName ?? "")
         attributeString.addAttribute(
             .foregroundColor,

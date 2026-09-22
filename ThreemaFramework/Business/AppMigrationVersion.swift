@@ -6,7 +6,7 @@ import Foundation
 ///
 /// # How to add a new version?
 ///
-/// Add a new  case with a higher integer than the existing ones. If another migration is needed during the beta phase
+/// Add a new case with a higher integer than the existing ones. If another migration is needed during the beta phase
 /// just increment the number by one. This enforced another run of this migration. **After a release don't increment the
 /// number anymore.**
 public enum AppMigrationVersion: Int, Comparable, CaseIterable {
@@ -31,6 +31,7 @@ public enum AppMigrationVersion: Int, Comparable, CaseIterable {
     case v7_0_4 = 33
     case v7_1 = 34
     case v7_3 = 35
+    case v7_4 = 36
     // Add new version for app migration here...
 
     public private(set) static var isAppVersionDowngraded = false

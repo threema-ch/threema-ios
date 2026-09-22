@@ -1,22 +1,22 @@
 import Foundation
 import ThreemaFramework
 
-@objc open class ThreemaImagePickerControllerDefaultUIDelegate: DKImagePickerControllerDefaultUIDelegate,
+final class ThreemaImagePickerControllerDefaultUIDelegate: DKImagePickerControllerDefaultUIDelegate,
     MWPhotoBrowserDelegate {
     
     var photosArray = [MWPhoto]()
     var photoAssets = [DKAsset]()
-    open var controller: DKImagePickerController?
+    public var controller: DKImagePickerController?
     
-    override open func imagePickerControllerCollectionViewBackgroundColor() -> UIColor {
+    override public func imagePickerControllerCollectionViewBackgroundColor() -> UIColor {
         Colors.backgroundViewController
     }
     
-    override open func imagePickerControllerGlobalTitleColor() -> UIColor? {
+    override public func imagePickerControllerGlobalTitleColor() -> UIColor? {
         .tintColor
     }
     
-    override open func createDoneButtonIfNeeded() -> UIButton {
+    override public func createDoneButtonIfNeeded() -> UIButton {
         if doneButton == nil {
             doneButton = super.createDoneButtonIfNeeded()
             doneButton!.removeTarget(
@@ -33,7 +33,7 @@ import ThreemaFramework
         return doneButton!
     }
 
-    override open func updateDoneButtonTitle(_ button: UIButton) {
+    override public func updateDoneButtonTitle(_ button: UIButton) {
         if !imagePickerController.selectedAssets.isEmpty {
             button.setTitle(
                 String.localizedStringWithFormat(
@@ -51,19 +51,19 @@ import ThreemaFramework
         button.sizeToFit()
     }
     
-    @objc func updateButton() {
+    func updateButton() {
         updateDoneButtonTitle(createDoneButtonIfNeeded())
     }
     
-    override open func imagePickerControllerCollectionImageCell() -> DKAssetGroupDetailBaseCell.Type {
+    override public func imagePickerControllerCollectionImageCell() -> DKAssetGroupDetailBaseCell.Type {
         CustomGroupDetailImageCell.self
     }
     
-    override open func imagePickerControllerCollectionVideoCell() -> DKAssetGroupDetailBaseCell.Type {
+    override public func imagePickerControllerCollectionVideoCell() -> DKAssetGroupDetailBaseCell.Type {
         CustomGroupDetailVideoCell.self
     }
     
-    override open func imagePickerControllerLongPress(
+    override public func imagePickerControllerLongPress(
         _ imagePickerController: DKImagePickerController,
         _ selectedRow: Int,
         _ assets: [DKAsset]
@@ -100,7 +100,7 @@ import ThreemaFramework
         UInt(photosArray.count)
     }
     
-    open func photoBrowser(_ photoBrowser: MWPhotoBrowser!, photoAt index: UInt) -> MWPhotoProtocol! {
+    public func photoBrowser(_ photoBrowser: MWPhotoBrowser!, photoAt index: UInt) -> MWPhotoProtocol! {
         photosArray[Int(index)]
     }
     

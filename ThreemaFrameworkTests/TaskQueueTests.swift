@@ -1298,7 +1298,7 @@ final class TaskQueueTests: XCTestCase {
             return expectedContactEntity
         }
 
-        let (_, groupEntity, conversation) = try dbPreparer.createGroup(
+        let (_, groupEntity, conversation) = dbPreparer.createGroup(
             groupID: BytesUtility.generateGroupID(),
             groupCreatorIdentity: "ADMIN007",
             members: ["MEMBER01", "MEMBER02", "MEMBER03"]
@@ -1592,7 +1592,15 @@ final class TaskQueueTests: XCTestCase {
 
         try! tq.enqueue(task: taskReactionMessage, completionHandler: nil)
         
-        let expectedItemCount = 21
+        // Add TaskDefinitionSendCallOfferAnswerMessage
+        let abstractMessage = BoxVoIPCallAnswerMessage()
+        let taskCallOfferAnswer = TaskDefinitionSendCallOfferAnswerMessage(
+            message: abstractMessage,
+            callID: VoIPCallID(callID: UInt32(1337))
+        )
+        try! tq.enqueue(task: taskCallOfferAnswer, completionHandler: nil)
+        
+        let expectedItemCount = 22
         guard tq.list.count == expectedItemCount else {
             XCTFail("TaskList has wrong number of items. Expected \(expectedItemCount) but was \(tq.list.count)")
             return
@@ -1656,6 +1664,16 @@ final class TaskQueueTests: XCTestCase {
         }
         
         if !(tq.list[19].taskDefinition is TaskDefinitionNewDeviceSync) {
+            XCTFail()
+        }
+        
+        if let task = tq.list[21].taskDefinition as? TaskDefinitionSendCallOfferAnswerMessage {
+            XCTAssertEqual(TaskExecutionState.pending, task.state)
+            XCTAssertEqual(task.scope, .o2OCall)
+            XCTAssertEqual(task.callID, VoIPCallID(callID: UInt32(1337)))
+            XCTAssertTrue(task.retry)
+        }
+        else {
             XCTFail()
         }
 

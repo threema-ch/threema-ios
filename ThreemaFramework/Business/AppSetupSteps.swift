@@ -1,7 +1,7 @@
 import CocoaLumberjackSwift
 import ThreemaEssentials
 
-public enum AppSetupStepsError: Error {
+enum AppSetupStepsError: Error {
     /// A request timed out
     case timeout
     /// An empty error was returned

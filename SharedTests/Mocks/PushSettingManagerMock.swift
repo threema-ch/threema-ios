@@ -3,8 +3,11 @@ import ThreemaEssentials
 @testable import ThreemaFramework
 
 final class PushSettingManagerMock: PushSettingManagerProtocol {
+    var findForContactCalls = [ThreemaIdentity]()
+
     func find(forContact identity: ThreemaIdentity) -> PushSetting {
-        PushSetting(identity: identity)
+        findForContactCalls.append(identity)
+        return PushSetting(identity: identity)
     }
     
     func find(forGroup groupIdentity: GroupIdentity) -> PushSetting {

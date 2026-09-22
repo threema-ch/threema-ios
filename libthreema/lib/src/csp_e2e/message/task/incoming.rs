@@ -3,18 +3,19 @@ use core::mem;
 use std::str;
 
 use const_format::formatcp;
+use libthreema_dependencies::crypto::aead::AeadInPlace as _;
 use libthreema_macros::{DebugVariantNames, Name, VariantNames};
 use prost::Message as _;
 use tracing::{debug, error, info, trace, warn};
 
 use crate::{
     common::{
-        Delta, MessageFlags, MessageId, MessageMetadata, Nonce, ThreemaId, keys::CspE2eKey, task::TaskLoop,
+        ConversationId, MessageFlags, MessageId, MessageMetadata, Nonce, ThreemaId, keys::CspE2eKey,
+        task::TaskLoop,
     },
-    crypto::aead::AeadInPlace as _,
     csp::payload::{MessageAck, MessageWithMetadataBox},
     csp_e2e::{
-        CspE2eContext, CspE2eProtocolContext, CspE2eProtocolError, D2mRole,
+        CspE2eProtocolContext, CspE2eProtocolError, D2mRole,
         contacts::{
             create::{
                 CreateContactsInstruction, CreateContactsLoop, CreateContactsResponse, CreateContactsTask,
@@ -27,18 +28,19 @@ use crate::{
                 UpdateContactsInstruction, UpdateContactsLoop, UpdateContactsResponse, UpdateContactsTask,
             },
         },
-        message::{codec::CspMessageDecoder as _, payload::IncomingMessageWithMetadataBox},
-        reflect::{ReflectFlags, ReflectInstruction, ReflectPayload, ReflectResponse, ReflectSubtask},
-    },
-    model::{
-        contact::{CommunicationPermission, ContactOrInit, ContactUpdate, PredefinedContact},
         message::{
             ContactMessageBody, IncomingMessage, IncomingMessageBody, MessageOverrides, MessageProperties,
+            codec::CspMessageDecoder as _, payload::IncomingMessageWithMetadataBox,
         },
-        provider::ProviderError,
+        reflect::{ReflectFlags, ReflectInstruction, ReflectPayload, ReflectResponse, ReflectSubtask},
     },
+    model::contact::{CommunicationPermission, ContactOrInit, ContactUpdate, PredefinedContact},
     protobuf::{self, common::CspE2eMessageType, d2d_sync::contact as protobuf_contact},
-    utils::{apply::Apply as _, debug::Name as _},
+    provider::ProviderError,
+    utils::{
+        debug::Name as _,
+        update::{ApplySome as _, DeltaOption as _},
+    },
 };
 
 /// Instruction for processing an incoming message.
@@ -94,6 +96,7 @@ enum DiscardReason {
     ReceiverIsNotUser,
     SenderIsUser,
     SenderIsInvalid,
+    SenderPublicKeyNonContributory,
     MetadataDecryptionFailed,
     MetadataDecodingFailed,
     MessageDecryptionFailed,
@@ -137,7 +140,7 @@ enum ProcessingOutcome<T> {
 #[derive(Debug)]
 struct AcknowledgeContext {
     sender_identity: ThreemaId,
-    id: MessageId,
+    message_id: MessageId,
     flags: MessageFlags,
     nonce: Option<Nonce>,
 }
@@ -145,7 +148,7 @@ impl From<&IncomingMessageWithMetadataBox> for AcknowledgeContext {
     fn from(payload: &IncomingMessageWithMetadataBox) -> Self {
         Self {
             sender_identity: payload.sender_identity,
-            id: payload.id,
+            message_id: payload.message_id,
             flags: payload.flags,
             nonce: Some(payload.nonce.clone()),
         }
@@ -155,7 +158,7 @@ impl From<&IncomingMessageParts> for AcknowledgeContext {
     fn from(message: &IncomingMessageParts) -> Self {
         Self {
             sender_identity: message.inner.sender_identity,
-            id: message.inner.id,
+            message_id: message.inner.message_id,
             flags: message.outer.flags,
             nonce: Some(message.outer.nonce.clone()),
         }
@@ -346,7 +349,7 @@ fn decrypt_and_decode_message(
     // Decode the incoming message
     let inner_message = IncomingMessage {
         sender_identity: sender.inner().identity,
-        id: payload.id,
+        message_id: payload.message_id,
         overrides: MessageOverrides::from(payload.flags),
         created_at: inner_metadata.as_ref().map_or(
             u64::from(payload.legacy_created_at).saturating_mul(1000),
@@ -448,7 +451,7 @@ impl State {
         let payload = {
             let MessageWithMetadataBox {
                 sender_identity,
-                id: message_id,
+                message_id,
                 flags: message_flags,
                 ..
             } = state.payload;
@@ -464,7 +467,7 @@ impl State {
                         reason: DiscardReason::PayloadDecodingFailed,
                         acknowledge: AcknowledgeContext {
                             sender_identity,
-                            id: message_id,
+                            message_id,
                             flags: message_flags,
                             nonce: None,
                         },
@@ -477,13 +480,18 @@ impl State {
         // Add tracing span
         let _span = tracing::info_span! {
             "message",
-            id = ?payload.id,
+            id = ?payload.message_id,
             sender = ?payload.sender_identity,
         }
         .entered();
 
         // Check if the nonce has been used before
-        if context.csp_e2e.nonce_storage.borrow().has(&payload.nonce)? {
+        if context
+            .providers
+            .csp_e2e_nonce_provider
+            .borrow()
+            .has(&payload.nonce.hash_with(context.csp_e2e.user_identity))?
+        {
             warn!("Discarding message due to nonce reuse");
             return Ok(ProcessingOutcome::Discard {
                 reason: DiscardReason::NonceReuse,
@@ -544,7 +552,7 @@ impl State {
         // Add tracing span
         let _span = tracing::info_span! {
             "message",
-            id = ?payload.id,
+            id = ?payload.message_id,
             sender = ?payload.sender_identity,
         }
         .entered();
@@ -583,14 +591,18 @@ impl State {
         //
         // Note: At this point the message is only decoded and validated to some degree. The receive
         // steps have not been run, yet.
-        let message = match decrypt_and_decode_message(
-            context
-                .csp_e2e
-                .client_key
-                .derive_csp_e2e_key(&sender.inner().public_key),
-            payload,
-            &sender,
-        ) {
+        let Some(shared_secret) = context
+            .csp_e2e
+            .client_key
+            .derive_csp_e2e_key(&sender.inner().public_key)
+        else {
+            warn!("Discarding message where the sender's public key is non-contributory");
+            return Ok(ProcessingOutcome::Discard {
+                reason: DiscardReason::SenderPublicKeyNonContributory,
+                acknowledge: AcknowledgeContext::from(&*payload),
+            });
+        };
+        let message = match decrypt_and_decode_message(shared_secret, payload, &sender) {
             ProcessingOutcome::Ok(message) => message,
             ProcessingOutcome::Discard { reason, acknowledge } => {
                 return Ok(ProcessingOutcome::Discard { reason, acknowledge });
@@ -600,7 +612,7 @@ impl State {
 
         // Check the message ID for divergences or re-use
         if let Some(metadata) = message.metadata.as_ref()
-            && metadata.message_id != payload.id
+            && metadata.message_id != payload.message_id
         {
             warn!(
                 ?inner_type,
@@ -613,9 +625,10 @@ impl State {
             });
         }
         if context
+            .providers
             .conversations
             .borrow()
-            .message_is_marked_used(sender.inner().identity, payload.id)?
+            .is_message_marked_used(sender.inner().identity, payload.message_id)?
         {
             warn!(?inner_type, "Discarding message with reused message ID");
             return Ok(ProcessingOutcome::Discard {
@@ -632,8 +645,9 @@ impl State {
         if !message.inner.is_exempt_from_blocking() {
             let communication_permission = sender.communication_permission(
                 &context.config,
-                &*context.settings.borrow(),
-                &*context.contacts.borrow(),
+                &*context.providers.settings.borrow(),
+                &*context.providers.contacts.borrow(),
+                &*context.providers.groups.borrow(),
             )?;
             match communication_permission {
                 CommunicationPermission::Allow => {},
@@ -663,15 +677,19 @@ impl State {
                     acknowledge: AcknowledgeContext::from(&*payload),
                 });
             };
-            context.shortcut.handle_web_session_resume(web_session_resume)?;
+            context
+                .providers
+                .shortcut
+                .borrow_mut()
+                .handle_web_session_resume_payload(web_session_resume.push_payload)?;
 
             // Nothing more to do
             return Ok(ProcessingOutcome::Ok((
-                State::Done,
+                Self::Done,
                 IncomingMessageLoop::Done(IncomingMessageResult {
                     outgoing_message_ack: Some(MessageAck {
                         sender_identity: message.inner.sender_identity,
-                        id: message.inner.id,
+                        message_id: message.inner.message_id,
                     }),
                     outgoing_message_task: None,
                 }),
@@ -708,12 +726,9 @@ impl State {
         let sender_nickname = if let Some(metadata) = message.metadata.as_ref() {
             metadata.nickname.clone()
         } else if effective_message_properties.user_profile_distribution {
-            match payload.legacy_sender_nickname.clone() {
-                Some(nickname) => Delta::Update(nickname),
-                None => Delta::Remove,
-            }
+            Some(payload.legacy_sender_nickname.clone())
         } else {
-            Delta::Unchanged
+            None
         };
 
         // Update or create the contact, if necessary
@@ -728,7 +743,7 @@ impl State {
                     {
                         update.acquaintance_level = Some(protobuf_contact::AcquaintanceLevel::Direct);
                     }
-                    update.nickname = sender_nickname.changes(sender.nickname.as_ref());
+                    update.nickname = sender_nickname.delta(&sender.nickname);
                     update
                 };
 
@@ -756,7 +771,7 @@ impl State {
                 // Note: This only works as intended for groups because each member is added as part of the
                 // `group-setup` receive steps with the acquaintance level _group_.
                 sender.acquaintance_level = protobuf_contact::AcquaintanceLevel::Direct;
-                sender.nickname.apply(sender_nickname);
+                sender.nickname.apply_some(sender_nickname);
 
                 // Create the contact in the next state
                 Self::process_create_contact_state(
@@ -888,11 +903,16 @@ impl State {
         }
 
         // Check if we need to adjust the acquaintance level again
-        let sender = context.contacts.borrow().get(sender_identity)?.ok_or_else(|| {
-            let message = "Sender contact disappeared";
-            error!(message);
-            CspE2eProtocolError::DesyncError(message.to_owned())
-        })?;
+        let sender = context
+            .providers
+            .contacts
+            .borrow()
+            .get(sender_identity)?
+            .ok_or_else(|| {
+                let message = "Sender contact disappeared";
+                error!(message);
+                CspE2eProtocolError::DesyncError(message.to_owned())
+            })?;
         if sender.acquaintance_level == protobuf_contact::AcquaintanceLevel::Direct {
             return Ok(None);
         }
@@ -918,29 +938,59 @@ impl State {
     ) -> Result<ProcessingOutcome<(Self, IncomingMessageLoop)>, CspE2eProtocolError> {
         let inner_type = message.inner.message_type();
 
-        // Run the receive steps associated to the message
+        // Run the receive steps associated to the message.
         match &message.inner.body {
             // All 1:1 messages...
-            IncomingMessageBody::Contact(body) => match body {
-                ContactMessageBody::Text(_)
-                | ContactMessageBody::Location(_)
-                | ContactMessageBody::DeliveryReceipt(_)
-                | ContactMessageBody::LegacyReaction(_) => {
-                    info!(?inner_type, "Adding message to 1:1 conversation");
-                    context
+            IncomingMessageBody::Contact(body) => {
+                let conversation_id = ConversationId::Contact(message.inner.sender_identity);
+                match body {
+                    ContactMessageBody::Text(text) => context
+                        .providers
                         .conversations
                         .borrow_mut()
-                        .add_or_update_incoming_message(message.inner.clone())?;
-                },
+                        .add_messages(vec![message.inner.to_state(text)])?,
 
-                ContactMessageBody::WebSessionResume(_) => {
-                    // Only allowed from `*3MAPUSH`
-                    warn!(?inner_type, "Discarding message only allowed from *3MAPUSH");
-                    return Ok(ProcessingOutcome::Discard {
-                        reason: DiscardReason::MessageOnlyAllowedFrom3maPush,
-                        acknowledge: AcknowledgeContext::from(&message),
-                    });
-                },
+                    ContactMessageBody::Location(location) => context
+                        .providers
+                        .conversations
+                        .borrow_mut()
+                        .add_messages(vec![message.inner.to_state(location)])?,
+
+                    ContactMessageBody::DeliveryReceipt(delivery_receipt) => {
+                        let mut conversations = context.providers.conversations.borrow_mut();
+                        let referred_messages_metadata = conversations
+                            .get_messages_metadata(conversation_id, &delivery_receipt.message_ids)?;
+                        conversations.update_messages(delivery_receipt.to_incoming_state_updates(
+                            context.csp_e2e.user_identity,
+                            message.inner.sender_identity,
+                            message.inner.created_at,
+                            conversation_id,
+                            &referred_messages_metadata,
+                        ))?;
+                    },
+
+                    ContactMessageBody::LegacyReaction(legacy_reaction) => {
+                        let mut conversations = context.providers.conversations.borrow_mut();
+                        let referred_messages_metadata = conversations
+                            .get_messages_metadata(conversation_id, &legacy_reaction.message_ids)?;
+                        conversations.update_messages(legacy_reaction.to_incoming_state_updates(
+                            context.csp_e2e.user_identity,
+                            message.inner.sender_identity,
+                            message.inner.created_at,
+                            conversation_id,
+                            &referred_messages_metadata,
+                        ))?;
+                    },
+
+                    ContactMessageBody::WebSessionResume(_) => {
+                        // Only allowed from `*3MAPUSH`.
+                        warn!(?inner_type, "Discarding message only allowed from *3MAPUSH");
+                        return Ok(ProcessingOutcome::Discard {
+                            reason: DiscardReason::MessageOnlyAllowedFrom3maPush,
+                            acknowledge: AcknowledgeContext::from(&message),
+                        });
+                    },
+                }
             },
 
             // All group messages...
@@ -971,20 +1021,23 @@ impl State {
                 d2x_context,
                 ReflectFlags::from(effective_message_properties),
                 protobuf::d2d::envelope::Content::IncomingMessage(protobuf::d2d::IncomingMessage {
-                    sender_identity: message.inner.sender_identity.as_str().to_owned(),
-                    message_id: message.inner.id.0,
+                    sender_identity: message.inner.sender_identity.into(),
+                    message_id: message.inner.message_id.0,
                     created_at: message.inner.created_at,
                     r#type: message.outer.message_type.into(),
                     body: message.outer.unpadded_message_data,
                     nonce: message.outer.nonce.0.to_vec(),
                 }),
             )?;
-            d2x_context.nonce_storage.borrow_mut().add_many(vec![nonce])?;
+            d2x_context
+                .nonce_provider
+                .borrow_mut()
+                .add_many(vec![nonce.hash_with(context.csp_e2e.user_identity)])?;
             let (reflect_message_task, reflect_instruction) = ReflectSubtask::new(vec![reflect_message]);
             return Ok((
                 Self::ReflectMessage(ReflectMessageState {
                     sender_identity: message.inner.sender_identity,
-                    message_id: message.inner.id,
+                    message_id: message.inner.message_id,
                     message_flags: message.outer.flags,
                     message_nonce: message.outer.nonce.clone(),
                     effective_message_properties: effective_message_properties.clone(),
@@ -1000,7 +1053,7 @@ impl State {
         Self::acknowledge_message_and_schedule_delivery_receipt(
             context,
             message.inner.sender_identity,
-            message.inner.id,
+            message.inner.message_id,
             message.outer.flags,
             message.outer.nonce,
             effective_message_properties,
@@ -1034,10 +1087,10 @@ impl State {
         effective_message_properties: &MessageProperties,
     ) -> Result<(Self, IncomingMessageLoop), CspE2eProtocolError> {
         let outgoing_message_ack = Self::acknowledge(
-            &mut context.csp_e2e,
+            context,
             AcknowledgeContext {
                 sender_identity,
-                id: message_id,
+                message_id,
                 flags: message_flags,
                 // Only mark the nonce as used if we need replay protection for the message
                 nonce: if effective_message_properties.replay_protection {
@@ -1070,7 +1123,7 @@ impl State {
         Ok((
             Self::Done,
             IncomingMessageLoop::Done(IncomingMessageResult {
-                outgoing_message_ack: Self::acknowledge(&mut context.csp_e2e, acknowledge)?,
+                outgoing_message_ack: Self::acknowledge(context, acknowledge)?,
                 outgoing_message_task: None,
             }),
         ))
@@ -1078,15 +1131,18 @@ impl State {
 
     #[expect(clippy::needless_pass_by_value, reason = "Prevent re-use")]
     fn acknowledge(
-        context: &mut CspE2eContext,
+        context: &mut CspE2eProtocolContext,
         acknowledge: AcknowledgeContext,
     ) -> Result<Option<MessageAck>, ProviderError> {
         // Mark the nonce as used if the message requires protection against replay attacks
         if let Some(message_nonce) = acknowledge.nonce.as_ref() {
             context
-                .nonce_storage
+                .providers
+                .csp_e2e_nonce_provider
                 .borrow_mut()
-                .add_many(vec![message_nonce.clone()])?;
+                .add_many(vec![
+                    message_nonce.clone().hash_with(context.csp_e2e.user_identity),
+                ])?;
         }
 
         // TODO(LIB-42): Run `fs-commit-fn` if applicable. Ensure this does not get executed if called prior
@@ -1097,7 +1153,7 @@ impl State {
             if acknowledge.flags.0 & MessageFlags::NO_SERVER_ACKNOWLEDGEMENT == 0 {
                 Some(MessageAck {
                     sender_identity: acknowledge.sender_identity,
-                    id: acknowledge.id,
+                    message_id: acknowledge.message_id,
                 })
             } else {
                 None
@@ -1215,22 +1271,25 @@ mod tests {
     use std::{rc::Rc, sync::Arc};
 
     use assert_matches::assert_matches;
-    use data_encoding::HEXLOWER;
     use derive_builder::Builder;
+    use libthreema_dependencies::data_encoding::HEXLOWER_PERMISSIVE;
     use rstest::rstest;
 
     use super::*;
     use crate::{
+        cli::provider::{InMemoryDb, InMemoryDbInit},
         common::{
             ClientInfo, ConversationId, D2xDeviceId, FeatureMask, MessageFlags, MessageId, Nonce, ThreemaId,
             config::{Config, Flavor, WorkContext, WorkCredentials, WorkFlavor},
             keys::{ClientKey, DeviceGroupKey, PublicKey, RawClientKey},
         },
         csp_e2e::{
-            CspE2eContextInit, CspE2eProtocolContext, CspE2eProtocolContextInit, CspE2eProtocolError,
+            CspE2eContext, CspE2eProtocolContext, CspE2eProtocolContextInit, CspE2eProtocolError,
             D2xContextInit,
             contacts::lookup::{CachedContactResult, ContactsLookupSubtask},
             message::{
+                DeliveryReceiptMessage, DeliveryReceiptType, LocationMessage, OutgoingContactMessage,
+                OutgoingMessage, OutgoingMessageBody, TextMessage, WebSessionResumeMessage,
                 codec::CspMessageEncoder as _,
                 payload::OutgoingMessageWithMetadataBox,
                 task::outgoing::{
@@ -1241,48 +1300,68 @@ mod tests {
         },
         model::{
             contact::Contact,
+            group::Group,
             message::{
-                DeliveryReceiptMessage, DeliveryReceiptType, LocationMessage, MessageLifetime,
-                OutgoingContactMessageBody, OutgoingMessage, OutgoingMessageBody, TextMessage,
-                WebSessionResumeMessage,
+                IncomingMessageDirection, LocationMessageState, MessageDirection, MessageStarMarker,
+                MessageState, MessageStateBody, MessageText, OutgoingMessageDirection, TextMessageState,
             },
-            provider::{
-                ShortcutProvider,
-                in_memory::{InMemoryDb, InMemoryDbInit, InMemoryDbSettings},
-            },
+            settings::Settings,
+            user_profile::UserProfile,
         },
         protobuf::{self, d2d_sync::contact as protobuf_contact},
-        utils::{bytes::OwnedVecByteWriter, time::utc_now_ms},
+        provider::ShortcutProvider,
+        utils::{bytes::OwnedVecByteWriter, sync::MutexIgnorePoison as _, time::utc_now_ms},
     };
 
     trait TestSender {
         fn identity() -> ThreemaId;
         fn public_key() -> PublicKey;
-        fn nickname() -> Delta<String>;
+        fn nickname() -> Option<String>;
 
         fn contact() -> Contact {
             Contact {
                 identity: Self::identity(),
+
                 public_key: Self::public_key(),
+
                 created_at: utc_now_ms(),
-                first_name: None,
-                last_name: None,
+
+                last_update_at: None,
+
+                first_name: String::default(),
+
+                last_name: String::default(),
+
                 // We're intentionally not using `Self::nickname()` here so that we can check if the nickname
                 // was applied after receiving.
-                nickname: None,
+                nickname: String::default(),
+
                 verification_level: protobuf_contact::VerificationLevel::Unverified,
+
                 work_verification_level: protobuf_contact::WorkVerificationLevel::None,
+
                 identity_type: protobuf_contact::IdentityType::Regular,
+
                 acquaintance_level: protobuf_contact::AcquaintanceLevel::GroupOrDeleted,
+
                 activity_state: protobuf_contact::ActivityState::Active,
+
                 feature_mask: FeatureMask(FeatureMask::NONE),
+
                 sync_state: protobuf_contact::SyncState::Initial,
+
                 work_last_full_sync_at: None,
+
                 work_availability_status: None,
+
                 read_receipt_policy_override: None,
+
                 typing_indicator_policy_override: None,
+
                 notification_trigger_policy_override: None,
+
                 conversation_category: protobuf::d2d_sync::ConversationCategory::Default,
+
                 conversation_visibility: protobuf::d2d_sync::ConversationVisibility::Normal,
             }
         }
@@ -1296,18 +1375,33 @@ mod tests {
             (identity, CachedContactResult::Invalid(identity))
         }
 
-        fn create_message(
+        fn create_message_with_shared_secret(
             context: &CspE2eContext,
+            shared_secret: CspE2eKey,
             message: &OutgoingMessage,
         ) -> OutgoingMessageWithMetadataBox {
             let nickname = Self::nickname();
             encode_and_encrypt_message(
                 Self::identity(),
-                (nickname.as_deref().clone().into_non_empty(), nickname.as_deref()),
+                (nickname.as_deref().unwrap_or_default(), nickname.as_deref()),
                 context.user_identity,
-                context.client_key.derive_csp_e2e_key(&Self::public_key()),
+                shared_secret,
                 message,
                 Nonce::random(),
+            )
+        }
+
+        fn create_message(
+            context: &CspE2eContext,
+            message: &OutgoingMessage,
+        ) -> OutgoingMessageWithMetadataBox {
+            Self::create_message_with_shared_secret(
+                context,
+                context
+                    .client_key
+                    .derive_csp_e2e_key(&Self::public_key())
+                    .unwrap(),
+                message,
             )
         }
 
@@ -1318,7 +1412,7 @@ mod tests {
             Self::create_message(
                 context,
                 &OutgoingMessage {
-                    id: MessageId::random(),
+                    message_id: MessageId::random(),
                     overrides: MessageOverrides::default(),
                     created_at: utc_now_ms(),
                     body: message_body,
@@ -1329,7 +1423,7 @@ mod tests {
         fn create_text_message(context: &CspE2eContext, text: String) -> OutgoingMessageWithMetadataBox {
             Self::create_message_from_body(
                 context,
-                OutgoingMessageBody::Contact(OutgoingContactMessageBody {
+                OutgoingMessageBody::Contact(OutgoingContactMessage {
                     receiver_identity: context.user_identity,
                     body: ContactMessageBody::Text(TextMessage { text }),
                 }),
@@ -1341,9 +1435,8 @@ mod tests {
         message: MessageWithMetadataBox,
         expected_id: MessageId,
         expected_created_at: u64,
-        expected_properties: MessageProperties,
         expected_nonce: Nonce,
-        expected_body: IncomingMessageBody,
+        expected_body_state: MessageStateBody,
     }
 
     struct StaticTestSender;
@@ -1351,7 +1444,7 @@ mod tests {
         const IDENTITY: ThreemaId = ThreemaId::predefined(*b"0DA5ME76");
 
         fn static_text_message() -> StaticMessage {
-            let message = HEXLOWER
+            let message = HEXLOWER_PERMISSIVE
                 .decode(
                     b"\
                     304441354d453736304850543945574489aa9a7eaff77d96cb732768010034000000000000000000\
@@ -1371,26 +1464,18 @@ mod tests {
                 message,
                 expected_id: MessageId::from_hex("89aa9a7eaff77d96").unwrap(),
                 expected_created_at: 1747416011868,
-                expected_properties: MessageProperties {
-                    push: true,
-                    lifetime: MessageLifetime::Indefinite,
-                    user_profile_distribution: true,
-                    requires_direct_contact: true,
-                    replay_protection: true,
-                    reflect_incoming: true,
-                    reflect_outgoing: true,
-                    reflect_sent_update: true,
-                    delivery_receipts: true,
-                },
                 expected_nonce: Nonce::from_hex("b2d718b0db179e3e3bcdbf3c2be997490a0349f2e4fbaa43").unwrap(),
-                expected_body: IncomingMessageBody::Contact(ContactMessageBody::Text(TextMessage {
-                    text: "Hi".to_owned(),
-                })),
+                expected_body_state: MessageStateBody::Text(TextMessageState {
+                    original: MessageText {
+                        text: "Hi".to_owned(),
+                    },
+                    revisions: vec![],
+                }),
             }
         }
 
         fn static_location_message() -> StaticMessage {
-            let message = HEXLOWER
+            let message = HEXLOWER_PERMISSIVE
                 .decode(
                     b"\
                     304441354d45373630485054394557446d6b2e0a01d312587458ee68010034000000000000000000\
@@ -1411,25 +1496,14 @@ mod tests {
                 message,
                 expected_id: MessageId::from_hex("6d6b2e0a01d31258").unwrap(),
                 expected_created_at: 1760450676889,
-                expected_properties: MessageProperties {
-                    push: true,
-                    lifetime: MessageLifetime::Indefinite,
-                    user_profile_distribution: true,
-                    requires_direct_contact: true,
-                    replay_protection: true,
-                    reflect_incoming: true,
-                    reflect_outgoing: true,
-                    reflect_sent_update: true,
-                    delivery_receipts: true,
-                },
                 expected_nonce: Nonce::from_hex("8326dff3ad0296f74ab49c81dd9cc234f75580a99d19051c").unwrap(),
-                expected_body: IncomingMessageBody::Contact(ContactMessageBody::Location(LocationMessage {
+                expected_body_state: MessageStateBody::Location(LocationMessageState {
                     latitude: 47.202952,
                     longitude: 8.778079,
                     accuracy_m: Some(0.0_f64),
-                    name: Some("Pfäffikon SZ".to_owned()),
-                    address: Some("Unknown address".to_owned()),
-                })),
+                    name: "Pfäffikon SZ".to_owned(),
+                    address: "Unknown address".to_owned(),
+                }),
             }
         }
     }
@@ -1448,8 +1522,8 @@ mod tests {
             ])
         }
 
-        fn nickname() -> Delta<String> {
-            Delta::Update("lenny-test@pixel8a".to_owned())
+        fn nickname() -> Option<String> {
+            Some("lenny-test@pixel8a".to_owned())
         }
     }
 
@@ -1482,8 +1556,8 @@ mod tests {
             ])
         }
 
-        fn nickname() -> Delta<String> {
-            Delta::Update(Self::NICKNAME.to_owned())
+        fn nickname() -> Option<String> {
+            Some(Self::NICKNAME.to_owned())
         }
 
         fn contact() -> Contact {
@@ -1520,8 +1594,8 @@ mod tests {
             ])
         }
 
-        fn nickname() -> Delta<String> {
-            Delta::Update(Self::NICKNAME.to_owned())
+        fn nickname() -> Option<String> {
+            Some(Self::NICKNAME.to_owned())
         }
 
         fn contact() -> Contact {
@@ -1557,8 +1631,8 @@ mod tests {
             ])
         }
 
-        fn nickname() -> Delta<String> {
-            Delta::Update(Self::NICKNAME.to_owned())
+        fn nickname() -> Option<String> {
+            Some(Self::NICKNAME.to_owned())
         }
 
         fn contact() -> Contact {
@@ -1566,15 +1640,31 @@ mod tests {
         }
     }
 
+    /// Special Version of `StaticTestSender` to mimic client with all-zero public key.
+    struct TestSenderNonContributory(StaticTestSender);
+    impl TestSenderNonContributory {
+        const IDENTITY: ThreemaId = ThreemaId::predefined(*b"NASTYKEY");
+    }
+    impl TestSender for TestSenderNonContributory {
+        fn identity() -> ThreemaId {
+            Self::IDENTITY
+        }
+
+        fn public_key() -> PublicKey {
+            PublicKey::from([0_u8; 32])
+        }
+
+        fn nickname() -> Option<String> {
+            Some("non-contributor".to_owned())
+        }
+    }
+
     struct TestShortcutProvider {
-        web_session_resume_buffer: Rc<RefCell<Vec<WebSessionResumeMessage>>>,
+        web_session_resume_buffer: Rc<RefCell<Vec<Vec<u8>>>>,
     }
     impl ShortcutProvider for TestShortcutProvider {
-        fn handle_web_session_resume(
-            &mut self,
-            message: WebSessionResumeMessage,
-        ) -> Result<(), ProviderError> {
-            self.web_session_resume_buffer.borrow_mut().push(message);
+        fn handle_web_session_resume_payload(&mut self, payload: Vec<u8>) -> Result<(), ProviderError> {
+            self.web_session_resume_buffer.borrow_mut().push(payload);
             Ok(())
         }
     }
@@ -1598,13 +1688,13 @@ mod tests {
         predefined_contacts: Vec<PredefinedContact>,
 
         #[builder(default = "Vec::default()")]
-        blocked_identities: Vec<ThreemaId>,
-
-        #[builder(default = "Vec::default()")]
         contacts: Vec<Contact>,
 
-        #[builder(default = "InMemoryDbSettings::default()")]
-        settings: InMemoryDbSettings,
+        #[builder(default = "Vec::default()")]
+        groups: Vec<Group>,
+
+        #[builder(default = "Settings::default()")]
+        settings: Settings,
 
         #[builder(default = "Vec::default()")]
         contact_lookup_cache: Vec<(ThreemaId, CachedContactResult)>,
@@ -1636,11 +1726,27 @@ mod tests {
             }));
             self
         }
+
+        fn with_block_unknown(mut self) -> Self {
+            self.settings = Some(Settings {
+                unknown_contact_policy: protobuf::d2d_sync::settings::UnknownContactPolicy::BlockUnknown,
+                ..Settings::default()
+            });
+            self
+        }
+
+        fn with_blocked_identities(mut self, identities: Vec<ThreemaId>) -> Self {
+            self.settings = Some(Settings {
+                blocked_identities: identities,
+                ..Default::default()
+            });
+            self
+        }
     }
 
     struct Context {
         database: InMemoryDb,
-        web_session_resume_buffer: Rc<RefCell<Vec<WebSessionResumeMessage>>>,
+        web_session_resume_buffer: Rc<RefCell<Vec<Vec<u8>>>>,
         context: CspE2eProtocolContext,
     }
     impl From<ContextInit> for Context {
@@ -1651,7 +1757,9 @@ mod tests {
                 user_identity,
                 settings: init.settings,
                 contacts: init.contacts,
-                blocked_identities: init.blocked_identities,
+                groups: init.groups,
+                distribution_lists: vec![],
+                user_profile: UserProfile::default(),
             });
 
             // Add predefined contacts
@@ -1664,28 +1772,28 @@ mod tests {
 
             // Create protocol context
             let web_session_resume_buffer = Rc::new(RefCell::new(vec![]));
-            let context = CspE2eProtocolContext::from(CspE2eProtocolContextInit {
-                client_info: ClientInfo::Libthreema,
-                config: Arc::new(config),
-                csp_e2e: CspE2eContextInit {
-                    user_identity,
-                    client_key: ClientKey::from(&RawClientKey::from_hex(init.client_key).unwrap()),
-                    flavor: init.flavor,
-                    nonce_storage: Box::new(RefCell::new(database.csp_e2e_nonce_provider())),
-                },
-                d2x: init.device_group_key.map(|device_group_key| D2xContextInit {
-                    device_id: D2xDeviceId(0x01),
-                    device_group_key,
-                    nonce_storage: Box::new(RefCell::new(database.d2d_nonce_provider())),
-                }),
-                shortcut: Box::new(TestShortcutProvider {
+            let context = {
+                let mut providers = database.csp_e2e_protocol_providers();
+                providers.shortcut = Rc::new(RefCell::new(TestShortcutProvider {
                     web_session_resume_buffer: Rc::clone(&web_session_resume_buffer),
-                }),
-                settings: Box::new(RefCell::new(database.settings_provider())),
-                contacts: Box::new(RefCell::new(database.contact_provider())),
-                conversations: Box::new(RefCell::new(database.message_provider())),
-            });
-            let mut context = Context {
+                }));
+                CspE2eProtocolContext::from(CspE2eProtocolContextInit {
+                    client_info: ClientInfo::Libthreema,
+                    config: Arc::new(config),
+                    csp_e2e: CspE2eContext {
+                        user_identity,
+                        client_key: ClientKey::from(&RawClientKey::from_hex(init.client_key).unwrap()),
+                        flavor: init.flavor,
+                    },
+                    d2x: init.device_group_key.map(|device_group_key| D2xContextInit {
+                        device_id: D2xDeviceId(0x01),
+                        device_group_key,
+                        nonce_provider: Box::new(RefCell::new(database.d2d_nonce_provider())),
+                    }),
+                    providers,
+                })
+            };
+            let mut context = Self {
                 database,
                 web_session_resume_buffer,
                 context,
@@ -1714,7 +1822,7 @@ mod tests {
         let state_fn = || InitState {
             payload: MessageWithMetadataBox {
                 sender_identity,
-                id: message_id,
+                message_id,
                 flags: message_flags,
                 bytes: vec![],
             },
@@ -1728,7 +1836,7 @@ mod tests {
             let result = assert_matches!(instruction, IncomingMessageLoop::Done(result) => result);
             let message_ack = assert_matches!(result.outgoing_message_ack, Some(message_ack) => message_ack);
             assert_eq!(message_ack.sender_identity, sender_identity);
-            assert_eq!(message_ack.id, message_id);
+            assert_eq!(message_ack.message_id, message_id);
             assert_eq!(result.outgoing_message_task, None);
         }
 
@@ -1737,7 +1845,7 @@ mod tests {
             ProcessingOutcome::Discard { reason, acknowledge } => {
                 assert_eq!(reason, DiscardReason::PayloadDecodingFailed);
                 assert_eq!(acknowledge.sender_identity, sender_identity);
-                assert_eq!(acknowledge.id, message_id);
+                assert_eq!(acknowledge.message_id, message_id);
                 assert_eq!(acknowledge.flags, message_flags);
                 assert_eq!(acknowledge.nonce, None);
             }
@@ -1771,17 +1879,21 @@ mod tests {
         // Mark the nonce as used
         context
             .context
-            .csp_e2e
-            .nonce_storage
+            .providers
+            .csp_e2e_nonce_provider
             .borrow_mut()
-            .add_many(vec![static_message.expected_nonce])?;
+            .add_many(vec![
+                static_message
+                    .expected_nonce
+                    .hash_with(context.context.csp_e2e.user_identity),
+            ])?;
 
         assert_matches!(
             State::process_init_state(&mut context.context, state)?,
             ProcessingOutcome::Discard { reason, acknowledge } => {
                 assert_eq!(reason, DiscardReason::NonceReuse);
                 assert_eq!(acknowledge.sender_identity, message.sender_identity);
-                assert_eq!(acknowledge.id, message.id);
+                assert_eq!(acknowledge.message_id, message.message_id);
                 assert_eq!(acknowledge.flags, message.flags);
                 assert_eq!(acknowledge.nonce, Some(message.nonce));
             }
@@ -1856,11 +1968,11 @@ mod tests {
         let mut context = Context::from(ContextInitBuilder::default().build()?);
         let mut message =
             IncomingMessageWithMetadataBox::try_from(StaticTestSender::static_text_message().message)?;
-        message.sender_identity = context.database.user_identity;
+        message.sender_identity = context.context.csp_e2e.user_identity;
         let state = FetchSenderState {
             payload: message,
             fetch_sender_task: ContactsLookupSubtask::new(
-                vec![context.database.user_identity],
+                vec![context.context.csp_e2e.user_identity],
                 CacheLookupPolicy::Allow,
             ),
         };
@@ -1995,14 +2107,14 @@ mod tests {
 
         // Construct an invalid message
         let message = {
-            let receiver_identity = context.database.user_identity;
+            let receiver_identity = context.context.csp_e2e.user_identity;
 
             // Create outgoing message
             let message = OutgoingMessage {
-                id: MessageId::random(),
+                message_id: MessageId::random(),
                 overrides: MessageOverrides::default(),
                 created_at: utc_now_ms(),
-                body: OutgoingMessageBody::Contact(OutgoingContactMessageBody {
+                body: OutgoingMessageBody::Contact(OutgoingContactMessage {
                     receiver_identity,
                     body: ContactMessageBody::Text(TextMessage {
                         text: "meow".to_owned(),
@@ -2015,16 +2127,16 @@ mod tests {
                 .context
                 .csp_e2e
                 .client_key
-                .derive_csp_e2e_key(&StaticTestSender::public_key());
+                .derive_csp_e2e_key(&StaticTestSender::public_key())
+                .unwrap();
 
             // Create random nonce
             let nonce = Nonce::random();
 
             // Encode and encrypt metadata (pre-defined or fallback to valid metadata)
             let metadata = {
-                let mut metadata = metadata.unwrap_or_else(|| {
-                    encode_metadata(Delta::Unchanged, &message, &message.effective_properties())
-                });
+                let mut metadata = metadata
+                    .unwrap_or_else(|| encode_metadata(None, &message, &message.effective_properties()));
                 encrypt_metadata_in_place(&shared_secret, &nonce, &mut metadata);
                 metadata
             };
@@ -2044,10 +2156,10 @@ mod tests {
             OutgoingMessageWithMetadataBox {
                 sender_identity: StaticTestSender::IDENTITY,
                 receiver_identity,
-                id: message.id,
+                message_id: message.message_id,
                 legacy_created_at: 0,
                 flags: MessageFlags::default(),
-                legacy_sender_nickname: None,
+                legacy_sender_nickname: String::default(),
                 metadata,
                 nonce,
                 message_container,
@@ -2082,7 +2194,7 @@ mod tests {
 
         // Change the outer message ID, so that it diverges from the inner one (of the encrypted metadata)
         let mut message = StaticTestSender::create_text_message(&context.context.csp_e2e, "meow".to_owned());
-        message.id = MessageId::random();
+        message.message_id = MessageId::random();
 
         let state = FetchSenderState {
             payload: IncomingMessageWithMetadataBox::try_from(MessageWithMetadataBox::try_from(message)?)?,
@@ -2106,25 +2218,40 @@ mod tests {
     fn fetch_sender_reused_message_id() -> anyhow::Result<()> {
         let mut context = Context::from(
             ContextInitBuilder::default()
-                .contacts(vec![StaticTestSender::contact()])
+                .contacts(vec![{
+                    let mut contact = StaticTestSender::contact();
+                    contact.acquaintance_level = protobuf_contact::AcquaintanceLevel::Direct;
+                    contact
+                }])
                 .build()?,
         );
 
         // Create the message and then mark the message as used
         let message = StaticTestSender::create_text_message(&context.context.csp_e2e, "meow".to_owned());
+
         context
             .context
+            .providers
             .conversations
             .borrow_mut()
-            .add_or_update_incoming_message(IncomingMessage {
-                sender_identity: StaticTestSender::IDENTITY,
-                id: message.id,
-                overrides: MessageOverrides::default(),
+            .add_messages(vec![MessageState {
+                conversation_id: ConversationId::Contact(StaticTestSender::identity()),
+                creator_identity: StaticTestSender::identity(),
+                message_id: message.message_id,
                 created_at: utc_now_ms(),
-                body: IncomingMessageBody::Contact(ContactMessageBody::Text(TextMessage {
-                    text: "re-use, h3h3".to_owned(),
-                })),
-            })?;
+                direction: MessageDirection::Incoming(IncomingMessageDirection {
+                    received_at: utc_now_ms(),
+                }),
+                read_at: None,
+                star_marker: MessageStarMarker::None,
+                reactions: vec![],
+                body: MessageStateBody::Text(TextMessageState {
+                    original: MessageText {
+                        text: "re-use, h3h3".to_owned(),
+                    },
+                    revisions: vec![],
+                }),
+            }])?;
 
         let state = FetchSenderState {
             payload: IncomingMessageWithMetadataBox::try_from(MessageWithMetadataBox::try_from(message)?)?,
@@ -2152,13 +2279,7 @@ mod tests {
     fn fetch_sender_blocked_unknown_sender(
         #[case] context_builder: ContextInitBuilder,
     ) -> anyhow::Result<()> {
-        let mut context = Context::from(
-            context_builder
-                .settings(InMemoryDbSettings {
-                    block_unknown_identities: true,
-                })
-                .build()?,
-        );
+        let mut context = Context::from(context_builder.with_block_unknown().build()?);
 
         let state = FetchSenderState {
             payload: IncomingMessageWithMetadataBox::try_from(
@@ -2197,7 +2318,7 @@ mod tests {
     ) -> anyhow::Result<()> {
         let mut context = Context::from(
             context_builder
-                .blocked_identities(vec![StaticTestSender::IDENTITY])
+                .with_blocked_identities(vec![StaticTestSender::IDENTITY])
                 .build()?,
         );
 
@@ -2251,10 +2372,8 @@ mod tests {
 
     #[rstest]
     #[case(ContextInitBuilder::default())]
-    #[case(ContextInitBuilder::default().settings(InMemoryDbSettings {
-        block_unknown_identities: true,
-    }))]
-    #[case(ContextInitBuilder::default().blocked_identities(vec![ThreemaPushTestSender::identity()]))]
+    #[case(ContextInitBuilder::default().with_block_unknown())]
+    #[case(ContextInitBuilder::default().with_blocked_identities(vec![ThreemaPushTestSender::identity()]))]
     fn fetch_sender_valid_message_by_3mapush(
         #[case] context_builder: ContextInitBuilder,
     ) -> anyhow::Result<()> {
@@ -2269,12 +2388,12 @@ mod tests {
         };
         let message = ThreemaPushTestSender::create_message_from_body(
             &context.context.csp_e2e,
-            OutgoingMessageBody::Contact(OutgoingContactMessageBody {
-                receiver_identity: context.database.user_identity,
+            OutgoingMessageBody::Contact(OutgoingContactMessage {
+                receiver_identity: context.context.csp_e2e.user_identity,
                 body: ContactMessageBody::WebSessionResume(web_session_resume.clone()),
             }),
         );
-        let message_id = message.id;
+        let message_id = message.message_id;
         let state = FetchSenderState {
             payload: IncomingMessageWithMetadataBox::try_from(MessageWithMetadataBox::try_from(message)?)?,
             fetch_sender_task: ContactsLookupSubtask::new(
@@ -2299,15 +2418,21 @@ mod tests {
                     outgoing_message_ack,
                     Some(MessageAck {
                         sender_identity: ThreemaPushTestSender::identity(),
-                        id: message_id,
+                        message_id,
                     })
                 );
                 assert_eq!(outgoing_message_task, None);
             }
         );
-        assert_eq!(context.web_session_resume_buffer.take(), vec![web_session_resume]);
-        assert!(context.database.contacts.borrow().is_empty());
-        assert!(context.database.conversations.borrow().is_empty());
+        assert_eq!(
+            context.web_session_resume_buffer.take(),
+            vec![web_session_resume.push_payload]
+        );
+        {
+            let storage = context.database.storage.lock_ignore_poison();
+            assert!(storage.contacts.is_empty());
+            assert!(storage.conversations.is_empty());
+        }
 
         Ok(())
     }
@@ -2324,7 +2449,7 @@ mod tests {
             &context.context.csp_e2e,
             "You're SPECIAL".to_owned(),
         );
-        let message_id = message.id;
+        let message_id = message.message_id;
         let state = FetchSenderState {
             payload: IncomingMessageWithMetadataBox::try_from(MessageWithMetadataBox::try_from(message)?)?,
             fetch_sender_task: ContactsLookupSubtask::new(
@@ -2349,14 +2474,17 @@ mod tests {
                     outgoing_message_ack,
                     Some(MessageAck {
                         sender_identity: ThreemaSpecialTestSender::IDENTITY,
-                        id: message_id,
+                        message_id,
                     })
                 );
                 assert_eq!(outgoing_message_task, Some(()));
             }
         );
-        assert!(context.database.contacts.borrow().is_empty());
-        assert!(context.database.conversations.borrow().is_empty());
+        {
+            let storage = context.database.storage.lock_ignore_poison();
+            assert!(storage.contacts.is_empty());
+            assert!(storage.conversations.is_empty());
+        }
 
         Ok(())
     }
@@ -2373,8 +2501,8 @@ mod tests {
             payload: IncomingMessageWithMetadataBox::try_from(MessageWithMetadataBox::try_from(
                 StaticTestSender::create_message_from_body(
                     &context.context.csp_e2e,
-                    OutgoingMessageBody::Contact(OutgoingContactMessageBody {
-                        receiver_identity: context.database.user_identity,
+                    OutgoingMessageBody::Contact(OutgoingContactMessage {
+                        receiver_identity: context.context.csp_e2e.user_identity,
                         body: ContactMessageBody::DeliveryReceipt(DeliveryReceiptMessage {
                             receipt_type: DeliveryReceiptType::Received,
                             message_ids: vec![MessageId::random()],
@@ -2395,6 +2523,57 @@ mod tests {
             }
         );
 
+        Ok(())
+    }
+
+    #[test]
+    fn fetch_sender_non_contributory() -> anyhow::Result<()> {
+        let mut context = Context::from(
+            ContextInitBuilder::default()
+                .contact_lookup_cache(vec![TestSenderNonContributory::cached()])
+                .build()?,
+        );
+
+        let state = FetchSenderState {
+            payload: IncomingMessageWithMetadataBox::try_from(
+                MessageWithMetadataBox::try_from(
+                    TestSenderNonContributory::create_message_with_shared_secret(
+                        &context.context.csp_e2e,
+                        context
+                            .context
+                            .csp_e2e
+                            .client_key
+                            .derive_csp_e2e_key(&PublicKey::from([1_u8; PublicKey::LENGTH]))
+                            .unwrap(),
+                        &OutgoingMessage {
+                            message_id: MessageId::random(),
+                            overrides: MessageOverrides::default(),
+                            created_at: utc_now_ms(),
+                            body: OutgoingMessageBody::Contact(OutgoingContactMessage {
+                                receiver_identity: context.context.csp_e2e.user_identity,
+                                body: ContactMessageBody::DeliveryReceipt(DeliveryReceiptMessage {
+                                    receipt_type: DeliveryReceiptType::Received,
+                                    message_ids: vec![MessageId::random()],
+                                }),
+                            }),
+                        },
+                    ),
+                )
+                .unwrap(),
+            )
+            .unwrap(),
+            fetch_sender_task: ContactsLookupSubtask::new(
+                vec![TestSenderNonContributory::identity()],
+                CacheLookupPolicy::Allow,
+            ),
+        };
+
+        assert_matches!(
+            State::process_fetch_sender_state(&mut context.context, state)?,
+            ProcessingOutcome::Discard { reason, .. } => {
+                assert_eq!(reason, DiscardReason::SenderPublicKeyNonContributory);
+            }
+        );
         Ok(())
     }
 
@@ -2433,41 +2612,41 @@ mod tests {
                     outgoing_message_ack,
                     Some(MessageAck {
                         sender_identity: StaticTestSender::IDENTITY,
-                        id: message.expected_id,
+                        message_id: message.expected_id,
                     })
                 );
                 assert_eq!(outgoing_message_task, Some(()));
             }
         );
 
-        // Ensure the contact exists and was updated to the correct acquaintance level and nickname
-        let contacts = context.database.contacts.borrow();
-        let (sender_contact, _) = contacts.get(&StaticTestSender::IDENTITY).unwrap();
-        assert_eq!(
-            sender_contact.acquaintance_level,
-            protobuf_contact::AcquaintanceLevel::Direct
-        );
-        assert_eq!(
-            sender_contact.nickname,
-            StaticTestSender::nickname().into_non_empty()
-        );
+        {
+            // Ensure the contact exists and was updated to the correct acquaintance level and nickname
+            let storage = context.database.storage.lock_ignore_poison();
+            let sender_contact = &storage.contacts.get(&StaticTestSender::IDENTITY).unwrap().contact;
+            assert_eq!(
+                sender_contact.acquaintance_level,
+                protobuf_contact::AcquaintanceLevel::Direct
+            );
+            assert_eq!(
+                sender_contact.nickname,
+                StaticTestSender::nickname().unwrap_or_default()
+            );
 
-        // Ensure the message exists and equals the one that was sent
-        let conversations = context.database.conversations.borrow();
-        let incoming_message = conversations
-            .get(&ConversationId::Contact(StaticTestSender::IDENTITY))
-            .unwrap()
-            .get(&(StaticTestSender::IDENTITY, message.expected_id))
-            .unwrap();
-        assert_eq!(incoming_message.sender_identity, StaticTestSender::IDENTITY);
-        assert_eq!(incoming_message.id, message.expected_id);
-        assert_eq!(incoming_message.overrides, MessageOverrides::default());
-        assert_eq!(incoming_message.created_at, message.expected_created_at);
-        assert_eq!(
-            incoming_message.effective_properties(),
-            message.expected_properties
-        );
-        assert_eq!(incoming_message.body, message.expected_body);
+            // Ensure the message exists and equals the one that was sent
+            let conversation_id = ConversationId::Contact(StaticTestSender::IDENTITY);
+            let message_state = storage
+                .conversations
+                .get(&conversation_id)
+                .unwrap()
+                .get(&message.expected_id)
+                .unwrap();
+            assert_eq!(message_state.conversation_id, conversation_id);
+            assert_eq!(message_state.creator_identity, StaticTestSender::IDENTITY);
+            assert_eq!(message_state.message_id, message.expected_id);
+            assert_eq!(message_state.created_at, message.expected_created_at);
+            assert_matches!(message_state.direction, MessageDirection::Incoming(_));
+            assert_eq!(message_state.body, message.expected_body_state);
+        }
 
         Ok(())
     }
@@ -2499,13 +2678,11 @@ mod tests {
             (
                 StaticTestSender,
                 ContextInitBuilder::default()
-                    .settings(InMemoryDbSettings {
-                        block_unknown_identities: true,
-                    })
+                    .with_block_unknown()
                     .contacts(vec![{
                         let mut contact = StaticTestSender::contact();
                         contact.acquaintance_level = protobuf_contact::AcquaintanceLevel::Direct;
-                        contact.nickname = Some("lappen3000".to_owned());
+                        contact.nickname = "lappen3000".to_owned();
                         contact
                     }])
             ),
@@ -2515,9 +2692,7 @@ mod tests {
                 ThreemaSupportTestSender,
                 ContextInitBuilder::default()
                     .predefined_contacts(vec![ThreemaSupportTestSender::predefined()])
-                    .settings(InMemoryDbSettings {
-                        block_unknown_identities: true,
-                    })
+                    .with_block_unknown()
                     .contact_lookup_cache(vec![ThreemaSupportTestSender::cached()])
             ),
 
@@ -2530,7 +2705,7 @@ mod tests {
                     .contacts(vec![{
                         let mut contact = ThreemaSupportTestSender::contact();
                         contact.acquaintance_level = protobuf_contact::AcquaintanceLevel::GroupOrDeleted;
-                        contact.nickname = Some("Peter Lustig".to_owned());
+                        contact.nickname = "Peter Lustig".to_owned();
                         contact
                     }])
             ),
@@ -2540,31 +2715,36 @@ mod tests {
         // All contact messages that implicitly create a contact / bump the acquaintance level of the sender
         // to _direct_.
         #[values(
-            ContactMessageBody::Text(TextMessage {
+            (ContactMessageBody::Text(TextMessage {
                 text: "meow".to_owned(),
-            }),
-            ContactMessageBody::Location(LocationMessage {
+            }), MessageStateBody::Text(TextMessageState { original: MessageText { text: "meow".to_owned() }, revisions: vec![] })),
+            (ContactMessageBody::Location(LocationMessage {
                 latitude: 47.201441260878504,
                 longitude: 8.78350732499435,
                 accuracy_m: Some(5_f64),
-                name: Some("Thermalbad".to_owned()),
-                address: Some("Churerstrasse 82\n8808 Pfäffikon".to_owned()),
-             }),
+                name: "Thermalbad".to_owned(),
+                address: "Churerstrasse 82\n8808 Pfäffikon".to_owned(),
+             }), MessageStateBody::Location(LocationMessageState { latitude: 47.201441260878504,
+             longitude: 8.78350732499435,
+             accuracy_m: Some(5_f64),
+             name: "Thermalbad".to_owned(),
+             address: "Churerstrasse 82\n8808 Pfäffikon".to_owned(),
+             })),
         )]
-        outgoing_message_body: ContactMessageBody,
+        (outgoing_message_body, expected_message_body_state): (ContactMessageBody, MessageStateBody),
     ) -> anyhow::Result<()> {
         let mut context = Context::from(context_builder.build()?);
 
         let outgoing_message = OutgoingMessage {
-            id: MessageId::random(),
+            message_id: MessageId::random(),
             overrides: MessageOverrides::default(),
             created_at: utc_now_ms(),
-            body: OutgoingMessageBody::Contact(OutgoingContactMessageBody {
-                receiver_identity: context.database.user_identity,
+            body: OutgoingMessageBody::Contact(OutgoingContactMessage {
+                receiver_identity: context.context.csp_e2e.user_identity,
                 body: outgoing_message_body.clone(),
             }),
         };
-        let message_id = outgoing_message.id;
+        let message_id = outgoing_message.message_id;
         let state = FetchSenderState {
             payload: IncomingMessageWithMetadataBox::try_from(MessageWithMetadataBox::try_from(
                 TSender::create_message(&context.context.csp_e2e, &outgoing_message),
@@ -2592,36 +2772,38 @@ mod tests {
                     outgoing_message_ack,
                     Some(MessageAck {
                         sender_identity: TSender::identity(),
-                        id: message_id,
+                        message_id,
                     })
                 );
                 assert_eq!(outgoing_message_task, Some(()));
             }
         );
 
-        // Ensure the contact exists and was updated to the correct acquaintance level and nickname
-        let contacts = context.database.contacts.borrow();
-        let (sender_contact, _) = contacts.get(&TSender::identity()).unwrap();
-        assert_eq!(
-            sender_contact.acquaintance_level,
-            protobuf_contact::AcquaintanceLevel::Direct
-        );
-        assert_eq!(sender_contact.nickname, TSender::nickname().into_non_empty());
+        {
+            let storage = context.database.storage.lock_ignore_poison();
+            // Ensure the contact exists and was updated to the correct acquaintance level and nickname
+            let sender_contact = &storage.contacts.get(&TSender::identity()).unwrap().contact;
+            assert_eq!(
+                sender_contact.acquaintance_level,
+                protobuf_contact::AcquaintanceLevel::Direct
+            );
+            assert_eq!(sender_contact.nickname, TSender::nickname().unwrap_or_default());
 
-        // Ensure the message exists and equals the one that was sent
-        let conversations = context.database.conversations.borrow();
-        let incoming_message = conversations
-            .get(&ConversationId::Contact(TSender::identity()))
-            .unwrap()
-            .get(&(TSender::identity(), message_id))
-            .unwrap();
-        assert_eq!(incoming_message.sender_identity, TSender::identity());
-        assert_eq!(incoming_message.id, message_id);
-        assert_eq!(incoming_message.overrides, outgoing_message.overrides);
-        assert_eq!(incoming_message.created_at, outgoing_message.created_at);
-        assert_matches!(&incoming_message.body, IncomingMessageBody::Contact(incoming_message_body) => {
-            assert_eq!(*incoming_message_body, outgoing_message_body);
-        });
+            // Ensure the message exists and equals the one that was sent
+            let conversation_id = ConversationId::Contact(TSender::identity());
+            let message_state = storage
+                .conversations
+                .get(&conversation_id)
+                .unwrap()
+                .get(&message_id)
+                .unwrap();
+            assert_eq!(message_state.conversation_id, conversation_id);
+            assert_eq!(message_state.creator_identity, TSender::identity());
+            assert_eq!(message_state.message_id, message_id);
+            assert_eq!(message_state.created_at, outgoing_message.created_at);
+            assert_matches!(message_state.direction, MessageDirection::Incoming(_));
+            assert_eq!(message_state.body, expected_message_body_state);
+        }
 
         Ok(())
     }
@@ -2629,59 +2811,46 @@ mod tests {
     #[rstest]
     fn handle_valid_message_legacy_metadata_only(
         // The previous nickname should be overridden, regardless of whether it was present or not.
-        #[values(None, Some("vorher"))] previous_nickname: Option<&str>,
+        #[values("", "vorher")] previous_nickname: &str,
 
         // The legacy nickname should be applied correctly (if the message is eligible for user profile
         // distribution).
-        #[values(None, Some(""), Some("hinterher"))] new_legacy_nickname: Option<&str>,
-
-        // Try it with messages that are both eligible and not eligible for user profile distributions.
-        #[values(
-            (
-                ContactMessageBody::Text(TextMessage {
-                    text: "greetings".to_owned(),
-                }),
-                true,
-            ),
-            (
-                ContactMessageBody::DeliveryReceipt(DeliveryReceiptMessage {
-                    receipt_type: DeliveryReceiptType::Read,
-                    message_ids: vec![],
-                }),
-                false,
-            ),
-        )]
-        (outgoing_message_body, user_profile_distribution): (ContactMessageBody, bool),
+        #[values("", "hinterher")] new_legacy_nickname: &str,
     ) -> anyhow::Result<()> {
         let mut context = Context::from(
             ContextInitBuilder::default()
                 .contacts(vec![{
                     let mut contact = StaticTestSender::contact();
                     contact.acquaintance_level = protobuf_contact::AcquaintanceLevel::Direct;
-                    contact.nickname = previous_nickname.map(ToOwned::to_owned);
+                    contact.nickname = previous_nickname.to_owned();
                     contact
                 }])
                 .build()?,
         );
+
+        let outgoing_message_body = ContactMessageBody::Text(TextMessage {
+            text: "greetings".to_owned(),
+        });
 
         // Construct a message where only the legacy metadata is present by stripping the new-style metadata
         // and enforcing the legacy metadata
         let message_id = MessageId::random();
         let mut message = encode_and_encrypt_message(
             StaticTestSender::IDENTITY,
-            (None, Delta::Unchanged),
-            context.database.user_identity,
+            ("", None),
+            context.context.csp_e2e.user_identity,
             context
                 .context
                 .csp_e2e
                 .client_key
-                .derive_csp_e2e_key(&StaticTestSender::public_key()),
+                .derive_csp_e2e_key(&StaticTestSender::public_key())
+                .unwrap(),
             &OutgoingMessage {
-                id: message_id,
+                message_id,
                 overrides: MessageOverrides::default(),
                 created_at: utc_now_ms(),
-                body: OutgoingMessageBody::Contact(OutgoingContactMessageBody {
-                    receiver_identity: context.database.user_identity,
+                body: OutgoingMessageBody::Contact(OutgoingContactMessage {
+                    receiver_identity: context.context.csp_e2e.user_identity,
                     body: outgoing_message_body.clone(),
                 }),
             },
@@ -2689,7 +2858,7 @@ mod tests {
         );
         message.metadata = vec![];
         message.legacy_created_at = 1337;
-        message.legacy_sender_nickname = new_legacy_nickname.map(ToOwned::to_owned);
+        message.legacy_sender_nickname = new_legacy_nickname.to_owned();
 
         let state = FetchSenderState {
             payload: IncomingMessageWithMetadataBox::try_from(MessageWithMetadataBox::try_from(message)?)?,
@@ -2703,30 +2872,143 @@ mod tests {
         assert_matches!(state, State::Done);
         assert_matches!(result, IncomingMessageLoop::Done(_));
 
-        // Ensure the contact exists and was updated to the correct nickname
-        let contacts = context.database.contacts.borrow();
-        let (sender_contact, _) = contacts.get(&StaticTestSender::IDENTITY).unwrap();
-        assert_eq!(
-            sender_contact.nickname.as_deref(),
-            match (user_profile_distribution, new_legacy_nickname) {
-                (true, Some("")) => None,
-                (true, _) => new_legacy_nickname,
-                (false, _) => previous_nickname,
-            }
+        {
+            let storage = context.database.storage.lock_ignore_poison();
+
+            // Ensure the contact exists and was updated to the correct nickname
+            let sender_contact = &storage.contacts.get(&StaticTestSender::IDENTITY).unwrap().contact;
+            assert_eq!(
+                sender_contact.nickname,
+                match new_legacy_nickname {
+                    "" => "",
+                    _ => new_legacy_nickname,
+                }
+            );
+
+            // Ensure the message exists has the correct (legacy) metadata.
+            let message_state = storage
+                .conversations
+                .get(&ConversationId::Contact(StaticTestSender::IDENTITY))
+                .unwrap()
+                .get(&message_id)
+                .unwrap();
+            assert_eq!(message_state.message_id, message_id);
+            assert_eq!(message_state.created_at, 1337000);
+        }
+
+        Ok(())
+    }
+
+    #[rstest]
+    fn handle_valid_message_legacy_metadata_only_no_user_profile_distribution(
+        // The previous nickname should be overridden, regardless of whether it was present or not.
+        #[values("", "vorher")] previous_nickname: &str,
+
+        // The legacy nickname should be applied correctly (if the message is eligible for user profile
+        // distribution).
+        #[values("", "hinterher")] new_legacy_nickname: &str,
+    ) -> anyhow::Result<()> {
+        let mut context = Context::from(
+            ContextInitBuilder::default()
+                .contacts(vec![{
+                    let mut contact = StaticTestSender::contact();
+                    contact.acquaintance_level = protobuf_contact::AcquaintanceLevel::Direct;
+                    contact.nickname = previous_nickname.to_owned();
+                    contact
+                }])
+                .build()?,
         );
 
-        // Ensure the message exists has the correct (legacy) metadata
-        let conversations = context.database.conversations.borrow();
-        let incoming_message = conversations
-            .get(&ConversationId::Contact(StaticTestSender::IDENTITY))
-            .unwrap()
-            .get(&(StaticTestSender::IDENTITY, message_id))
-            .unwrap();
-        assert_eq!(incoming_message.id, message_id);
-        assert_eq!(incoming_message.created_at, 1337000);
-        assert_matches!(&incoming_message.body, IncomingMessageBody::Contact(incoming_message_body) => {
-            assert_eq!(*incoming_message_body, outgoing_message_body);
+        // Add a message where the delivery receipt can refer to.
+        let original_message_id = MessageId::random();
+        let outgoing_message_body = ContactMessageBody::DeliveryReceipt(DeliveryReceiptMessage {
+            receipt_type: DeliveryReceiptType::Read,
+            message_ids: vec![original_message_id],
         });
+        let original_message = MessageState {
+            conversation_id: ConversationId::Contact(StaticTestSender::IDENTITY),
+            creator_identity: context.context.csp_e2e.user_identity,
+            message_id: original_message_id,
+            created_at: 1234,
+            direction: MessageDirection::Outgoing(OutgoingMessageDirection {
+                sent_at: None,
+                delivered_at: None,
+            }),
+            read_at: None,
+            star_marker: MessageStarMarker::None,
+            reactions: vec![],
+            body: MessageStateBody::Text(TextMessageState {
+                original: MessageText {
+                    text: "Loco Buddy".to_owned(),
+                },
+                revisions: vec![],
+            }),
+        };
+        context
+            .context
+            .providers
+            .conversations
+            .borrow_mut()
+            .add_messages(vec![original_message])?;
+
+        // Construct a message where only the legacy metadata is present by stripping the new-style metadata
+        // and enforcing the legacy metadata
+        let message_id = MessageId::random();
+        let mut message = encode_and_encrypt_message(
+            StaticTestSender::IDENTITY,
+            ("", None),
+            context.context.csp_e2e.user_identity,
+            context
+                .context
+                .csp_e2e
+                .client_key
+                .derive_csp_e2e_key(&StaticTestSender::public_key())
+                .unwrap(),
+            &OutgoingMessage {
+                message_id,
+                overrides: MessageOverrides::default(),
+                created_at: utc_now_ms(),
+                body: OutgoingMessageBody::Contact(OutgoingContactMessage {
+                    receiver_identity: context.context.csp_e2e.user_identity,
+                    body: outgoing_message_body.clone(),
+                }),
+            },
+            Nonce::random(),
+        );
+        message.metadata = vec![];
+        message.legacy_created_at = 1337;
+        message.legacy_sender_nickname = new_legacy_nickname.to_owned();
+
+        let state = FetchSenderState {
+            payload: IncomingMessageWithMetadataBox::try_from(MessageWithMetadataBox::try_from(message)?)?,
+            fetch_sender_task: ContactsLookupSubtask::new(
+                vec![StaticTestSender::IDENTITY],
+                CacheLookupPolicy::Allow,
+            ),
+        };
+
+        let (state, result) = State::poll_fetch_sender(&mut context.context, state)?;
+        assert_matches!(state, State::Done);
+        assert_matches!(result, IncomingMessageLoop::Done(_));
+
+        {
+            let storage = context.database.storage.lock_ignore_poison();
+
+            // Ensure the contact exists and was updated to the correct nickname.
+            let sender_contact = &storage.contacts.get(&StaticTestSender::IDENTITY).unwrap().contact;
+            assert_eq!(sender_contact.nickname, previous_nickname);
+
+            // Ensure the message was properly updated.
+            let message_state = storage
+                .conversations
+                .get(&ConversationId::Contact(StaticTestSender::IDENTITY))
+                .unwrap()
+                .get(&original_message_id)
+                .unwrap();
+            assert_eq!(message_state.message_id, original_message_id);
+            assert_eq!(message_state.created_at, 1234);
+            assert_eq!(message_state.read_at, Some(1337000));
+        }
 
         Ok(())
     }
@@ -2734,37 +3016,28 @@ mod tests {
     #[rstest]
     fn handle_valid_message_metadata(
         // The previous nickname should be overridden, regardless of whether it was present or not.
-        #[values(None, Some("vorher"))] previous_nickname: Option<&str>,
+        #[values("", "vorher")] previous_nickname: &str,
 
         // The legacy nickname should have no impact.
-        #[values(None, Some("ignorier-mich"))] new_legacy_nickname: Option<&str>,
+        #[values("", "ignorier-mich")] new_legacy_nickname: &str,
 
         // The metadata nickname delta update should be applied correctly.
-        #[values(Delta::Unchanged, Delta::Remove, Delta::Update("hinterher"))] new_nickname: Delta<&str>,
-
-        // The metadata nickname should be applied regardless of whether the message is eligible for user
-        // profile distribution or not.
-        #[values(
-            ContactMessageBody::Text(TextMessage {
-                text: "greetings".to_owned(),
-            }),
-            ContactMessageBody::DeliveryReceipt(DeliveryReceiptMessage {
-                receipt_type: DeliveryReceiptType::Read,
-                message_ids: vec![],
-            })
-        )]
-        outgoing_message_body: ContactMessageBody,
+        #[values(None, Some(""), Some("hinterher"))] new_nickname: Option<&str>,
     ) -> anyhow::Result<()> {
         let mut context = Context::from(
             ContextInitBuilder::default()
                 .contacts(vec![{
                     let mut contact = StaticTestSender::contact();
                     contact.acquaintance_level = protobuf_contact::AcquaintanceLevel::Direct;
-                    contact.nickname = previous_nickname.map(ToOwned::to_owned);
+                    contact.nickname = previous_nickname.to_owned();
                     contact
                 }])
                 .build()?,
         );
+
+        let outgoing_message_body = ContactMessageBody::Text(TextMessage {
+            text: "greetings".to_owned(),
+        });
 
         // Construct a message where the legacy metadata diverges from the new-style metadata
         let message_id = MessageId::random();
@@ -2773,7 +3046,8 @@ mod tests {
                 .context
                 .csp_e2e
                 .client_key
-                .derive_csp_e2e_key(&StaticTestSender::public_key());
+                .derive_csp_e2e_key(&StaticTestSender::public_key())
+                .unwrap();
             let nonce = Nonce::random();
 
             // Encode and encrypt metadata
@@ -2781,7 +3055,7 @@ mod tests {
                 let mut metadata: Vec<u8> = MessageMetadata {
                     message_id,
                     created_at: 1234,
-                    nickname: new_nickname.clone().map(ToOwned::to_owned),
+                    nickname: new_nickname.map(ToOwned::to_owned),
                 }
                 .into();
                 encrypt_metadata_in_place(&shared_secret, &nonce, &mut metadata);
@@ -2791,8 +3065,8 @@ mod tests {
             // Encode and encrypt message container
             let message_container = {
                 let mut writer = OwnedVecByteWriter::new_empty();
-                OutgoingMessageBody::Contact(OutgoingContactMessageBody {
-                    receiver_identity: context.database.user_identity,
+                OutgoingMessageBody::Contact(OutgoingContactMessage {
+                    receiver_identity: context.context.csp_e2e.user_identity,
                     body: outgoing_message_body.clone(),
                 })
                 .encode_into(&mut writer)
@@ -2805,11 +3079,11 @@ mod tests {
             // Wrap outgoing message for transposing into an incoming message
             OutgoingMessageWithMetadataBox {
                 sender_identity: StaticTestSender::IDENTITY,
-                receiver_identity: context.database.user_identity,
-                id: message_id,
+                receiver_identity: context.context.csp_e2e.user_identity,
+                message_id,
                 legacy_created_at: 1337,
                 flags: MessageFlags::default(),
-                legacy_sender_nickname: new_legacy_nickname.map(ToOwned::to_owned),
+                legacy_sender_nickname: new_legacy_nickname.to_owned(),
                 metadata,
                 nonce,
                 message_container,
@@ -2828,30 +3102,174 @@ mod tests {
         assert_matches!(state, State::Done);
         assert_matches!(result, IncomingMessageLoop::Done(_));
 
-        // Ensure the contact exists and was updated to the correct nickname
-        let contacts = context.database.contacts.borrow();
-        let (sender_contact, _) = contacts.get(&StaticTestSender::IDENTITY).unwrap();
-        assert_eq!(
-            sender_contact.nickname.as_deref(),
-            match new_nickname {
-                Delta::Unchanged => previous_nickname,
-                Delta::Update(updated_nickname) => Some(updated_nickname),
-                Delta::Remove => None,
-            }
+        {
+            let storage = context.database.storage.lock_ignore_poison();
+
+            // Ensure the contact exists and was updated to the correct nickname
+            let sender_contact = &storage.contacts.get(&StaticTestSender::IDENTITY).unwrap().contact;
+            assert_eq!(
+                sender_contact.nickname,
+                match new_nickname {
+                    None => previous_nickname,
+                    Some(updated_nickname) => updated_nickname,
+                }
+            );
+
+            // Ensure the message exists has the correct (legacy) metadata.
+            let message_state = storage
+                .conversations
+                .get(&ConversationId::Contact(StaticTestSender::IDENTITY))
+                .unwrap()
+                .get(&message_id)
+                .unwrap();
+            assert_eq!(message_state.message_id, message_id);
+            assert_eq!(message_state.created_at, 1234);
+        }
+
+        Ok(())
+    }
+
+    #[rstest]
+    fn handle_valid_message_metadata_no_profile_distribution(
+        // The previous nickname should be overridden, regardless of whether it was present or not.
+        #[values("", "vorher")] previous_nickname: &str,
+
+        // The legacy nickname should have no impact.
+        #[values("", "ignorier-mich")] new_legacy_nickname: &str,
+
+        // The metadata nickname delta update should be applied correctly.
+        #[values(None, Some(""), Some("hinterher"))] new_nickname: Option<&str>,
+    ) -> anyhow::Result<()> {
+        let mut context = Context::from(
+            ContextInitBuilder::default()
+                .contacts(vec![{
+                    let mut contact = StaticTestSender::contact();
+                    contact.acquaintance_level = protobuf_contact::AcquaintanceLevel::Direct;
+                    contact.nickname = previous_nickname.to_owned();
+                    contact
+                }])
+                .build()?,
         );
 
-        // Ensure the message exists has the correct new-style metadata
-        let conversations = context.database.conversations.borrow();
-        let incoming_message = conversations
-            .get(&ConversationId::Contact(StaticTestSender::IDENTITY))
-            .unwrap()
-            .get(&(StaticTestSender::IDENTITY, message_id))
-            .unwrap();
-        assert_eq!(incoming_message.id, message_id);
-        assert_eq!(incoming_message.created_at, 1234);
-        assert_matches!(&incoming_message.body, IncomingMessageBody::Contact(incoming_message_body) => {
-            assert_eq!(*incoming_message_body, outgoing_message_body);
+        // Add a message where the delivery receipt can refer to.
+        let original_message_id = MessageId::random();
+        let outgoing_message_body = ContactMessageBody::DeliveryReceipt(DeliveryReceiptMessage {
+            receipt_type: DeliveryReceiptType::Read,
+            message_ids: vec![original_message_id],
         });
+        let original_message = MessageState {
+            conversation_id: ConversationId::Contact(StaticTestSender::IDENTITY),
+            creator_identity: context.context.csp_e2e.user_identity,
+            message_id: original_message_id,
+            created_at: 1234,
+            direction: MessageDirection::Outgoing(OutgoingMessageDirection {
+                sent_at: None,
+                delivered_at: None,
+            }),
+            read_at: None,
+            star_marker: MessageStarMarker::None,
+            reactions: vec![],
+            body: MessageStateBody::Text(TextMessageState {
+                original: MessageText {
+                    text: "Loco Buddy".to_owned(),
+                },
+                revisions: vec![],
+            }),
+        };
+        context
+            .context
+            .providers
+            .conversations
+            .borrow_mut()
+            .add_messages(vec![original_message])?;
+
+        // Construct a message where the legacy metadata diverges from the new-style metadata
+        let message_id = MessageId::random();
+        let message = {
+            let shared_secret = context
+                .context
+                .csp_e2e
+                .client_key
+                .derive_csp_e2e_key(&StaticTestSender::public_key())
+                .unwrap();
+            let nonce = Nonce::random();
+
+            // Encode and encrypt metadata
+            let metadata = {
+                let mut metadata: Vec<u8> = MessageMetadata {
+                    message_id,
+                    created_at: 8004,
+                    nickname: new_nickname.map(ToOwned::to_owned),
+                }
+                .into();
+                encrypt_metadata_in_place(&shared_secret, &nonce, &mut metadata);
+                metadata
+            };
+
+            // Encode and encrypt message container
+            let message_container = {
+                let mut writer = OwnedVecByteWriter::new_empty();
+                OutgoingMessageBody::Contact(OutgoingContactMessage {
+                    receiver_identity: context.context.csp_e2e.user_identity,
+                    body: outgoing_message_body.clone(),
+                })
+                .encode_into(&mut writer)
+                .unwrap();
+                let mut message_container = writer.into_inner();
+                encrypt_message_container_in_place(&shared_secret, &nonce, &mut message_container);
+                message_container
+            };
+
+            // Wrap outgoing message for transposing into an incoming message
+            OutgoingMessageWithMetadataBox {
+                sender_identity: StaticTestSender::IDENTITY,
+                receiver_identity: context.context.csp_e2e.user_identity,
+                message_id,
+                legacy_created_at: 1337,
+                flags: MessageFlags::default(),
+                legacy_sender_nickname: new_legacy_nickname.to_owned(),
+                metadata,
+                nonce,
+                message_container,
+            }
+        };
+
+        let state = FetchSenderState {
+            payload: IncomingMessageWithMetadataBox::try_from(MessageWithMetadataBox::try_from(message)?)?,
+            fetch_sender_task: ContactsLookupSubtask::new(
+                vec![StaticTestSender::IDENTITY],
+                CacheLookupPolicy::Allow,
+            ),
+        };
+
+        let (state, result) = State::poll_fetch_sender(&mut context.context, state)?;
+        assert_matches!(state, State::Done);
+        assert_matches!(result, IncomingMessageLoop::Done(_));
+
+        {
+            let storage = context.database.storage.lock_ignore_poison();
+
+            // Ensure the contact exists and was updated to the correct nickname
+            let sender_contact = &storage.contacts.get(&StaticTestSender::IDENTITY).unwrap().contact;
+            assert_eq!(
+                sender_contact.nickname,
+                match new_nickname {
+                    None => previous_nickname,
+                    Some(updated_nickname) => updated_nickname,
+                }
+            );
+
+            // Ensure the message was properly updated
+            let message_state = storage
+                .conversations
+                .get(&ConversationId::Contact(StaticTestSender::IDENTITY))
+                .unwrap()
+                .get(&original_message_id)
+                .unwrap();
+            assert_eq!(message_state.message_id, original_message_id);
+            assert_eq!(message_state.created_at, 1234);
+            assert_eq!(message_state.read_at, Some(8004));
+        }
 
         Ok(())
     }

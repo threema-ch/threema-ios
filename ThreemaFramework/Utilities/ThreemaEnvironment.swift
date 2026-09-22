@@ -103,10 +103,23 @@ public final class ThreemaEnvironment: NSObject {
             return false
         #endif
     }
-    
+
+    // MARK: Backups Version 2
+
+    @objc public static var backups2Enabled: Bool {
+        if ProcessInfoHelper.isRunningForScreenshots {
+            return false
+        }
+        #if DEBUG
+            return UserSettings.shared().backups2Enabled
+        #else
+            return false
+        #endif
+    }
+
     // MARK: Delete & edit messages
     
-    @objc public static var deleteEditMessage: Bool {
+    public static var deleteEditMessage: Bool {
         if ProcessInfoHelper.isRunningForScreenshots {
             return false
         }
@@ -138,5 +151,16 @@ public final class ThreemaEnvironment: NSObject {
             return false
         }
         return true
+    }
+    
+    // MARK: Spam reporting
+    
+    public static var enableSpamReporting: Bool {
+        if env() == .appStore {
+            false
+        }
+        else {
+            true
+        }
     }
 }

@@ -233,7 +233,7 @@ impl State {
             ),
         });
         Ok((
-            State::RegisterWork(RegisterWorkState {
+            Self::RegisterWork(RegisterWorkState {
                 client_key: state.client_key,
                 identity_info: state.identity_info,
                 response: None,

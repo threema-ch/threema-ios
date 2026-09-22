@@ -6,9 +6,11 @@ use tracing::{error, warn};
 use crate::{
     common::Nonce,
     crypto::aead::AeadRandomNonceAhead as _,
-    csp_e2e::{CspE2eProtocolError, CspE2eProtocolInternalErrorCause, D2xContext, ReflectId},
-    model::message::{MessageLifetime, MessageProperties},
-    protobuf::{self},
+    csp_e2e::{
+        CspE2eProtocolError, CspE2eProtocolInternalErrorCause, D2xContext, ReflectId,
+        message::{MessageLifetime, MessageProperties},
+    },
+    protobuf,
     utils::{debug::Name as _, protobuf::PaddedMessage as _},
 };
 

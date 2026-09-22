@@ -465,7 +465,7 @@ public final class Contact: NSObject {
 
     // MARK: - Verification level
 
-    @objc public var verificationLevelImageSmall: UIImage {
+    public var verificationLevelImageSmall: UIImage {
         switch verificationLevel {
         case .unverified:
             StyleKit.verificationSmall0
@@ -529,7 +529,7 @@ public final class Contact: NSObject {
     }
 
     /// Localized string of verification level usable for accessibility
-    @objc public var verificationLevelAccessibilityLabel: String {
+    public var verificationLevelAccessibilityLabel: String {
         switch verificationLevel {
         case .unverified:
             Contact.workAdjustedVerificationLevelString0

@@ -139,7 +139,12 @@ public final class HTTPClient: NSObject {
     public func downloadData(url: URL, contentType: ContentType) async throws -> (Data, URLResponse) {
         var request = urlRequest(for: url, httpMethod: .get, authorization: authorization)
         request.setValue(contentType.rawValue, forHTTPHeaderField: HTTPHeaderField.accept.rawValue)
-
+        
+        if let oppfAppIdentifier = BundleUtil.oppfAppIdentifier(),
+           !oppfAppIdentifier.isEmpty {
+            request.setValue(oppfAppIdentifier, forHTTPHeaderField: "X-App-Identifier")
+        }
+        
         do {
             return try await urlSessionManager.storedSession(for: self, createAsBackgroundSession: false)
                 .data(for: request)
@@ -149,7 +154,7 @@ public final class HTTPClient: NSObject {
             throw error
         }
     }
-
+    
     #if DEBUG
         /// Only used for testing.
         public func downloadData(url: URL, delegate: URLSessionDelegate) {

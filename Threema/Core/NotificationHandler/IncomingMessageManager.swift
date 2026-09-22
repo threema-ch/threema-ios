@@ -5,7 +5,7 @@ import ThreemaFramework
 
 final class IncomingMessageManager: NSObject {
     
-    @objc static let inAppNotificationNewMessage = "ThreemaNewMessageReceived"
+    static let inAppNotificationNewMessage = "ThreemaNewMessageReceived"
 
     /// Using as main (context) configured manager (will be used when messages are processed in main thread)
     private let pendingUserNotificationManager: PendingUserNotificationManagerProtocol
@@ -40,7 +40,7 @@ final class IncomingMessageManager: NSObject {
         self.notificationManager = NotificationManager(businessInjector: backgroundBusinessInjector)
     }
     
-    @objc override convenience init() {
+    override convenience init() {
         let businessInjector = BusinessInjector.ui
         let backgroundBusinessInjector = BusinessInjector(forBackgroundProcess: true)
         self.init(
@@ -76,7 +76,7 @@ final class IncomingMessageManager: NSObject {
         )
     }
 
-    @objc func reloadPendingUserNotificationCache() {
+    func reloadPendingUserNotificationCache() {
         pendingUserNotificationManager.loadAll()
     }
     
@@ -84,7 +84,7 @@ final class IncomingMessageManager: NSObject {
     /// - Parameters:
     ///     - threemaDic: Dictionary of threema push
     ///     - completion: Completion block of notification
-    @objc func incomingPush(threemaDic: [String: Any], completion: @escaping () -> Void) {
+    func incomingPush(threemaDic: [String: Any], completion: @escaping () -> Void) {
         businessInjector.entityManager.performAndWait {
             guard let threemaPushNotification = try? ThreemaPushNotification(from: threemaDic),
                   let pendingUserNotification = self.pendingUserNotificationManager.pendingUserNotification(
@@ -111,12 +111,12 @@ final class IncomingMessageManager: NSObject {
     /// - Parameters:
     ///     - payloadDic: Dictionary of test push (without threema key)
     ///     - completion: Completion block of notification
-    @objc func incomingPush(payloadDic: [String: Any], completion: @escaping () -> Void) {
+    func incomingPush(payloadDic: [String: Any], completion: @escaping () -> Void) {
         pendingUserNotificationManager.startTestUserNotification(payload: payloadDic, completion: completion)
     }
     
     /// Show notification for pending user notification is missing on notification center.
-    @objc func showIsNotPending() {
+    func showIsNotPending() {
         businessInjector.entityManager.performAndWait {
             if let pendingUserNotificationsAreNotPending = self.pendingUserNotificationManager
                 .pendingUserNotificationsAreNotPending() {
@@ -423,8 +423,13 @@ extension IncomingMessageManager: MessageProcessorDelegate {
             }
         }
 
-        // Cancel possible background task for sending message, gives a little time to process delivery receipts
+        // Cancel possible background task for sending message, gives a little time to process delivery receipts.
+        // Not while a Threema Web session is running, it needs the whole background window to sync.
         DispatchQueue.global().asyncAfter(deadline: .now() + .seconds(5)) {
+            guard !WCSessionManager.shared.isRunningWCSession() else {
+                return
+            }
+
             BackgroundTaskManager.shared.cancelBackgroundTask(key: kAppClosedByUserBackgroundTask)
         }
     }
@@ -439,53 +444,43 @@ extension IncomingMessageManager: MessageProcessorDelegate {
     
     func processVoIPCall(
         _ message: NSObject,
-        identity: String?,
+        identity: String,
         onCompletion: @escaping ((any MessageProcessorDelegate)?) -> Void,
         onError: @escaping (any Error, (any MessageProcessorDelegate)?) -> Void
     ) {
         switch message {
-        case is VoIPCallOfferMessage:
-            guard let identity else {
-                DDLogError("No contact for processing VoIP call offer.")
-                onCompletion(self) // Discard message
-                break
-            }
-            
-            VoIPCallStateManager.shared.incomingCallOffer(offer: message as! VoIPCallOfferMessage, identity: identity) {
+        case let offerMessage as VoIPCallOfferMessage:
+            VoIPCallStateManager.shared.incomingCallOffer(
+                offer: offerMessage,
+                identity: identity
+            ) {
                 onCompletion(self)
             }
-        case is VoIPCallAnswerMessage:
-            guard let identity else {
-                DDLogError("No contact for processing VoIP call answer.")
-                onCompletion(self) // Discard message
-                break
-            }
             
+        case let answerMessage as VoIPCallAnswerMessage:
             VoIPCallStateManager.shared.incomingCallAnswer(
-                answer: message as! VoIPCallAnswerMessage,
+                answer: answerMessage,
                 identity: identity
             ) {
                 onCompletion(self)
-            }
-        case is VoIPCallIceCandidatesMessage:
-            guard let identity else {
-                DDLogError("No contact for processing VoIP call ice candidates.")
-                onCompletion(self) // Discard message
-                break
             }
             
+        case let iceCandidatesMessage as VoIPCallIceCandidatesMessage:
             VoIPCallStateManager.shared.incomingIceCandidates(
-                candidates: message as! VoIPCallIceCandidatesMessage,
+                candidates: iceCandidatesMessage,
                 identity: identity
             ) {
                 onCompletion(self)
             }
-        case is VoIPCallHangupMessage:
-            VoIPCallStateManager.shared.incomingCallHangup(hangup: message as! VoIPCallHangupMessage)
+            
+        case let hangupMessage as VoIPCallHangupMessage:
+            VoIPCallStateManager.shared.incomingCallHangup(hangup: hangupMessage)
             onCompletion(self)
-        case is VoIPCallRingingMessage:
-            VoIPCallStateManager.shared.incomingCallRinging(ringing: message as! VoIPCallRingingMessage)
+            
+        case let ringingMessage as VoIPCallRingingMessage:
+            VoIPCallStateManager.shared.incomingCallRinging(ringing: ringingMessage)
             onCompletion(self)
+            
         default:
             DDLogError("Message couldn't process as VoIP call.")
             onCompletion(self) // Discard message

@@ -101,16 +101,11 @@ public final class NotificationPresenterWrapper: NSObject {
         }
     }
 
-    @objc public func dismissAllPresentedNotifications() {
+    public func dismissAllPresentedNotifications() {
         NotificationPresenterWrapper.presenter.dismiss()
     }
-
-    @available(*, deprecated, message: "Only use from Objective-C")
-    @objc public func presentUpdateWorkDataError() {
-        present(type: .updateWorkDataFailed)
-    }
     
-    @objc public func presentSendingError() {
+    public func presentSendingError() {
         present(type: .sendingError)
     }
     
@@ -153,7 +148,7 @@ public final class NotificationPresenterWrapper: NSObject {
         }
     }
     
-    @objc public func colorChanged() {
+    public func colorChanged() {
         NotificationPresenterWrapper.shared = NotificationPresenterWrapper()
     }
     

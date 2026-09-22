@@ -1,6 +1,6 @@
 import Foundation
 
-@objc public final class SafeData: NSObject, NSSecureCoding {
+public final class SafeData: NSObject, NSSecureCoding {
     public static var supportsSecureCoding = true
 
     public var key: [UInt8]?

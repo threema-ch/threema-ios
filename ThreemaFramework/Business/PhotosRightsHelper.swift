@@ -16,7 +16,12 @@ public protocol PhotosRightsHelperProtocol {
     func haveWriteAccess() -> Bool
 }
 
-@objc public final class PhotosRightsHelper: NSObject, PhotosRightsHelperProtocol {
+public final class PhotosRightsHelper: PhotosRightsHelperProtocol {
+    
+    // Needed to expose public init
+    public init() {
+        // no-op
+    }
     
     public func haveFullAccess() -> Bool {
         let authStatus = PHPhotoLibrary.authorizationStatus(for: .readWrite)

@@ -210,7 +210,7 @@ extension ChatViewLocationMessageTableViewCell: ChatViewMessageActions {
         
         // Copy
         let copyHandler = {
-            UIPasteboard.general.string = locationSummary
+            UIPasteboard.general.set(string: locationSummary, sensitiveContent: .messageContent)
             NotificationPresenterWrapper.shared.present(type: .copySuccess)
         }
         

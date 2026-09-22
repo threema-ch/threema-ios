@@ -7,7 +7,7 @@ struct WebRequestError: Error {
     let message: String
 }
 
-public class WebAbstractMessage: NSObject {
+class WebAbstractMessage: NSObject {
 
     private var entityManager: EntityManager {
         BusinessInjector.ui.entityManager
@@ -21,7 +21,7 @@ public class WebAbstractMessage: NSObject {
     var args: [AnyHashable: Any?]?
     var data: Any?
     
-    public init(
+    init(
         messageType: String,
         messageSubType: String?,
         requestID: String?,
@@ -37,7 +37,7 @@ public class WebAbstractMessage: NSObject {
         self.data = data
     }
     
-    public init(dictionary: [AnyHashable: Any?]) {
+    init(dictionary: [AnyHashable: Any?]) {
         self.messageType = dictionary["type"] as! String
         self.messageSubType = dictionary["subType"] as? String
         self.requestID = dictionary["id"] as? String
@@ -53,7 +53,7 @@ public class WebAbstractMessage: NSObject {
         }
     }
     
-    public init(message: WebAbstractMessage) {
+    init(message: WebAbstractMessage) {
         self.messageType = message.messageType
         self.messageSubType = message.messageSubType
         self.requestID = message.requestID
@@ -62,12 +62,12 @@ public class WebAbstractMessage: NSObject {
         self.data = message.data
     }
     
-    public func addIDs(message: WebAbstractMessage) {
+    func addIDs(message: WebAbstractMessage) {
         requestID = message.requestID
         ack = message.ack
     }
     
-    public func messagePack() -> Data {
+    func messagePack() -> Data {
         var msgData = Data()
         do {
             var dict: [AnyHashable: Any?] = ["type": messageType, "subType": messageSubType ?? ""]
@@ -804,7 +804,7 @@ public class WebAbstractMessage: NSObject {
     }
 }
     
-public struct WebAbstractMessageAcknowledgement {
+struct WebAbstractMessageAcknowledgement {
     var id: String?
     var success: Bool
     var error: String?

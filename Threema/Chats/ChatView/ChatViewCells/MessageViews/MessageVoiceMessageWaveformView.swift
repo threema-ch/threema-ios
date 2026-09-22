@@ -248,11 +248,11 @@ final class MessageVoiceMessageWaveformView: UIView, UIGestureRecognizerDelegate
     // MARK: - Action Functions
     
     /// Update current playback progress (even when the message was paused or never played) when tap ends
-    @objc func handleTap(sender: UITapGestureRecognizer) {
+    @objc private func handleTap(sender: UITapGestureRecognizer) {
         updateProgress(from: sender)
     }
     
-    @objc func handleSwipe(sender: UIPanGestureRecognizer) {
+    @objc private func handleSwipe(sender: UIPanGestureRecognizer) {
         updateProgress(from: sender)
     }
     

@@ -9,7 +9,7 @@ use crate::{
         D2mProtocolError,
         payload::{PayloadDecoder, PayloadEncoder},
     },
-    protobuf::d2m as protobuf,
+    protobuf,
     utils::{
         bytes::{ByteWriter, OwnedVecByteReader},
         debug::{Name, debug_slice_length},
@@ -46,7 +46,7 @@ enum HandshakePayloadType {
 #[derive(Name, Educe)]
 #[educe(Debug)]
 pub(crate) struct ServerHello {
-    /// Highest protocol version [`protobuf::ProtocolVersion`] the server supports.
+    /// Highest protocol version [`protobuf::d2m::ProtocolVersion`] the server supports.
     pub(crate) version: u32,
 
     /// Ephemeral Server Key (ESK).
@@ -60,7 +60,7 @@ impl SpecificPayloadDecoder for ServerHello {
     const TYPE: u8 = HandshakePayloadType::ServerHello as u8;
 
     fn decode(reader: OwnedVecByteReader) -> Result<Self, D2mProtocolError> {
-        let protobuf::ServerHello {
+        let protobuf::d2m::ServerHello {
             version,
             esk,
             challenge,
@@ -85,7 +85,7 @@ impl SpecificPayloadDecoder for ServerHello {
 
 /// Initial message from the client, containing the authentication challenge response and additional login
 /// information.
-impl PayloadEncoder for protobuf::ClientHello {
+impl PayloadEncoder for protobuf::d2m::ClientHello {
     #[inline]
     fn type_and_length(&self) -> (u8, Option<usize>) {
         (HandshakePayloadType::ClientHello as u8, Some(self.encoded_len()))
@@ -112,7 +112,7 @@ pub struct ServerInfo {
     pub max_device_slots: u32,
 
     /// Device slot state of the client on the server.
-    pub device_slot_state: Option<protobuf::DeviceSlotState>,
+    pub device_slot_state: Option<protobuf::d2m::DeviceSlotState>,
 
     /// Device data shared among devices (`SharedDeviceData`), encrypted by `DGSDDK.secret` and prefixed with
     /// a random nonce.
@@ -131,7 +131,7 @@ impl SpecificPayloadDecoder for ServerInfo {
     const TYPE: u8 = HandshakePayloadType::ServerInfo as u8;
 
     fn decode(reader: OwnedVecByteReader) -> Result<Self, D2mProtocolError> {
-        let protobuf::ServerInfo {
+        let protobuf::d2m::ServerInfo {
             current_time,
             max_device_slots,
             device_slot_state,
@@ -141,7 +141,7 @@ impl SpecificPayloadDecoder for ServerInfo {
         Ok(Self {
             clock_delta: ClockDelta::calculate(Duration::from_millis(current_time)),
             max_device_slots,
-            device_slot_state: protobuf::DeviceSlotState::try_from(device_slot_state).ok(),
+            device_slot_state: protobuf::d2m::DeviceSlotState::try_from(device_slot_state).ok(),
             encrypted_shared_device_data,
             reflection_queue_length,
         })

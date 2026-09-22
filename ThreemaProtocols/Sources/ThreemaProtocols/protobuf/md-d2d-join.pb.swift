@@ -151,14 +151,14 @@ import SwiftProtobuf
 // incompatible with the version of SwiftProtobuf to which you are linking.
 // Please ensure that you are building against the same version of the API
 // that was used to generate this file.
-fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAPIVersionCheck {
+fileprivate nonisolated struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAPIVersionCheck {
   struct _2: SwiftProtobuf.ProtobufAPIVersion_2 {}
   typealias Version = _2
 }
 
 /// Root message envelope for messages from the new device (ND) to the existing
 /// device (ED).
-public struct D2dJoin_NdToEd: Sendable {
+public nonisolated struct D2dJoin_NdToEd: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -177,7 +177,7 @@ public struct D2dJoin_NdToEd: Sendable {
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
   /// The enveloped message
-  public enum OneOf_Content: Equatable, Sendable {
+  public nonisolated enum OneOf_Content: Equatable, Sendable {
     case registered(D2dJoin_Registered)
 
   }
@@ -187,7 +187,7 @@ public struct D2dJoin_NdToEd: Sendable {
 
 /// Root message envelope for messages from the existing device (ED) to the new
 /// device (ND).
-public struct D2dJoin_EdToNd: Sendable {
+public nonisolated struct D2dJoin_EdToNd: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -230,7 +230,7 @@ public struct D2dJoin_EdToNd: Sendable {
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
   /// The enveloped message
-  public enum OneOf_Content: Equatable, Sendable {
+  public nonisolated enum OneOf_Content: Equatable, Sendable {
     case begin(D2dJoin_Begin)
     /// A Blob that is referenced as part of `EssentialData`.
     ///
@@ -271,7 +271,7 @@ public struct D2dJoin_EdToNd: Sendable {
 ///    steps.
 /// 2. Stop displaying RPH and notify the user that the device join process is in
 ///    progress.
-public struct D2dJoin_Begin: Sendable {
+public nonisolated struct D2dJoin_Begin: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -315,7 +315,7 @@ public struct D2dJoin_Begin: Sendable {
 ///       the connection and abort these steps.
 ///    2. If the user wants to request conversation history data from ED, leave
 ///       the connection running and start the History Exchange Protocol.
-public struct D2dJoin_EssentialData: @unchecked Sendable {
+public nonisolated struct D2dJoin_EssentialData: @unchecked Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -331,9 +331,9 @@ public struct D2dJoin_EssentialData: @unchecked Sendable {
 
   /// Threema Work credentials
   ///
-  /// Shall not be present in the _Consumer_ flavour.
+  /// Shall not be present in the _Consumer_ or _Green_ flavour.
   ///
-  /// Required in the _Work_ flavour.
+  /// Required in the _Work_, _Blue_ or _OnPrem_ flavour.
   public var workCredentials: D2dSync_ThreemaWorkCredentials {
     get {_storage._workCredentials ?? D2dSync_ThreemaWorkCredentials()}
     set {_uniqueStorage()._workCredentials = newValue}
@@ -374,9 +374,9 @@ public struct D2dJoin_EssentialData: @unchecked Sendable {
 
   /// MDM parameters
   ///
-  /// Shall not be present in the _Consumer_ flavour.
+  /// Shall not be present in the _Consumer_ or _Green_ flavour.
   ///
-  /// Optional in the _Work_ flavour.
+  /// Optional in the _Work_, _Blue_ or _OnPrem_ flavour.
   ///
   /// [//]: # "TODO(SE-307): Make this required for Threema Work!"
   public var mdmParameters: D2dSync_MdmParameters {
@@ -418,7 +418,7 @@ public struct D2dJoin_EssentialData: @unchecked Sendable {
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
   /// User's identity data
-  public struct IdentityData: Sendable {
+  public nonisolated struct IdentityData: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
@@ -441,7 +441,7 @@ public struct D2dJoin_EssentialData: @unchecked Sendable {
   }
 
   /// Device group data
-  public struct DeviceGroupData: Sendable {
+  public nonisolated struct DeviceGroupData: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
@@ -455,7 +455,7 @@ public struct D2dJoin_EssentialData: @unchecked Sendable {
   }
 
   /// Contacts
-  public struct AugmentedContact: Sendable {
+  public nonisolated struct AugmentedContact: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
@@ -492,7 +492,7 @@ public struct D2dJoin_EssentialData: @unchecked Sendable {
   }
 
   /// Groups
-  public struct AugmentedGroup: Sendable {
+  public nonisolated struct AugmentedGroup: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
@@ -519,7 +519,7 @@ public struct D2dJoin_EssentialData: @unchecked Sendable {
   }
 
   /// Distribution lists
-  public struct AugmentedDistributionList: Sendable {
+  public nonisolated struct AugmentedDistributionList: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
@@ -561,7 +561,7 @@ public struct D2dJoin_EssentialData: @unchecked Sendable {
 /// 2. Wait for ND to either close the connection or for ND to request
 ///    conversation history data. Any further messages from ND will move into
 ///    the History Exchange Protocol.
-public struct D2dJoin_Registered: Sendable {
+public nonisolated struct D2dJoin_Registered: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -573,9 +573,9 @@ public struct D2dJoin_Registered: Sendable {
 
 // MARK: - Code below here is support for the SwiftProtobuf runtime.
 
-fileprivate let _protobuf_package = "d2d_join"
+fileprivate nonisolated let _protobuf_package = "d2d_join"
 
-extension D2dJoin_NdToEd: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2dJoin_NdToEd: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".NdToEd"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}registered\0")
 
@@ -621,7 +621,7 @@ extension D2dJoin_NdToEd: SwiftProtobuf.Message, SwiftProtobuf._MessageImplement
   }
 }
 
-extension D2dJoin_EdToNd: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2dJoin_EdToNd: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".EdToNd"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}begin\0\u{3}blob_data\0\u{3}essential_data\0")
 
@@ -705,7 +705,7 @@ extension D2dJoin_EdToNd: SwiftProtobuf.Message, SwiftProtobuf._MessageImplement
   }
 }
 
-extension D2dJoin_Begin: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2dJoin_Begin: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".Begin"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap()
 
@@ -724,7 +724,7 @@ extension D2dJoin_Begin: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementa
   }
 }
 
-extension D2dJoin_EssentialData: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2dJoin_EssentialData: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".EssentialData"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{4}\u{2}identity_data\0\u{3}device_group_data\0\u{3}user_profile\0\u{1}settings\0\u{3}mdm_parameters\0\u{1}contacts\0\u{1}groups\0\u{3}distribution_lists\0\u{3}csp_hashed_nonces\0\u{3}d2d_hashed_nonces\0\u{3}work_credentials\0\u{c}\u{1}\u{1}")
 
@@ -864,7 +864,7 @@ extension D2dJoin_EssentialData: SwiftProtobuf.Message, SwiftProtobuf._MessageIm
   }
 }
 
-extension D2dJoin_EssentialData.IdentityData: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2dJoin_EssentialData.IdentityData: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = D2dJoin_EssentialData.protoMessageName + ".IdentityData"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}identity\0\u{1}ck\0\u{3}csp_device_cookie\0\u{3}csp_server_group\0")
 
@@ -909,7 +909,7 @@ extension D2dJoin_EssentialData.IdentityData: SwiftProtobuf.Message, SwiftProtob
   }
 }
 
-extension D2dJoin_EssentialData.DeviceGroupData: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2dJoin_EssentialData.DeviceGroupData: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = D2dJoin_EssentialData.protoMessageName + ".DeviceGroupData"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}dgk\0")
 
@@ -939,7 +939,7 @@ extension D2dJoin_EssentialData.DeviceGroupData: SwiftProtobuf.Message, SwiftPro
   }
 }
 
-extension D2dJoin_EssentialData.AugmentedContact: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2dJoin_EssentialData.AugmentedContact: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = D2dJoin_EssentialData.protoMessageName + ".AugmentedContact"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}contact\0\u{3}last_update_at\0")
 
@@ -978,7 +978,7 @@ extension D2dJoin_EssentialData.AugmentedContact: SwiftProtobuf.Message, SwiftPr
   }
 }
 
-extension D2dJoin_EssentialData.AugmentedGroup: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2dJoin_EssentialData.AugmentedGroup: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = D2dJoin_EssentialData.protoMessageName + ".AugmentedGroup"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}group\0\u{3}last_update_at\0")
 
@@ -1017,7 +1017,7 @@ extension D2dJoin_EssentialData.AugmentedGroup: SwiftProtobuf.Message, SwiftProt
   }
 }
 
-extension D2dJoin_EssentialData.AugmentedDistributionList: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2dJoin_EssentialData.AugmentedDistributionList: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = D2dJoin_EssentialData.protoMessageName + ".AugmentedDistributionList"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}distribution_list\0\u{3}last_update_at\0")
 
@@ -1056,7 +1056,7 @@ extension D2dJoin_EssentialData.AugmentedDistributionList: SwiftProtobuf.Message
   }
 }
 
-extension D2dJoin_Registered: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2dJoin_Registered: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".Registered"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap()
 

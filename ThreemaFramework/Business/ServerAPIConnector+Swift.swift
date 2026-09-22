@@ -91,4 +91,18 @@ extension ServerAPIConnector {
             }
         }
     }
+    
+    public func reportSpamForSender(
+        with identity: String,
+        and nickname: String?,
+        store: MyIdentityStoreProtocol
+    ) async throws {
+        try await withCheckedThrowingContinuation { continuation in
+            reportSpamForSender(withIdentity: identity, andNickname: nickname, withStore: store) {
+                continuation.resume()
+            } onError: { error in
+                continuation.resume(throwing: error ?? ServerAPIConnectorError.genericError)
+            }
+        }
+    }
 }

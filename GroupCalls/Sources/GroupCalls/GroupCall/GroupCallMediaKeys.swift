@@ -61,35 +61,39 @@ final class MediaKeys {
     }
     
     func applyMediaKeys(to encryptor: ThreemaGroupCallFrameCryptoEncryptorProtocol) throws {
-        guard epoch < UInt8.max else {
+        // The epoch wraps back to 0 after 255 and the ratchet counter is capped in `ratchet()`, thus 255 is a valid
+        // value for both of them.
+        guard epoch <= Int(UInt8.max) else {
             DDLogError(
                 "[GroupCall] Could not apply pcmk because epoch was too big. Epoch is \(epoch) but maximum is \(UInt8.max)."
             )
             throw GroupCallError.keyRatchetError
         }
-        
-        guard ratchetCounter < UInt8.max else {
+
+        guard ratchetCounter <= Int(UInt8.max) else {
             DDLogError(
                 "[GroupCall] Could not apply pcmk because ratchetCounter was too big. RatchetCounter is \(ratchetCounter) but maximum is \(UInt8.max)."
             )
             throw GroupCallError.keyRatchetError
         }
-        
+
         let uint8Epoch = UInt8(epoch)
         let uint8Ratchet = UInt8(ratchetCounter)
-        
+
         encryptor.setPcmk(pcmk, epoch: uint8Epoch, ratchetCounter: uint8Ratchet)
     }
     
     func applyMediaKeys(to decryptor: ThreemaGroupCallFrameCryptoDecryptorProtocol) throws {
-        guard epoch < UInt8.max else {
+        // The epoch wraps back to 0 after 255 and the ratchet counter is capped in `ratchet()`, thus 255 is a valid
+        // value for both of them.
+        guard epoch <= Int(UInt8.max) else {
             DDLogError(
                 "[GroupCall] Could not apply pcmk because epoch was too big. Epoch is \(epoch) but maximum is \(UInt8.max)."
             )
             throw GroupCallError.keyRatchetError
         }
-        
-        guard ratchetCounter < UInt8.max else {
+
+        guard ratchetCounter <= Int(UInt8.max) else {
             DDLogError(
                 "[GroupCall] Could not apply pcmk because ratchetCounter was too big. RatchetCounter is \(ratchetCounter) but maximum is \(UInt8.max)."
             )

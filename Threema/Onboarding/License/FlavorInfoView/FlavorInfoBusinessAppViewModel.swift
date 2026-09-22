@@ -9,7 +9,7 @@ struct FlavorInfoBusinessAppViewModel {
         TargetManager.appName
     )
     
-    let moreInformationText = #localize("flavorinfo_businessappviewmodel_more_information")
+    let moreInformationText = #localize("learn_more")
         
     let promotionText =
         if TargetManager.isWork {

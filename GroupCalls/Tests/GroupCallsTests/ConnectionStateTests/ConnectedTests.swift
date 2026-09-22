@@ -16,44 +16,6 @@ final class ConnectedTests: XCTestCase {
 
     // MARK: - Test cases
     
-    /// Tests a basic initialization of `Connected`
-    @GlobalGroupCallActor
-    func testBasicInit() async throws {
-        let dependencies = MockDependencies().create()
-        
-        let groupCallActor = try GroupCallActor(
-            localContactModel: localContactModel,
-            groupModel: groupModel,
-            sfuBaseURL: sfuBaseURL,
-            gck: gck,
-            dependencies: dependencies
-        )
-        
-        let groupCallStartData = GroupCallStartData(
-            protocolVersion: 0,
-            gck: gck,
-            sfuBaseURL: sfuBaseURL
-        )
-        
-        let groupCallMessageCrypto = try GroupCallBaseState(
-            group: groupModel,
-            startedAt: .now,
-            dependencies: dependencies,
-            groupCallStartData: groupCallStartData
-        )
-        
-        let groupCallContext = MockGroupCallContext(
-            dependencies: dependencies,
-            groupCallMessageCrypto: groupCallMessageCrypto
-        )
-        
-        Connected(
-            groupCallActor: groupCallActor,
-            groupCallContext: groupCallContext,
-            participantIDs: [UInt32]()
-        )
-    }
-    
     /// Tests the correct passing of `PeerConnectionMessage`'s in the process loop in `next()`
     @GlobalGroupCallActor
     func testConnectedProcessBuffer() async throws {
@@ -68,19 +30,13 @@ final class ConnectedTests: XCTestCase {
             dependencies: dependencies
         )
         
-        let groupCallStartData = GroupCallStartData(
-            protocolVersion: 0,
+        let groupCallMessageCrypto = try TestDataProvider.groupCallBaseState(
+            group: groupModel,
+            dependencies: dependencies,
             gck: gck,
             sfuBaseURL: sfuBaseURL
         )
-        
-        let groupCallMessageCrypto = try! GroupCallBaseState(
-            group: groupModel,
-            startedAt: .now,
-            dependencies: dependencies,
-            groupCallStartData: groupCallStartData
-        )
-        
+
         let groupCallContext = MockGroupCallContext(
             dependencies: dependencies,
             groupCallMessageCrypto: groupCallMessageCrypto

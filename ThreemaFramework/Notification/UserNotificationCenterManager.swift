@@ -111,8 +111,16 @@ final class UserNotificationCenterManager: UserNotificationCenterManagerProtocol
             }
             dispatchGroup.leave()
         }
-        dispatchGroup.wait()
-        
+
+        // The completion stalls while another notification center delivery (e.g. a
+        // tapped response) is still awaiting its completion handler. Never wait
+        // unboundedly; assume "pending" on timeout so callers leave the
+        // notification alone instead of re-showing it.
+        if dispatchGroup.wait(timeout: .now() + .seconds(10)) == .timedOut {
+            DDLogError("[Push] Timed out fetching pending notification requests for \(contentKey)")
+            return true
+        }
+
         return isPending
     }
 
@@ -139,7 +147,13 @@ final class UserNotificationCenterManager: UserNotificationCenterManagerProtocol
             }
             dispatchGroup.leave()
         }
-        dispatchGroup.wait()
+
+        // See `isPending(contentKey:stage:)` — never wait unboundedly. "Not
+        // delivered" on timeout falls back to the regular notification handling.
+        if dispatchGroup.wait(timeout: .now() + .seconds(10)) == .timedOut {
+            DDLogError("[Push] Timed out fetching delivered notifications for \(contentKey)")
+            return false
+        }
 
         return isDelivered
     }

@@ -14,6 +14,7 @@ extension SFUHTTPConnection {
         case notDetermined
         case needsTokenRefresh
         case invalidRequest
+        case failed
         case running(GroupCall_SfuHttpResponse.Peek)
     }
     
@@ -33,16 +34,26 @@ extension SFUHTTPConnection {
         }
         
         guard let httpStatus = status as? HTTPURLResponse else {
-            return .notRunning
+            return .failed
         }
-        
-        guard httpStatus.statusCode == 200 || httpStatus.statusCode == 400 || httpStatus.statusCode == 401 else {
+
+        /// **Protocol Step: Group Call Peek Steps** 5.2.: Only a 404 means the call is not running.
+        if httpStatus.statusCode == 404 {
             DDLogWarn(
-                "[GroupCall] [PeriodicCleanup] Peek for group call \(groupCallDescription.callID) returned \(httpStatus.statusCode) instead of 200, 400 or 401. Removing call"
+                "[GroupCall] [PeriodicCleanup] Peek for group call \(groupCallDescription.callID) returned 404. Call is not running"
             )
             return .notRunning
         }
-        
+
+        /// **Protocol Step: Group Call Peek Steps** 5.3.: Any other unexpected status code (e.g. 5xx) means the peek
+        /// failed, but the call might still be running.
+        guard httpStatus.statusCode == 200 || httpStatus.statusCode == 400 || httpStatus.statusCode == 401 else {
+            DDLogWarn(
+                "[GroupCall] [PeriodicCleanup] Peek for group call \(groupCallDescription.callID) returned \(httpStatus.statusCode) instead of 200, 400, 401 or 404. Keeping call"
+            )
+            return .failed
+        }
+
         if httpStatus.statusCode == 401 {
             DDLogWarn(
                 "[GroupCall] [PeriodicCleanup] Our credentials have expired. Try again in some time."

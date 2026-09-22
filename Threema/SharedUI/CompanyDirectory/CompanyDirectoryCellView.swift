@@ -1,7 +1,7 @@
 import Foundation
 import ThreemaMacros
 
-class CompanyDirectoryCellView: UIStackView {
+final class CompanyDirectoryCellView: UIStackView {
     
     private lazy var configuration = CellConfiguration(size: .small)
     private lazy var companyProfilePictureView: UIImageView = {
@@ -95,7 +95,7 @@ class CompanyDirectoryCellView: UIStackView {
         tintColor = .tintColor
     }
         
-    @objc public func refresh() {
+    public func refresh() {
         configureView()
     }
 }

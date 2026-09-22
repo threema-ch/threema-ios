@@ -78,7 +78,6 @@ final class ThreemaWebSettingsViewModel: NSObject, ObservableObject {
     private lazy var userSettings = UserSettings.shared()!
     private lazy var webClientSessionStore = WebClientSessionStore.shared
     private lazy var contactStore = ContactStore.shared()
-    private lazy var appDelegate = AppDelegate.shared()
 
     private var downloadString: String {
         if TargetManager.isBusinessApp {
@@ -113,8 +112,14 @@ final class ThreemaWebSettingsViewModel: NSObject, ObservableObject {
     }
 
     private var topViewController: UIViewController {
-        appDelegate?.currentTopViewController() ?? UIViewController()
+        SharedAppProvider.currentTopViewController ?? UIViewController()
     }
+
+    private lazy var passcodeRouter: any PasscodeRouterProtocol = PasscodeRouter(
+        lockScreen: LockScreen(isLockScreenController: false),
+        isPasscodeRequired: KKPasscodeLock.shared().isPasscodeRequired(),
+        rootViewController: self.topViewController
+    )
 
     // MARK: Lifecycle
     
@@ -162,21 +167,40 @@ final class ThreemaWebSettingsViewModel: NSObject, ObservableObject {
     // MARK: - Public actions
     
     func load() {
-        canScan = !mdmWebDisabled && DeviceCapabilitiesManager().supportsRecordingVideo
+        canScan = !mdmWebDisabled && DeviceCapabilitiesManager().hasVideoCaptureDevice
         reloadSessions()
         cleanupOldNonPermanentSessions()
     }
 
     func toggleWeb(_ newValue: Bool) {
-        isWebEnabled = newValue
-        threemaWebSwitchChanged()
+        // Disabling only stops sessions, thus no passcode is needed
+        guard newValue else {
+            isWebEnabled = false
+            threemaWebSwitchChanged()
+            return
+        }
+
+        // Enabling might start the scanner right away
+        passcodeRouter.requireAuthenticationIfNeeded(onCancel: { [weak self] in
+            self?.isWebEnabled = false
+        }, onSuccess: { [weak self] in
+            self?.isWebEnabled = true
+            self?.threemaWebSwitchChanged()
+        })
     }
 
     func scan() {
         guard canScan else {
             return
         }
-        showScanner()
+
+        passcodeRouter.requireAuthenticationIfNeeded(onSuccess: { [weak self] in
+            self?.showScanner()
+        })
+    }
+
+    func close() {
+        topViewController.dismiss(animated: true)
     }
 
     func presentActions(for session: WebClientSessionEntity) {
@@ -194,15 +218,29 @@ final class ThreemaWebSettingsViewModel: NSObject, ObservableObject {
     }
 
     func startOrStopSelectedSession() {
-        guard let s = selectedSession else {
+        guard let session = selectedSession else {
             return
         }
-        if s.active?.boolValue ?? false {
-            sessionManager.stopSession(s)
+
+        // Stopping a session needs no passcode
+        guard session.active?.boolValue == false else {
+            sessionManager.stopSession(session)
+            return
         }
-        else {
-            sessionManager.connect(authToken: nil, wca: nil, webClientSession: s)
-        }
+
+        passcodeRouter.requireAuthenticationIfNeeded(onSuccess: { [weak self] in
+            guard let self else {
+                return
+            }
+
+            // Starting a session enables Threema Web, if it is disabled
+            if !isWebEnabled {
+                userSettings.threemaWeb = true
+                isWebEnabled = true
+            }
+
+            sessionManager.connect(authToken: nil, wca: nil, webClientSession: session)
+        })
     }
 
     func askRename() {
@@ -233,6 +271,7 @@ final class ThreemaWebSettingsViewModel: NSObject, ObservableObject {
     }
  
     func showDesktop() {
+        // The passcode is requested when a device is added, see `LinkedDevicesView`
         let settingsStore = BusinessInjector.ui.settingsStore as! SettingsStore
         let rootView = LinkedDevicesView().environmentObject(settingsStore)
         let viewController = UIHostingController(rootView: rootView)
@@ -268,7 +307,7 @@ final class ThreemaWebSettingsViewModel: NSObject, ObservableObject {
     private func showScanner() {
         let model = QRCodeScannerViewModel(
             mode: .webSession,
-            audioSessionManager: AudioSessionManager(),
+            audioSessionManager: BusinessInjector.ui.audioSessionManager,
             systemFeedbackManager: SystemFeedbackManager(
                 deviceCapabilitiesManager: DeviceCapabilitiesManager(),
                 settingsStore: BusinessInjector.ui.settingsStore
@@ -424,7 +463,7 @@ final class ThreemaWebSettingsViewModel: NSObject, ObservableObject {
     private func showAlertForUnauthorizedSession() {
         let title = #localize("webClient_scan_error_mdm_host_title")
         let message = #localize("webClient_scan_error_mdm_host_message")
-        UIAlertTemplate.showAlert(owner: topViewController, title: title, message: message) { [topViewController] _ in
+        UIAlertTemplate.showOKAlert(owner: topViewController, title: title, message: message) { [topViewController] _ in
             topViewController.dismiss(animated: true, completion: nil)
         }
     }

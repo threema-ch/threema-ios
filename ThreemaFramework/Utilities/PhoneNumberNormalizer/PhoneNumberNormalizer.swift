@@ -1,8 +1,7 @@
 import Foundation
 import libPhoneNumber
-import ObjectiveC
 
-@objcMembers public final class PhoneNumberNormalizer: NSObject, PhoneNumberNormalizerProtocol {
+public final class PhoneNumberNormalizer: NSObject, PhoneNumberNormalizerProtocol {
 
     // MARK: - Private properties
 
@@ -17,7 +16,7 @@ import ObjectiveC
 
     // MARK: - Public methods
 
-    public func e164Format(from phoneNumber: String, defaultRegion: String) -> String? {
+    @objc public func e164Format(from phoneNumber: String, defaultRegion: String) -> String? {
         guard
             let parsed = try? phoneNumberUtil.parse(phoneNumber, defaultRegion: defaultRegion),
             let formatted = try? phoneNumberUtil.format(parsed, numberFormat: .E164)
@@ -28,7 +27,7 @@ import ObjectiveC
         return formatted.trimmingCharacters(in: CharacterSet(charactersIn: "+"))
     }
 
-    public func prettyFormat(from phoneNumber: String, defaultRegion: String) -> String? {
+    @objc public func prettyFormat(from phoneNumber: String, defaultRegion: String) -> String? {
         guard
             let parsed = try? phoneNumberUtil.parse(phoneNumber, defaultRegion: defaultRegion)
         else {
@@ -48,7 +47,7 @@ import ObjectiveC
         return try? phoneNumberUtil.format(exampleNumber, numberFormat: .NATIONAL)
     }
 
-    public func exampleRegionalPhoneNumber(for region: String) -> String? {
+    @objc public func exampleRegionalPhoneNumber(for region: String) -> String? {
         guard
             let exampleNumber = try? phoneNumberUtil.getExampleNumber(region),
             let number = try? phoneNumberUtil.format(exampleNumber, numberFormat: .INTERNATIONAL)
@@ -59,7 +58,7 @@ import ObjectiveC
         return regionalPart(from: number)
     }
 
-    public func regionalPart(from phoneNumber: String) -> String? {
+    @objc public func regionalPart(from phoneNumber: String) -> String? {
         guard
             let metadataHelper = NBMetadataHelper(),
             let region = region(from: phoneNumber)
@@ -76,11 +75,11 @@ import ObjectiveC
         return nil
     }
 
-    public func userRegion() -> String {
+    @objc public func userRegion() -> String {
         Locale.current.region?.identifier ?? ""
     }
 
-    public func region(from phoneNumber: String) -> String? {
+    @objc public func region(from phoneNumber: String) -> String? {
         guard let parsed = try? phoneNumberUtil.parse(phoneNumber, defaultRegion: nil) else {
             return nil
         }

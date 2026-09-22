@@ -1160,6 +1160,75 @@ struct KeychainManagerTests {
         #expect(cryptoMock.calls.isEmpty)
     }
 
+    // MARK: - Unencrypted License Tests
+
+    @Test("Load unencrypted license")
+    func testLoadUnencryptedLicense() throws {
+        let (
+            keychainManager,
+            keychainMock,
+            cryptoMock,
+            _
+        ) = makeSUT(isRemoteSecretEnabled: false)
+
+        let license = Keychain.ThreemaLicense(
+            user: "test_user",
+            password: "test_password",
+            deviceID: "device123",
+            onPremServer: "test.server.com"
+        )
+        try keychainManager.storeLicense(license)
+
+        let loadedLicense = try #require(
+            try KeychainManager.loadUnencryptedLicense(keychainProvider: keychainMock)
+        )
+
+        #expect(loadedLicense.user == license.user)
+        #expect(loadedLicense.password == license.password)
+        #expect(loadedLicense.deviceID == license.deviceID)
+        #expect(loadedLicense.onPremServer == license.onPremServer)
+        #expect(cryptoMock.calls.isEmpty)
+    }
+
+    @Test("Load unencrypted license without a stored license")
+    func testLoadUnencryptedLicenseNotFound() throws {
+        let (
+            _,
+            keychainMock,
+            _,
+            _
+        ) = makeSUT()
+
+        try #require(try KeychainManager.loadUnencryptedLicense(keychainProvider: keychainMock) == nil)
+    }
+
+    /// With a remote secret the license is encrypted with it, and it can only be fetched for an
+    /// existing Threema ID
+    @Test("Load unencrypted license with a remote secret in the keychain")
+    func testLoadUnencryptedLicenseWithRemoteSecret() throws {
+        let (
+            keychainManager,
+            keychainMock,
+            _,
+            _
+        ) = makeSUT(isRemoteSecretEnabled: true)
+
+        try keychainManager.storeLicense(
+            Keychain.ThreemaLicense(
+                user: "test_user",
+                password: "test_password",
+                deviceID: "device123",
+                onPremServer: "test.server.com"
+            )
+        )
+        try keychainMock.store(.remoteSecret(), password: Data([0x01]), generic: Data([0x02]))
+
+        try #require(try KeychainManager.loadUnencryptedLicense(keychainProvider: keychainMock) == nil)
+
+        // The license item is not even read
+        #expect(keychainMock.loadCalls.map(\.searchItem) == [.remoteSecret()])
+    }
+
     // MARK: - Threema Safe Key Tests (No remote secret encryption)
 
     @Test

@@ -2,7 +2,7 @@ import CocoaLumberjackSwift
 import Foundation
 import ThreemaProtocols
 
-@objc public final class DeleteMessage: AbstractMessage {
+public final class DeleteMessage: AbstractMessage {
     public var decoded: CspE2e_DeleteMessage?
 
     override public var loggingDescription: String {

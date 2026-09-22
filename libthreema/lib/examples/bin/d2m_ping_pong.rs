@@ -9,10 +9,10 @@
 use core::time::Duration;
 
 use anyhow::{Result, anyhow, bail};
-use clap::Parser;
+use clap::{ArgAction, Parser};
 use futures_util::{SinkExt as _, TryStreamExt as _};
 use libthreema::{
-    cli::{FullIdentityConfig, FullIdentityConfigOptions},
+    cli::config::{FullIdentityConfig, FullIdentityConfigOptions},
     d2m::{
         D2mContext, D2mProtocol, D2mStateUpdate,
         payload::{BeginTransaction, IncomingPayload, OutgoingPayload, Reflect, ReflectFlags},
@@ -20,14 +20,8 @@ use libthreema::{
     https::cli::https_client_builder,
     utils::logging::init_stderr_logging,
 };
-use rand::random;
-use reqwest::StatusCode;
-use tokio::{
-    net::TcpStream,
-    signal,
-    sync::mpsc,
-    time::{self, Instant},
-};
+use libthreema_dependencies::rand;
+use tokio::{net::TcpStream, signal, sync::mpsc, time};
 use tokio_tungstenite::{
     MaybeTlsStream, WebSocketStream, connect_async,
     tungstenite::protocol::{CloseFrame, Message, frame::coding::CloseCode},
@@ -39,6 +33,11 @@ use tracing::{Level, debug, error, info, trace, warn};
 struct D2mPingPongCommand {
     #[command(flatten)]
     config: FullIdentityConfigOptions,
+
+    /// Turn on debugging information.
+    /// Use -v -vv to control log level.
+    #[arg(short, action = ArgAction::Count)]
+    verbose: u8,
 }
 
 /// Payload queues for the main process.
@@ -70,10 +69,10 @@ impl D2mProtocolRunner {
         // Connect via WebSocket
         debug!(?url, "Establishing WebSocket connection to mediator server");
         let (stream, response) = connect_async(url).await?;
-        if response.status() != StatusCode::SWITCHING_PROTOCOLS {
+        if response.status() != reqwest::StatusCode::SWITCHING_PROTOCOLS {
             bail!(
                 "Expected response to switch protocols ({expected}), got {actual}",
-                expected = StatusCode::SWITCHING_PROTOCOLS,
+                expected = reqwest::StatusCode::SWITCHING_PROTOCOLS,
                 actual = response.status(),
             );
         }
@@ -266,7 +265,7 @@ impl D2mPingPongFlowRunner {
     async fn run(mut self) -> Result<()> {
         // Create a timer that will periodically trigger an outgoing payload
         let mut payload_timer = time::interval_at(
-            Instant::now()
+            time::Instant::now()
                 .checked_add(Duration::from_secs(10))
                 .expect("Oops, apocalypse is near"),
             Duration::from_secs(10),
@@ -344,7 +343,7 @@ impl D2mPingPongFlowRunner {
         trace!(state = ?self.transaction_state);
         match self.transaction_state {
             // No transaction: Occasionally begin a transaction
-            TransactionState::None if random::<bool>() => {
+            TransactionState::None if rand::random::<bool>() => {
                 self.transaction_state = TransactionState::AwaitingBeginAck;
                 Some(OutgoingPayload::BeginTransaction(BeginTransaction {
                     encrypted_scope: b"encrypted_scope".to_vec(),
@@ -376,14 +375,19 @@ impl D2mPingPongFlowRunner {
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    // Parse command
+    let arguments = D2mPingPongCommand::parse();
+
     // Configure logging
-    init_stderr_logging(Level::TRACE);
+    let log_level = match arguments.verbose {
+        1 => Level::DEBUG,
+        2 => Level::TRACE,
+        _ => Level::INFO,
+    };
+    init_stderr_logging(log_level);
 
     // Create HTTP client
     let http_client = https_client_builder().build()?;
-
-    // Parse command
-    let arguments = D2mPingPongCommand::parse();
     let config = FullIdentityConfig::from_options(&http_client, arguments.config).await?;
 
     // Create payload queues

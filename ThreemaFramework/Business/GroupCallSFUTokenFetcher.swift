@@ -9,7 +9,7 @@ enum GroupCallHTTPHelperError: Error {
 
 /// Fetches and caches SFU tokens
 /// Will attempt at most one fetch
-public actor GroupCallSFUTokenFetcher: GroupCallSFUTokenFetchAdapterProtocol {
+actor GroupCallSFUTokenFetcher: GroupCallSFUTokenFetchAdapterProtocol {
     fileprivate let myIdentityStore = MyIdentityStore.shared()
     
     // TODO: (IOS-4029) Is this needed in the future?
@@ -17,7 +17,7 @@ public actor GroupCallSFUTokenFetcher: GroupCallSFUTokenFetchAdapterProtocol {
     
     fileprivate var currentTask: Task<SFUToken, Error>?
     
-    public func sfuCredentials() async throws -> SFUToken {
+    func sfuCredentials() async throws -> SFUToken {
         // TODO: (IOS-4047) Does this work as expected?
         guard let currentTask, try await currentTask.value.stillValid else {
             DDLogVerbose("[GroupCall] Token never fetched or not valid anymore. Fetch again.")

@@ -1,0 +1,24 @@
+{
+  "configurations" : [
+    {
+      "id" : "0244DA3C-A611-48D3-9AE5-0B75C5325BC8",
+      "name" : "Configuration 1",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+
+  },
+  "testTargets" : [
+    {
+      "target" : {
+        "containerPath" : "container:",
+        "identifier" : "CoordinatorTests",
+        "name" : "CoordinatorTests"
+      }
+    }
+  ],
+  "version" : 1
+}

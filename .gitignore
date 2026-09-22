@@ -45,3 +45,4 @@ export/
 .env
 !.env.example
 skills-lock.json
+.devcontainer/devcontainer-lock.json

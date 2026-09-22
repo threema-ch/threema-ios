@@ -79,7 +79,7 @@ public final class DirtyObjectManager: NSObject {
     /// Refresh dirty and all related objects on main context.
     /// Is used within the app to apply changes from Notification/Share Extension.
     /// - Parameter clearMarkedObjects: Is true all objects marked as dirty are deleted from the cache
-    @objc public func refreshDirtyObjects(reset clearMarkedObjects: Bool) {
+    public func refreshDirtyObjects(reset clearMarkedObjects: Bool) {
         DDLogInfo("[dirty-objects] Refresh dirty objects")
 
         dirtyObjectsQueue.sync {

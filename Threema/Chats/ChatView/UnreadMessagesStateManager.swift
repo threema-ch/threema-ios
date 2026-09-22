@@ -108,7 +108,7 @@ final class UnreadMessagesStateManager {
     init(
         conversation: ConversationEntity,
         businessInjector: BusinessInjectorProtocol,
-        notificationManager: NotificationManagerProtocol = NotificationManager(),
+        notificationManager: NotificationManagerProtocol = NotificationManager(businessInjector: BusinessInjector.ui),
         unreadMessagesStateManagerDelegate: UnreadMessagesStateManagerDelegate
     ) {
         self.messageFetcher = MessageFetcher(for: conversation, with: businessInjector.entityManager)

@@ -759,6 +759,9 @@ class TaskExecution: NSObject {
         if let task = task as? TaskDefinitionSendAbstractMessage {
             identities = Set<String>([task.message.toIdentity])
         }
+        else if let task = task as? TaskDefinitionSendCallOfferAnswerMessage {
+            identities = Set<String>([task.message.toIdentity])
+        }
         else if let task = task as? TaskDefinitionSendDeliveryReceiptsMessage {
             identities = Set<String>([task.toIdentity])
         }

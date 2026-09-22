@@ -414,7 +414,7 @@ message GroupCallStart {
   //
   // Note: This is a _major_ version and may only be increased in case of
   // breaking changes due to the significant UX impact this has when running the
-  // _Common Group Receive Steps_ (i.e. only calls with supported protocol
+  // _Group Call Refresh Steps_ (i.e. only calls with supported protocol
   // versions can be _chosen_).
   uint32 protocol_version = 1;
 
@@ -641,8 +641,8 @@ message Reaction {
 //
 // When receiving this message:
 //
-// 1. If not Work flavour, log a warning, discard the message and abort these
-//    steps.
+// 1. If the application is not built for the _Work_, _Blue_ or _OnPrem_
+//    flavour, log a warning, discard the message and abort these steps.
 // 2. If the sender is not `*3MAW0RK`, discard the message and abort these
 //    steps.
 // 3. If `action` is of variant `require_work_sync`, schedule a persistent task
@@ -659,8 +659,8 @@ message Reaction {
 //       2. Run the _Work Sync Delta Change Determination Steps_ another time
 //          and update `changes` with the result.¹
 //       3. If `changes` is a marker that a _full Work Sync is required_,
-//          schedule a persistent task to make a full Work Sync. Otherwise, reflect
-//          all `changes`.
+//          schedule a persistent task to make a full Work Sync. Otherwise,
+//          reflect all `changes`.
 //       4. Commit the transaction and await acknowledgement.
 //    5. Apply all `changes` persistently.
 // 5. If `action` is an unknown variant, log a warning that an unknown Work Sync

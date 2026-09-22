@@ -3,10 +3,8 @@
 #import <MBProgressHUD/MBProgressHUD.h>
 #import "MyIdentityStore.h"
 #import "NSData+Base32.h"
-#import "AppDelegate.h"
 #import "ServerAPIConnector.h"
 #import "IntroQuestionView.h"
-#import "NibUtil.h"
 #import "Threema-Swift.h"
 
 @import UniformTypeIdentifiers;
@@ -69,7 +67,7 @@
     // With a transparent background, the button is only accessible when the finger is positioned over the text
     _cancelButton.backgroundColor = [UIColor.blackColor colorWithAlphaComponent:0.02];
     
-    [_doneButton setTitle:[BundleUtil localizedStringForKey:@"Done"] forState:UIControlStateNormal];
+    [_doneButton setTitle:[BundleUtil localizedStringForKey:@"done"] forState:UIControlStateNormal];
     [_cancelButton setTitle:[BundleUtil localizedStringForKey:@"cancel"] forState:UIControlStateNormal];
     _doneButton.backgroundColor = darkTint;
     [_doneButton setTitleColor:Colors.textProminentButtonWizard forState:UIControlStateNormal];
@@ -244,7 +242,7 @@
         
         [MBProgressHUD hideHUDForView:self.view animated:YES];
         
-        IntroQuestionView *view = (IntroQuestionView *)[NibUtil loadViewFromNibWithName:@"IntroQuestionView"];
+        IntroQuestionView *view = (IntroQuestionView *)[[(NSBundle *)[NSBundle mainBundle] loadNibNamed:@"IntroQuestionView" owner:nil options:nil] firstObject];
         view.showOnlyOkButton = YES;
         view.questionLabel.text = error.localizedDescription;
         view.delegate = self;

@@ -80,7 +80,7 @@ final class MediatorMessageProtocol: NSObject, MediatorMessageProtocolProtocol {
         self.deviceGroupKeys = deviceGroupKeys
     }
 
-    @objc static func doReflectMessage(_ type: Int32) -> Bool {
+    static func doReflectMessage(_ type: Int32) -> Bool {
         let mt = getMultiDeviceMessageType(for: type)
 
         return switch mt {

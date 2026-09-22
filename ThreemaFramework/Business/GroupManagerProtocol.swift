@@ -30,6 +30,7 @@ public protocol GroupManagerProtocol: GroupManagerProtocolObjc {
     func deletePhoto(groupID: Data, creator: String, sentDate: Date, send: Bool) async throws
     func sync(group: Group, to identities: Set<String>?, withoutCreateMessage: Bool) async throws
     func sendEmptyMemberList(groupIdentity: GroupIdentity, to identities: Set<ThreemaIdentity>)
+    func periodicSyncIfNeeded(for group: Group)
 }
 
 // Define "default" arguments for certain protocol methods
@@ -127,7 +128,6 @@ extension GroupManagerProtocol {
         withoutCreateMessage: Bool
     ) async throws
     func sendSyncRequest(groupID: Data, creator: String, force: Bool)
-    func periodicSyncIfNeeded(for group: Group)
 }
 
 // Define "default" arguments for certain protocol methods

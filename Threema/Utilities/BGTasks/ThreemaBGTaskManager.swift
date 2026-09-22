@@ -6,12 +6,9 @@ import ThreemaFramework
 /// Manages everything related to BGTasks. Always use the shared instance.
 ///
 /// New task need to adapt `ThreemaBackgroundTask` and be added to the `tasks` array below.
-final class ThreemaBGTaskManager: NSObject {
+final class ThreemaBGTaskManager {
     
-    /// This will call `registerTasks()` below and register all tasks during initialization.
-    /// This **MUST** be called in `didFinishLaunchingWithOptions` otherwise the app will crash during scheduling of
-    /// the tasks. This is why we initialize the shared instance there and `init` is private.
-    @objc public static let shared = ThreemaBGTaskManager()
+    public static let shared = ThreemaBGTaskManager()
     
     // MARK: - Tasks
 
@@ -23,12 +20,13 @@ final class ThreemaBGTaskManager: NSObject {
     // MARK: - Registration
 
     /// Do not override or add other initializers
-    @objc override private init() {
-        super.init()
-        registerTasks()
+    private init() {
+        // no-op
     }
     
-    private func registerTasks() {
+    /// This must be called in `didFinishLaunchingWithOptions` otherwise the app will crash
+    /// during scheduling of the tasks.
+    func registerTasks() {
         for task in tasks {
             BGTaskScheduler.shared.register(
                 forTaskWithIdentifier: task.identifier,
@@ -70,7 +68,7 @@ final class ThreemaBGTaskManager: NSObject {
     // MARK: Scheduling
     
     /// Schedules BGTasks
-    @objc public func scheduleTasks() {
+    public func scheduleTasks() {
         for task in tasks {
             scheduleBGTask(for: task)
         }

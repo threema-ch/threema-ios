@@ -1,26 +1,27 @@
 //! Task for sending an outgoing message.
-
-use aead::AeadMutInPlace as _;
+use libthreema_dependencies::crypto::aead::AeadInPlace as _;
 
 use crate::{
-    common::{Delta, MessageMetadata, Nonce, ThreemaId, keys::CspE2eKey},
-    csp_e2e::message::{codec::CspMessageEncoder as _, payload::OutgoingMessageWithMetadataBox},
-    model::message::{MessageProperties, OutgoingMessage},
+    common::{MessageMetadata, Nonce, ThreemaId, keys::CspE2eKey},
+    csp_e2e::message::{
+        MessageProperties, OutgoingMessage, codec::CspMessageEncoder as _,
+        payload::OutgoingMessageWithMetadataBox,
+    },
     utils::bytes::OwnedVecByteWriter,
 };
 
 pub(super) fn encode_metadata(
-    sender_nickname: Delta<&str>,
+    sender_nickname: Option<&str>,
     message: &OutgoingMessage,
     effective_message_properties: &MessageProperties,
 ) -> Vec<u8> {
     MessageMetadata {
-        message_id: message.id,
+        message_id: message.message_id,
         created_at: message.created_at,
         nickname: if effective_message_properties.user_profile_distribution {
             sender_nickname.map(ToOwned::to_owned)
         } else {
-            Delta::Unchanged
+            None
         },
     }
     .into()
@@ -51,7 +52,7 @@ pub(super) fn encrypt_message_container_in_place(
 #[expect(unused, reason = "TODO(LIB-51)")]
 pub(super) fn encode_and_encrypt_message(
     sender_identity: ThreemaId,
-    (legacy_sender_nickname, sender_nickname): (Option<&str>, Delta<&str>),
+    (legacy_sender_nickname, sender_nickname): (&str, Option<&str>),
     receiver_identity: ThreemaId,
     shared_secret: CspE2eKey,
     message: &OutgoingMessage,
@@ -98,16 +99,16 @@ pub(super) fn encode_and_encrypt_message(
     // Encode legacy sender nickname (if applicable and towards a Gateway ID)
     let legacy_sender_nickname =
         if effective_message_properties.user_profile_distribution && receiver_identity.is_gateway_id() {
-            legacy_sender_nickname.map(ToOwned::to_owned)
+            legacy_sender_nickname.to_owned()
         } else {
-            None
+            String::default()
         };
 
     // Done
     OutgoingMessageWithMetadataBox {
         sender_identity,
         receiver_identity,
-        id: message.id,
+        message_id: message.message_id,
         legacy_created_at,
         flags: message.flags(),
         legacy_sender_nickname,

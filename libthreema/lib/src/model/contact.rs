@@ -1,14 +1,25 @@
 //! Contact structs.
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
-use super::provider::{ContactProvider, ProviderError, SettingsProvider};
+use libthreema_macros::Name;
+
 use crate::{
-    common::{Delta, FeatureMask, ThreemaId, config::Config, keys::PublicKey},
-    protobuf::{self, d2d_sync::contact as protobuf_contact},
-    utils::{
-        apply::{Apply as _, TryApply},
-        time::utc_now_ms,
+    common::{FeatureMask, ThreemaId, config::Config, keys::PublicKey},
+    model::{
+        group::{GroupMembershipFilter, GroupProvider},
+        profile::ProfilePicture,
+        settings::SettingsProvider,
     },
+    protobuf::{
+        self,
+        d2d_sync::contact::{self as protobuf_contact},
+    },
+    provider::ProviderError,
+    utils::{
+        time::utc_now_ms,
+        update::{Apply as _, ApplySome as _, Delta, TryApply},
+    },
+    work::properties::WorkAvailabilityStatus,
 };
 
 /// A contact could not be updated.
@@ -21,6 +32,11 @@ pub(crate) enum ContactUpdateError {
     /// Contact could not be updated because the public key does not match.
     #[error("Public key mismatch")]
     PublicKeyMismatch,
+}
+impl From<ContactUpdateError> for ProviderError {
+    fn from(error: ContactUpdateError) -> Self {
+        Self::InvalidState(format!("Cannot update contact: {error}"))
+    }
 }
 
 #[derive(Debug)]
@@ -40,14 +56,49 @@ pub(crate) enum CommunicationPermission {
     BlockUnknown,
 }
 
+/// Notification trigger policy for a [`ContactNotificationTriggerPolicyOverride`].
+#[derive(Clone, Copy, Debug, PartialEq, Name)]
+#[cfg_attr(feature = "uniffi", derive(uniffi::Enum))]
+pub enum ContactNotificationTriggerPolicyOverridePolicy {
+    /// Never trigger a notification message.
+    Never,
+}
+
+/// Notification trigger policy override for a contact.
+#[derive(Clone, Copy, Debug, PartialEq, Name)]
+#[cfg_attr(feature = "uniffi", derive(uniffi::Record))]
+pub struct ContactNotificationTriggerPolicyOverride {
+    /// The policy to be applied.
+    pub policy: ContactNotificationTriggerPolicyOverridePolicy,
+
+    /// Unix-ish timestamp in milliseconds when the policy should expire and fall back to the default.
+    pub expires_at: Option<u64>,
+}
+impl From<&ContactNotificationTriggerPolicyOverride>
+    for protobuf_contact::notification_trigger_policy_override::Policy
+{
+    fn from(policy_override: &ContactNotificationTriggerPolicyOverride) -> Self {
+        type OverridePolicy =
+            protobuf_contact::notification_trigger_policy_override::policy::NotificationTriggerPolicy;
+
+        Self {
+            policy: match policy_override.policy {
+                ContactNotificationTriggerPolicyOverridePolicy::Never => OverridePolicy::Never,
+            }
+            .into(),
+            expires_at: policy_override.expires_at,
+        }
+    }
+}
+
 /// All protocol relevant data associated to a contact with the following exclusions:
 ///
 /// - _contact-defined_ profile picture
 /// - _user-defined_ profile picture
 //-
 // IMPORTANT: When touching these, always make sure to update [`ContactUpdate`] and
-// `ContactUpdate::apply_to` accordingly.
-#[derive(Debug, Clone)]
+// [`ContactUpdate::try_apply`] accordingly.
+#[derive(Clone, Debug)]
 pub struct Contact {
     /// Threema ID of the contact.
     pub identity: ThreemaId,
@@ -58,16 +109,26 @@ pub struct Contact {
     /// Unix-ish timestamp in milliseconds when the contact has been created (added) locally.
     pub created_at: u64,
 
+    /// Optional Unix-ish timestamp in milliseconds when the conversation with this
+    /// contact was last updated.
+    pub last_update_at: Option<u64>,
+
     /// First name of the contact.
-    pub first_name: Option<String>,
+    ///
+    /// Empty string means that the contact has no provided first name.
+    pub first_name: String,
 
     /// Last name of the contact.
-    pub last_name: Option<String>,
+    ///
+    /// Empty string means that the contact has no provided last name.
+    pub last_name: String,
 
     /// Nickname of the contact (without `~` prefix).
     ///
-    /// IMPORTANT: Do not provide the Threema ID as a fallback!
-    pub nickname: Option<String>,
+    /// Empty string means that the contact has no provided nickname.
+    ///
+    /// Note: Do not provide the Threema ID as a fallback when no nickname has been provided!
+    pub nickname: String,
 
     /// Verification level of the contact.
     pub verification_level: protobuf_contact::VerificationLevel,
@@ -95,7 +156,7 @@ pub struct Contact {
     pub work_last_full_sync_at: Option<u64>,
 
     /// Work availability status of the contact.
-    pub work_availability_status: Option<protobuf::d2d_sync::WorkAvailabilityStatus>,
+    pub work_availability_status: Option<WorkAvailabilityStatus>,
 
     /// _Read_ receipt policy override for this contact.
     pub read_receipt_policy_override: Option<protobuf::d2d_sync::ReadReceiptPolicy>,
@@ -104,8 +165,7 @@ pub struct Contact {
     pub typing_indicator_policy_override: Option<protobuf::d2d_sync::TypingIndicatorPolicy>,
 
     /// Notification trigger policy for the contact.
-    pub notification_trigger_policy_override:
-        Option<protobuf_contact::notification_trigger_policy_override::Policy>,
+    pub notification_trigger_policy_override: Option<ContactNotificationTriggerPolicyOverride>,
 
     /// Conversation category of the contact.
     pub conversation_category: protobuf::d2d_sync::ConversationCategory,
@@ -129,7 +189,7 @@ impl ContactOrInit {
     #[inline]
     pub(crate) const fn inner(&self) -> &Contact {
         match self {
-            ContactOrInit::NewContact(contact) | ContactOrInit::ExistingContact(contact) => contact,
+            Self::NewContact(contact) | Self::ExistingContact(contact) => contact,
         }
     }
 
@@ -138,22 +198,26 @@ impl ContactOrInit {
         config: &Config,
         settings_provider: &dyn SettingsProvider,
         contact_provider: &dyn ContactProvider,
+        group_provider: &dyn GroupProvider,
     ) -> Result<CommunicationPermission, ProviderError> {
         let inner = self.inner();
         let predefined_contact = config.predefined_contacts.get(&inner.identity);
 
-        // Special contacts cannot be blocked
+        // Special contacts cannot be blocked.
         if predefined_contact.is_some_and(|contact| contact.special) {
             return Ok(CommunicationPermission::Allow);
         }
 
-        // Check if the user explicitly blocked the contact
+        // Check if the user explicitly blocked the contact.
         if contact_provider.is_explicitly_blocked(inner.identity)? {
             return Ok(CommunicationPermission::BlockExplicit);
         }
 
-        // Check if the user wants to block _unknown_ identities.
-        if !settings_provider.block_unknown_identities()? {
+        // Check if the user wants to allow _unknown_ identities.
+        if matches!(
+            settings_provider.get()?.unknown_contact_policy,
+            protobuf::d2d_sync::settings::UnknownContactPolicy::AllowUnknown
+        ) {
             return Ok(CommunicationPermission::Allow);
         }
 
@@ -163,19 +227,19 @@ impl ContactOrInit {
         }
 
         Ok(match &self {
-            ContactOrInit::NewContact(_) => {
-                // The contact does not exist and block unknown is active
+            Self::NewContact(_) => {
+                // The contact does not exist and block unknown is active.
                 CommunicationPermission::BlockUnknown
             },
 
-            ContactOrInit::ExistingContact(inner) => {
-                // Check if the contact has acquaintance level _direct_
+            Self::ExistingContact(inner) => {
+                // Check if the contact has acquaintance level _direct_.
                 if inner.acquaintance_level == protobuf_contact::AcquaintanceLevel::Direct {
                     return Ok(CommunicationPermission::Allow);
                 }
 
-                // Check if the user and the contact are part of an active group
-                if contact_provider.is_member_of_active_group(inner.identity)? {
+                // Check if the user and the contact are part of an active group.
+                if group_provider.is_part_of_any_group(inner.identity, GroupMembershipFilter::OnlyActive)? {
                     CommunicationPermission::Allow
                 } else {
                     CommunicationPermission::BlockUnknown
@@ -197,15 +261,21 @@ pub struct ContactUpdate {
     pub identity: ThreemaId,
 
     /// First name of the contact.
-    pub first_name: Delta<String>,
+    ///
+    /// Empty string means that the contact has no provided first name.
+    pub first_name: Option<String>,
 
     /// Last name of the contact.
-    pub last_name: Delta<String>,
+    ///
+    /// Empty string means that the contact has no provided last name.
+    pub last_name: Option<String>,
 
     /// Nickname of the contact (without `~` prefix).
     ///
-    /// IMPORTANT: Do not provide the Threema ID as a fallback!
-    pub nickname: Delta<String>,
+    /// Empty string means that the contact has no provided nickname.
+    ///
+    /// Note: Do not provide the Threema ID as a fallback when no nickname has been provided!
+    pub nickname: Option<String>,
 
     /// Verification level of the contact.
     pub verification_level: Option<protobuf_contact::VerificationLevel>,
@@ -228,6 +298,13 @@ pub struct ContactUpdate {
     /// Contact synchronisation state.
     pub sync_state: Option<protobuf_contact::SyncState>,
 
+    /// The last full sync of this contact. Must not be present in non-work
+    /// builds.
+    pub work_last_full_sync_at: Option<u64>,
+
+    /// Work availability status of the contact.
+    pub work_availability_status: Option<WorkAvailabilityStatus>,
+
     /// _Read_ receipt policy override for this contact.
     pub read_receipt_policy_override: Delta<protobuf::d2d_sync::ReadReceiptPolicy>,
 
@@ -235,30 +312,22 @@ pub struct ContactUpdate {
     pub typing_indicator_policy_override: Delta<protobuf::d2d_sync::TypingIndicatorPolicy>,
 
     /// Notification trigger policy for the contact.
-    pub notification_trigger_policy_override:
-        Delta<protobuf_contact::notification_trigger_policy_override::Policy>,
+    pub notification_trigger_policy_override: Delta<ContactNotificationTriggerPolicyOverride>,
 
     /// Conversation category of the contact.
     pub conversation_category: Option<protobuf::d2d_sync::ConversationCategory>,
 
     /// Conversation visibility of the contact.
     pub conversation_visibility: Option<protobuf::d2d_sync::ConversationVisibility>,
-
-    /// Work availability status of the contact.
-    pub work_availability_status: Option<protobuf::d2d_sync::WorkAvailabilityStatus>,
-
-    /// The last full sync of this contact. Must not be present in non-work
-    /// builds.
-    pub work_last_full_sync_at: Option<u64>,
 }
 
 impl ContactUpdate {
     pub(crate) fn default(identity: ThreemaId) -> Self {
         Self {
             identity,
-            first_name: Delta::Unchanged,
-            last_name: Delta::Unchanged,
-            nickname: Delta::Unchanged,
+            first_name: None,
+            last_name: None,
+            nickname: None,
             verification_level: None,
             work_verification_level: None,
             identity_type: None,
@@ -266,13 +335,13 @@ impl ContactUpdate {
             activity_state: None,
             feature_mask: None,
             sync_state: None,
+            work_last_full_sync_at: None,
+            work_availability_status: None,
             read_receipt_policy_override: Delta::Unchanged,
             typing_indicator_policy_override: Delta::Unchanged,
             notification_trigger_policy_override: Delta::Unchanged,
             conversation_category: None,
             conversation_visibility: None,
-            work_availability_status: None,
-            work_last_full_sync_at: None,
         }
     }
 
@@ -288,8 +357,7 @@ impl TryApply<ContactUpdate> for Contact {
     /// # Errors
     ///
     /// Returns [`ContactUpdateError`] if the identity mismatches.
-    fn try_apply(&mut self, value: ContactUpdate) -> Result<(), Self::Error> {
-        // Unpacking here, so we can't miss updating this function when a new field is being added
+    fn try_apply(&mut self, update: ContactUpdate) -> Result<(), Self::Error> {
         let ContactUpdate {
             identity,
             first_name,
@@ -302,16 +370,16 @@ impl TryApply<ContactUpdate> for Contact {
             activity_state,
             feature_mask,
             sync_state,
+            work_last_full_sync_at,
+            work_availability_status,
             read_receipt_policy_override,
             typing_indicator_policy_override,
             notification_trigger_policy_override,
             conversation_category,
             conversation_visibility,
-            work_availability_status,
-            work_last_full_sync_at,
-        } = value;
+        } = update;
 
-        // Ensure the identity equals before updating
+        // Ensure the identity equals before updating.
         if identity != self.identity {
             return Err(ContactUpdateError::IdentityMismatch {
                 expected: self.identity,
@@ -319,27 +387,27 @@ impl TryApply<ContactUpdate> for Contact {
             });
         }
 
-        // Update all properties
-        self.first_name.apply(first_name);
-        self.last_name.apply(last_name);
-        self.nickname.apply(nickname);
-        self.verification_level = verification_level.unwrap_or(self.verification_level);
-        self.work_verification_level = work_verification_level.unwrap_or(self.work_verification_level);
-        self.identity_type = identity_type.unwrap_or(self.identity_type);
-        self.acquaintance_level = acquaintance_level.unwrap_or(self.acquaintance_level);
-        self.activity_state = activity_state.unwrap_or(self.activity_state);
-        self.feature_mask = feature_mask.unwrap_or(self.feature_mask);
-        self.sync_state = sync_state.unwrap_or(self.sync_state);
+        // Update all properties.
+        self.first_name.apply_some(first_name);
+        self.last_name.apply_some(last_name);
+        self.nickname.apply_some(nickname);
+        self.verification_level.apply_some(verification_level);
+        self.work_verification_level.apply_some(work_verification_level);
+        self.identity_type.apply_some(identity_type);
+        self.acquaintance_level.apply_some(acquaintance_level);
+        self.activity_state.apply_some(activity_state);
+        self.feature_mask.apply_some(feature_mask);
+        self.sync_state.apply_some(sync_state);
+        self.work_last_full_sync_at = work_last_full_sync_at;
+        self.work_availability_status = work_availability_status;
         self.read_receipt_policy_override
             .apply(read_receipt_policy_override);
         self.typing_indicator_policy_override
             .apply(typing_indicator_policy_override);
         self.notification_trigger_policy_override
             .apply(notification_trigger_policy_override);
-        self.conversation_category = conversation_category.unwrap_or(self.conversation_category);
-        self.conversation_visibility = conversation_visibility.unwrap_or(self.conversation_visibility);
-        self.work_availability_status = work_availability_status;
-        self.work_last_full_sync_at = work_last_full_sync_at;
+        self.conversation_category.apply_some(conversation_category);
+        self.conversation_visibility.apply_some(conversation_visibility);
 
         // Done
         Ok(())
@@ -553,31 +621,34 @@ impl PredefinedContact {
             nickname: "Threema Quatsch".to_owned(),
         }
     }
+}
+impl TryApply<&PredefinedContact> for Contact {
+    type Error = ContactUpdateError;
 
-    pub(crate) fn update(&self, contact: &mut Contact) -> Result<(), ContactUpdateError> {
-        let Self {
+    fn try_apply(&mut self, contact: &PredefinedContact) -> Result<(), Self::Error> {
+        let PredefinedContact {
             identity,
             special: _special,
             public_key,
             nickname,
-        } = self;
+        } = contact;
 
-        // Ensure the identity and public key equal before updating
-        if *identity != contact.identity {
+        // Ensure the identity and public key equal before updating.
+        if *identity != self.identity {
             return Err(ContactUpdateError::IdentityMismatch {
-                expected: contact.identity,
+                expected: self.identity,
                 actual: *identity,
             });
         }
-        if *public_key != contact.public_key {
+        if *public_key != self.public_key {
             return Err(ContactUpdateError::PublicKeyMismatch);
         }
 
-        // Bump verification level
-        contact.verification_level = protobuf_contact::VerificationLevel::FullyVerified;
+        // Bump verification level.
+        self.verification_level = protobuf_contact::VerificationLevel::FullyVerified;
 
-        // Update nickname
-        contact.nickname = Some(nickname.clone());
+        // Update nickname.
+        self.nickname.clone_from(nickname);
 
         // Done
         Ok(())
@@ -588,26 +659,216 @@ impl From<&PredefinedContact> for ContactInit {
     fn from(predefined_contact: &PredefinedContact) -> Self {
         Self {
             identity: predefined_contact.identity,
+
             public_key: predefined_contact.public_key,
+
             created_at: utc_now_ms(),
-            first_name: None,
-            last_name: None,
-            nickname: Some(predefined_contact.nickname.clone()),
+
+            last_update_at: None,
+
+            first_name: String::default(),
+
+            last_name: String::default(),
+
+            nickname: predefined_contact.nickname.clone(),
+
             verification_level: protobuf_contact::VerificationLevel::FullyVerified,
+
             work_verification_level: protobuf_contact::WorkVerificationLevel::None,
+
             // Gateway IDs are semantically neither identity type but, eh, whatever.
             identity_type: protobuf_contact::IdentityType::Regular,
+
             acquaintance_level: protobuf_contact::AcquaintanceLevel::GroupOrDeleted,
+
             activity_state: protobuf_contact::ActivityState::Active,
+
             feature_mask: FeatureMask(FeatureMask::NONE),
+
             sync_state: protobuf_contact::SyncState::Initial,
+
             read_receipt_policy_override: None,
+
             typing_indicator_policy_override: None,
+
             notification_trigger_policy_override: None,
+
             conversation_category: protobuf::d2d_sync::ConversationCategory::Default,
+
             conversation_visibility: protobuf::d2d_sync::ConversationVisibility::Normal,
+
             work_availability_status: None,
+
             work_last_full_sync_at: None,
         }
     }
+}
+
+/// All protocol relevant data associated to a contact.
+#[derive(Clone, Debug, Name)]
+pub struct ContactWithProfilePictures {
+    /// The contact.
+    pub contact: Contact,
+
+    /// The _contact-defined_ profile picture (if any).
+    pub contact_defined_profile_picture: Option<ProfilePicture>,
+
+    /// The _user-defined_ profile picture (if any).
+    pub user_defined_profile_picture: Option<ProfilePicture>,
+}
+
+/// Contact storage interface.
+pub trait ContactProvider {
+    /// 1. For each `contact` of `contacts`:
+    ///    1. If `contact.identity` is the user's Threema ID, return [`ProviderError::InvalidState`].
+    ///    2. If a contact with identity `contact.identity` already exists, return
+    ///       [`ProviderError::InvalidState`].¹
+    /// 2. For each `contact` of `contacts`:
+    ///    1. Add `contact` to the application storage.
+    ///
+    /// ¹: This must consider contacts with any acquaintance level, including _deleted_.
+    ///
+    /// # Errors
+    ///
+    /// In case libthreema provides invalid parameters or an invalid state. Otherwise, this function is
+    /// considered infallible and should not return an error.
+    fn add(&mut self, contacts: Vec<Contact>) -> Result<(), ProviderError>;
+
+    /// 1. For each `contact` of `contacts`:
+    ///    1. If `contact.contact.identity` is the user's Threema ID, return [`ProviderError::InvalidState`].
+    ///    2. If a contact with identity `contact.contact.identity` already exists, return
+    ///       [`ProviderError::InvalidState`].¹
+    /// 2. For each `contact` of `contacts`:
+    ///    1. Add `contact` to the application storage.
+    ///
+    /// ¹: This must consider contacts with any acquaintance level, including _deleted_.
+    ///
+    /// # Errors
+    ///
+    /// In case libthreema provides invalid parameters or an invalid state. Otherwise, this function is
+    /// considered infallible and should not return an error.
+    fn add_with_profile_pictures(
+        &mut self,
+        contacts: Vec<ContactWithProfilePictures>,
+    ) -> Result<(), ProviderError>;
+
+    /// 1. If `identity` is the user's Threema ID, return [`ProviderError::InvalidState`].
+    /// 2. Look up the contact associated to `identity` and let `contact` be the result.¹
+    /// 3. If `contact` is not defined, return [`ProviderError::InvalidState`].
+    /// 4. Set the contact-defined profile picture associated to `contact` to `profile_picture`.²
+    ///
+    /// ¹: This must consider contacts with acquaintance level _direct_ or _group_.
+    ///
+    /// ²: [`None`] signals to remove the profile picture.
+    ///
+    /// # Errors
+    ///
+    /// In case libthreema provides invalid parameters. Otherwise, this function is considered infallible and
+    /// should not return an error.
+    fn set_contact_defined_profile_picture(
+        &self,
+        identity: ThreemaId,
+        profile_picture: Option<ProfilePicture>,
+    ) -> Result<(), ProviderError>;
+
+    /// 1. If `identity` is the user's Threema ID, return [`ProviderError::InvalidState`].
+    /// 2. Look up the contact associated to `identity` and let `contact` be the result.¹
+    /// 3. If `contact` is not defined, return [`ProviderError::InvalidState`].
+    /// 4. Set the user-defined profile picture associated to `contact` to `profile_picture`.²
+    ///
+    /// ¹: This must consider contacts with acquaintance level _direct_ or _group_.
+    ///
+    /// ²: [`None`] signals to remove the profile picture.
+    ///
+    /// # Errors
+    ///
+    /// In case libthreema provides invalid parameters. Otherwise, this function is considered infallible and
+    /// should not return an error.
+    fn set_user_defined_profile_picture(
+        &self,
+        identity: ThreemaId,
+        profile_picture: Option<ProfilePicture>,
+    ) -> Result<(), ProviderError>;
+
+    /// 1. For each `update` of `updates`:
+    ///    1. If `update.identity` is the user's Threema ID, return [`ProviderError::InvalidState`].
+    ///    2. If no contact with the identity `update.identity` exists, return
+    ///       [`ProviderError::InvalidState`].¹
+    /// 2. For each `update` of `updates`:
+    ///    1. Apply `update` to the contact referred to by `update.identity`.
+    ///
+    /// ¹: This must consider contacts with any acquaintance level, including _deleted_.
+    ///
+    /// # Errors
+    ///
+    /// In case libthreema provides invalid parameters or an invalid state. Otherwise, this function is
+    /// considered infallible and should not return an error.
+    fn update(&mut self, updates: Vec<ContactUpdate>) -> Result<(), ProviderError>;
+
+    /// 1. Let `count` be `0`.
+    /// 2. For each `identity` of `identities`:
+    ///    1. If identity is the user's Threema ID, return [`ProviderError::InvalidState`].
+    ///    2. If a contact for `identity` exists, increase `count` by 1.¹
+    /// 3. Return `count`.
+    ///
+    /// ¹: This must count contacts with any acquaintance level, including _deleted_.
+    ///
+    /// # Errors
+    ///
+    /// In case libthreema provides invalid parameters or an invalid state. Otherwise, this function is
+    /// considered infallible and should not return an error.
+    fn count_existing(&self, identities: &[ThreemaId]) -> Result<usize, ProviderError>;
+
+    /// 1. If `identity` is the user's Threema ID, return [`ProviderError::InvalidState`].
+    /// 2. Return the contact stored for `identity`, if any.¹
+    ///
+    /// ¹: This must return contacts with any acquaintance level, including _deleted_.
+    ///
+    /// # Errors
+    ///
+    /// In case libthreema provides invalid parameters or an invalid state. Otherwise, this function is
+    /// considered infallible and should not return an error.
+    fn get(&self, identity: ThreemaId) -> Result<Option<Contact>, ProviderError>;
+
+    /// Return all Threema IDs of all contacts¹.
+    ///
+    /// ¹: This must return contacts with any acquaintance level, including _deleted_.
+    /// # Errors
+    ///
+    /// This function is considered infallible and should not return an error.
+    fn get_identities(&self) -> Result<HashSet<ThreemaId>, ProviderError>;
+
+    /// 1. If `identity` is the user's Threema ID, return [`ProviderError::InvalidState`].
+    /// 2. Return the contact with its profile pictures stored for `identity`, if any.¹
+    ///
+    /// ¹: This must return contacts with any acquaintance level, including _deleted_.
+    ///
+    /// # Errors
+    ///
+    /// In case libthreema provides invalid parameters or an invalid state. Otherwise, this function is
+    /// considered infallible and should not return an error.
+    fn get_with_profile_pictures(
+        &self,
+        identity: ThreemaId,
+    ) -> Result<Option<ContactWithProfilePictures>, ProviderError>;
+
+    /// 1. If `identity` is the user's Threema ID, return [`ProviderError::InvalidState`].
+    /// 2. Return whether a contact for `identity` exists.¹
+    ///
+    /// ¹: This must consider contacts with any acquaintance level, including _deleted_.
+    ///
+    /// # Errors
+    ///
+    /// In case libthreema provides invalid parameters or an invalid state. Otherwise, this function is
+    /// considered infallible and should not return an error.
+    fn has(&self, identity: ThreemaId) -> Result<bool, ProviderError>;
+
+    /// 1. If `identity` is the user's Threema ID, return [`ProviderError::InvalidState`].
+    /// 2. Return whether `identity` is present in the set of explicitly blocked identities.
+    ///
+    /// # Errors
+    ///
+    /// In case libthreema provides invalid parameters or an invalid state. Otherwise, this function is
+    /// considered infallible and should not return an error.
+    fn is_explicitly_blocked(&self, identity: ThreemaId) -> Result<bool, ProviderError>;
 }

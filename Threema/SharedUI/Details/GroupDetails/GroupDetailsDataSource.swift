@@ -30,7 +30,7 @@ final class GroupDetailsDataSource: UITableViewDiffableDataSource<GroupDetails.S
     
     // MARK: - Properties
     
-    private let displayMode: GroupDetailsDisplayMode
+    private let displayMode: GroupDetails.DisplayMode
 
     private let group: ThreemaFramework.Group
     private let conversation: ConversationEntity
@@ -78,7 +78,7 @@ final class GroupDetailsDataSource: UITableViewDiffableDataSource<GroupDetails.S
     
     init(
         for group: ThreemaFramework.Group,
-        displayMode: GroupDetailsDisplayMode,
+        displayMode: GroupDetails.DisplayMode,
         groupDetailsViewController: GroupDetailsViewController,
         tableView: UITableView
     ) {
@@ -448,10 +448,7 @@ extension GroupDetailsDataSource {
             title: #localize("group_call_title"),
             accessibilityIdentifier: "GroupDetailsDataSourceGroupCallQuickActionButton"
         ) { _ in
-            GlobalGroupCallManagerSingleton.shared.startGroupCall(
-                in: self.group,
-                intent: .createOrJoin
-            )
+            CallProvider.shared.startGroupCall(in: self.group, intent: .createOrJoin)
         }
         
         return quickAction
@@ -814,7 +811,7 @@ extension GroupDetailsDataSource {
                 // Safety net if creating new groups got disabled in the meantime
                 guard let mdmSetup = strongSelf.mdmSetup, !mdmSetup.disableCreateGroup() else {
                     let localizedDisabledByDevicePolicy = #localize("disabled_by_device_policy")
-                    UIAlertTemplate.showAlert(
+                    UIAlertTemplate.showOKAlert(
                         owner: strongGroupDetailsViewController,
                         title: localizedDisabledByDevicePolicy,
                         message: nil

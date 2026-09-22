@@ -293,7 +293,7 @@ pub mod monitor {
                             )
                         })?;
 
-                    monitor::RemoteSecretVerifier::RemoteSecretHash(remote_secret_hash.into())
+                    Self::RemoteSecretHash(remote_secret_hash.into())
                 },
 
                 RemoteSecretVerifier::RemoteSecretHashForIdentity {
@@ -310,7 +310,7 @@ pub mod monitor {
                             )
                         })?;
 
-                    monitor::RemoteSecretVerifier::RemoteSecretHashForIdentity {
+                    Self::RemoteSecretHashForIdentity {
                         user_identity,
                         remote_secret_hash_for_identity: remote_secret_hash_for_identity.into(),
                     }
@@ -416,14 +416,16 @@ pub mod wonky_field_encryption {
     //! Wonk field encryption utilities for iOS.
     use std::sync::Arc;
 
-    use rand::Rng as _;
+    use libthreema_dependencies::{
+        crypto::chacha20,
+        rand::{self, Rng as _},
+    };
 
     use crate::{
         bindings::uniffi::crypto::{
             ChunkedXChaCha20Poly1305Decryptor, ChunkedXChaCha20Poly1305Encryptor, CryptoError,
         },
         common::keys::{RemoteSecret, WonkyFieldCipherKey},
-        crypto::chacha20,
     };
 
     /// A wonky field encryptor context created by [`WonkyFieldCipher::encryptor`].

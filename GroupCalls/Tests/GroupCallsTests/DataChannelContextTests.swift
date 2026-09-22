@@ -5,16 +5,18 @@ import XCTest
 
 final class DataChannelContextTests: XCTestCase {
     
-    func testBasicInit() async throws {
+    /// Messages that are received after the data channel changed to `closed` are dropped, i.e. the message stream
+    /// delivers exactly the messages that were received before.
+    func testMessagesAfterCloseByStateChangeAreDropped() async throws {
         let mockDataChannel = MockRTCDataChannel()
         let dataChannelCtx = DataChannelContext(dataChannel: mockDataChannel)
         
         let expectation = XCTestExpectation(description: "CorrectNumberOfMessages")
         expectation.assertForOverFulfill = true
         expectation.expectedFulfillmentCount = 120
-        
+
         Task.detached {
-            for await message in dataChannelCtx.messageStream {
+            for await _ in dataChannelCtx.messageStream {
                 expectation.fulfill()
             }
         }
@@ -32,12 +34,12 @@ final class DataChannelContextTests: XCTestCase {
         }
         
         await Task.yield()
-        
-        print("Start wait for expectation")
-        wait(for: [expectation], timeout: 120)
+
+        await fulfillment(of: [expectation], timeout: 10)
     }
-    
-    func testOutsideClose() async throws {
+
+    /// Messages that are received after the data channel was closed by us are dropped as well.
+    func testMessagesAfterOutsideCloseAreDropped() async throws {
         let mockDataChannel = MockRTCDataChannel()
         let dataChannelCtx = DataChannelContext(dataChannel: mockDataChannel)
         
@@ -46,7 +48,7 @@ final class DataChannelContextTests: XCTestCase {
         expectation.expectedFulfillmentCount = 120
         
         Task.detached {
-            for await message in dataChannelCtx.messageStream {
+            for await _ in dataChannelCtx.messageStream {
                 expectation.fulfill()
             }
         }
@@ -64,8 +66,7 @@ final class DataChannelContextTests: XCTestCase {
         }
         
         await Task.yield()
-        
-        print("Start wait for expectation")
-        wait(for: [expectation], timeout: 120)
+
+        await fulfillment(of: [expectation], timeout: 10)
     }
 }

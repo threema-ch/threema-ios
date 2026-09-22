@@ -151,7 +151,85 @@ public final class EntityFetcher: NSObject {
     public func nonceEntities() -> [NonceEntity]? {
         fetchEntities(entityName: "Nonce")
     }
-    
+
+    // Fetches `NonceEntity` objects using deterministic ordering with pagination.
+    ///
+    /// Results are sorted to ensure stable and reproducible ordering across calls,
+    /// which is required for correct batching behavior. Ordering is applied using
+    /// the `nonce` attribute to guarantee a strict and consistent sequence.
+    ///
+    /// - Important: Sorting must rely only on Core Data attributes. Index names
+    ///   (for example SQLite indexes) are not part of the Core Data model and
+    ///   cannot be used for sorting.
+    ///
+    /// - Parameters:
+    ///   - offset: The number of initial entities to skip. Used for pagination.
+    ///   - limit: The maximum number of entities to return. A value of `0` means no limit.
+    /// - Returns: An optional array of `NonceEntity` objects. Returns `nil` if the fetch fails.
+    public func nonceEntities(offset: Int, limit: Int) -> [NonceEntity]? {
+        let sortDescriptors = [
+            NSSortDescriptor(key: "nonce", ascending: true),
+        ]
+
+        return fetchEntities(entityName: "Nonce", sortDescriptors: sortDescriptors, offset: offset, limit: limit)
+    }
+
+    /// Performs a batch lookup to determine which of the provided nonce values
+    /// already exist in the persistent store.
+    ///
+    /// This method is optimized for large input sets and avoids per-item database
+    /// queries by:
+    /// - Splitting the input into smaller chunks to limit predicate size
+    /// - Using a compound `OR` predicate over the `nonce` attribute
+    /// - Fetching only the `nonce` field using a lightweight dictionary result type
+    ///
+    /// The method returns only the subset of input values that are already stored,
+    /// represented as a `Set<Data>` for efficient O(1) membership checks.
+    ///
+    /// - Important: This method relies on the `nonce` attribute, not any SQLite index.
+    ///   Core Data automatically uses available indexes for performance.
+    /// - Note: In case of a fetch failure, the affected chunk is ignored and the error is logged.
+    ///
+    /// - Parameter values: Array of nonce `Data` values to check in the database.
+    /// - Returns: A set containing all values from the input that already exist in storage.
+    ///            Returns an empty set if no matches are found or input is empty.
+    public func existingNonces(in values: [Data]) throws -> Set<Data> {
+        guard !values.isEmpty else {
+            return []
+        }
+
+        let chunkSize = 200
+        var result = Set<Data>()
+
+        for chunk in values.chunked(into: chunkSize) {
+            let predicates = chunk.map {
+                NSPredicate(format: "nonce == %@", $0 as CVarArg)
+            }
+
+            let compound = NSCompoundPredicate(orPredicateWithSubpredicates: predicates)
+
+            let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "Nonce")
+            fetchRequest.predicate = compound
+            fetchRequest.resultType = .dictionaryResultType
+            fetchRequest.propertiesToFetch = ["nonce"]
+
+            let partial: Set<Data> = try managedObjectContext.performAndWait {
+                do {
+                    let results = try fetchRequest.execute() as? [[String: Any]] ?? []
+                    return Set(results.compactMap { $0["nonce"] as? Data })
+                }
+                catch {
+                    DDLogError("[EntityFetcher] Failed batch lookup. Error: \(error)")
+                    throw error
+                }
+            }
+
+            result.formUnion(partial)
+        }
+
+        return result
+    }
+
     public func isNonceEntityAlreadyInDB(_ hashedNonce: Data) -> Bool {
         let predicate = NSPredicate(format: "nonce == %@", hashedNonce as CVarArg)
         return fetchEntity(entityName: "Nonce", predicate: predicate) != nil
@@ -322,11 +400,16 @@ public final class EntityFetcher: NSObject {
     func fetchEntities<Entity: NSManagedObject>(
         entityName: String,
         predicate: NSPredicate? = nil,
-        sortDescriptors: [NSSortDescriptor]? = nil
+        sortDescriptors: [NSSortDescriptor]? = nil,
+        offset: Int = 0,
+        limit: Int = 0 // 0 means no limit
     ) -> [Entity]? {
         
         let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: entityName)
-        fetchRequest.fetchLimit = 0
+
+        fetchRequest.fetchOffset = offset
+        fetchRequest.fetchLimit = limit
+
         if let predicate {
             fetchRequest.predicate = predicate
         }

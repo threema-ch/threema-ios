@@ -5,28 +5,23 @@ protocol VoIPStatsRepresentation {
     func getRepresentation() -> String
 }
 
-@objc public enum CandidatePairVariant: Int {
+enum CandidatePairVariant: Int {
     case NONE = 0x00
     case OVERVIEW = 0x01
     case DETAILED = 0x02
     case OVERVIEW_AND_DETAILED = 0x03 // OVERVIEW | DETAILED
 }
 
-@objc public final class VoIPStatsOptions: NSObject {
-    @objc public var transport = false
-    @objc public var inboundRtp = false
-    @objc public var outboundRtp = false
-    @objc public var codecs = false
-    @objc public var selectedCandidatePair = false
-    @objc public var candidatePairsFlag = CandidatePairVariant.NONE
-    @objc public var tracks = false
-    @objc public var framesReceived = false
-    @objc public var crypto = false
-}
-
-enum Direction {
-    case inbound
-    case outbound
+final class VoIPStatsOptions {
+    var transport = false
+    var inboundRtp = false
+    var outboundRtp = false
+    var codecs = false
+    var selectedCandidatePair = false
+    var candidatePairsFlag = CandidatePairVariant.NONE
+    var tracks = false
+    var framesReceived = false
+    var crypto = false
 }
 
 enum CodecMimeTypePrimary {
@@ -71,7 +66,7 @@ enum CodecMimeTypePrimary {
     }
 }
 
-@objc public final class VoIPStats: NSObject, VoIPStatsRepresentation {
+final class VoIPStats: VoIPStatsRepresentation {
     private let report: RTCStatisticsReport
     private let options: VoIPStatsOptions
     private let previousState: VoIPStatsState?
@@ -86,8 +81,36 @@ enum CodecMimeTypePrimary {
     private var outboundRtpVideo: OutboundRtp?
     private var inboundTrackVideo: Track?
     private var outboundTrackVideo: Track?
-    private var inboundCodecs: [String: Codec]?
-    private var outboundCodecs: [String: Codec]?
+    private var codecs: [String: Codec]?
+
+    /// Instantaneous microphone level, from the `media-source` entry.
+    private var micAudioLevel: Double?
+
+    /// Playout delay above this is not explainable by any network this app should be running on.
+    private static let inflatedJitterBufferTargetSeconds = 0.4
+
+    /// Network jitter below this means the link is not asking for a large buffer.
+    private static let calmNetworkJitterSeconds = 0.05
+
+    /// Set when the jitter buffer is holding back playout by a lot *and the network did not ask it to*.
+    var inflatedJitterBufferDiagnosis: String? {
+        guard let playout = inboundRtpAudio?.audioPlayout,
+              let target = playout.jitterBufferTargetDelayPerSample,
+              target > Self.inflatedJitterBufferTargetSeconds else {
+            return nil
+        }
+
+        let jitter = inboundRtpAudio?.jitter ?? 0
+        guard jitter < Self.calmNetworkJitterSeconds, playout.concealmentEventsDelta ?? 0 == 0 else {
+            // The link genuinely wants a buffer this size.
+            return nil
+        }
+
+        let delay = playout.jitterBufferDelayPerSample ?? 0
+        return "target=\(Int(target * 1000))ms jbuf=\(Int(delay * 1000))ms jitter=\(jitter) " +
+            "compressed=\(playout.removedSamplesDelta ?? 0) — no network cause, playout stalled earlier in the call"
+    }
+    
     private let transceivers: [RTCRtpTransceiver]
     private var rtpTransceivers: [RtpTransceiver]?
     private var candidatePairs: [CandidatePair]?
@@ -95,8 +118,8 @@ enum CodecMimeTypePrimary {
     private var totalFramesReceived: UInt64?
     
     final class BytesTransferred: VoIPStatsRepresentation {
-        public let sent: UInt64?
-        public let received: UInt64?
+        let sent: UInt64?
+        let received: UInt64?
 
         init(_ entry: RTCStatistics) {
             if let sentNumber = entry.values["bytesSent"] as? NSNumber {
@@ -114,7 +137,7 @@ enum CodecMimeTypePrimary {
             }
         }
         
-        public func getShortRepresentation() -> String {
+        func getShortRepresentation() -> String {
             var result = "tx="
             
             if let sent {
@@ -135,16 +158,16 @@ enum CodecMimeTypePrimary {
             return result
         }
         
-        public func getRepresentation() -> String {
+        func getRepresentation() -> String {
             getShortRepresentation()
         }
     }
     
     final class Candidate: VoIPStatsRepresentation {
-        public let address: String?
-        public let type: String?
-        public let protocol_: String?
-        public let network: String?
+        let address: String?
+        let type: String?
+        let protocol_: String?
+        let network: String?
         
         init(_ entry: RTCStatistics) {
             self.address = entry.values["ip"] as? String
@@ -153,7 +176,7 @@ enum CodecMimeTypePrimary {
             self.network = entry.values["networkType"] as? String
         }
         
-        public func getShortRepresentation() -> String {
+        func getShortRepresentation() -> String {
             var result = "\(address ?? "?.?.?.?") \(type ?? "n/a") \(protocol_ ?? "n/a")"
             if let network {
                 result += " " + network
@@ -161,7 +184,7 @@ enum CodecMimeTypePrimary {
             return result
         }
         
-        public func getRepresentation() -> String {
+        func getRepresentation() -> String {
             var result = "address=\(address ?? "?.?.?.?"), type=\(type ?? "n/a"), protocol=\(protocol_ ?? "n/a")"
             if let network {
                 result += ", network=\(network)"
@@ -169,7 +192,7 @@ enum CodecMimeTypePrimary {
             return result
         }
         
-        public func usesCellular() -> Bool {
+        func usesCellular() -> Bool {
             network == "cellular"
         }
     }
@@ -184,18 +207,18 @@ enum CodecMimeTypePrimary {
             case failed
         }
         
-        public let id: String
-        public let priority: UInt64
-        public let local: Candidate?
-        public let remote: Candidate?
-        public let nominated: Bool?
-        public let state: State
-        public let bytesTransferred: BytesTransferred
-        public let roundTripTime: RoundTripTime
-        public let availableOutgoingBitrate: Double?
-        public let usesRelay: Bool
+        let id: String
+        let priority: UInt64
+        let local: Candidate?
+        let remote: Candidate?
+        let nominated: Bool?
+        let state: State
+        let bytesTransferred: BytesTransferred
+        let roundTripTime: RoundTripTime
+        let availableOutgoingBitrate: Double?
+        let usesRelay: Bool
 
-        public static func fromID(_ id: String, report: RTCStatisticsReport) -> CandidatePair? {
+        static func fromID(_ id: String, report: RTCStatisticsReport) -> CandidatePair? {
             // Lookup pair
             let id = id.dropFirst(20)
             for entry in report.statistics.values {
@@ -207,7 +230,7 @@ enum CodecMimeTypePrimary {
             return nil
         }
 
-        public init(_ entry: RTCStatistics, report: RTCStatisticsReport) {
+        init(_ entry: RTCStatistics, report: RTCStatisticsReport) {
             // ID
             self.id = candidatePairID(statsID: entry.id)
             
@@ -300,7 +323,7 @@ enum CodecMimeTypePrimary {
             return false
         }
             
-        public func getShortRepresentation() -> String {
+        func getShortRepresentation() -> String {
             var result = "pair=\(state) "
             if let nominated, nominated == true {
                 result += " nominated"
@@ -337,7 +360,7 @@ enum CodecMimeTypePrimary {
             return result
         }
         
-        public func getRepresentation() -> String {
+        func getRepresentation() -> String {
             var result = "id=\(id), state=\(state), priority="
             if priority > 0 {
                 result += String(priority)
@@ -359,7 +382,7 @@ enum CodecMimeTypePrimary {
             return result
         }
         
-        public func getStatusChar() -> String {
+        func getStatusChar() -> String {
             // '-' -> frozen: The pair has been held back due to another pair with the same
             //        foundation that is currently in the waiting state.
             // '.' -> waiting: Pair checking has not started, yet.
@@ -382,18 +405,16 @@ enum CodecMimeTypePrimary {
     final class Codec: VoIPStatsRepresentation {
         
         struct CodecMimeType {
-            public let primary: CodecMimeTypePrimary
-            public let secondary: String
+            let primary: CodecMimeTypePrimary
+            let secondary: String
         }
 
         public let codecID: String
-        public let direction: Direction
         private let mimeType: CodecMimeType
         private let clockRate: UInt64?
-        
+
         public init(_ entry: RTCStatistics) {
             self.codecID = entry.id
-            self.direction = codecID.contains("Inbound") ? Direction.inbound : Direction.outbound
             self.mimeType = Codec.getMimeType(mimeTypeString: entry.values["mimeType"] as? String)
             if let clockRateNumber = entry.values["clockRate"] as? NSNumber {
                 self.clockRate = UInt64(truncating: clockRateNumber)
@@ -403,7 +424,7 @@ enum CodecMimeTypePrimary {
             }
         }
         
-        public func getShortRepresentation() -> String {
+        func getShortRepresentation() -> String {
             var result = "\(mimeType.primary.toShortRepresentation())/\(mimeType.secondary)"
             if clockRate == nil {
                 return result
@@ -421,7 +442,7 @@ enum CodecMimeTypePrimary {
             return result
         }
         
-        public func getRepresentation() -> String {
+        func getRepresentation() -> String {
             var result = "mime-type=\(mimeType.primary.toRepresentation())/\(mimeType.secondary)"
                         
             result += ", clock-rate="
@@ -434,7 +455,7 @@ enum CodecMimeTypePrimary {
             return result
         }
         
-        public static func getMimeType(mimeTypeString: String?) -> CodecMimeType {
+        static func getMimeType(mimeTypeString: String?) -> CodecMimeType {
             if mimeTypeString == nil {
                 return CodecMimeType(primary: CodecMimeTypePrimary.unknown, secondary: "?")
             }
@@ -453,12 +474,178 @@ enum CodecMimeTypePrimary {
         }
     }
     
+    /// Audio playout metrics of an `inbound-rtp` audio entry
+    ///
+    /// These answer two questions the rest of the stats cannot: whether the jitter buffer is
+    /// holding back playout by seconds (the RFC 3550 `jitter` above is a *network* metric and stays
+    /// in the low milliseconds even when playout is three seconds behind), and whether media that
+    /// is demonstrably arriving is actually being played out.
+    ///
+    /// All the underlying WebRTC values except `audioLevel` are cumulative over the whole call, so
+    /// reporting them raw is useless here: a three second spike that recovers averages away to
+    /// nothing over a five minute call. Everything printed is a delta against the previous sample,
+    /// carried over in `VoIPStatsState` the same way `bytesTransferred` already is.
+    struct AudioPlayout: VoIPStatsRepresentation {
+
+        // Cumulative values as reported. Retained so the next sample can difference against them;
+        // never printed directly.
+        let jitterBufferDelay: Double?
+        let jitterBufferTargetDelay: Double?
+        let jitterBufferEmittedCount: UInt64?
+        let concealedSamples: UInt64?
+        let concealmentEvents: UInt64?
+        let insertedSamplesForDeceleration: UInt64?
+        let removedSamplesForAcceleration: UInt64?
+        let totalSamplesReceived: UInt64?
+        let totalAudioEnergy: Double?
+
+        /// Level of the most recent audio sample, 0...1. Instantaneous, no delta needed. Staying at
+        /// zero while `packetsReceived` climbs is the signature of "media arrives, playout never
+        /// starts".
+        let audioLevel: Double?
+
+        /// Mean playout delay over the last sampling period, in seconds
+        private(set) var jitterBufferDelayPerSample: Double?
+
+        /// Mean delay NetEQ was *aiming* for over the last sampling period, in seconds. This rising
+        /// is what turns a network blip into seconds of added latency that never recovers.
+        private(set) var jitterBufferTargetDelayPerSample: Double?
+
+        private(set) var concealedSamplesDelta: UInt64?
+        private(set) var concealmentEventsDelta: UInt64?
+        private(set) var insertedSamplesDelta: UInt64?
+        private(set) var removedSamplesDelta: UInt64?
+        private(set) var totalSamplesReceivedDelta: UInt64?
+        private(set) var totalAudioEnergyDelta: Double?
+
+        /// Share of the samples played out over the last sampling period that had to be concealed
+        private(set) var concealedPercent: Double?
+
+        init(_ entry: RTCStatistics, previous: AudioPlayout?) {
+            self.jitterBufferDelay = entry.doubleValue("jitterBufferDelay")
+            self.jitterBufferTargetDelay = entry.doubleValue("jitterBufferTargetDelay")
+            self.jitterBufferEmittedCount = entry.uInt64Value("jitterBufferEmittedCount")
+            self.concealedSamples = entry.uInt64Value("concealedSamples")
+            self.concealmentEvents = entry.uInt64Value("concealmentEvents")
+            self.insertedSamplesForDeceleration = entry.uInt64Value("insertedSamplesForDeceleration")
+            self.removedSamplesForAcceleration = entry.uInt64Value("removedSamplesForAcceleration")
+            self.totalSamplesReceived = entry.uInt64Value("totalSamplesReceived")
+            self.totalAudioEnergy = entry.doubleValue("totalAudioEnergy")
+            self.audioLevel = entry.doubleValue("audioLevel")
+
+            // Both delays are sums over the emitted samples, so both are divided by the same
+            // emitted count delta to get a mean for the period
+            if let emittedCountDelta = cumulativeDelta(
+                self.jitterBufferEmittedCount,
+                previous?.jitterBufferEmittedCount
+            ), emittedCountDelta > 0 {
+                if let delayDelta = cumulativeDelta(self.jitterBufferDelay, previous?.jitterBufferDelay) {
+                    self.jitterBufferDelayPerSample = delayDelta / Double(emittedCountDelta)
+                }
+                if let targetDelayDelta = cumulativeDelta(
+                    self.jitterBufferTargetDelay,
+                    previous?.jitterBufferTargetDelay
+                ) {
+                    self.jitterBufferTargetDelayPerSample = targetDelayDelta / Double(emittedCountDelta)
+                }
+            }
+
+            self.concealedSamplesDelta = cumulativeDelta(self.concealedSamples, previous?.concealedSamples)
+            self.concealmentEventsDelta = cumulativeDelta(self.concealmentEvents, previous?.concealmentEvents)
+            self.insertedSamplesDelta = cumulativeDelta(
+                self.insertedSamplesForDeceleration,
+                previous?.insertedSamplesForDeceleration
+            )
+            self.removedSamplesDelta = cumulativeDelta(
+                self.removedSamplesForAcceleration,
+                previous?.removedSamplesForAcceleration
+            )
+            self.totalSamplesReceivedDelta = cumulativeDelta(self.totalSamplesReceived, previous?.totalSamplesReceived)
+            self.totalAudioEnergyDelta = cumulativeDelta(self.totalAudioEnergy, previous?.totalAudioEnergy)
+
+            if let concealedSamplesDelta = self.concealedSamplesDelta,
+               let totalSamplesReceivedDelta = self.totalSamplesReceivedDelta, totalSamplesReceivedDelta > 0 {
+                self.concealedPercent = Double(concealedSamplesDelta) / Double(totalSamplesReceivedDelta) * 100
+            }
+        }
+
+        func getShortRepresentation() -> String {
+            var parts = [String]()
+
+            if let jitterBufferDelayPerSample {
+                var jitterBuffer = "jbuf=\(String(format: "%.0f", jitterBufferDelayPerSample * 1000))ms"
+                if let jitterBufferTargetDelayPerSample {
+                    jitterBuffer += "/target=\(String(format: "%.0f", jitterBufferTargetDelayPerSample * 1000))ms"
+                }
+                parts.append(jitterBuffer)
+            }
+
+            if let concealedSamplesDelta {
+                var concealed = "concealed=\(concealedSamplesDelta)"
+                if let concealedPercent {
+                    concealed += "(\(String(format: "%.1f", concealedPercent))%)"
+                }
+                if let concealmentEventsDelta {
+                    concealed += "/\(concealmentEventsDelta)evt"
+                }
+                parts.append(concealed)
+            }
+
+            if let insertedSamplesDelta, let removedSamplesDelta {
+                parts.append("stretched=\(insertedSamplesDelta)/compressed=\(removedSamplesDelta)")
+            }
+
+            // Deliberately coarse — see `levelBucket`
+            if let audioLevel {
+                parts.append("level=\(AudioPlayout.levelBucket(audioLevel))")
+            }
+
+            // Over a 30s sampling period an instantaneous level of zero proves nothing: the remote
+            // party may simply not have been speaking at that instant. Whether *any* energy
+            // accumulated over the whole period is what separates "playout never started" from
+            // "nobody was talking", and it is a single bit.
+            if let totalAudioEnergyDelta {
+                parts.append("playout=\(totalAudioEnergyDelta > 0 ? "active" : "silent")")
+            }
+
+            return parts.joined(separator: " ")
+        }
+
+        func getRepresentation() -> String {
+            getShortRepresentation()
+        }
+
+        /// Bucket an audio level for logging
+        ///
+        /// `audioLevel` and `totalAudioEnergy` are the only values here derived from call *content*
+        /// rather than from transport or DSP behaviour, and they describe the remote party's speech —
+        /// who never consented to the log being exported to support. A run of precise levels is an
+        /// amplitude envelope of the conversation: far too coarse to recover speech, but enough to
+        /// show who spoke when and for how long.
+        ///
+        /// The diagnosis only needs "is anything coming out of the decoder at all", so only a coarse
+        /// bucket is logged. Four buckets at a 30s (or, while connecting, 2s) interval answer that
+        /// while carrying essentially nothing about the conversation.
+        static func levelBucket(_ level: Double) -> String {
+            switch level {
+            case ..<0.0001:
+                "silent"
+            case ..<0.01:
+                "low"
+            case ..<0.1:
+                "mid"
+            default:
+                "high"
+            }
+        }
+    }
+
     class Rtp: VoIPStatsRepresentation {
         private let codecs: [String: Codec]
         
-        public let codecID: String?
-        public let kind: String
-        public var jitter: Double?
+        let codecID: String?
+        let kind: String
+        var jitter: Double?
         public var packetsTotal: UInt64?
         public var bytesTotal: UInt64?
         public var packetsLost: UInt64?
@@ -537,6 +724,10 @@ enum CodecMimeTypePrimary {
     }
     
     final class InboundRtp: Rtp {
+
+        /// Only populated for the audio entry
+        private(set) var audioPlayout: AudioPlayout?
+
         public init(
             _ entry: RTCStatistics,
             codecs: [String: Codec],
@@ -590,16 +781,32 @@ enum CodecMimeTypePrimary {
                 )
             }
             
-            if previousState != nil, previousState!.videoBytesReceived != nil, bytesTotal != nil {
-                bitrate = calculateVideoBitrate(
-                    previousTimestamp: previousState!.timestampUs,
-                    previousBytes: previousState!.videoBytesReceived!,
+            // Difference against the previous sample of the *same* kind: measuring the audio entry
+            // against the video byte count (and vice versa) yields a meaningless bitrate
+            let previousBytesReceived = kind == "audio" ? previousState?.audioBytesReceived : previousState?
+                .videoBytesReceived
+            if let previousState, let previousBytesReceived, let bytesTotal {
+                bitrate = calculateBitrate(
+                    previousTimestamp: previousState.timestampUs,
+                    previousBytes: previousBytesReceived,
                     currentTimestamp: timestamp,
-                    currentBytes: bytesTotal!
+                    currentBytes: bytesTotal
                 )
             }
+
+            if kind == "audio" {
+                self.audioPlayout = AudioPlayout(entry, previous: previousState?.audioPlayout)
+            }
         }
-                
+
+        override public func getShortRepresentation() -> String {
+            let playout = audioPlayout?.getShortRepresentation() ?? ""
+            guard !playout.isEmpty else {
+                return super.getShortRepresentation()
+            }
+            return "\(super.getShortRepresentation()) \(playout)"
+        }
+
         private func calculatePacketLoss() -> Float64? {
             if packetsTotal == nil || packetsLost == nil {
                 return nil
@@ -655,12 +862,14 @@ enum CodecMimeTypePrimary {
 
             self.implementation = entry.values["encoderImplementation"] as? String
 
-            if previousState != nil, previousState!.videoBytesSent != nil, bytesTotal != nil {
-                bitrate = calculateVideoBitrate(
-                    previousTimestamp: previousState!.timestampUs,
-                    previousBytes: previousState!.videoBytesSent!,
+            // Same-kind differencing as in `InboundRtp`
+            let previousBytesSent = kind == "audio" ? previousState?.audioBytesSent : previousState?.videoBytesSent
+            if let previousState, let previousBytesSent, let bytesTotal {
+                bitrate = calculateBitrate(
+                    previousTimestamp: previousState.timestampUs,
+                    previousBytes: previousBytesSent,
                     currentTimestamp: timestamp,
-                    currentBytes: bytesTotal!
+                    currentBytes: bytesTotal
                 )
             }
         }
@@ -1049,41 +1258,44 @@ enum CodecMimeTypePrimary {
         self.transceivers = transceivers
         self.previousState = previousState
         self.timestamp = report.timestamp_us
-        super.init()
+
         extract()
     }
 
     // O(n^2) but could be optimised for O(n) if needed
     func extract() {
-        inboundCodecs = [String: Codec]()
-        outboundCodecs = [String: Codec]()
-
         if options.candidatePairsFlag != CandidatePairVariant.NONE {
             candidatePairs = [CandidatePair]()
         }
-        
+
+        // Codecs are collected in their own pass, for two reasons. `report.statistics` is a
+        // dictionary, so a `codec` entry can be visited *after* the `inbound-rtp`/`outbound-rtp`
+        // entry that references it, and `Rtp` copies the dictionary it is handed — a codec
+        // collected later would never become visible to it. And each RTP entry names its own codec
+        // via `codecId`, so splitting the codecs by direction up front was never necessary: it was
+        // done by matching "Inbound" in the stats ID, which this WebRTC version never emits, so
+        // the inbound table was always empty and every inbound line reported `codec=?`.
+        var codecs = [String: Codec]()
+        for entry in report.statistics.values where entry.type == "codec" {
+            codecs[entry.id] = Codec(entry)
+        }
+        self.codecs = codecs
+
         // Extract values
         for entry in report.statistics.values {
             switch entry.type {
-            case "codec":
-                let codec = Codec(entry)
-                if codec.direction == .inbound {
-                    inboundCodecs![codec.codecID] = codec
-                }
-                else {
-                    outboundCodecs![codec.codecID] = codec
-                }
             case "candidate-pair":
                 if options.candidatePairsFlag != .NONE {
                     candidatePairs!.append(CandidatePair(entry, report: report))
                 }
+                
             case "inbound-rtp":
                 if options.inboundRtp {
                     let kind = entry.values["kind"] as? String
                     if kind == "audio" {
                         inboundRtpAudio = InboundRtp(
                             entry,
-                            codecs: inboundCodecs!,
+                            codecs: codecs,
                             previousState: previousState,
                             timestamp: timestamp
                         )
@@ -1091,19 +1303,25 @@ enum CodecMimeTypePrimary {
                     else if kind == "video" {
                         inboundRtpVideo = InboundRtp(
                             entry,
-                            codecs: inboundCodecs!,
+                            codecs: codecs,
                             previousState: previousState,
                             timestamp: timestamp
                         )
                     }
                 }
+                
+            case "media-source":
+                if options.outboundRtp, entry.values["kind"] as? String == "audio" {
+                    micAudioLevel = entry.values["audioLevel"] as? Double
+                }
+                
             case "outbound-rtp":
                 if options.outboundRtp {
                     let kind = entry.values["kind"] as? String
                     if kind == "audio" {
                         outboundRtpAudio = OutboundRtp(
                             entry,
-                            codecs: outboundCodecs!,
+                            codecs: codecs,
                             previousState: previousState,
                             timestamp: timestamp
                         )
@@ -1111,12 +1329,13 @@ enum CodecMimeTypePrimary {
                     else if kind == "video" {
                         outboundRtpVideo = OutboundRtp(
                             entry,
-                            codecs: outboundCodecs!,
+                            codecs: codecs,
                             previousState: previousState,
                             timestamp: timestamp
                         )
                     }
                 }
+                
             case "track":
                 if options.tracks {
                     let kind = entry.values["kind"] as? String
@@ -1146,6 +1365,7 @@ enum CodecMimeTypePrimary {
                         }
                     }
                 }
+                
             case "transport":
                 if options.transport {
                     transport = Transport(entry)
@@ -1162,6 +1382,7 @@ enum CodecMimeTypePrimary {
                         selectedCandidatePair = candidatePair
                     }
                 }
+                
             default:
                 break // Ignore
             }
@@ -1179,7 +1400,7 @@ enum CodecMimeTypePrimary {
         }
     }
     
-    @objc public func getShortRepresentation() -> String {
+    public func getShortRepresentation() -> String {
         var result = ""
         if let transport, options.transport {
             result += "\(transport.getShortRepresentation())\n"
@@ -1217,24 +1438,13 @@ enum CodecMimeTypePrimary {
             result += "out/track- \(outboundTrackVideo.getShortRepresentation())\n"
         }
 
-        if options.codecs {
-            if let inboundCodecs {
-                result += "in/codecs "
-                for codec in inboundCodecs.values {
-                    result += codec.getShortRepresentation()
-                    result += " "
-                }
-                result += "\n"
+        if options.codecs, codecs != nil {
+            result += "codecs "
+            for (direction, codec) in describedCodecs() {
+                result += "\(direction):\(codec.getShortRepresentation())"
+                result += " "
             }
-            
-            if let outboundCodecs {
-                result += "out/codecs "
-                for codec in outboundCodecs.values {
-                    result += codec.getShortRepresentation()
-                    result += " "
-                }
-                result += "\n"
-            }
+            result += "\n"
         }
         
         if let rtpTransceivers {
@@ -1255,7 +1465,7 @@ enum CodecMimeTypePrimary {
         return result
     }
     
-    @objc public func getRepresentation() -> String {
+    public func getRepresentation() -> String {
         var result = ""
         if let transport {
             result += "Transport: \(transport.getRepresentation())\n"
@@ -1278,7 +1488,9 @@ enum CodecMimeTypePrimary {
             result += "Inbound RTP Video: \(inboundRtpVideo.getRepresentation())\n"
         }
         if let outboundRtpAudio {
-            result += "Outbound RTP Audio: \(outboundRtpAudio.getRepresentation())\n"
+            var line = outboundRtpAudio.getRepresentation()
+            line += " mic=\(micAudioLevel.map(AudioPlayout.levelBucket) ?? "?")"
+            result += "Outbound RTP Audio: \(line)\n"
         }
         if let outboundRtpVideo {
             result += "Outbound RTP Video: \(outboundRtpVideo.getRepresentation())\n"
@@ -1289,16 +1501,10 @@ enum CodecMimeTypePrimary {
         if let outboundTrackVideo {
             result += "Outbound Track Video: \(outboundTrackVideo.getRepresentation())\n"
         }
-        if let inboundCodecs {
-            result += "Inbound Codecs (\(inboundCodecs.count))\n"
-            for codec in inboundCodecs.values {
-                result += "- \(codec.getShortRepresentation())\n"
-            }
-        }
-        if let outboundCodecs {
-            result += "Outbound Codecs (\(outboundCodecs.count))\n"
-            for codec in outboundCodecs.values {
-                result += "- \(codec.getShortRepresentation())\n"
+        if let codecs {
+            result += "Codecs (\(codecs.count))\n"
+            for (direction, codec) in describedCodecs() {
+                result += "- \(direction) \(codec.getShortRepresentation())\n"
             }
         }
         if let rtpTransceivers {
@@ -1319,7 +1525,46 @@ enum CodecMimeTypePrimary {
         return result
     }
     
-    @objc public func isReceivingVideo() -> Bool {
+    /// Which direction a codec entry is used in
+    ///
+    /// A `codec` entry carries no direction of its own — the relationship exists only as the
+    /// `codecId` pointer *from* each `inbound-rtp`/`outbound-rtp` entry *to* the codec it uses. So
+    /// the label is read back off those pointers rather than guessed from the codec's stats ID,
+    /// which is what the old `contains("Inbound")` classification got wrong.
+    ///
+    /// `?` means the codec was negotiated but no extracted RTP entry references it — including the
+    /// case where `options.inboundRtp`/`outboundRtp` were off, so there is nothing to read from.
+    private func codecDirectionLabel(for codecID: String) -> String {
+        let isInbound = codecID == inboundRtpAudio?.codecID || codecID == inboundRtpVideo?.codecID
+        let isOutbound = codecID == outboundRtpAudio?.codecID || codecID == outboundRtpVideo?.codecID
+
+        return switch (isInbound, isOutbound) {
+        case (true, false):
+            "in"
+        case (false, true):
+            "out"
+        case (true, true):
+            "in/out"
+        case (false, false):
+            "?"
+        }
+    }
+
+    /// Codecs paired with the direction they are used in, ordered so the log is stable between
+    /// samples (`codecs` is a dictionary, so its own iteration order is not)
+    private func describedCodecs() -> [(direction: String, codec: Codec)] {
+        guard let codecs else {
+            return []
+        }
+
+        return codecs
+            .map { (direction: codecDirectionLabel(for: $0.key), codec: $0.value) }
+            .sorted { ($0.direction, $0.codec.getShortRepresentation()) <
+                ($1.direction, $1.codec.getShortRepresentation())
+            }
+    }
+
+    public func isReceivingVideo() -> Bool {
         // check previous and actual frames and compare
         if totalFramesReceived != nil, previousState != nil, previousState?.videoFramesReceived != nil {
             let diff = totalFramesReceived!.distance(to: previousState!.videoFramesReceived!)
@@ -1344,21 +1589,29 @@ enum CodecMimeTypePrimary {
         return false
     }
         
-    public func buildVoIPStatsState() -> VoIPStatsState {
+    func buildVoIPStatsState() -> VoIPStatsState {
         VoIPStatsState(
             timestampUs: timestamp,
-            videoBytesSent: outboundRtpVideo?.bytesTotal ?? nil,
-            videoBytesReceived: inboundRtpVideo?.bytesTotal ?? nil,
-            videoFramesReceived: totalFramesReceived ?? nil
+            audioBytesSent: outboundRtpAudio?.bytesTotal,
+            audioBytesReceived: inboundRtpAudio?.bytesTotal,
+            videoBytesSent: outboundRtpVideo?.bytesTotal,
+            videoBytesReceived: inboundRtpVideo?.bytesTotal,
+            videoFramesReceived: totalFramesReceived,
+            audioPlayout: inboundRtpAudio?.audioPlayout
         )
     }
 }
 
-public struct VoIPStatsState {
-    public let timestampUs: Double
-    public let videoBytesSent: UInt64?
-    public let videoBytesReceived: UInt64?
-    public let videoFramesReceived: UInt64?
+struct VoIPStatsState {
+    let timestampUs: Double
+    let audioBytesSent: UInt64?
+    let audioBytesReceived: UInt64?
+    let videoBytesSent: UInt64?
+    let videoBytesReceived: UInt64?
+    let videoFramesReceived: UInt64?
+
+    /// Cumulative playout counters of this sample, so the next one can difference against them
+    let audioPlayout: VoIPStats.AudioPlayout?
 }
 
 // Convert byte count into human readable number
@@ -1410,15 +1663,14 @@ func candidatePairID(statsID: String?) -> String {
     return "???"
 }
 
-func calculateVideoBitrate(
+func calculateBitrate(
     previousTimestamp: Double,
     previousBytes: UInt64,
     currentTimestamp: Double,
     currentBytes: UInt64
 ) -> Double? {
-    let bytesSent = currentBytes.distance(to: previousBytes)
     let microSecondsElapsed = currentTimestamp - previousTimestamp
-    
+
     if microSecondsElapsed < 0 {
         debugPrint("Previous state must not have a higher timestamp than current state")
         return nil
@@ -1427,5 +1679,44 @@ func calculateVideoBitrate(
         debugPrint("State timestamps should be at least 100ms apart")
         return nil
     }
-    return Double((8 * Double(bytesSent)) / (microSecondsElapsed / 1000 / 1000))
+    // `previous.distance(to: current)`, not the reverse: `Strideable.distance(to:)` returns
+    // `other - self`, so the operands being swapped here reported every bitrate negated
+    guard let bytesTransferred = cumulativeDelta(currentBytes, previousBytes) else {
+        return nil
+    }
+    return (8 * Double(bytesTransferred)) / (microSecondsElapsed / 1000 / 1000)
+}
+
+/// Difference two samples of a counter that only ever grows
+///
+/// Returns `nil` rather than wrapping around when the counter went backwards, which happens when
+/// the underlying stream is replaced mid-call and the counters restart at zero.
+func cumulativeDelta(_ current: UInt64?, _ previous: UInt64?) -> UInt64? {
+    guard let current, let previous, current >= previous else {
+        return nil
+    }
+    return current - previous
+}
+
+func cumulativeDelta(_ current: Double?, _ previous: Double?) -> Double? {
+    guard let current, let previous, current >= previous else {
+        return nil
+    }
+    return current - previous
+}
+
+extension RTCStatistics {
+    fileprivate func doubleValue(_ key: String) -> Double? {
+        guard let number = values[key] as? NSNumber else {
+            return nil
+        }
+        return Double(truncating: number)
+    }
+
+    fileprivate func uInt64Value(_ key: String) -> UInt64? {
+        guard let number = values[key] as? NSNumber else {
+            return nil
+        }
+        return UInt64(truncating: number)
+    }
 }

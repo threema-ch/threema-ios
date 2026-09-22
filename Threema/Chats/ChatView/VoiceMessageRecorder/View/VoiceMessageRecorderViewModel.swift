@@ -1,3 +1,4 @@
+import AudioSessionManager
 import AVFoundation
 import CocoaLumberjackSwift
 import DSWaveformImage
@@ -36,6 +37,9 @@ final class VoiceMessageRecorderViewModel: NSObject, ObservableObject {
     private let conversation: ConversationEntity
     
     private let playSentMessageSound: (() -> Void)?
+
+    /// Called when recording never got going, so the owner can take its UI away again.
+    private let onStartFailed: (() -> Void)?
     
     let recordingMaxDuration = 30 * 60.0
 
@@ -73,17 +77,28 @@ final class VoiceMessageRecorderViewModel: NSObject, ObservableObject {
     // Both must call stop before the other accesses file at the url (i.e. is initialized).
     private var currentRecorder: AVAudioRecorder?
     private var currentPlayer: AVAudioPlayer?
-    private lazy var audioSessionManager = AudioSessionManager()
-    
+
+    private let audioSessionManager: any AudioSessionManagerProtocol
+    private var audioSessionClaim: AudioSessionClaim?
+    private var audioSessionEventTask: Task<Void, Never>?
+
     private var sendingInProgress = false
     
     // MARK: - Lifecycle
 
     @MainActor
-    init(conversation: ConversationEntity, draftAudioURL: URL? = nil, playSentMessageSound: (() -> Void)? = nil) throws {
+    init(
+        conversation: ConversationEntity,
+        draftAudioURL: URL? = nil,
+        playSentMessageSound: (() -> Void)? = nil,
+        onStartFailed: (() -> Void)? = nil,
+        audioSessionManager: any AudioSessionManagerProtocol
+    ) throws {
 
         self.conversation = conversation
         self.playSentMessageSound = playSentMessageSound
+        self.onStartFailed = onStartFailed
+        self.audioSessionManager = audioSessionManager
 
         super.init()
         
@@ -109,9 +124,19 @@ final class VoiceMessageRecorderViewModel: NSObject, ObservableObject {
     }
     
     deinit {
+        audioSessionEventTask?.cancel()
+
+        // Copied into locals: the `Task` outlives this object, so it must not capture `self`.
+        let manager = audioSessionManager
+        let claim = audioSessionClaim
+
         Task { @MainActor in
             UIDevice.current.isProximityMonitoringEnabled = false
             UIApplication.shared.isIdleTimerDisabled = false
+
+            if let claim {
+                await manager.release(claim)
+            }
         }
     }
 
@@ -144,57 +169,96 @@ final class VoiceMessageRecorderViewModel: NSObject, ObservableObject {
             name: UIKit.UIDevice.proximityStateDidChangeNotification,
             object: nil
         )
-        
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(interruptionNotification(notification:)),
-            name: AVAudioSession.interruptionNotification,
-            object: nil
-        )
     }
-    
+
     @objc private func proximityStateDidChange() {
-        audioSessionManager.adaptToProximityState()
-    }
-    
-    @objc private func interruptionNotification(notification: Notification) {
-        guard let info = notification.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt,
-              let type = AVAudioSession.InterruptionType(rawValue: info) else {
-            return
-        }
-        
-        switch type {
-        case .began:
-            Task { @MainActor in
-                await interruptionBegan()
-            }
-
-        case .ended:
-            DDLogInfo("Audio session interruption ended, reactivating...")
-            do {
-                try AVAudioSession.sharedInstance().setActive(true)
-            }
-            catch {
-                DDLogError("Failed to reactivate audio session: \(error)")
-            }
-
-        @unknown default:
-            break
+        Task {
+            await updateAudioSessionOutput()
         }
     }
 
+    /// The session went away: the system took it, or a call took it.
     @MainActor
-    private func interruptionBegan() async {
+    private func sessionLost() async {
         switch recordingState {
         case .ready, .stopped, .paused:
             break
         case .recording:
+            NotificationPresenterWrapper.shared.present(type: .recordingPaused)
             await stopRecording()
         case .playing:
             pause()
         }
     }
-    
+
+    // MARK: - Audio session claim
+
+    /// Take the session for `kind`, replacing a claim held for the other one.
+    ///
+    /// - Throws: `AudioSessionError.busyWithCall` when a call holds the session and `kind` is
+    ///   `.recording`.
+    private func claimAudioSession(for kind: AudioSessionClientKind) async throws {
+        if let existing = audioSessionClaim {
+            guard existing.kind != kind else {
+                await updateAudioSessionOutput()
+                return
+            }
+
+            await releaseAudioSessionClaim()
+        }
+
+        let output: AudioSessionOutput =
+            if kind == .playback {
+                await ProximityAudioRouting.currentOutput(audioSessionManager)
+            }
+            else {
+                .system
+            }
+
+        let claim = try await audioSessionManager.acquire(kind, output: output)
+        audioSessionClaim = claim
+
+        observeAudioSessionEvents(for: claim)
+    }
+
+    private func releaseAudioSessionClaim() async {
+        audioSessionEventTask?.cancel()
+        audioSessionEventTask = nil
+
+        guard let claim = audioSessionClaim else {
+            return
+        }
+        audioSessionClaim = nil
+
+        await audioSessionManager.release(claim)
+    }
+
+    /// Follow the proximity sensor.
+    private func updateAudioSessionOutput() async {
+        guard let claim = audioSessionClaim, claim.kind == .playback else {
+            return
+        }
+
+        let output = await ProximityAudioRouting.currentOutput(audioSessionManager)
+        await audioSessionManager.update(claim, output: output)
+    }
+
+    private func observeAudioSessionEvents(for claim: AudioSessionClaim) {
+        audioSessionEventTask?.cancel()
+
+        audioSessionEventTask = Task { [weak self, manager = audioSessionManager] in
+            for await event in await manager.events(for: claim) {
+                switch event {
+                case .interrupted, .subordinated:
+                    await self?.sessionLost()
+
+                case .interruptionEnded, .outputRouteChanged:
+                    continue
+                }
+            }
+        }
+    }
+
     // MARK: - Recording
 
     @MainActor
@@ -256,6 +320,7 @@ final class VoiceMessageRecorderViewModel: NSObject, ObservableObject {
             NotificationPresenterWrapper.shared.present(type: .recordingCallRunning)
 
             recordingState = .stopped
+            reportStartFailedIfNothingRecorded()
             return
         }
         
@@ -269,6 +334,17 @@ final class VoiceMessageRecorderViewModel: NSObject, ObservableObject {
             terminatePlayer()
         }
         
+        // Before the recorder exists, so it is created against a session that can actually record.
+        do {
+            try await claimAudioSession(for: .recording)
+        }
+        catch AudioSessionError.busyWithCall {
+            NotificationPresenterWrapper.shared.present(type: .recordingCallRunning)
+            recordingState = .stopped
+            reportStartFailedIfNothingRecorded()
+            return
+        }
+
         // We check if we need to create a new recorder (not needed when only pausing but not playing).
         let recorder: AVAudioRecorder
         if let currentRecorder {
@@ -278,17 +354,28 @@ final class VoiceMessageRecorderViewModel: NSObject, ObservableObject {
             recorder = try createRecorder()
             currentRecorder = recorder
         }
-        
+
         // Disable proximity monitoring for voice-over during the recording process
         if UIAccessibility.isVoiceOverRunning {
             UIDevice.current.isProximityMonitoringEnabled = false
         }
-        
-        try audioSessionManager.setupForRecording()
+
         recordingState = .recording
         recorder.record()
         recorderStartTimeInterval = recorder.deviceCurrentTime
         startRecordTimer()
+    }
+
+    /// Only when nothing has been recorded yet.
+    ///
+    /// `startRecording()` is also how `continueRecording()` resumes after a pause, and a refusal there must
+    /// leave the recorder standing — there is a draft in it.
+    private func reportStartFailedIfNothingRecorded() {
+        guard combinedRecordings == nil, currentRecorder == nil else {
+            return
+        }
+
+        onStartFailed?()
     }
 
     @MainActor
@@ -316,10 +403,10 @@ final class VoiceMessageRecorderViewModel: NSObject, ObservableObject {
             UIDevice.current.isProximityMonitoringEnabled = true
             
             do {
-                try audioSessionManager.setupForPlayback()
+                try await claimAudioSession(for: .playback)
             }
             catch {
-                DDLogError("[Voice Recorder] Can't setup audio session for playback.")
+                DDLogError("[Voice Recorder] Can't setup audio session for playback: \(error).")
             }
         }
         
@@ -404,14 +491,15 @@ final class VoiceMessageRecorderViewModel: NSObject, ObservableObject {
         
     // MARK: - Player
 
-    func createPlayer() throws -> AVAudioPlayer {
+    func createPlayer() async throws -> AVAudioPlayer {
         guard let combinedRecordings else {
             DDLogError("[Voice Recorder] Combined assets missing for creating player.")
             throw VoiceMessageError.assetNotFound
         }
-        
-        try audioSessionManager.setupForPlayback()
-        
+
+        // Before the player exists, so it is created against the session it will play on.
+        try await claimAudioSession(for: .playback)
+
         let player = try AVAudioPlayer(contentsOf: combinedRecordings.url)
         player.delegate = self
         currentPlayer = player
@@ -439,12 +527,12 @@ final class VoiceMessageRecorderViewModel: NSObject, ObservableObject {
         // We possibly need to combine the files first, and then call play.
         terminateRecorder { [weak self] in
             Task { @MainActor in
-                self?.startPlaying()
+                await self?.startPlaying()
             }
         }
     }
 
-    private func startPlaying() {
+    private func startPlaying() async {
         // We disallow play when in a call
         guard !NavigationBarPromptHandler.isCallActiveInBackground, !NavigationBarPromptHandler.isGroupCallActive else {
             NotificationPresenterWrapper.shared.present(type: .recordingCallRunning)
@@ -458,7 +546,7 @@ final class VoiceMessageRecorderViewModel: NSObject, ObservableObject {
         }
         else {
             do {
-                player = try createPlayer()
+                player = try await createPlayer()
             }
             catch {
                 DDLogError("[Voice Recorder] Failed to start playing: \(error).")
@@ -597,6 +685,10 @@ final class VoiceMessageRecorderViewModel: NSObject, ObservableObject {
         stopRecordTimer()
         terminatePlayer()
         cleanupFiles()
+        
+        Task {
+            await releaseAudioSessionClaim()
+        }
     }
     
     func saveVoiceMessageRecordingAsDraft() {

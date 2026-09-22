@@ -20,19 +20,3 @@ public enum FileUtilitySetter {
         )
     }
 }
-
-@available(
-    swift,
-    obsoleted: 1.0,
-    renamed: "FileUtilityObjCSetter",
-    message: "Only use from Objective-C"
-)
-@objc public class FileUtilityObjCSetter: NSObject {
-    @objc public static func setInitialFileUtility() {
-        FileUtilitySetter.setInitialFileUtility()
-    }
-
-    @objc public static func setRunningPreviewsFileUtility() {
-        FileUtilitySetter.setRunningPreviewsFileUtility()
-    }
-}

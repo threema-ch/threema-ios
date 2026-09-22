@@ -26,7 +26,7 @@ final class SSLCAHelper: NSObject, SSLCAHelperProtocol {
     /// Check is authentication mode like server trust.
     /// - Parameter protectionSpace: Received protection space
     /// - Returns: True if server trust
-    @objc static func canAuthenticate(_ protectionSpace: URLProtectionSpace) -> Bool {
+    static func canAuthenticate(_ protectionSpace: URLProtectionSpace) -> Bool {
         protectionSpace.authenticationMethod == NSURLAuthenticationMethodServerTrust
     }
 

@@ -12,7 +12,7 @@ final class ResultPollViewModel: ObservableObject {
     
     // MARK: - Public properties
     
-    let doneTitle = #localize("Done")
+    let doneTitle = #localize("done")
 
     var navigationTitle: String {
         poll?.isClosed ?? false ? #localize("ballot_results") : #localize("ballot_intermediate_results")

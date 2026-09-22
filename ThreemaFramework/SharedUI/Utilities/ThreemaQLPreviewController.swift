@@ -64,12 +64,24 @@ public final class ThreemaQLPreviewController: QLPreviewController {
     /// Hides the navigation toolbar and observes its `isHidden` state to keep it
     /// hidden if QuickLook tries to show it again.
     private func removeToolbarItems() {
-        if mdmSetup?.disableShareMedia() ?? false, let navigationToolbar = navigationController?.toolbar {
+        
+        guard mdmSetup?.disableShareMedia() ?? false else {
+            return
+        }
+       
+        if let navigationToolbar = navigationController?.toolbar {
             navigationToolbar.isHidden = true
             /// Fires whenever QuickLook changes the toolbar visibility. Keeps it hidden
             /// for the lifetime of this controller.
             let observation = navigationToolbar.observe(\.isHidden, changeHandler: observeNavigationToolbarHidden)
             observations.append(observation)
+        }
+        
+        // Since iOS 26, the share item has moved to the bottom toolbar. Since we cannot observe its visibility directly
+        // we use the observation of the visibility of the navigation bar to re-hide its items below.
+        if #available(iOS 26.0, *) {
+            // We cannot detect which item is the share button, so we just remove all of them.
+            toolbarItems = nil
         }
     }
     
@@ -77,6 +89,11 @@ public final class ThreemaQLPreviewController: QLPreviewController {
     func observeNavigationToolbarHidden(changed: UIView, change: NSKeyValueObservedChange<Bool>) {
         if navigationController?.toolbar.isHidden == false {
             navigationController?.toolbar.isHidden = true
+            
+            if #available(iOS 26.0, *) {
+                // We cannot detect which item is the share button, so we just remove all of them.
+                toolbarItems = nil
+            }
         }
     }
 }
@@ -144,22 +161,29 @@ extension ThreemaQLPreviewController: UINavigationControllerDelegate {
         }
         
         qlPreviewViewController.currentPreviewItemIndex = 0
+        stripButtons(from: viewController)
     }
 
     /// Strips buttons immediately and again after a short delay to catch items
     /// that QuickLook adds asynchronously after the triggering event.
     private func stripButtonsImmediatelyAndDelayed(from viewController: UIViewController?) {
         stripButtons(from: viewController)
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self, weak viewController] in
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) { [weak self, weak viewController] in
             self?.stripButtons(from: viewController)
         }
     }
 
     /// Removes all share and menu controls from the given view controller's navigation item.
     private func stripButtons(from viewController: UIViewController?) {
-        viewController?.navigationItem.rightBarButtonItems = []
-        viewController?.navigationItem.titleView = nil
-        viewController?.navigationItem.documentProperties = nil
-        viewController?.navigationItem.titleMenuProvider = nil
+        guard let viewController else {
+            return
+        }
+        
+        viewController.navigationItem.rightBarButtonItems = []
+        viewController.navigationItem.titleView = nil
+        viewController.navigationItem.documentProperties = nil
+        viewController.navigationItem.titleMenuProvider = nil
+        
+        viewController.toolbarItems = nil
     }
 }

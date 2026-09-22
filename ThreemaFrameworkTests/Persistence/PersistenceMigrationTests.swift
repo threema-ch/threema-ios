@@ -4,6 +4,11 @@ import ThreemaEssentials
 
 @testable import ThreemaFramework
 
+// The test operates directly on a `mainQueueConcurrencyType` Core Data context (see `DatabaseContextMock`), so the
+// whole suite must run on the main thread. Without this, Swift Testing runs the test body on a background cooperative
+// thread while the main run loop concurrently processes the context's recent changes, corrupting it and crashing in
+// `-[NSManagedObjectContext _postRefreshedObjectsNotificationAndClearList]`.
+@MainActor
 @Suite("Persistence migration tests")
 struct PersistenceMigrationTests {
 

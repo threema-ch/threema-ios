@@ -7,10 +7,3 @@ extension Array {
         }
     }
 }
-
-extension NSArray {
-    @objc func chunked(into size: Int) -> NSArray {
-        let arr = Array(self)
-        return NSArray(array: arr.chunked(into: size))
-    }
-}

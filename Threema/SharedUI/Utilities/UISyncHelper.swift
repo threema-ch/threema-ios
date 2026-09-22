@@ -91,7 +91,7 @@ final class UISyncHelper {
                 }
             }
             else {
-                UIAlertTemplate.showAlert(owner: self.viewController, title: title, message: message) { _ in
+                UIAlertTemplate.showOKAlert(owner: self.viewController, title: title, message: message) { _ in
                     self.seal?.reject(error)
                 }
             }

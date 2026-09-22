@@ -194,7 +194,7 @@ extension ChatViewStickerMessageTableViewCell: ChatViewMessageActions {
                     NotificationPresenterWrapper.shared.present(type: .copyError)
                     return
                 }
-                UIPasteboard.general.image = image
+                UIPasteboard.general.set(image: image, sensitiveContent: .messageContent)
                 NotificationPresenterWrapper.shared.present(type: .copySuccess)
 
             default:

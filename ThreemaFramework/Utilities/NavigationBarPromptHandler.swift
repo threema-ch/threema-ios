@@ -3,9 +3,9 @@ import Foundation
 import GroupCalls
 import ThreemaMacros
 
-@objc public final class NavigationBarPromptHandler: NSObject {
+public final class NavigationBarPromptHandler: NSObject {
     
-    @objc public static var isWebActive = false {
+    public static var isWebActive = false {
         didSet {
             guard isWebActive != oldValue else {
                 return
@@ -14,7 +14,7 @@ import ThreemaMacros
         }
     }
     
-    @objc public static var isCallActiveInBackground = false {
+    public static var isCallActiveInBackground = false {
         didSet {
             guard isCallActiveInBackground != oldValue else {
                 return
@@ -34,7 +34,7 @@ import ThreemaMacros
         }
     }
     
-    @objc public static var name: String? = nil
+    public static var name: String? = nil
         
     public static func getCurrentPrompt(duration: Int?) -> String? {
         

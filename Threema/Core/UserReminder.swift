@@ -110,7 +110,7 @@ enum UserReminder {
         let title = #localize("archived_alert_title")
         let message = #localize("archived_alert_message")
         
-        UIAlertTemplate.showAlert(owner: viewController, title: title, message: message, actionOk: { _ in
+        UIAlertTemplate.showOKAlert(owner: viewController, title: title, message: message, actionOk: { _ in
             AppGroup.userDefaults().set(true, forKey: key)
         })
     }
@@ -127,7 +127,7 @@ enum UserReminder {
         let title = #localize("privateChat_alert_title")
         let message = #localize("private_delete_info_alert_message")
         
-        UIAlertTemplate.showAlert(owner: viewController, title: title, message: message, actionOk: { _ in
+        UIAlertTemplate.showOKAlert(owner: viewController, title: title, message: message, actionOk: { _ in
             AppGroup.userDefaults().set(true, forKey: key)
         })
     }

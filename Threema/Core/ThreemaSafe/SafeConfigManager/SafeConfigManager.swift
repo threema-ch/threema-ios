@@ -3,7 +3,7 @@ import Foundation
 import Keychain
 import ThreemaEssentials
 
-final class SafeConfigManager: NSObject, SafeConfigManagerProtocol {
+final class SafeConfigManager: SafeConfigManagerProtocol {
 
     private static let safeConfigMutationLock = DispatchQueue(label: "safeConfigMutationLock")
     private static var safeConfig: SafeData?
@@ -12,11 +12,10 @@ final class SafeConfigManager: NSObject, SafeConfigManagerProtocol {
     
     init(keychainManager: KeychainManagerProtocol) {
         self.keychainManager = keychainManager
-        super.init()
     }
     
     // Convenience init for legacy code that uses AppLaunchManager
-    @objc override convenience init() {
+    convenience init() {
         self.init(keychainManager: KeychainManager(
             remoteSecretManager: RemoteSecretProvider.remoteSecretManager
         ))
@@ -24,7 +23,7 @@ final class SafeConfigManager: NSObject, SafeConfigManagerProtocol {
 
     // MARK: - Safe config
 
-    @objc public func destroy() {
+    public func destroy() {
         UserSettings.shared().safeConfig = nil
         SafeConfigManager.safeConfig = nil
         destroyKeychain()
@@ -40,41 +39,41 @@ final class SafeConfigManager: NSObject, SafeConfigManagerProtocol {
         setConfig(config)
     }
 
-    @objc public func getCustomServer() -> String? {
+    public func getCustomServer() -> String? {
         getConfig().customServer
     }
 
-    @objc public func setCustomServer(_ value: String?) {
+    public func setCustomServer(_ value: String?) {
         let config = getConfig()
         config.customServer = value
         setConfig(config)
     }
 
-    @objc public func getServerUser() -> String? {
+    public func getServerUser() -> String? {
         getConfig().serverUser
     }
 
-    @objc public func setServerUser(_ value: String?) {
+    public func setServerUser(_ value: String?) {
         let config = getConfig()
         config.serverUser = value
         setConfig(config)
     }
 
-    @objc public func getServerPassword() -> String? {
+    public func getServerPassword() -> String? {
         getConfig().serverPassword
     }
 
-    @objc public func setServerPassword(_ value: String?) {
+    public func setServerPassword(_ value: String?) {
         let config = getConfig()
         config.serverPassword = value
         setConfig(config)
     }
 
-    @objc public func getServer() -> String? {
+    public func getServer() -> String? {
         getConfig().server
     }
 
-    @objc public func setServer(_ value: String?) {
+    public func setServer(_ value: String?) {
         let config = getConfig()
         config.server = value
         setConfig(config)
@@ -82,11 +81,6 @@ final class SafeConfigManager: NSObject, SafeConfigManagerProtocol {
 
     public func getMaxBackupBytes() -> Int? {
         getConfig().maxBackupBytes
-    }
-    
-    @available(swift, obsoleted: 1.0, renamed: "getMaxBackupBytes()", message: "Only use from Objective-C")
-    @objc public func getMaxBackupBytesObjC() -> NSNumber? {
-        getConfig().maxBackupBytes as NSNumber?
     }
 
     public func setMaxBackupBytes(_ value: Int?) {
@@ -97,11 +91,6 @@ final class SafeConfigManager: NSObject, SafeConfigManagerProtocol {
 
     public func getRetentionDays() -> Int? {
         getConfig().retentionDays
-    }
-    
-    @available(swift, obsoleted: 1.0, renamed: "getRetentionDays()", message: "Only use from Objective-C")
-    @objc public func getRetentionDaysObjC() -> NSNumber? {
-        getConfig().retentionDays as NSNumber?
     }
 
     public func setRetentionDays(_ value: Int?) {
@@ -170,7 +159,7 @@ final class SafeConfigManager: NSObject, SafeConfigManagerProtocol {
         setConfig(config)
     }
 
-    @objc public func getIsTriggered() -> Bool {
+    public func getIsTriggered() -> Bool {
         getConfig().isTriggered != 0
     }
 

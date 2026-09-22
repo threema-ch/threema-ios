@@ -1,18 +1,18 @@
 import Foundation
 
-public final class ShowConversationInformation: NSObject {
-    @objc public let conversation: ConversationEntity
-    @objc public let forceCompose: Bool
-    @objc public let precomposedText: String?
-    @objc public let image: UIImage?
-    @objc public let messageObjectID: NSManagedObjectID?
+public final class ShowConversationInformation {
+    public let conversation: ConversationEntity
+    public let forceCompose: Bool
+    public let precomposedText: String?
+    public let image: UIImage?
+    public let messageObjectID: NSManagedObjectID?
 
     // TODO: (IOS-4617) Remove once logic is improved. We need a solution to inject these dynamically into a initialized chat view.
-    @objc public var forceReopenChat: Bool {
+    public var forceReopenChat: Bool {
         precomposedText != nil || image != nil || messageObjectID != nil
     }
     
-    init(
+    public init(
         conversation: ConversationEntity,
         forceCompose: Bool = true,
         precomposedText: String? = nil,
@@ -26,7 +26,7 @@ public final class ShowConversationInformation: NSObject {
         self.messageObjectID = messageObjectID
     }
     
-    @objc public static func createInfo(
+    public static func createInfo(
         for notification: NSNotification
     ) -> ShowConversationInformation? {
         guard let info = notification.userInfo else {

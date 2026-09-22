@@ -1,7 +1,7 @@
 import Foundation
 
 public final class Colors: NSObject {
-    @objc public enum Theme: NSInteger {
+    public enum Theme: NSInteger {
         case light
         case dark
 
@@ -13,7 +13,7 @@ public final class Colors: NSObject {
         }
     }
     
-    @objc public static var theme: Theme = .light {
+    public static var theme: Theme = .light {
         didSet {
             StyleKit.resetThemedCache()
             Colors.setupAppearance()
@@ -24,7 +24,16 @@ public final class Colors: NSObject {
         }
     }
              
-    @objc public class func resolveTheme() {
+    public static var themeUserInterfaceStyle: UIUserInterfaceStyle {
+        switch theme {
+        case .light:
+            .light
+        case .dark:
+            .dark
+        }
+    }
+
+    public class func resolveTheme() {
         switch UserSettings.shared().interfaceStyle {
         case UIUserInterfaceStyle.light.rawValue:
             Colors.theme = .light

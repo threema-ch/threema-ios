@@ -9,7 +9,7 @@ import RemoteSecretProtocol
 import ThreemaFramework
 import ThreemaMacros
 
-class ShareSheetRootNavigationController: UINavigationController {
+final class ShareSheetRootNavigationController: UINavigationController {
 
     private lazy var businessInjector = BusinessInjector.ui
    
@@ -62,17 +62,24 @@ class ShareSheetRootNavigationController: UINavigationController {
                 return
             }
 
-            // Register connection state delegate
-            businessInjector.serverConnector.registerConnectionStateDelegate(delegate: self)
-
-            // Delete all files and directories from temporary directory
-            FileUtility.shared.removeItemsInDirectory(directoryURL: FileUtility.shared.appTemporaryDirectory)
-
-            // Check if we already have a suggested contact
-            setContactsFromIntent()
-            
+            prepareExtension()
             startExtension()
         }
+    }
+
+    /// Setup needed before `startExtension()`
+    ///
+    /// This also runs after the lock screen was dismissed, because in that case `extensionIsReady` completes with
+    /// `false` and the extension is only started in `didPasscodeViewDismiss(_:)`.
+    private func prepareExtension() {
+        // Register connection state delegate
+        businessInjector.serverConnector.registerConnectionStateDelegate(delegate: self)
+
+        // Delete all files and directories from temporary directory
+        FileUtility.shared.removeItemsInDirectory(directoryURL: FileUtility.shared.appTemporaryDirectory)
+
+        // Check if we already have a suggested contact
+        setContactsFromIntent()
     }
 
     deinit {
@@ -450,7 +457,7 @@ class ShareSheetRootNavigationController: UINavigationController {
             
             let navigationController = UINavigationController(rootViewController: lockViewController)
             navigationController.setNavigationBarHidden(true, animated: false)
-            
+
             present(navigationController, animated: true, completion: {
                 self.tryTouchIDAuthentication()
             })
@@ -474,7 +481,7 @@ class ShareSheetRootNavigationController: UINavigationController {
                         else {
                             #localize("alert_biometrics_changed_title_touch")
                         }
-                    UIAlertTemplate.showAlert(
+                    UIAlertTemplate.showOKAlert(
                         owner: vc,
                         title: title,
                         message: String.localizedStringWithFormat(
@@ -497,6 +504,7 @@ class ShareSheetRootNavigationController: UINavigationController {
     
     private func showExtension() {
         presentedViewController?.dismiss(animated: true) {
+            self.prepareExtension()
             self.startExtension()
         }
     }
@@ -561,16 +569,19 @@ class ShareSheetRootNavigationController: UINavigationController {
                 DDLogWarn("[ShareExtension] Business injector is not ready to use")
                 showNeedStartAppFirst()
                 completion(false)
+                return
             }
-            
-            if !checkPasscode() {
+
+            guard checkPasscode() else {
                 completion(false)
+                return
             }
-            
-            if !checkContextItems() {
+
+            guard checkContextItems() else {
                 completion(false)
+                return
             }
-            
+
             completion(true)
         }
     }
@@ -585,7 +596,7 @@ class ShareSheetRootNavigationController: UINavigationController {
             DDLogError("\(err)")
             fatalError(err)
         }
-        UIAlertTemplate.showAlert(owner: viewController, title: title, message: message, actionOk: { _ in
+        UIAlertTemplate.showOKAlert(owner: viewController, title: title, message: message, actionOk: { _ in
             
             if closeOnOK {
                 self.extensionContext!.completeRequest(returningItems: nil, completionHandler: { _ in
@@ -667,9 +678,7 @@ class ShareSheetRootNavigationController: UINavigationController {
         AppGroup.setGroupID(BundleUtil.threemaAppGroupIdentifier())
         AppGroup.setAppID(BundleUtil.threemaAppIdentifier())
         
-        if !UserSettings.shared().ipcCommunicationEnabled {
-            AppGroup.setMeActive()
-        }
+        AppGroup.setMeActiveUnlessIPC()
 
         UserSettings.resetSharedInstance()
         
@@ -813,9 +822,7 @@ class ShareSheetRootNavigationController: UINavigationController {
     }
     
     @objc private func didBecomeActive(notification: Notification) {
-        if !UserSettings.shared().ipcCommunicationEnabled {
-            AppGroup.setMeActive()
-        }
+        AppGroup.setMeActiveUnlessIPC()
     }
 }
 
@@ -887,6 +894,7 @@ extension ShareSheetRootNavigationController: JKLLockScreenViewControllerDelegat
     
     func didPasscodeViewDismiss(_ viewController: JKLLockScreenViewController!) {
         if isAuthorized {
+            prepareExtension()
             startExtension()
         }
     }

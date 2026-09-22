@@ -1014,7 +1014,7 @@ Process incoming message.
 
 
 - (void)processIncomingVoIPCallOfferMessage:(BoxVoIPCallOfferMessage *)msg onCompletion:(void(^ _Nonnull)(id<MessageProcessorDelegate> _Nullable))onCompletion onError:(void(^ _Nonnull)(NSError * _Nonnull, id<MessageProcessorDelegate> _Nullable delegateError))onError {
-    VoIPCallOfferMessage *message = [VoIPCallMessageDecoder decodeVoIPCallOfferFrom:msg];
+    VoIPCallOfferMessage *message = [VoIPCallMessageDecoder decodeVoIPCallOfferFrom:msg receivedAsReflected:NO isOutgoing:NO];
     if (message == nil) {
         onError([ThreemaError threemaError:@"Error parsing json for voip call offer"], nil);
         return;
@@ -1024,7 +1024,7 @@ Process incoming message.
 }
 
 - (void)processIncomingVoIPCallAnswerMessage:(BoxVoIPCallAnswerMessage *)msg onCompletion:(void(^ _Nonnull)(id<MessageProcessorDelegate> _Nullable))onCompletion onError:(void(^ _Nonnull)(NSError * _Nonnull, id<MessageProcessorDelegate> _Nullable))onError {
-    VoIPCallAnswerMessage *message = [VoIPCallMessageDecoder decodeVoIPCallAnswerFrom:msg];
+    VoIPCallAnswerMessage *message = [VoIPCallMessageDecoder decodeVoIPCallAnswerFrom:msg receivedAsReflected:NO isOutgoing:NO];
     if (message == nil) {
         onError([ThreemaError threemaError:@"Error parsing json for ballot vote"], nil);
         return;
@@ -1034,7 +1034,7 @@ Process incoming message.
 }
 
 - (void)processIncomingVoIPCallIceCandidatesMessage:(BoxVoIPCallIceCandidatesMessage *)msg onCompletion:(void(^ _Nonnull)(id<MessageProcessorDelegate> _Nullable))onCompletion onError:(void(^ _Nonnull)(NSError * _Nonnull, id<MessageProcessorDelegate> _Nullable))onError {
-    VoIPCallIceCandidatesMessage *message = [VoIPCallMessageDecoder decodeVoIPCallIceCandidatesFrom:msg];
+    VoIPCallIceCandidatesMessage *message = [VoIPCallMessageDecoder decodeVoIPCallIceCandidatesFrom:msg receivedAsReflected:NO isOutgoing:NO];
     if (message == nil) {
         onError([ThreemaError threemaError:@"Error parsing json for ice candidates"], nil);
         return;
@@ -1044,25 +1044,25 @@ Process incoming message.
 }
 
 - (void)processIncomingVoIPCallHangupMessage:(BoxVoIPCallHangupMessage *)msg onCompletion:(void(^ _Nonnull)(id<MessageProcessorDelegate> _Nullable))onCompletion onError:(void(^ _Nonnull)(NSError * _Nonnull, id<MessageProcessorDelegate> _Nullable))onError {
-    VoIPCallHangupMessage *message = [VoIPCallMessageDecoder decodeVoIPCallHangupFrom:msg contactIdentity:msg.fromIdentity];
+    VoIPCallHangupMessage *message = [VoIPCallMessageDecoder decodeVoIPCallHangupFrom:msg contactIdentity:msg.fromIdentity receivedAsReflected:NO isOutgoing:NO];
     
     if (message == nil) {
         onError([ThreemaError threemaError:@"Error parsing json for hangup"], nil);
         return;
     }
     
-    [messageProcessorDelegate processVoIPCall:message identity:nil onCompletion:onCompletion onError:onError];
+    [messageProcessorDelegate processVoIPCall:message identity:msg.fromIdentity onCompletion:onCompletion onError:onError];
 }
 
 - (void)processIncomingVoipCallRingingMessage:(BoxVoIPCallRingingMessage *)msg onCompletion:(void(^ _Nonnull)(id<MessageProcessorDelegate> _Nullable delegate))onCompletion onError:(void(^ _Nonnull)(NSError * _Nonnull, id<MessageProcessorDelegate> _Nullable))onError {
-    VoIPCallRingingMessage *message = [VoIPCallMessageDecoder decodeVoIPCallRingingFrom:msg contactIdentity:msg.fromIdentity];
+    VoIPCallRingingMessage *message = [VoIPCallMessageDecoder decodeVoIPCallRingingFrom:msg contactIdentity:msg.fromIdentity receivedAsReflected:NO isOutgoing:NO];
 
     if (message == nil) {
         onError([ThreemaError threemaError:@"Error parsing json for ringing"], nil);
         return;
     }
     
-    [messageProcessorDelegate processVoIPCall:message identity:nil onCompletion: onCompletion onError:onError];
+    [messageProcessorDelegate processVoIPCall:message identity:msg.fromIdentity onCompletion: onCompletion onError:onError];
 }
 
 

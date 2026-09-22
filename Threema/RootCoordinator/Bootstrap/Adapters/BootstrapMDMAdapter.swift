@@ -5,6 +5,7 @@ import ThreemaFramework
 @MainActor
 protocol BootstrapMDMSetupProtocol: AnyObject {
     var mdmSetup: MDMSetup { get }
+    var isRemoteSecretEnabled: Bool { get }
     var disableBackups: Bool { get }
     var isSafeRestoreForced: Bool { get }
     var isSafeRestoreDisabled: Bool { get }
@@ -36,11 +37,15 @@ final class BootstrapMDMAdapter: NSObject, BootstrapMDMSetupProtocol {
     }
     
     // MARK: - Properties
-    
+
     let mdmSetup: MDMSetup
-    
+
     // MARK: - Computed Properties
-    
+
+    var isRemoteSecretEnabled: Bool {
+        mdmSetup.enableRemoteSecret()
+    }
+
     var disableBackups: Bool {
         mdmSetup.disableBackups()
     }

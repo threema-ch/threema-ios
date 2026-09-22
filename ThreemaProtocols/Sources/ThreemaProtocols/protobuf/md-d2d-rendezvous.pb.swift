@@ -206,7 +206,7 @@ import SwiftProtobuf
 // incompatible with the version of SwiftProtobuf to which you are linking.
 // Please ensure that you are building against the same version of the API
 // that was used to generate this file.
-fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAPIVersionCheck {
+fileprivate nonisolated struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAPIVersionCheck {
   struct _2: SwiftProtobuf.ProtobufAPIVersion_2 {}
   typealias Version = _2
 }
@@ -254,7 +254,7 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
 /// 5. On each successful direct or relayed connection made in the background,
 ///    forward an event to the upper-layer protocol in order for it to select one
 ///    of the paths for nomination.
-public struct D2dRendezvous_RendezvousInit: Sendable {
+public nonisolated struct D2dRendezvous_RendezvousInit: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -284,7 +284,7 @@ public struct D2dRendezvous_RendezvousInit: Sendable {
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public enum Version: SwiftProtobuf.Enum, Swift.CaseIterable {
+  public nonisolated enum Version: SwiftProtobuf.Enum, Swift.CaseIterable {
     public typealias RawValue = Int
 
     /// Initial version.
@@ -317,7 +317,7 @@ public struct D2dRendezvous_RendezvousInit: Sendable {
   }
 
   /// Network cost of an interface
-  public enum NetworkCost: SwiftProtobuf.Enum, Swift.CaseIterable {
+  public nonisolated enum NetworkCost: SwiftProtobuf.Enum, Swift.CaseIterable {
     public typealias RawValue = Int
 
     /// It is unknown whether the interface is metered or unmetered
@@ -362,7 +362,7 @@ public struct D2dRendezvous_RendezvousInit: Sendable {
   }
 
   /// Relayed WebSocket path
-  public struct RelayedWebSocket: Sendable {
+  public nonisolated struct RelayedWebSocket: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
@@ -383,7 +383,7 @@ public struct D2dRendezvous_RendezvousInit: Sendable {
   }
 
   /// Direct path to a TCP server created by the initiator
-  public struct DirectTcpServer: Sendable {
+  public nonisolated struct DirectTcpServer: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
@@ -397,7 +397,7 @@ public struct D2dRendezvous_RendezvousInit: Sendable {
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
     /// An IP address
-    public struct IpAddress: Sendable {
+    public nonisolated struct IpAddress: Sendable {
       // SwiftProtobuf.Message conformance is added in an extension below. See the
       // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
       // methods supported on all messages.
@@ -426,7 +426,7 @@ public struct D2dRendezvous_RendezvousInit: Sendable {
 }
 
 /// Messages required for the initial lock-step handshake between RRD and RID.
-public struct D2dRendezvous_Handshake: Sendable {
+public nonisolated struct D2dRendezvous_Handshake: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -434,7 +434,7 @@ public struct D2dRendezvous_Handshake: Sendable {
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
   /// Handshake messages from RRD to RID.
-  public struct RrdToRid: Sendable {
+  public nonisolated struct RrdToRid: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
@@ -443,7 +443,7 @@ public struct D2dRendezvous_Handshake: Sendable {
 
     /// Initial message from RRD containing its authentication challenge,
     /// encrypted by RRD's encryption scheme with RRDAK.
-    public struct Hello: Sendable {
+    public nonisolated struct Hello: Sendable {
       // SwiftProtobuf.Message conformance is added in an extension below. See the
       // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
       // methods supported on all messages.
@@ -467,7 +467,7 @@ public struct D2dRendezvous_Handshake: Sendable {
     /// 1. If the challenge `response` from RRD does not match the challenge sent
     ///    by RID, close the connection with a protocol error (WS: `4000`) and
     ///    abort these steps.
-    public struct Auth: Sendable {
+    public nonisolated struct Auth: Sendable {
       // SwiftProtobuf.Message conformance is added in an extension below. See the
       // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
       // methods supported on all messages.
@@ -484,7 +484,7 @@ public struct D2dRendezvous_Handshake: Sendable {
   }
 
   /// Handshake messages from RID to RRD.
-  public struct RidToRrd: Sendable {
+  public nonisolated struct RidToRrd: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
@@ -500,7 +500,7 @@ public struct D2dRendezvous_Handshake: Sendable {
     /// 1. If the challenge `response` from RID does not match the challenge sent
     ///    by RRD, close the connection with a protocol error (WS: `4000`) and
     ///    abort these steps.
-    public struct AuthHello: Sendable {
+    public nonisolated struct AuthHello: Sendable {
       // SwiftProtobuf.Message conformance is added in an extension below. See the
       // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
       // methods supported on all messages.
@@ -537,7 +537,7 @@ public struct D2dRendezvous_Handshake: Sendable {
 ///
 /// ¹: Closing other paths is only triggered by the receiver as it may otherwise
 ///    lead to a race between nomination and close detection.
-public struct D2dRendezvous_Nominate: Sendable {
+public nonisolated struct D2dRendezvous_Nominate: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -549,9 +549,9 @@ public struct D2dRendezvous_Nominate: Sendable {
 
 // MARK: - Code below here is support for the SwiftProtobuf runtime.
 
-fileprivate let _protobuf_package = "d2d_rendezvous"
+fileprivate nonisolated let _protobuf_package = "d2d_rendezvous"
 
-extension D2dRendezvous_RendezvousInit: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2dRendezvous_RendezvousInit: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".RendezvousInit"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}version\0\u{1}ak\0\u{3}relayed_web_socket\0\u{3}direct_tcp_server\0")
 
@@ -600,15 +600,15 @@ extension D2dRendezvous_RendezvousInit: SwiftProtobuf.Message, SwiftProtobuf._Me
   }
 }
 
-extension D2dRendezvous_RendezvousInit.Version: SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2dRendezvous_RendezvousInit.Version: SwiftProtobuf._ProtoNameProviding {
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0V1_0\0")
 }
 
-extension D2dRendezvous_RendezvousInit.NetworkCost: SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2dRendezvous_RendezvousInit.NetworkCost: SwiftProtobuf._ProtoNameProviding {
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0UNKNOWN\0\u{1}UNMETERED\0\u{1}METERED\0")
 }
 
-extension D2dRendezvous_RendezvousInit.RelayedWebSocket: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2dRendezvous_RendezvousInit.RelayedWebSocket: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = D2dRendezvous_RendezvousInit.protoMessageName + ".RelayedWebSocket"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}path_id\0\u{3}network_cost\0\u{1}url\0")
 
@@ -648,7 +648,7 @@ extension D2dRendezvous_RendezvousInit.RelayedWebSocket: SwiftProtobuf.Message, 
   }
 }
 
-extension D2dRendezvous_RendezvousInit.DirectTcpServer: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2dRendezvous_RendezvousInit.DirectTcpServer: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = D2dRendezvous_RendezvousInit.protoMessageName + ".DirectTcpServer"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}port\0\u{3}ip_addresses\0")
 
@@ -683,7 +683,7 @@ extension D2dRendezvous_RendezvousInit.DirectTcpServer: SwiftProtobuf.Message, S
   }
 }
 
-extension D2dRendezvous_RendezvousInit.DirectTcpServer.IpAddress: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2dRendezvous_RendezvousInit.DirectTcpServer.IpAddress: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = D2dRendezvous_RendezvousInit.DirectTcpServer.protoMessageName + ".IpAddress"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}path_id\0\u{3}network_cost\0\u{1}ip\0")
 
@@ -723,7 +723,7 @@ extension D2dRendezvous_RendezvousInit.DirectTcpServer.IpAddress: SwiftProtobuf.
   }
 }
 
-extension D2dRendezvous_Handshake: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2dRendezvous_Handshake: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".Handshake"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap()
 
@@ -742,7 +742,7 @@ extension D2dRendezvous_Handshake: SwiftProtobuf.Message, SwiftProtobuf._Message
   }
 }
 
-extension D2dRendezvous_Handshake.RrdToRid: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2dRendezvous_Handshake.RrdToRid: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = D2dRendezvous_Handshake.protoMessageName + ".RrdToRid"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap()
 
@@ -761,7 +761,7 @@ extension D2dRendezvous_Handshake.RrdToRid: SwiftProtobuf.Message, SwiftProtobuf
   }
 }
 
-extension D2dRendezvous_Handshake.RrdToRid.Hello: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2dRendezvous_Handshake.RrdToRid.Hello: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = D2dRendezvous_Handshake.RrdToRid.protoMessageName + ".Hello"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}challenge\0\u{1}etk\0")
 
@@ -796,7 +796,7 @@ extension D2dRendezvous_Handshake.RrdToRid.Hello: SwiftProtobuf.Message, SwiftPr
   }
 }
 
-extension D2dRendezvous_Handshake.RrdToRid.Auth: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2dRendezvous_Handshake.RrdToRid.Auth: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = D2dRendezvous_Handshake.RrdToRid.protoMessageName + ".Auth"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}response\0")
 
@@ -826,7 +826,7 @@ extension D2dRendezvous_Handshake.RrdToRid.Auth: SwiftProtobuf.Message, SwiftPro
   }
 }
 
-extension D2dRendezvous_Handshake.RidToRrd: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2dRendezvous_Handshake.RidToRrd: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = D2dRendezvous_Handshake.protoMessageName + ".RidToRrd"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap()
 
@@ -845,7 +845,7 @@ extension D2dRendezvous_Handshake.RidToRrd: SwiftProtobuf.Message, SwiftProtobuf
   }
 }
 
-extension D2dRendezvous_Handshake.RidToRrd.AuthHello: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2dRendezvous_Handshake.RidToRrd.AuthHello: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = D2dRendezvous_Handshake.RidToRrd.protoMessageName + ".AuthHello"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}response\0\u{1}challenge\0\u{1}etk\0")
 
@@ -885,7 +885,7 @@ extension D2dRendezvous_Handshake.RidToRrd.AuthHello: SwiftProtobuf.Message, Swi
   }
 }
 
-extension D2dRendezvous_Nominate: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2dRendezvous_Nominate: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".Nominate"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap()
 

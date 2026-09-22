@@ -52,7 +52,7 @@ final class TaskDefinitionTests: XCTestCase {
             expectedMember: BytesUtility.generateMessageNonce(),
         ]
 
-        let (_, groupEntity, conversation) = try dbPreparer.createGroup(
+        let (_, groupEntity, conversation) = dbPreparer.createGroup(
             groupID: BytesUtility.generateGroupID(),
             groupCreatorIdentity: "ADMIN007",
             members: ["ECHOECHO"]
@@ -307,7 +307,7 @@ final class TaskDefinitionTests: XCTestCase {
         let expectedMessageID = BytesUtility.generateMessageID()
         let expectedNonces = ["ADMIN007": BytesUtility.generateMessageNonce()]
 
-        let (_, groupEntity, conversation) = try dbPreparer.createGroup(
+        let (_, groupEntity, conversation) = dbPreparer.createGroup(
             groupID: BytesUtility.generateGroupID(),
             groupCreatorIdentity: "ADMIN007",
             members: ["ECHOECHO"]
@@ -353,7 +353,7 @@ final class TaskDefinitionTests: XCTestCase {
         let expectedMessagePoiAddress = "poi address"
         let expectedNonces = ["ADMIN007": BytesUtility.generateMessageNonce()]
 
-        let (_, groupEntity, conversation) = try dbPreparer.createGroup(
+        let (_, groupEntity, conversation) = dbPreparer.createGroup(
             groupID: BytesUtility.generateGroupID(),
             groupCreatorIdentity: "ADMIN007",
             members: ["ECHOECHO"]
@@ -402,7 +402,7 @@ final class TaskDefinitionTests: XCTestCase {
             expectedNonces[identity] = BytesUtility.generateMessageNonce()
         }
 
-        let (_, groupEntity, conversation) = try dbPreparer.createGroup(
+        let (_, groupEntity, conversation) = dbPreparer.createGroup(
             groupID: BytesUtility.generateGroupID(),
             groupCreatorIdentity: "CREATOR1",
             members: expectedMembers
@@ -453,7 +453,7 @@ final class TaskDefinitionTests: XCTestCase {
             expectedNonces[identity] = BytesUtility.generateMessageNonce()
         }
 
-        let (_, groupEntity, conversation) = try dbPreparer.createGroup(
+        let (_, groupEntity, conversation) = dbPreparer.createGroup(
             groupID: BytesUtility.generateGroupID(),
             groupCreatorIdentity: "CREATOR1",
             members: ["MEMBER01", "MEMBER02", "MEMBER03", "MEMBER04"]
@@ -540,7 +540,7 @@ final class TaskDefinitionTests: XCTestCase {
             expectedNonces[identity] = BytesUtility.generateMessageNonce()
         }
 
-        let (_, groupEntity, conversation) = try dbPreparer.createGroup(
+        let (_, groupEntity, conversation) = dbPreparer.createGroup(
             groupID: BytesUtility.generateGroupID(),
             groupCreatorIdentity: "CREATOR1",
             members: ["MEMBER01", "MEMBER02", "MEMBER03", "MEMBER04"]
@@ -594,7 +594,7 @@ final class TaskDefinitionTests: XCTestCase {
             expectedNonces[identity] = BytesUtility.generateMessageNonce()
         }
         
-        let (_, groupEntity, conversation) = try dbPreparer.createGroup(
+        let (_, groupEntity, conversation) = dbPreparer.createGroup(
             groupID: BytesUtility.generateGroupID(),
             groupCreatorIdentity: "CREATOR1",
             members: ["MEMBER01", "MEMBER02", "MEMBER03", "MEMBER04"]
@@ -752,7 +752,7 @@ final class TaskDefinitionTests: XCTestCase {
             expectedNonces[identity] = BytesUtility.generateMessageNonce()
         }
 
-        let (_, groupEntity, conversation) = try dbPreparer.createGroup(
+        let (_, groupEntity, conversation) = dbPreparer.createGroup(
             groupID: BytesUtility.generateGroupID(),
             groupCreatorIdentity: "CREATOR1",
             members: expectedToMembers

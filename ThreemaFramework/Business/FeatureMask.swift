@@ -3,19 +3,13 @@ import Foundation
 import ThreemaEssentials
 import ThreemaProtocols
 
-public enum FeatureMaskError: Error {
+enum FeatureMaskError: Error {
     case unknownError
 }
 
 public final class FeatureMask: NSObject, FeatureMaskProtocol {
     
     // MARK: - Local
-
-    /// Updates local feature mask and sends it to server
-    @available(swift, obsoleted: 1.0, renamed: "updateLocal()", message: "Only use from Objective-C")
-    @objc public static func updateLocalObjc() {
-        FeatureMask.updateLocal()
-    }
     
     /// Updates local feature mask and sends it to server
     public static func updateLocal(completion: (() -> Void)? = nil, onError: ((Error) -> Void)? = nil) {

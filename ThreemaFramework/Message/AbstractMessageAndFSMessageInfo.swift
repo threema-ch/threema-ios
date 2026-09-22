@@ -2,7 +2,7 @@ import Foundation
 
 /// A helper object to facilitate communication / passing (Swift) objects between `TaskExecutionReceiveMessage`,
 /// `MessageProcessor` and `ForwardSecurityMessageProcessor`
-class AbstractMessageAndFSMessageInfo: NSObject {
+final class AbstractMessageAndFSMessageInfo: NSObject {
     @objc let message: AbstractMessage?
     @objc let fsMessageInfo: Any? // Must be a FSMessageInfo
     

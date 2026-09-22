@@ -217,7 +217,7 @@ final class PublicKeyView: UIView {
     
     // MARK: - Actions
        
-    @objc public func close() {
+    @objc func close() {
         okButton.backgroundColor = .secondarySystemBackground
         
         if superview != nil {
@@ -231,11 +231,11 @@ final class PublicKeyView: UIView {
         onDismiss?()
     }
     
-    @objc func touchButtonDown() {
+    @objc private func touchButtonDown() {
         okButton.backgroundColor = Colors.backgroundTableViewCellSelected
     }
     
-    @objc func touchCancel() {
+    @objc private func touchCancel() {
         okButton.backgroundColor = .secondarySystemBackground
     }
 }

@@ -28,7 +28,7 @@ import SwiftProtobuf
 // incompatible with the version of SwiftProtobuf to which you are linking.
 // Please ensure that you are building against the same version of the API
 // that was used to generate this file.
-fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAPIVersionCheck {
+fileprivate nonisolated struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAPIVersionCheck {
   struct _2: SwiftProtobuf.ProtobufAPIVersion_2 {}
   typealias Version = _2
 }
@@ -41,7 +41,7 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
 /// Note 2: Once the D2D protocol is more stable, an unknown major version can be
 /// interpreted as incompatible. For now, we only have 0.X versions that define
 /// in which way they break compatibility.
-public enum D2d_ProtocolVersion: SwiftProtobuf.Enum, Swift.CaseIterable {
+public nonisolated enum D2d_ProtocolVersion: SwiftProtobuf.Enum, Swift.CaseIterable {
   public typealias RawValue = Int
 
   /// The version is unspecified.
@@ -116,7 +116,7 @@ public enum D2d_ProtocolVersion: SwiftProtobuf.Enum, Swift.CaseIterable {
 }
 
 /// Data shared across all devices and transmitted during the handshake.
-public struct D2d_SharedDeviceData: Sendable {
+public nonisolated struct D2d_SharedDeviceData: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -133,7 +133,7 @@ public struct D2d_SharedDeviceData: Sendable {
 }
 
 /// Metadata about a device, determined by the device itself.
-public struct D2d_DeviceInfo: Sendable {
+public nonisolated struct D2d_DeviceInfo: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -157,7 +157,7 @@ public struct D2d_DeviceInfo: Sendable {
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
   /// Platform
-  public enum Platform: SwiftProtobuf.Enum, Swift.CaseIterable {
+  public nonisolated enum Platform: SwiftProtobuf.Enum, Swift.CaseIterable {
     public typealias RawValue = Int
 
     /// Unknown platform
@@ -217,7 +217,7 @@ public struct D2d_DeviceInfo: Sendable {
 }
 
 /// A transaction scope. Used in the d2m transaction messages.
-public struct D2d_TransactionScope: Sendable {
+public nonisolated struct D2d_TransactionScope: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -226,7 +226,7 @@ public struct D2d_TransactionScope: Sendable {
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public enum Scope: SwiftProtobuf.Enum, Swift.CaseIterable {
+  public nonisolated enum Scope: SwiftProtobuf.Enum, Swift.CaseIterable {
     public typealias RawValue = Int
     case userProfileSync // = 0
     case contactSync // = 1
@@ -237,6 +237,7 @@ public struct D2d_TransactionScope: Sendable {
     case newDeviceSync // = 6
     case dropDevice // = 7
     case workSyncDelta // = 8
+    case o2OCall // = 9
     case UNRECOGNIZED(Int)
 
     public init() {
@@ -254,6 +255,7 @@ public struct D2d_TransactionScope: Sendable {
       case 6: self = .newDeviceSync
       case 7: self = .dropDevice
       case 8: self = .workSyncDelta
+      case 9: self = .o2OCall
       default: self = .UNRECOGNIZED(rawValue)
       }
     }
@@ -269,6 +271,7 @@ public struct D2d_TransactionScope: Sendable {
       case .newDeviceSync: return 6
       case .dropDevice: return 7
       case .workSyncDelta: return 8
+      case .o2OCall: return 9
       case .UNRECOGNIZED(let i): return i
       }
     }
@@ -284,6 +287,7 @@ public struct D2d_TransactionScope: Sendable {
       .newDeviceSync,
       .dropDevice,
       .workSyncDelta,
+      .o2OCall,
     ]
 
   }
@@ -292,7 +296,7 @@ public struct D2d_TransactionScope: Sendable {
 }
 
 /// Root message
-public struct D2d_Envelope: @unchecked Sendable {
+public nonisolated struct D2d_Envelope: @unchecked Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -406,7 +410,7 @@ public struct D2d_Envelope: @unchecked Sendable {
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
   /// The enveloped reflected message
-  public enum OneOf_Content: Equatable, Sendable {
+  public nonisolated enum OneOf_Content: Equatable, Sendable {
     case outgoingMessage(D2d_OutgoingMessage)
     case outgoingMessageUpdate(D2d_OutgoingMessageUpdate)
     case incomingMessage(D2d_IncomingMessage)
@@ -426,7 +430,7 @@ public struct D2d_Envelope: @unchecked Sendable {
 }
 
 /// Unique conversation identifier.
-public struct D2d_ConversationId: Sendable {
+public nonisolated struct D2d_ConversationId: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -463,7 +467,7 @@ public struct D2d_ConversationId: Sendable {
 
   /// A contact's Threema ID, distribution list ID or group identity to identify
   /// the conversation.
-  public enum OneOf_ID: Equatable, Sendable {
+  public nonisolated enum OneOf_ID: Equatable, Sendable {
     case contact(String)
     case distributionList(UInt64)
     case group(Common_GroupIdentity)
@@ -492,7 +496,7 @@ public struct D2d_ConversationId: Sendable {
 ///
 /// ¹: For contacts and distribution lists, there will be exactly one nonce. For
 /// groups, there will be as many nonces as there are group members minus one.
-public struct D2d_OutgoingMessage: Sendable {
+public nonisolated struct D2d_OutgoingMessage: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -554,7 +558,7 @@ public struct D2d_OutgoingMessage: Sendable {
 }
 
 /// Update one or more existing outgoing messages.
-public struct D2d_OutgoingMessageUpdate: Sendable {
+public nonisolated struct D2d_OutgoingMessageUpdate: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -572,7 +576,7 @@ public struct D2d_OutgoingMessageUpdate: Sendable {
   /// Note 2: This indicates that the referred message has been successfully
   /// stored in the message queue of the server. It does NOT indicate that the
   /// referred message has been delivered to the intended receiver.
-  public struct Sent: Sendable {
+  public nonisolated struct Sent: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
@@ -582,7 +586,7 @@ public struct D2d_OutgoingMessageUpdate: Sendable {
     public init() {}
   }
 
-  public struct Update: Sendable {
+  public nonisolated struct Update: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
@@ -615,7 +619,7 @@ public struct D2d_OutgoingMessageUpdate: Sendable {
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
     /// Update type
-    public enum OneOf_Update: Equatable, Sendable {
+    public nonisolated enum OneOf_Update: Equatable, Sendable {
       /// Mark the referred message as sent
       case sent(D2d_OutgoingMessageUpdate.Sent)
 
@@ -645,7 +649,7 @@ public struct D2d_OutgoingMessageUpdate: Sendable {
 /// 2. If a message with the same `message_id` exists within the associated
 ///    `conversation`, discard the message and abort these steps.
 /// 3. [...]
-public struct D2d_IncomingMessage: Sendable {
+public nonisolated struct D2d_IncomingMessage: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -682,7 +686,7 @@ public struct D2d_IncomingMessage: Sendable {
 }
 
 /// Update one or more existing incoming messages.
-public struct D2d_IncomingMessageUpdate: Sendable {
+public nonisolated struct D2d_IncomingMessageUpdate: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -696,7 +700,7 @@ public struct D2d_IncomingMessageUpdate: Sendable {
   ///
   /// Note: This may only be used when _read receipts_ have been turned off, i.e.
   /// as a replacement for reflecting `delivery-receipt` type _read_ (`0x02`).
-  public struct Read: Sendable {
+  public nonisolated struct Read: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
@@ -710,7 +714,7 @@ public struct D2d_IncomingMessageUpdate: Sendable {
     public init() {}
   }
 
-  public struct Update: Sendable {
+  public nonisolated struct Update: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
@@ -743,7 +747,7 @@ public struct D2d_IncomingMessageUpdate: Sendable {
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
     /// Update type
-    public enum OneOf_Update: Equatable, Sendable {
+    public nonisolated enum OneOf_Update: Equatable, Sendable {
       /// Mark the referred message as read
       case read(D2d_IncomingMessageUpdate.Read)
 
@@ -758,7 +762,7 @@ public struct D2d_IncomingMessageUpdate: Sendable {
 }
 
 /// User profile synchronisation message.
-public struct D2d_UserProfileSync: Sendable {
+public nonisolated struct D2d_UserProfileSync: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -777,13 +781,13 @@ public struct D2d_UserProfileSync: Sendable {
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
   /// Synchronisation type
-  public enum OneOf_Action: Equatable, Sendable {
+  public nonisolated enum OneOf_Action: Equatable, Sendable {
     case update(D2d_UserProfileSync.Update)
 
   }
 
   /// Update the user's profile
-  public struct Update: Sendable {
+  public nonisolated struct Update: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
@@ -808,7 +812,7 @@ public struct D2d_UserProfileSync: Sendable {
 }
 
 /// Contact synchronisation message.
-public struct D2d_ContactSync: Sendable {
+public nonisolated struct D2d_ContactSync: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -837,7 +841,7 @@ public struct D2d_ContactSync: Sendable {
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
   /// Synchronisation type
-  public enum OneOf_Action: Equatable, Sendable {
+  public nonisolated enum OneOf_Action: Equatable, Sendable {
     /// Create a Threema contact
     case create(D2d_ContactSync.Create)
     /// Update a Threema contact
@@ -846,7 +850,7 @@ public struct D2d_ContactSync: Sendable {
   }
 
   /// Create a Threema contact.
-  public struct Create: Sendable {
+  public nonisolated struct Create: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
@@ -868,7 +872,7 @@ public struct D2d_ContactSync: Sendable {
   }
 
   /// Update a Threema contact.
-  public struct Update: Sendable {
+  public nonisolated struct Update: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
@@ -893,7 +897,7 @@ public struct D2d_ContactSync: Sendable {
 }
 
 /// Group synchronisation message.
-public struct D2d_GroupSync: Sendable {
+public nonisolated struct D2d_GroupSync: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -931,7 +935,7 @@ public struct D2d_GroupSync: Sendable {
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
   /// Synchronisation type
-  public enum OneOf_Action: Equatable, Sendable {
+  public nonisolated enum OneOf_Action: Equatable, Sendable {
     /// Create a group
     case create(D2d_GroupSync.Create)
     /// Update a group
@@ -942,7 +946,7 @@ public struct D2d_GroupSync: Sendable {
   }
 
   /// Create a group.
-  public struct Create: Sendable {
+  public nonisolated struct Create: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
@@ -979,7 +983,7 @@ public struct D2d_GroupSync: Sendable {
   ///       `member-changes`.
   /// 5. Group `member-changes` by their associated `state-change` and add
   ///    appropriate status messages to the associated conversation.
-  public struct Update: Sendable {
+  public nonisolated struct Update: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
@@ -998,7 +1002,7 @@ public struct D2d_GroupSync: Sendable {
 
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public enum MemberStateChange: SwiftProtobuf.Enum, Swift.CaseIterable {
+    public nonisolated enum MemberStateChange: SwiftProtobuf.Enum, Swift.CaseIterable {
       public typealias RawValue = Int
 
       /// The member has been added
@@ -1048,7 +1052,7 @@ public struct D2d_GroupSync: Sendable {
   }
 
   /// Delete a group.
-  public struct Delete: Sendable {
+  public nonisolated struct Delete: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
@@ -1074,7 +1078,7 @@ public struct D2d_GroupSync: Sendable {
 }
 
 /// Distribution list synchronisation message.
-public struct D2d_DistributionListSync: Sendable {
+public nonisolated struct D2d_DistributionListSync: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -1112,7 +1116,7 @@ public struct D2d_DistributionListSync: Sendable {
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
   /// Synchronisation type
-  public enum OneOf_Action: Equatable, Sendable {
+  public nonisolated enum OneOf_Action: Equatable, Sendable {
     /// Create a distribution list
     case create(D2d_DistributionListSync.Create)
     /// Update a distribution list
@@ -1123,7 +1127,7 @@ public struct D2d_DistributionListSync: Sendable {
   }
 
   /// Create a distribution list.
-  public struct Create: Sendable {
+  public nonisolated struct Create: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
@@ -1145,7 +1149,7 @@ public struct D2d_DistributionListSync: Sendable {
   }
 
   /// Update a distribution list.
-  public struct Update: Sendable {
+  public nonisolated struct Update: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
@@ -1167,7 +1171,7 @@ public struct D2d_DistributionListSync: Sendable {
   }
 
   /// Delete a distribution list.
-  public struct Delete: Sendable {
+  public nonisolated struct Delete: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
@@ -1184,7 +1188,7 @@ public struct D2d_DistributionListSync: Sendable {
 }
 
 /// Settings synchronisation message.
-public struct D2d_SettingsSync: Sendable {
+public nonisolated struct D2d_SettingsSync: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -1203,13 +1207,13 @@ public struct D2d_SettingsSync: Sendable {
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
   /// Synchronisation type
-  public enum OneOf_Action: Equatable, Sendable {
+  public nonisolated enum OneOf_Action: Equatable, Sendable {
     case update(D2d_SettingsSync.Update)
 
   }
 
   /// Update settings.
-  public struct Update: Sendable {
+  public nonisolated struct Update: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
@@ -1234,7 +1238,7 @@ public struct D2d_SettingsSync: Sendable {
 }
 
 /// MDM parameter synchronisation message.
-public struct D2d_MdmParameterSync: Sendable {
+public nonisolated struct D2d_MdmParameterSync: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -1253,7 +1257,7 @@ public struct D2d_MdmParameterSync: Sendable {
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
   /// Synchronisation type
-  public enum OneOf_Action: Equatable, Sendable {
+  public nonisolated enum OneOf_Action: Equatable, Sendable {
     case update(D2d_MdmParameterSync.Update)
 
   }
@@ -1261,7 +1265,7 @@ public struct D2d_MdmParameterSync: Sendable {
   /// Update MDM parameters.
   ///
   /// When receiving this variant, run the _MDM Merge And Apply Steps_.
-  public struct Update: Sendable {
+  public nonisolated struct Update: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
@@ -1287,13 +1291,13 @@ public struct D2d_MdmParameterSync: Sendable {
 
 // MARK: - Code below here is support for the SwiftProtobuf runtime.
 
-fileprivate let _protobuf_package = "d2d"
+fileprivate nonisolated let _protobuf_package = "d2d"
 
-extension D2d_ProtocolVersion: SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2d_ProtocolVersion: SwiftProtobuf._ProtoNameProviding {
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0UNSPECIFIED\0\u{1}V0_1\0\u{1}V0_2\0\u{1}V0_3\0")
 }
 
-extension D2d_SharedDeviceData: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2d_SharedDeviceData: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".SharedDeviceData"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}padding\0\u{1}version\0")
 
@@ -1328,7 +1332,7 @@ extension D2d_SharedDeviceData: SwiftProtobuf.Message, SwiftProtobuf._MessageImp
   }
 }
 
-extension D2d_DeviceInfo: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2d_DeviceInfo: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".DeviceInfo"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}padding\0\u{1}platform\0\u{3}platform_details\0\u{3}app_version\0\u{1}label\0")
 
@@ -1378,11 +1382,11 @@ extension D2d_DeviceInfo: SwiftProtobuf.Message, SwiftProtobuf._MessageImplement
   }
 }
 
-extension D2d_DeviceInfo.Platform: SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2d_DeviceInfo.Platform: SwiftProtobuf._ProtoNameProviding {
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0UNSPECIFIED\0\u{1}ANDROID\0\u{1}IOS\0\u{1}DESKTOP\0\u{1}WEB\0")
 }
 
-extension D2d_TransactionScope: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2d_TransactionScope: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".TransactionScope"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}scope\0")
 
@@ -1412,11 +1416,11 @@ extension D2d_TransactionScope: SwiftProtobuf.Message, SwiftProtobuf._MessageImp
   }
 }
 
-extension D2d_TransactionScope.Scope: SwiftProtobuf._ProtoNameProviding {
-  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0USER_PROFILE_SYNC\0\u{1}CONTACT_SYNC\0\u{1}GROUP_SYNC\0\u{1}DISTRIBUTION_LIST_SYNC\0\u{1}SETTINGS_SYNC\0\u{1}MDM_PARAMETER_SYNC\0\u{1}NEW_DEVICE_SYNC\0\u{1}DROP_DEVICE\0\u{1}WORK_SYNC_DELTA\0")
+nonisolated extension D2d_TransactionScope.Scope: SwiftProtobuf._ProtoNameProviding {
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0USER_PROFILE_SYNC\0\u{1}CONTACT_SYNC\0\u{1}GROUP_SYNC\0\u{1}DISTRIBUTION_LIST_SYNC\0\u{1}SETTINGS_SYNC\0\u{1}MDM_PARAMETER_SYNC\0\u{1}NEW_DEVICE_SYNC\0\u{1}DROP_DEVICE\0\u{1}WORK_SYNC_DELTA\0\u{1}O2O_CALL\0")
 }
 
-extension D2d_Envelope: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2d_Envelope: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".Envelope"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}padding\0\u{3}outgoing_message\0\u{3}protocol_version\0\u{3}incoming_message\0\u{3}user_profile_sync\0\u{3}contact_sync\0\u{3}group_sync\0\u{3}distribution_list_sync\0\u{3}settings_sync\0\u{3}outgoing_message_update\0\u{3}incoming_message_update\0\u{3}mdm_parameter_sync\0\u{3}device_id\0")
 
@@ -1675,7 +1679,7 @@ extension D2d_Envelope: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementat
   }
 }
 
-extension D2d_ConversationId: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2d_ConversationId: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".ConversationId"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}contact\0\u{3}distribution_list\0\u{1}group\0")
 
@@ -1749,7 +1753,7 @@ extension D2d_ConversationId: SwiftProtobuf.Message, SwiftProtobuf._MessageImple
   }
 }
 
-extension D2d_OutgoingMessage: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2d_OutgoingMessage: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".OutgoingMessage"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}conversation\0\u{3}message_id\0\u{3}created_at\0\u{1}type\0\u{1}body\0\u{3}thread_message_id\0\u{1}nonces\0")
 
@@ -1813,7 +1817,7 @@ extension D2d_OutgoingMessage: SwiftProtobuf.Message, SwiftProtobuf._MessageImpl
   }
 }
 
-extension D2d_OutgoingMessageUpdate: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2d_OutgoingMessageUpdate: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".OutgoingMessageUpdate"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}updates\0")
 
@@ -1843,7 +1847,7 @@ extension D2d_OutgoingMessageUpdate: SwiftProtobuf.Message, SwiftProtobuf._Messa
   }
 }
 
-extension D2d_OutgoingMessageUpdate.Sent: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2d_OutgoingMessageUpdate.Sent: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = D2d_OutgoingMessageUpdate.protoMessageName + ".Sent"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap()
 
@@ -1862,7 +1866,7 @@ extension D2d_OutgoingMessageUpdate.Sent: SwiftProtobuf.Message, SwiftProtobuf._
   }
 }
 
-extension D2d_OutgoingMessageUpdate.Update: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2d_OutgoingMessageUpdate.Update: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = D2d_OutgoingMessageUpdate.protoMessageName + ".Update"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}conversation\0\u{3}message_id\0\u{1}sent\0")
 
@@ -1918,7 +1922,7 @@ extension D2d_OutgoingMessageUpdate.Update: SwiftProtobuf.Message, SwiftProtobuf
   }
 }
 
-extension D2d_IncomingMessage: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2d_IncomingMessage: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".IncomingMessage"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}sender_identity\0\u{3}message_id\0\u{3}created_at\0\u{2}\u{2}type\0\u{1}body\0\u{1}nonce\0\u{c}\u{4}\u{1}")
 
@@ -1973,7 +1977,7 @@ extension D2d_IncomingMessage: SwiftProtobuf.Message, SwiftProtobuf._MessageImpl
   }
 }
 
-extension D2d_IncomingMessageUpdate: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2d_IncomingMessageUpdate: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".IncomingMessageUpdate"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}updates\0")
 
@@ -2003,7 +2007,7 @@ extension D2d_IncomingMessageUpdate: SwiftProtobuf.Message, SwiftProtobuf._Messa
   }
 }
 
-extension D2d_IncomingMessageUpdate.Read: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2d_IncomingMessageUpdate.Read: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = D2d_IncomingMessageUpdate.protoMessageName + ".Read"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}at\0")
 
@@ -2033,7 +2037,7 @@ extension D2d_IncomingMessageUpdate.Read: SwiftProtobuf.Message, SwiftProtobuf._
   }
 }
 
-extension D2d_IncomingMessageUpdate.Update: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2d_IncomingMessageUpdate.Update: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = D2d_IncomingMessageUpdate.protoMessageName + ".Update"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}conversation\0\u{3}message_id\0\u{1}read\0")
 
@@ -2089,7 +2093,7 @@ extension D2d_IncomingMessageUpdate.Update: SwiftProtobuf.Message, SwiftProtobuf
   }
 }
 
-extension D2d_UserProfileSync: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2d_UserProfileSync: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".UserProfileSync"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}update\0")
 
@@ -2135,7 +2139,7 @@ extension D2d_UserProfileSync: SwiftProtobuf.Message, SwiftProtobuf._MessageImpl
   }
 }
 
-extension D2d_UserProfileSync.Update: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2d_UserProfileSync.Update: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = D2d_UserProfileSync.protoMessageName + ".Update"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}user_profile\0")
 
@@ -2169,7 +2173,7 @@ extension D2d_UserProfileSync.Update: SwiftProtobuf.Message, SwiftProtobuf._Mess
   }
 }
 
-extension D2d_ContactSync: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2d_ContactSync: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".ContactSync"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}create\0\u{1}update\0")
 
@@ -2236,7 +2240,7 @@ extension D2d_ContactSync: SwiftProtobuf.Message, SwiftProtobuf._MessageImplemen
   }
 }
 
-extension D2d_ContactSync.Create: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2d_ContactSync.Create: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = D2d_ContactSync.protoMessageName + ".Create"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}contact\0")
 
@@ -2270,7 +2274,7 @@ extension D2d_ContactSync.Create: SwiftProtobuf.Message, SwiftProtobuf._MessageI
   }
 }
 
-extension D2d_ContactSync.Update: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2d_ContactSync.Update: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = D2d_ContactSync.protoMessageName + ".Update"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}contact\0")
 
@@ -2304,7 +2308,7 @@ extension D2d_ContactSync.Update: SwiftProtobuf.Message, SwiftProtobuf._MessageI
   }
 }
 
-extension D2d_GroupSync: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2d_GroupSync: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".GroupSync"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}create\0\u{1}update\0\u{1}delete\0")
 
@@ -2388,7 +2392,7 @@ extension D2d_GroupSync: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementa
   }
 }
 
-extension D2d_GroupSync.Create: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2d_GroupSync.Create: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = D2d_GroupSync.protoMessageName + ".Create"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}group\0")
 
@@ -2422,7 +2426,7 @@ extension D2d_GroupSync.Create: SwiftProtobuf.Message, SwiftProtobuf._MessageImp
   }
 }
 
-extension D2d_GroupSync.Update: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2d_GroupSync.Update: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = D2d_GroupSync.protoMessageName + ".Update"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}group\0\u{3}member_state_changes\0")
 
@@ -2461,11 +2465,11 @@ extension D2d_GroupSync.Update: SwiftProtobuf.Message, SwiftProtobuf._MessageImp
   }
 }
 
-extension D2d_GroupSync.Update.MemberStateChange: SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2d_GroupSync.Update.MemberStateChange: SwiftProtobuf._ProtoNameProviding {
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0ADDED\0\u{1}KICKED\0\u{1}LEFT\0")
 }
 
-extension D2d_GroupSync.Delete: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2d_GroupSync.Delete: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = D2d_GroupSync.protoMessageName + ".Delete"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}group_identity\0")
 
@@ -2499,7 +2503,7 @@ extension D2d_GroupSync.Delete: SwiftProtobuf.Message, SwiftProtobuf._MessageImp
   }
 }
 
-extension D2d_DistributionListSync: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2d_DistributionListSync: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".DistributionListSync"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}create\0\u{1}update\0\u{1}delete\0")
 
@@ -2583,7 +2587,7 @@ extension D2d_DistributionListSync: SwiftProtobuf.Message, SwiftProtobuf._Messag
   }
 }
 
-extension D2d_DistributionListSync.Create: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2d_DistributionListSync.Create: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = D2d_DistributionListSync.protoMessageName + ".Create"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}distribution_list\0")
 
@@ -2617,7 +2621,7 @@ extension D2d_DistributionListSync.Create: SwiftProtobuf.Message, SwiftProtobuf.
   }
 }
 
-extension D2d_DistributionListSync.Update: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2d_DistributionListSync.Update: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = D2d_DistributionListSync.protoMessageName + ".Update"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}distribution_list\0")
 
@@ -2651,7 +2655,7 @@ extension D2d_DistributionListSync.Update: SwiftProtobuf.Message, SwiftProtobuf.
   }
 }
 
-extension D2d_DistributionListSync.Delete: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2d_DistributionListSync.Delete: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = D2d_DistributionListSync.protoMessageName + ".Delete"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}distribution_list_id\0")
 
@@ -2681,7 +2685,7 @@ extension D2d_DistributionListSync.Delete: SwiftProtobuf.Message, SwiftProtobuf.
   }
 }
 
-extension D2d_SettingsSync: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2d_SettingsSync: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".SettingsSync"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}update\0")
 
@@ -2727,7 +2731,7 @@ extension D2d_SettingsSync: SwiftProtobuf.Message, SwiftProtobuf._MessageImpleme
   }
 }
 
-extension D2d_SettingsSync.Update: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2d_SettingsSync.Update: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = D2d_SettingsSync.protoMessageName + ".Update"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}settings\0")
 
@@ -2761,7 +2765,7 @@ extension D2d_SettingsSync.Update: SwiftProtobuf.Message, SwiftProtobuf._Message
   }
 }
 
-extension D2d_MdmParameterSync: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2d_MdmParameterSync: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".MdmParameterSync"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}update\0")
 
@@ -2807,7 +2811,7 @@ extension D2d_MdmParameterSync: SwiftProtobuf.Message, SwiftProtobuf._MessageImp
   }
 }
 
-extension D2d_MdmParameterSync.Update: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2d_MdmParameterSync.Update: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = D2d_MdmParameterSync.protoMessageName + ".Update"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}parameters\0")
 

@@ -10,7 +10,7 @@ use std::{
 };
 
 use anyhow::Context as _;
-use data_encoding::HEXLOWER_PERMISSIVE;
+use clap::{ArgAction, Parser};
 use libthreema::{
     d2d_rendezvous::{
         RendezvousAuthenticationKey, RendezvousOutgoingFrame, RendezvousPathProcessResult,
@@ -18,7 +18,17 @@ use libthreema::{
     },
     utils::logging::init_stderr_logging,
 };
-use tracing::{Level, info, trace, trace_span, warn};
+use libthreema_dependencies::data_encoding::HEXLOWER_PERMISSIVE;
+use tracing::{Level, info, trace, warn};
+
+#[derive(Parser)]
+#[command()]
+struct D2dRendezvousCommand {
+    /// Turn on debugging information.
+    /// Use -v -vv to control log level.
+    #[arg(short, action = ArgAction::Count)]
+    verbose: u8,
+}
 
 struct Keys;
 impl Keys {
@@ -184,8 +194,16 @@ fn run_protocol(
 }
 
 fn main() {
+    // Parse arguments
+    let arguments = D2dRendezvousCommand::parse();
+
     // Configure logging
-    init_stderr_logging(Level::TRACE);
+    let log_level = match arguments.verbose {
+        1 => Level::DEBUG,
+        2 => Level::TRACE,
+        _ => Level::INFO,
+    };
+    init_stderr_logging(log_level);
 
     // Communication channels for RID and RRD
     let (to_rrd, from_rid) = mpsc::channel::<(u32, RendezvousOutgoingFrame)>();
@@ -193,7 +211,7 @@ fn main() {
 
     // Start RID
     let rid_thread = thread::spawn(move || {
-        trace_span!("initiator").in_scope(|| {
+        tracing::trace_span!("initiator").in_scope(|| {
             // Create and run protocol for RID
             let protocol =
                 RendezvousProtocol::new_as_rid(true, RendezvousAuthenticationKey(Keys::AK), &[0x1, 0x2]);
@@ -204,7 +222,7 @@ fn main() {
 
     // Start RRD
     let rrd_thread = thread::spawn(move || {
-        trace_span!("responder").in_scope(|| {
+        tracing::trace_span!("responder").in_scope(|| {
             // Create and run protocol for RRD
             let (protocol, initial_outgoing_frames) =
                 RendezvousProtocol::new_as_rrd(false, RendezvousAuthenticationKey(Keys::AK), &[0x1, 0x2]);

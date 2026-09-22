@@ -1,208 +1,74 @@
-//! Message structs.
-use core::{fmt, str};
+//! Message state structs.
+use core::str;
 
-use duplicate::duplicate_item;
 use educe::Educe;
-use libthreema_macros::Name;
+use libthreema_macros::VariantNames;
+#[cfg(any(test, feature = "cli"))]
+use tracing::debug;
 
 use crate::{
-    common::{GroupIdentity, MessageFlags, MessageId, ThreemaId},
-    protobuf::common::CspE2eMessageType,
-    utils::{
-        apply::Apply,
-        debug::{Name as _, debug_slice_length},
-    },
+    common::{ConversationId, MessageId, ThreemaId},
+    csp_e2e::message::LegacyReactionType,
+    model::poll::PollId,
+    utils::debug::debug_slice_length,
 };
+#[cfg(any(test, feature = "cli"))]
+use crate::{provider::ProviderError, utils::update::TryApply};
 
-/// Lifetime of the message on the server.
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub(crate) enum MessageLifetime {
-    /// The message is kept indefinitely until received.
-    Indefinite,
-
-    /// The message is kept for a short amount of time until it is silently dropped (usually 30s).
-    #[expect(dead_code, reason = "Will use later")]
-    Brief,
-
-    /// The message is only transmitted if the receiver is currently online.
-    ///
-    /// This is a combination of the _no server queuing_ and _no server acknowledgement_ flags
-    /// which are only used in conjunction.
-    Ephemeral,
-}
-
-/// Message properties associated to a message type.
-#[expect(
-    clippy::struct_excessive_bools,
-    reason = "The one place where it's reasonable"
-)]
-#[derive(Debug, Clone, Name)]
+/// A message star marker set by the user.
+#[derive(Clone, Debug)]
+#[cfg_attr(feature = "uniffi", derive(uniffi::Enum))]
 #[cfg_attr(test, derive(PartialEq))]
-pub(crate) struct MessageProperties {
-    /// Whether the message should be/has been pushed.
-    pub(crate) push: bool,
+pub enum MessageStarMarker {
+    /// Not starred.
+    None,
 
-    /// Lifetime of the message on the server.
-    pub(crate) lifetime: MessageLifetime,
-
-    /// Whether the message requires user profile distribution.
-    pub(crate) user_profile_distribution: bool,
-
-    /// Whether the message requires to create a _direct_ contact upon reception.
-    pub(crate) requires_direct_contact: bool,
-
-    /// Whether the message requires replay protection (by storing the nonce).
-    pub(crate) replay_protection: bool,
-
-    /// Whether the message should be reflected in case it is incoming.
-    pub(crate) reflect_incoming: bool,
-
-    /// Whether the message should be reflected in case it is outgoing.
-    #[expect(dead_code, reason = "Will use later")]
-    pub(crate) reflect_outgoing: bool,
-
-    /// Whether an update that the message has been _sent_ should be reflected (in case it is
-    /// outgoing).
-    #[expect(dead_code, reason = "Will use later")]
-    pub(crate) reflect_sent_update: bool,
-
-    /// Whether delivery receipts may be sent in response to this message.
-    pub(crate) delivery_receipts: bool,
-}
-impl Apply<MessageProperties> for MessageFlags {
-    fn apply(&mut self, value: MessageProperties) {
-        if value.push {
-            self.0 |= MessageFlags::SEND_PUSH_NOTIFICATION;
-        }
-        match value.lifetime {
-            MessageLifetime::Indefinite => {},
-            MessageLifetime::Brief => {
-                self.0 |= MessageFlags::SHORT_LIVED_SERVER_QUEUING;
-            },
-            MessageLifetime::Ephemeral => {
-                self.0 |= MessageFlags::NO_SERVER_QUEUING | MessageFlags::NO_SERVER_ACKNOWLEDGEMENT;
-            },
-        }
-    }
+    /// The message has been starred.
+    Star,
 }
 
-/// Message properties associated to a group message type.
-///
-/// This is a reduced version of [`MessageProperties`].
-#[expect(
-    clippy::struct_excessive_bools,
-    reason = "The one place where it's reasonable"
-)]
-struct GroupMessageProperties {
-    push: bool,
-    lifetime: MessageLifetime,
-    user_profile_distribution: bool,
-    replay_protection: bool,
-    reflect_incoming: bool,
-    reflect_outgoing: bool,
-    reflect_sent_update: bool,
-}
-impl GroupMessageProperties {
-    const fn into_message_properties(self) -> MessageProperties {
-        MessageProperties {
-            push: self.push,
-            lifetime: self.lifetime,
-            user_profile_distribution: self.user_profile_distribution,
-            requires_direct_contact: false,
-            replay_protection: self.replay_protection,
-            reflect_incoming: self.reflect_incoming,
-            reflect_outgoing: self.reflect_outgoing,
-            reflect_sent_update: self.reflect_sent_update,
-            delivery_receipts: false,
-        }
-    }
-}
-
-/// Message behaviour overrides that need to be stored.
-#[derive(Clone, Copy, Default, Name)]
-#[cfg_attr(test, derive(PartialEq))]
-pub struct MessageOverrides {
-    /// Whether delivery receipts should be omitted. If `true`, this overrides the default behaviour.
-    pub disable_delivery_receipts: bool,
-}
-impl Apply<MessageOverrides> for MessageProperties {
-    fn apply(&mut self, value: MessageOverrides) {
-        if value.disable_delivery_receipts {
-            self.delivery_receipts = false;
-        }
-    }
-}
-impl Apply<MessageOverrides> for MessageFlags {
-    fn apply(&mut self, value: MessageOverrides) {
-        if value.disable_delivery_receipts {
-            self.0 |= MessageFlags::NO_DELIVERY_RECEIPTS;
-        }
-    }
-}
-impl fmt::Debug for MessageOverrides {
-    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        // Keep this format in sync with [`MessageFlags`]!
-        write!(
-            formatter,
-            "{}({})",
-            Self::NAME,
-            itertools::join(
-                [self.disable_delivery_receipts.then_some("no-receipts")]
-                    .into_iter()
-                    .flatten(),
-                ", ",
-            ),
-        )
-    }
-}
-impl From<MessageFlags> for MessageOverrides {
-    fn from(flags: MessageFlags) -> Self {
-        Self {
-            disable_delivery_receipts: flags.0 & MessageFlags::NO_DELIVERY_RECEIPTS != 0,
-        }
-    }
-}
-
-/// A text message.
+/// A text in a message.
 #[derive(Clone, Educe)]
 #[educe(Debug)]
 #[cfg_attr(test, derive(PartialEq))]
-pub struct TextMessage {
-    /// Text of the message.
+#[cfg_attr(feature = "uniffi", derive(uniffi::Record))]
+pub struct MessageText {
+    /// The text.
     #[educe(Debug(method(debug_slice_length)))]
     pub text: String,
 }
-impl TextMessage {
-    const CONTACT_EXEMPT_FROM_BLOCKING: bool = false;
-    const CONTACT_PROPERTIES: MessageProperties = MessageProperties {
-        push: true,
-        lifetime: MessageLifetime::Indefinite,
-        user_profile_distribution: true,
-        requires_direct_contact: true,
-        replay_protection: true,
-        reflect_incoming: true,
-        reflect_outgoing: true,
-        reflect_sent_update: true,
-        delivery_receipts: true,
-    };
-    const CONTACT_TYPE: CspE2eMessageType = CspE2eMessageType::Text;
-    const GROUP_EXEMPT_FROM_BLOCKING: bool = false;
-    const GROUP_PROPERTIES: GroupMessageProperties = GroupMessageProperties {
-        push: true,
-        lifetime: MessageLifetime::Indefinite,
-        user_profile_distribution: true,
-        replay_protection: true,
-        reflect_incoming: true,
-        reflect_outgoing: true,
-        reflect_sent_update: true,
-    };
-    const GROUP_TYPE: CspE2eMessageType = CspE2eMessageType::GroupText;
+
+/// A revision of a text in a message.
+#[derive(Clone, Debug)]
+#[cfg_attr(test, derive(PartialEq))]
+#[cfg_attr(feature = "uniffi", derive(uniffi::Record))]
+pub struct MessageTextRevision {
+    /// Unix-ish timestamp in milliseconds for when the revision has been created.
+    pub created_at: u64,
+
+    /// Text of the revision.
+    pub message: MessageText,
 }
 
-/// A location message.
-#[derive(Clone, Name)]
+/// A text message including all its revisions.
+#[derive(Debug, Clone)]
 #[cfg_attr(test, derive(PartialEq))]
-pub struct LocationMessage {
+#[cfg_attr(feature = "uniffi", derive(uniffi::Record))]
+pub struct TextMessageState {
+    /// The original revision of the text message.
+    pub original: MessageText,
+
+    /// The revisions of the text message in ascending order of their reception.
+    /// The last revision contains the most recent revision (i.e. the one that should
+    /// be displayed).
+    pub revisions: Vec<MessageTextRevision>,
+}
+
+/// A location message state.
+#[derive(Clone, Debug)]
+#[cfg_attr(test, derive(PartialEq))]
+#[cfg_attr(feature = "uniffi", derive(uniffi::Record))]
+pub struct LocationMessageState {
     /// Latitude.
     pub latitude: f64,
 
@@ -213,501 +79,812 @@ pub struct LocationMessage {
     pub accuracy_m: Option<f64>,
 
     /// Closest name of the location or a point of interest.
-    pub name: Option<String>,
+    ///
+    /// Empty string means that no name was provided.
+    pub name: String,
 
-    /// An arbitrary address, not following any standardised pattern. May contain line breaks.
-    pub address: Option<String>,
+    /// An arbitrary address, not following any standardized pattern. May contain line breaks.
+    ///
+    /// Empty string means that no address was provided.
+    pub address: String,
 }
-impl LocationMessage {
-    const CONTACT_EXEMPT_FROM_BLOCKING: bool = false;
-    const CONTACT_PROPERTIES: MessageProperties = MessageProperties {
-        push: true,
-        lifetime: MessageLifetime::Indefinite,
-        user_profile_distribution: true,
-        requires_direct_contact: true,
-        replay_protection: true,
-        reflect_incoming: true,
-        reflect_outgoing: true,
-        reflect_sent_update: true,
-        delivery_receipts: true,
-    };
-    const CONTACT_TYPE: CspE2eMessageType = CspE2eMessageType::Location;
-    const GROUP_EXEMPT_FROM_BLOCKING: bool = false;
-    const GROUP_PROPERTIES: GroupMessageProperties = GroupMessageProperties {
-        push: true,
-        lifetime: MessageLifetime::Indefinite,
-        user_profile_distribution: true,
-        replay_protection: true,
-        reflect_incoming: true,
-        reflect_outgoing: true,
-        reflect_sent_update: true,
-    };
-    const GROUP_TYPE: CspE2eMessageType = CspE2eMessageType::Location;
+
+/// A message indicating the event that the referred [`poll::Poll`][`crate::model::poll::Poll`] was opened.
+#[derive(Clone, Debug)]
+#[cfg_attr(test, derive(PartialEq))]
+#[cfg_attr(feature = "uniffi", derive(uniffi::Record))]
+pub struct PollOpen {
+    /// Refers to the opened poll.
+    pub id: PollId,
 }
-impl fmt::Debug for LocationMessage {
-    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        formatter.write_str(Self::NAME)
+
+/// A message indicating the event that the referred [`poll::Poll`][`crate::model::poll::Poll`] was closed.
+#[derive(Clone, Debug)]
+#[cfg_attr(test, derive(PartialEq))]
+#[cfg_attr(feature = "uniffi", derive(uniffi::Record))]
+pub struct PollClose {
+    /// Refers to the closed poll.
+    pub id: PollId,
+}
+
+/// An emoji part of a [`MessageReaction`].
+#[derive(Clone, Debug)]
+#[cfg_attr(any(feature = "cli", test), derive(PartialEq))]
+#[cfg_attr(feature = "uniffi", derive(uniffi::Record))]
+pub struct EmojiReaction {
+    /// A single fully-qualified [emoji codepoint sequence that is part of the
+    /// currently supported Unicode standard][emoji-test.txt].
+    ///
+    /// [emoji-test.txt]:
+    /// https://www.unicode.org/Public/emoji/latest/emoji-test.txt
+    pub codepoint: String,
+}
+impl From<LegacyReactionType> for EmojiReaction {
+    fn from(legacy_reaction: LegacyReactionType) -> Self {
+        match legacy_reaction {
+            LegacyReactionType::Acknowledge => Self {
+                codepoint: "\u{1f44d}".to_owned(),
+            },
+            LegacyReactionType::Decline => Self {
+                codepoint: "\u{1f44e}".to_owned(),
+            },
+        }
     }
 }
 
-/// The type of delivery receipt.
-#[derive(Debug, Clone, Copy, strum::FromRepr)]
-#[repr(u8)]
-#[cfg_attr(test, derive(PartialEq))]
-pub enum DeliveryReceiptType {
-    /// The referred messages have been received (i.e. it was delivered to the recipient).
-    Received = 0x01,
-    /// The referred messages have been read.
-    Read = 0x02,
-}
-
-/// The type of legacy reaction.
-#[derive(Debug, Clone, Copy, strum::FromRepr)]
-#[repr(u8)]
-#[cfg_attr(test, derive(PartialEq))]
-pub enum LegacyReactionType {
-    /// The user reacted with _acknowledge_ (i.e. _thumbs up_) to the messages.
-    Acknowledge = 0x03,
-    /// The user reacted with _decline_ (i.e. _thumbs down_) to the messages.
-    Decline = 0x04,
-}
-
-/// A delivery receipt.
-///
-/// Note: This only covers real delivery receipts, not legacy reactions. These are always mapped to and from
-/// [`LegacyReactionMessage`].
+/// A reaction to a message.
 #[derive(Clone, Educe)]
 #[educe(Debug)]
+pub struct MessageReaction {
+    /// The creator of this reaction.
+    pub creator_identity: ThreemaId,
+
+    /// Unix-ish timestamp in milliseconds when the reaction was created.
+    pub created_at: u64,
+
+    /// The emoji.
+    pub emoji: EmojiReaction,
+}
+
+/// The type of a message body state.
+#[derive(Debug, Clone, Copy)]
 #[cfg_attr(test, derive(PartialEq))]
-pub struct DeliveryReceiptMessage {
-    /// Type of delivery receipt.
-    pub receipt_type: DeliveryReceiptType,
+#[cfg_attr(feature = "uniffi", derive(uniffi::Enum))]
+pub enum MessageStateBodyType {
+    /// Text message state.
+    Text,
 
-    /// Message ids of referred messages the receipt type should be applied to.
-    pub message_ids: Vec<MessageId>,
+    /// Location message state.
+    Location,
+
+    /// Open poll message state.
+    PollOpen,
+
+    /// Close poll message state.
+    PollClose,
+
+    /// Deleted message state.
+    Deleted,
 }
-impl DeliveryReceiptMessage {
-    const CONTACT_EXEMPT_FROM_BLOCKING: bool = false;
-    const CONTACT_PROPERTIES: MessageProperties = MessageProperties {
-        push: false,
-        lifetime: MessageLifetime::Indefinite,
-        user_profile_distribution: false,
-        requires_direct_contact: false,
-        replay_protection: false,
-        reflect_incoming: true,
-        reflect_outgoing: true,
-        reflect_sent_update: false,
-        delivery_receipts: false,
-    };
-    const CONTACT_TYPE: CspE2eMessageType = CspE2eMessageType::DeliveryReceipt;
-}
-
-/// A legacy reaction message.
-///
-/// Note: Delivery receipts containing legacy reactions are always mapped to and from this message internally.
-#[derive(Clone, Educe)]
-#[educe(Debug)]
-#[cfg_attr(test, derive(PartialEq))]
-pub struct LegacyReactionMessage {
-    /// Type of legacy reaction.
-    pub reaction_type: LegacyReactionType,
-
-    /// Message ids of referred messages the reaction should be applied to.
-    pub message_ids: Vec<MessageId>,
-}
-impl LegacyReactionMessage {
-    const CONTACT_EXEMPT_FROM_BLOCKING: bool = false;
-    const CONTACT_PROPERTIES: MessageProperties = MessageProperties {
-        push: false,
-        lifetime: MessageLifetime::Indefinite,
-        user_profile_distribution: true,
-        requires_direct_contact: false,
-        replay_protection: true,
-        reflect_incoming: true,
-        reflect_outgoing: true,
-        reflect_sent_update: false,
-        delivery_receipts: false,
-    };
-    const CONTACT_TYPE: CspE2eMessageType = CspE2eMessageType::DeliveryReceipt;
-    const GROUP_EXEMPT_FROM_BLOCKING: bool = false;
-    const GROUP_PROPERTIES: GroupMessageProperties = GroupMessageProperties {
-        push: false,
-        lifetime: MessageLifetime::Indefinite,
-        user_profile_distribution: true,
-        replay_protection: true,
-        reflect_incoming: true,
-        reflect_outgoing: true,
-        reflect_sent_update: false,
-    };
-    const GROUP_TYPE: CspE2eMessageType = CspE2eMessageType::GroupDeliveryReceipt;
-}
-
-/// A control message from Threema Web, requesting a session to be resumed.
-#[derive(Clone, Educe)]
-#[educe(Debug)]
-#[cfg_attr(test, derive(PartialEq))]
-pub struct WebSessionResumeMessage {
-    /// Raw `push-payload` of a `web-session-resume` message.
-    #[educe(Debug(method(debug_slice_length)))]
-    pub push_payload: Vec<u8>,
-}
-impl WebSessionResumeMessage {
-    const CONTACT_EXEMPT_FROM_BLOCKING: bool = true;
-    const CONTACT_PROPERTIES: MessageProperties = MessageProperties {
-        push: false,
-        lifetime: MessageLifetime::Ephemeral,
-        user_profile_distribution: false,
-        requires_direct_contact: false,
-        replay_protection: true,
-        reflect_incoming: false,
-        reflect_outgoing: false,
-        reflect_sent_update: false,
-        delivery_receipts: false,
-    };
-    const CONTACT_TYPE: CspE2eMessageType = CspE2eMessageType::WebSessionResume;
-}
-
-/// Message body of a 1:1 message.
-#[derive(Debug, Clone)]
-#[cfg_attr(test, derive(PartialEq))]
-pub enum ContactMessageBody {
-    /// See [`TextMessage`].
-    Text(TextMessage),
-
-    /// See [`LocationMessage`].
-    Location(LocationMessage),
-
-    /// See [`DeliveryReceiptMessage`].
-    DeliveryReceipt(DeliveryReceiptMessage),
-
-    /// See [`LegacyReactionMessage`].
-    LegacyReaction(LegacyReactionMessage),
-
-    /// See [`WebSessionResumeMessage`].
-    WebSessionResume(WebSessionResumeMessage),
-    // TODO(LIB-16): Complete
-}
-impl ContactMessageBody {
-    /// Get the 1:1 message's type.
-    const fn message_type(&self) -> CspE2eMessageType {
-        match &self {
-            ContactMessageBody::Text(_) => TextMessage::CONTACT_TYPE,
-            ContactMessageBody::Location(_) => LocationMessage::CONTACT_TYPE,
-            ContactMessageBody::DeliveryReceipt(_) => DeliveryReceiptMessage::CONTACT_TYPE,
-            ContactMessageBody::LegacyReaction(_) => LegacyReactionMessage::CONTACT_TYPE,
-            ContactMessageBody::WebSessionResume(_) => WebSessionResumeMessage::CONTACT_TYPE,
-        }
-    }
-
-    /// Get the 1:1 message's properties.
-    const fn properties(&self) -> MessageProperties {
-        match &self {
-            ContactMessageBody::Text(_) => TextMessage::CONTACT_PROPERTIES,
-            ContactMessageBody::Location(_) => LocationMessage::CONTACT_PROPERTIES,
-            ContactMessageBody::DeliveryReceipt(_) => DeliveryReceiptMessage::CONTACT_PROPERTIES,
-            ContactMessageBody::LegacyReaction(_) => LegacyReactionMessage::CONTACT_PROPERTIES,
-            ContactMessageBody::WebSessionResume(_) => WebSessionResumeMessage::CONTACT_PROPERTIES,
-        }
-    }
-
-    /// Determine whether the 1:1 message is exempt from blocking.
-    const fn is_exempt_from_blocking(&self) -> bool {
-        match &self {
-            ContactMessageBody::Text(_) => TextMessage::CONTACT_EXEMPT_FROM_BLOCKING,
-            ContactMessageBody::Location(_) => LocationMessage::CONTACT_EXEMPT_FROM_BLOCKING,
-            ContactMessageBody::DeliveryReceipt(_) => DeliveryReceiptMessage::CONTACT_EXEMPT_FROM_BLOCKING,
-            ContactMessageBody::LegacyReaction(_) => LegacyReactionMessage::CONTACT_EXEMPT_FROM_BLOCKING,
-            ContactMessageBody::WebSessionResume(_) => WebSessionResumeMessage::CONTACT_EXEMPT_FROM_BLOCKING,
-        }
-    }
-}
-
-/// Message body of a distribution list message.
-#[derive(Debug, Clone)]
-#[cfg_attr(test, derive(PartialEq))]
-pub enum DistributionListMessageBody {
-    /// See [`TextMessage`].
-    Text(TextMessage),
-
-    /// See [`LocationMessage`].
-    Location(LocationMessage),
-    // TODO(LIB-57): Complete
-}
-impl DistributionListMessageBody {
-    /// Get the distribution list message's type.
+impl MessageStateBodyType {
+    /// Whether the message type is eligible for reactions.
     ///
-    /// Note: These are always just 1:1 message types.
-    const fn message_type(&self) -> CspE2eMessageType {
-        match &self {
-            DistributionListMessageBody::Text(_) => TextMessage::CONTACT_TYPE,
-            DistributionListMessageBody::Location(_) => LocationMessage::CONTACT_TYPE,
-        }
-    }
-
-    /// Get the distribution list message's properties.
-    ///
-    /// Note: The properties are identical to the 1:1 message's properties.
-    const fn properties(&self) -> MessageProperties {
-        match &self {
-            DistributionListMessageBody::Text(_) => TextMessage::CONTACT_PROPERTIES,
-            DistributionListMessageBody::Location(_) => LocationMessage::CONTACT_PROPERTIES,
-        }
-    }
-
-    /// Determine whether the distribution list message is exempt from blocking.
-    ///
-    /// Note: This behaves identical to the respective 1:1 message.
-    const fn is_exempt_from_blocking(&self) -> bool {
-        match &self {
-            DistributionListMessageBody::Text(_) => TextMessage::CONTACT_EXEMPT_FROM_BLOCKING,
-            DistributionListMessageBody::Location(_) => LocationMessage::CONTACT_EXEMPT_FROM_BLOCKING,
-        }
-    }
-}
-
-/// Message body of a group message.
-#[derive(Debug, Clone)]
-#[cfg_attr(test, derive(PartialEq))]
-pub enum GroupMessageBody {
-    /// See [`TextMessage`].
-    Text(TextMessage),
-
-    /// See [`LocationMessage`].
-    Location(LocationMessage),
-
-    /// See [`LegacyReactionMessage`].
-    LegacyReaction(LegacyReactionMessage),
-    // TODO(LIB-53): Complete
-}
-impl GroupMessageBody {
-    /// Get the group message's type.
-    const fn message_type(&self) -> CspE2eMessageType {
-        match &self {
-            GroupMessageBody::Text(_) => TextMessage::GROUP_TYPE,
-            GroupMessageBody::Location(_) => LocationMessage::GROUP_TYPE,
-            GroupMessageBody::LegacyReaction(_) => LegacyReactionMessage::GROUP_TYPE,
-        }
-    }
-
-    /// Get the group message's properties.
-    const fn properties(&self) -> GroupMessageProperties {
-        match &self {
-            GroupMessageBody::Text(_) => TextMessage::GROUP_PROPERTIES,
-            GroupMessageBody::Location(_) => LocationMessage::GROUP_PROPERTIES,
-            GroupMessageBody::LegacyReaction(_) => LegacyReactionMessage::GROUP_PROPERTIES,
-        }
-    }
-
-    /// Determine whether the group message is exempt from blocking.
+    /// Caveat for [`MessageStateBodyType::Deleted`]: Even though the original type mandates whether the
+    /// message is eligible for reactions, they should not be applied to messages marked as deleted.
     #[inline]
-    fn is_exempt_from_blocking(&self) -> bool {
-        match &self {
-            GroupMessageBody::Text(_) => TextMessage::GROUP_EXEMPT_FROM_BLOCKING,
-            GroupMessageBody::Location(_) => LocationMessage::GROUP_EXEMPT_FROM_BLOCKING,
-            GroupMessageBody::LegacyReaction(_) => LegacyReactionMessage::GROUP_EXEMPT_FROM_BLOCKING,
+    pub(crate) const fn is_reactable(self) -> bool {
+        match self {
+            Self::Text | Self::Location => true,
+            Self::PollOpen | Self::PollClose | Self::Deleted => false,
+        }
+    }
+
+    /// Whether the message type is eligible for deletions.
+    ///
+    /// Caveat for [`MessageStateBodyType::Deleted`]: Even though the original type mandates whether the
+    /// message is eligible for deletion, it is already deleted... so, what's the point of doing that again.
+    #[inline]
+    pub(crate) const fn is_deletable(self) -> bool {
+        match self {
+            Self::Text | Self::Location => true,
+            Self::PollOpen | Self::PollClose | Self::Deleted => false,
         }
     }
 }
 
-/// An incoming group message.
-#[derive(Debug, Clone)]
+/// Body of a stateful message.
+///
+/// Depending on the variant, this may or may not incorporate multiple protocol-level messages into a single
+/// stateful message that is displayed.
+#[derive(Debug, Clone, VariantNames)]
 #[cfg_attr(test, derive(PartialEq))]
-pub struct IncomingGroupMessageBody {
-    /// The specific group identity.
-    pub group_identity: GroupIdentity,
+#[cfg_attr(feature = "uniffi", derive(uniffi::Enum))]
+pub enum MessageStateBody {
+    /// A text message state consisting of all revisions.
+    Text(TextMessageState),
 
-    /// The message's body.
-    pub body: GroupMessageBody,
+    /// A location message.
+    Location(LocationMessageState),
+
+    /// A message indicating the opening of a poll.
+    PollOpen(PollOpen),
+
+    /// A message indicating the closing of a poll.
+    PollClose(PollClose),
+
+    /// A deleted message, containing the previously contained type.
+    Deleted(MessageStateBodyType),
 }
-
-/// Incoming message bodies for their respective conversations.
-#[derive(Debug, Clone)]
-#[cfg_attr(test, derive(PartialEq))]
-pub enum IncomingMessageBody {
-    /// An incoming 1:1 message from a contact.
-    Contact(ContactMessageBody),
-
-    /// An incoming group message.
-    Group(IncomingGroupMessageBody),
-}
-impl IncomingMessageBody {
-    /// Get the incoming message's type.
-    const fn message_type(&self) -> CspE2eMessageType {
+#[cfg(any(test, feature = "cli"))]
+impl MessageStateBody {
+    #[inline]
+    pub(crate) const fn message_type(&self) -> MessageStateBodyType {
         match &self {
-            IncomingMessageBody::Contact(body) => body.message_type(),
-            IncomingMessageBody::Group(body) => body.body.message_type(),
+            Self::Text(_) => MessageStateBodyType::Text,
+            Self::Location(_) => MessageStateBodyType::Location,
+            Self::PollOpen(_) => MessageStateBodyType::PollOpen,
+            Self::PollClose(_) => MessageStateBodyType::PollClose,
+            Self::Deleted(_) => MessageStateBodyType::Deleted,
         }
     }
 
-    /// Get the incoming message's properties respective to the associated conversation.
-    const fn properties(&self) -> MessageProperties {
-        match &self {
-            IncomingMessageBody::Contact(body) => body.properties(),
-            IncomingMessageBody::Group(body) => body.body.properties().into_message_properties(),
-        }
-    }
-
-    /// Determine whether the incoming message is exempt from blocking.
-    fn is_exempt_from_blocking(&self) -> bool {
-        match &self {
-            IncomingMessageBody::Contact(body) => body.is_exempt_from_blocking(),
-            IncomingMessageBody::Group(body) => body.body.is_exempt_from_blocking(),
-        }
-    }
-}
-
-/// An outgoing 1:1 message to a contact.
-#[derive(Debug, Clone)]
-#[cfg_attr(test, derive(PartialEq))]
-pub struct OutgoingContactMessageBody {
-    /// Identity of the receiver.
-    pub receiver_identity: ThreemaId,
-
-    /// The message's body.
-    pub body: ContactMessageBody,
-}
-
-/// An outgoing distribution list message.
-#[derive(Debug, Clone)]
-#[cfg_attr(test, derive(PartialEq))]
-pub struct OutgoingDistributionListMessageBody {
-    /// The specific distribution list identity.
-    pub distribution_list_identity: u64,
-
-    /// The message's body.
-    pub body: DistributionListMessageBody,
-}
-
-/// An outgoing group message.
-#[derive(Debug, Clone)]
-#[cfg_attr(test, derive(PartialEq))]
-pub struct OutgoingGroupMessageBody {
-    /// The specific group identity.
-    pub group_identity: GroupIdentity,
-
-    /// The message's body.
-    pub body: GroupMessageBody,
-}
-
-/// Outgoing message bodies for their respective conversations.
-#[derive(Debug, Clone)]
-#[cfg_attr(test, derive(PartialEq))]
-pub enum OutgoingMessageBody {
-    /// An outgoing 1:1 message to a contact.
-    Contact(OutgoingContactMessageBody),
-
-    /// An outgoing distribution list message.
-    DistributionList(OutgoingDistributionListMessageBody),
-
-    /// An outgoing group message.
-    Group(OutgoingGroupMessageBody),
-}
-impl OutgoingMessageBody {
-    /// Get the outgoing message's type.
-    pub(crate) const fn message_type(&self) -> CspE2eMessageType {
-        match &self {
-            OutgoingMessageBody::Contact(body) => body.body.message_type(),
-            OutgoingMessageBody::DistributionList(body) => body.body.message_type(),
-            OutgoingMessageBody::Group(body) => body.body.message_type(),
-        }
-    }
-
-    /// Get the outgoing message's properties respective to the associated conversation.
-    const fn properties(&self) -> MessageProperties {
-        match &self {
-            OutgoingMessageBody::Contact(body) => body.body.properties(),
-            OutgoingMessageBody::DistributionList(body) => body.body.properties(),
-            OutgoingMessageBody::Group(body) => body.body.properties().into_message_properties(),
-        }
-    }
-
-    /// Determine whether the outgoing message is exempt from blocking.
-    fn is_exempt_from_blocking(&self) -> bool {
-        match &self {
-            OutgoingMessageBody::Contact(body) => body.body.is_exempt_from_blocking(),
-            OutgoingMessageBody::DistributionList(body) => body.body.is_exempt_from_blocking(),
-            OutgoingMessageBody::Group(body) => body.body.is_exempt_from_blocking(),
+    /// Get the text revisions, if the message is editable.
+    ///
+    /// Caveat for [`MessageStateBodyType::Deleted`]: Even though the original type mandates whether the
+    /// message is eligible for editing, existing revisions have been removed and no new ones may be added.
+    #[inline]
+    fn text_revisions(&mut self) -> Option<&mut Vec<MessageTextRevision>> {
+        match self {
+            Self::Text(message) => Some(message.revisions.as_mut()),
+            Self::Location(_) | Self::PollOpen(_) | Self::PollClose(_) | Self::Deleted(_) => None,
         }
     }
 }
 
-/// An incoming message.
-#[derive(Debug, Clone)]
-#[cfg_attr(test, derive(PartialEq))]
-pub struct IncomingMessage {
-    /// Identity of the sender.
-    pub sender_identity: ThreemaId,
+/// Directional data associated to an incoming message.
+#[derive(Clone, Copy, Debug)]
+#[cfg_attr(feature = "uniffi", derive(uniffi::Record))]
+pub struct IncomingMessageDirection {
+    /// Unix-ish timestamp in milliseconds for when the message has been received.
+    pub received_at: u64,
+}
+
+/// Directional data associated to an outgoing message.
+#[derive(Clone, Copy, Debug)]
+#[cfg_attr(feature = "uniffi", derive(uniffi::Record))]
+pub struct OutgoingMessageDirection {
+    /// Optional Unix-ish timestamp in milliseconds for when the message has been sent.
+    pub sent_at: Option<u64>,
+
+    /// Optional Unix-ish timestamp in milliseconds for when the message has been delivered.
+    pub delivered_at: Option<u64>,
+}
+
+/// Direction with directional data associated to a message.
+#[derive(Clone, Debug, Copy, VariantNames)]
+#[cfg_attr(feature = "uniffi", derive(uniffi::Enum))]
+pub enum MessageDirection {
+    /// Incoming.
+    Incoming(IncomingMessageDirection),
+
+    /// Outgoing.
+    Outgoing(OutgoingMessageDirection),
+}
+
+/// A minimal set of metadata for a given message.
+pub struct MessageStateMetadata {
+    /// The conversation ID of the conversation the message is found in.
+    pub conversation_id: ConversationId,
+
+    /// Creator of the state.
+    pub creator_identity: ThreemaId,
+
+    /// The message ID of the message.
+    pub message_id: MessageId,
+
+    /// The message body state type.
+    pub message_type: MessageStateBodyType,
+}
+
+/// A stateful message.
+// TODO(LIB-161): Add forward security mode
+#[derive(Clone, Debug)]
+pub struct MessageState {
+    /// The ID of the conversation this message state belongs to.
+    pub conversation_id: ConversationId,
+
+    /// Creator of the state.
+    pub creator_identity: ThreemaId,
 
     /// The ID of the message.
-    pub id: MessageId,
-
-    /// Behaviour overrides.
-    pub overrides: MessageOverrides,
+    pub message_id: MessageId,
 
     /// Unix-ish timestamp in milliseconds for when the message has been created.
     pub created_at: u64,
 
-    /// The message's body for the respective conversation.
-    pub body: IncomingMessageBody,
+    /// Direction, containing directional specific data.
+    ///
+    /// Note: While alignment is required, you should always use [`MessageState::creator_identity`] as the
+    /// primary source of truth to determine whether a message is incoming or outgoing!
+    pub direction: MessageDirection,
+
+    /// Optional Unix-ish timestamp in milliseconds for when the message has been marked as read.
+    pub read_at: Option<u64>,
+
+    /// Message marker.
+    pub star_marker: MessageStarMarker,
+
+    /// Reactions to this message.
+    pub reactions: Vec<MessageReaction>,
+
+    /// The message type dependent message body state.
+    pub body: MessageStateBody,
+}
+#[cfg(any(test, feature = "cli"))]
+impl MessageState {
+    pub(crate) fn metadata(&self) -> MessageStateMetadata {
+        MessageStateMetadata {
+            conversation_id: self.conversation_id,
+            creator_identity: self.creator_identity,
+            message_id: self.message_id,
+            message_type: self.body.message_type(),
+        }
+    }
+
+    fn reactions(&mut self) -> Option<&mut Vec<MessageReaction>> {
+        match self.body {
+            MessageStateBody::Text(_)
+            | MessageStateBody::Location(_)
+            | MessageStateBody::PollOpen(_)
+            | MessageStateBody::PollClose(_) => Some(self.reactions.as_mut()),
+            MessageStateBody::Deleted(_) => None,
+        }
+    }
 }
 
-/// An outgoing message.
+/// Unix-ish timestamp in milliseconds for when the outgoing message has been sent.
 #[derive(Debug, Clone)]
-#[cfg_attr(test, derive(PartialEq))]
-pub struct OutgoingMessage {
-    /// The ID of the message.
-    pub id: MessageId,
+pub struct UserSentTimestamp(pub u64);
 
-    /// Behaviour overrides.
-    pub overrides: MessageOverrides,
+/// Unix-ish timestamp in milliseconds for when the outgoing message has been read.
+#[derive(Clone, Debug)]
+pub struct UserReadTimestamp(pub u64);
 
-    /// Unix-ish timestamp in milliseconds for when the message has been created.
+/// A delivery receipt update by another contact.
+#[derive(Clone, Debug, VariantNames)]
+#[cfg_attr(feature = "uniffi", derive(uniffi::Enum))]
+pub enum ContactDeliveryUpdate {
+    /// Unix-ish timestamp in milliseconds for when the message has been received by the contact.
+    Delivered(u64),
+
+    /// Unix-ish timestamp in milliseconds for when the message has been read by the contact.
+    Read(u64),
+}
+
+/// Marks a message as deleted.
+#[derive(Debug, Clone)]
+pub struct DeleteMarker;
+
+/// The intent when updating a message with a reaction.
+#[derive(Clone, Debug)]
+#[cfg_attr(feature = "uniffi", derive(uniffi::Enum))]
+pub enum MessageReactionUpdateIntent {
+    /// Apply the reaction (if it does not already exist).
+    Apply,
+
+    /// Withdraw the reaction (if it already exists).
+    Withdraw,
+
+    /// Replace any reaction at the specified message of the specified sender with this reaction.
+    Replace,
+}
+
+/// A message reaction update.
+#[derive(Clone, Debug)]
+pub struct MessageReactionUpdate {
+    /// Unix-ish timestamp in milliseconds when the reaction was created (or withdrawn).
     pub created_at: u64,
 
-    /// The message's body for the respective conversation.
-    pub body: OutgoingMessageBody,
-}
-impl OutgoingMessage {
-    /// Computes [`MessageFlags`] from the [`MessageProperties`] and then the [`MessageOverrides`].
-    pub(crate) fn flags(&self) -> MessageFlags {
-        MessageFlags::default()
-            .chain_apply(self.properties())
-            .chain_apply(self.overrides)
-    }
+    /// Whether the reaction should be added, withdrawn or replaced.
+    pub intent: MessageReactionUpdateIntent,
+
+    /// The emoji.
+    pub emoji: EmojiReaction,
 }
 
-#[duplicate_item(
-    message_struct;
-    [ IncomingMessage ];
-    [ OutgoingMessage ];
-)]
-#[expect(clippy::allow_attributes, reason = "duplicate shenanigans")]
-impl message_struct {
-    /// Get the message's type.
-    #[inline]
-    #[must_use]
-    pub const fn message_type(&self) -> CspE2eMessageType {
-        self.body.message_type()
-    }
-
-    /// Get the message's properties.
+/// A message body state update.
+///
+/// See each variant's steps which is expected to be invoked with the following information:
+///
+/// - `update-creator`: The creator (i.e. origin) of the update.
+/// - `conversation`: The associated conversation.
+/// - `message`: The [message][`MessageState`] this update intends to be applied on.
+#[derive(Debug, Clone, VariantNames)]
+pub enum MessageStateBodyUpdate {
+    /// Mark an outgoing message as _sent_ by the user.
     ///
-    /// IMPORTANT: This does **NOT** include the overrides from [`MessageOverrides`]!
-    #[inline]
-    const fn properties(&self) -> MessageProperties {
-        self.body.properties()
-    }
+    /// 1. If `update-creator` is not the user, return [`crate::provider::ProviderError::InvalidState`].
+    /// 2. If `message.creator` is not the user, return [`crate::provider::ProviderError::InvalidState`].
+    /// 3. If `message.direction` is not [`MessageDirection::Outgoing`], return
+    ///    [`crate::provider::ProviderError::InvalidState`].
+    /// 4. Apply the enclosed value of `body` to `message.direction.sent_at`.
+    UserSent(UserSentTimestamp),
 
-    /// Get the effective message's properties, i.e. those with the [`MessageOverrides`] applied.
-    #[inline]
-    pub(crate) fn effective_properties(&self) -> MessageProperties {
-        self.properties().chain_apply(self.overrides)
-    }
+    /// Apply a delivery receipt from another contact to an outgoing message.
+    ///
+    /// 1. If `conversation` is not a 1:1 contact conversation, return
+    ///    [`crate::provider::ProviderError::InvalidState`].
+    /// 2. If `update-creator` is the user, return [`crate::provider::ProviderError::InvalidState`].
+    /// 3. If `message.creator` is not the user, return [`crate::provider::ProviderError::InvalidState`].
+    /// 4. If `message.direction` is not [`MessageDirection::Outgoing`], return
+    ///    [`crate::provider::ProviderError::InvalidState`].
+    /// 5. If `update.body` is [`ContactDeliveryUpdate::Delivered`], apply the enclosed timestamp to
+    ///    `message.direction.delivered_at`.
+    /// 6. If `update.body` is [`ContactDeliveryUpdate::Read`], apply the enclosed timestamp to
+    ///    `message.read_at`.
+    /// 7. (Unreachable).
+    ContactDeliveryReceipt(ContactDeliveryUpdate),
 
-    /// Determine whether the message is exempt from blocking.
-    #[inline]
-    #[allow(unused, reason = "TODO(LIB-51)")]
-    pub(crate) fn is_exempt_from_blocking(&self) -> bool {
-        self.body.is_exempt_from_blocking()
+    /// Mark an outgoing message as _read_ by the user.
+    ///
+    /// 1. If `conversation` is not a 1:1 contact conversation, return
+    ///    [`crate::provider::ProviderError::InvalidState`].
+    /// 4. If `update-creator` is not the user, return [`crate::provider::ProviderError::InvalidState`].
+    /// 3. If `message.creator` is the user, return [`crate::provider::ProviderError::InvalidState`].
+    /// 5. If `message.direction` is not [`MessageDirection::Incoming`], return
+    ///    [`crate::provider::ProviderError::InvalidState`].
+    /// 6. Apply the enclosed timestamp to `message.read_at`.
+    UserRead(UserReadTimestamp),
+
+    /// Update the star marker of a message.
+    ///
+    /// 1. If the `update-creator` is not the user, return [`crate::provider::ProviderError::InvalidState`].
+    /// 2. Apply the enclosed marker to `message.star_marker`.
+    StarMarker(MessageStarMarker),
+
+    /// Apply an edit revision to a message.
+    ///
+    /// 1. If `conversation` is a distribution list, return [`crate::provider::ProviderError::InvalidState`].
+    /// 2. If `update-creator` does not equal `message.creator`, return
+    ///    [`crate::provider::ProviderError::InvalidState`].
+    /// 3. If `message` has been [_deleted_][`crate::model::message::MessageStateBody::Deleted`], return
+    ///    [`crate::provider::ProviderError::InvalidState`].
+    /// 4. If `message` is not eligible for editing, return [`crate::provider::ProviderError::InvalidState`].
+    /// 5. Add the enclosed text revision to `message.body` as the most recent revision.
+    Edit(MessageTextRevision),
+
+    /// Mark a message as deleted, replacing its content with a placeholder and removing most of its visible
+    /// properties.
+    ///
+    /// 1. If `conversation` is a distribution list, return [`crate::provider::ProviderError::InvalidState`].
+    /// 2. If `update-creator` does not equal `message.creator`, return
+    ///    [`crate::provider::ProviderError::InvalidState`].
+    /// 3. If `message` has been [_deleted_][`crate::model::message::MessageStateBody::Deleted`], return
+    ///    [`crate::provider::ProviderError::InvalidState`].
+    /// 4. If `message` is not eligible for deletion, return [`crate::provider::ProviderError::InvalidState`].
+    /// 5. Remove all reactions from `message`.
+    /// 6. Set `message.body` to [`MessageStateBody::Deleted`].
+    Delete(DeleteMarker),
+
+    /// Update the reactions of a message.
+    ///
+    /// 1. If `conversation` is a distribution list, return [`crate::provider::ProviderError::InvalidState`].
+    /// 2. If `message` has been [_deleted_][`crate::model::message::MessageStateBody::Deleted`], return
+    ///    [`crate::provider::ProviderError::InvalidState`].
+    /// 3. If `message` is not eligible for reactions, return
+    ///    [`crate::provider::ProviderError::InvalidState`].
+    /// 4. Let `update` be the enclosed [`MessageReactionUpdate`].
+    /// 5. If `update.intent` is [`MessageReactionUpdateIntent::Apply`]:
+    ///    1. Look up a reaction from the `update-creator` matching `update.emoji` and let `existing` be the
+    ///       result.
+    ///    2. If `existing` is defined, log a notice, discard `update` and return.
+    ///    3. Add a new reaction based on `update` to `message.reactions`.
+    /// 6. If `update.intent` is [`MessageReactionUpdateIntent::Withdraw`], remove a reaction from the
+    ///    `update-creator` matching `update.emoji` within `message.reactions` (if it exists).
+    /// 7. If `update.intent` is [`MessageReactionUpdateIntent::Replace`]:
+    ///    1. Remove all reactions from the `update-creator` within `message.reactions`.
+    ///    2. Add a new reaction based on `update` to `message.reactions`.
+    Reaction(MessageReactionUpdate),
+}
+
+/// An update to a message state.
+///
+/// Can be created by:
+///
+/// - incoming messages from other contacts,
+/// - events of the user, e.g. _starring_ a message.
+///
+/// Consequently, the origin of an update is carried by the [`MessageStateUpdate::creator_identity`] field and
+/// the user's Threema ID is used for events created by the user.
+#[derive(Debug)]
+pub struct MessageStateUpdate {
+    /// The ID of the conversation the referred message (and also the origin for that matter)
+    /// belongs to.
+    pub conversation_id: ConversationId,
+
+    /// Creator of the update.
+    ///
+    /// Note: The creator of an update is not necessarily the creator of the referred state. Each
+    /// [`MessageStateBodyUpdate`] variant needs to handle this explicitly.
+    pub creator_identity: ThreemaId,
+
+    /// The ID of the message this update should be applied to (sometimes referred to as the _referred
+    /// message ID_).
+    pub message_id: MessageId,
+
+    /// The update to be applied to the referred message.
+    pub update: MessageStateBodyUpdate,
+}
+
+#[cfg(any(test, feature = "cli"))]
+struct MessageStateUpdateApplyFrom<T> {
+    user_identity: ThreemaId,
+    creator_identity: ThreemaId,
+    update: T,
+}
+#[cfg(any(test, feature = "cli"))]
+impl TryApply<MessageStateUpdateApplyFrom<UserSentTimestamp>> for MessageState {
+    type Error = ProviderError;
+
+    fn try_apply(
+        &mut self,
+        update_context: MessageStateUpdateApplyFrom<UserSentTimestamp>,
+    ) -> Result<(), Self::Error> {
+        // Ensure that the user is the creator of the update.
+        if update_context.creator_identity != update_context.user_identity {
+            return Err(ProviderError::InvalidState(
+                "Only the user can update sent timestamps".to_owned(),
+            ));
+        }
+
+        // Ensure that the message is outgoing.
+        if self.creator_identity != update_context.user_identity {
+            return Err(ProviderError::InvalidState(
+                "Cannot apply a sent timestamp to an incoming message".to_owned(),
+            ));
+        }
+        let MessageDirection::Outgoing(direction) = &mut self.direction else {
+            return Err(ProviderError::InvalidState(
+                "Inconsistent direction when attempting to apply an incoming message update".to_owned(),
+            ));
+        };
+
+        // Apply the timestamp.
+        direction.sent_at = Some(update_context.update.0);
+        Ok(())
+    }
+}
+#[cfg(any(test, feature = "cli"))]
+impl TryApply<MessageStateUpdateApplyFrom<ContactDeliveryUpdate>> for MessageState {
+    type Error = ProviderError;
+
+    fn try_apply(
+        &mut self,
+        update_context: MessageStateUpdateApplyFrom<ContactDeliveryUpdate>,
+    ) -> Result<(), Self::Error> {
+        // Ensure the update does only update 1:1 conversations.
+        if !matches!(self.conversation_id, ConversationId::Contact(_)) {
+            return Err(ProviderError::InvalidState(format!(
+                "Unsupported conversation {} for incoming delivery update",
+                self.conversation_id.variant_name()
+            )));
+        }
+
+        // Ensure that the update creator is not the user.
+        if update_context.creator_identity == update_context.user_identity {
+            return Err(ProviderError::InvalidState(
+                "Cannot apply an incoming delivery update from the user".to_owned(),
+            ));
+        }
+
+        // Ensure the message is outgoing.
+        if self.creator_identity != update_context.user_identity {
+            return Err(ProviderError::InvalidState(
+                "Cannot apply a sent timestamp to an incoming message".to_owned(),
+            ));
+        }
+        let MessageDirection::Outgoing(direction) = &mut self.direction else {
+            return Err(ProviderError::InvalidState(
+                "Inconsistent direction when attempting to apply an incoming message update".to_owned(),
+            ));
+        };
+
+        // Apply the timestamp.
+        match update_context.update {
+            ContactDeliveryUpdate::Delivered(delivered_at) => direction.delivered_at = Some(delivered_at),
+            ContactDeliveryUpdate::Read(read) => self.read_at = Some(read),
+        }
+        Ok(())
+    }
+}
+#[cfg(any(test, feature = "cli"))]
+impl TryApply<MessageStateUpdateApplyFrom<UserReadTimestamp>> for MessageState {
+    type Error = ProviderError;
+
+    fn try_apply(
+        &mut self,
+        update_context: MessageStateUpdateApplyFrom<UserReadTimestamp>,
+    ) -> Result<(), Self::Error> {
+        // Ensure the update does only update 1:1 conversations.
+        if !matches!(self.conversation_id, ConversationId::Contact(_)) {
+            return Err(ProviderError::InvalidState(format!(
+                "Unsupported conversation {} for applying the user's read timestamp",
+                self.conversation_id.variant_name()
+            )));
+        }
+
+        // Ensure that the update creator is not the user.
+        if update_context.creator_identity != update_context.user_identity {
+            return Err(ProviderError::InvalidState(
+                "Only the user can update the read timestamp of an outgoing message".to_owned(),
+            ));
+        }
+
+        // Ensure the message is incoming.
+        if self.creator_identity == update_context.user_identity {
+            return Err(ProviderError::InvalidState(
+                "Cannot apply an outgoing read timestamp to an outgoing message".to_owned(),
+            ));
+        }
+        if !matches!(self.direction, MessageDirection::Incoming(_)) {
+            return Err(ProviderError::InvalidState(
+                "Inconsistent direction when attempting to apply an outgoing message update".to_owned(),
+            ));
+        }
+
+        // Apply the timestamp.
+        self.read_at = Some(update_context.update.0);
+        Ok(())
+    }
+}
+#[cfg(any(test, feature = "cli"))]
+impl TryApply<MessageStateUpdateApplyFrom<MessageStarMarker>> for MessageState {
+    type Error = ProviderError;
+
+    fn try_apply(
+        &mut self,
+        update_context: MessageStateUpdateApplyFrom<MessageStarMarker>,
+    ) -> Result<(), Self::Error> {
+        // Ensure the update creator is the user.
+        if update_context.creator_identity != update_context.user_identity {
+            return Err(ProviderError::InvalidState(format!(
+                "Cannot apply a message star marker from non-user origin {}",
+                update_context.creator_identity,
+            )));
+        }
+
+        // Apply the message star marker.
+        self.star_marker = update_context.update;
+        Ok(())
+    }
+}
+#[cfg(any(test, feature = "cli"))]
+impl TryApply<MessageStateUpdateApplyFrom<MessageTextRevision>> for MessageState {
+    type Error = ProviderError;
+
+    fn try_apply(
+        &mut self,
+        update_context: MessageStateUpdateApplyFrom<MessageTextRevision>,
+    ) -> Result<(), Self::Error> {
+        // Ensure the update does not target a distribution list.
+        if matches!(self.conversation_id, ConversationId::DistributionList(_)) {
+            return Err(ProviderError::InvalidState(format!(
+                "Unsupported conversation {} for editing",
+                self.conversation_id.variant_name()
+            )));
+        }
+
+        // Ensure the update creator is the original creator of the message.
+        if update_context.creator_identity != self.creator_identity {
+            return Err(ProviderError::InvalidState(
+                "Message can only be edited by its creator".to_owned(),
+            ));
+        }
+
+        // Determine whether the message is eligible for editing.
+        //
+        // Note: When a text revision is yielded, we have implicitly ensured that the message has not been
+        // deleted.
+        let Some(text_revisions) = self.body.text_revisions() else {
+            return Err(ProviderError::InvalidState(format!(
+                "Message {} is not eligible for editing",
+                self.body.variant_name()
+            )));
+        };
+
+        // Add to text revisions.
+        text_revisions.push(update_context.update);
+        Ok(())
+    }
+}
+#[cfg(any(test, feature = "cli"))]
+impl TryApply<MessageStateUpdateApplyFrom<DeleteMarker>> for MessageState {
+    type Error = ProviderError;
+
+    fn try_apply(
+        &mut self,
+        update_context: MessageStateUpdateApplyFrom<DeleteMarker>,
+    ) -> Result<(), Self::Error> {
+        // Ensure the update does not target a distribution list.
+        if matches!(self.conversation_id, ConversationId::DistributionList(_)) {
+            return Err(ProviderError::InvalidState(format!(
+                "Unsupported conversation {} for deletion",
+                self.conversation_id.variant_name()
+            )));
+        }
+
+        // Ensure the update creator is the original creator of the message.
+        if update_context.creator_identity != self.creator_identity {
+            return Err(ProviderError::InvalidState(
+                "Message can only be deleted by its creator".to_owned(),
+            ));
+        }
+
+        // Determine whether the message is eligible for deletion.
+        //
+        // Note: This implicitly checks if the message has already been deleted.
+        let message_type = self.body.message_type();
+        if !message_type.is_deletable() {
+            return Err(ProviderError::InvalidState(format!(
+                "Message {} is not eligible for deletion",
+                self.body.variant_name()
+            )));
+        }
+
+        // Purge reactions and replace with a _deleted_ message.
+        self.reactions = vec![];
+        self.body = MessageStateBody::Deleted(message_type);
+        Ok(())
+    }
+}
+#[cfg(any(test, feature = "cli"))]
+impl TryApply<MessageStateUpdateApplyFrom<MessageReactionUpdate>> for MessageState {
+    type Error = ProviderError;
+
+    fn try_apply(
+        &mut self,
+        update_context: MessageStateUpdateApplyFrom<MessageReactionUpdate>,
+    ) -> Result<(), Self::Error> {
+        // Ensure the update does not target a distribution list.
+        if matches!(self.conversation_id, ConversationId::DistributionList(_)) {
+            return Err(ProviderError::InvalidState(format!(
+                "Unsupported conversation {} for reactions",
+                self.conversation_id.variant_name()
+            )));
+        }
+
+        // Determine whether the message is eligible for reactions.
+        //
+        // Note: This implicitly checks if the message has already been deleted.
+        let Some(reactions) = self.reactions() else {
+            return Err(ProviderError::InvalidState(format!(
+                "Message {} is not eligible for reactions",
+                self.body.variant_name()
+            )));
+        };
+
+        // Apply the reaction according to the intent
+        match update_context.update.intent {
+            MessageReactionUpdateIntent::Apply => {
+                // Check if there already is a matching existing reaction.
+                if reactions
+                    .iter()
+                    .find(|reaction| {
+                        reaction.creator_identity == update_context.creator_identity
+                            && reaction.emoji == update_context.update.emoji
+                    })
+                    .is_some()
+                {
+                    debug!(
+                        "Discarding reaction that already exists on message {}",
+                        self.message_id
+                    );
+                    return Ok(());
+                }
+
+                // Apply the new reaction.
+                reactions.push(MessageReaction {
+                    creator_identity: update_context.creator_identity,
+                    created_at: update_context.update.created_at,
+                    emoji: update_context.update.emoji,
+                });
+            },
+
+            MessageReactionUpdateIntent::Withdraw => {
+                // Lookup a matching existing reaction and remove it, if any.
+                if let Some(position) = reactions.iter().position(|reaction| {
+                    reaction.emoji == update_context.update.emoji
+                        && reaction.creator_identity == update_context.creator_identity
+                }) {
+                    let _ = reactions.remove(position);
+                } else {
+                    debug!(
+                        "Reaction to withdraw does not exist on message {}",
+                        self.message_id
+                    );
+                }
+            },
+
+            MessageReactionUpdateIntent::Replace => {
+                // Remove all reactions from the sender.
+                reactions.retain(|reaction| reaction.creator_identity != update_context.creator_identity);
+
+                // Add the reaction.
+                reactions.push(MessageReaction {
+                    creator_identity: update_context.creator_identity,
+                    created_at: update_context.update.created_at,
+                    emoji: update_context.update.emoji,
+                });
+            },
+        }
+        Ok(())
+    }
+}
+
+#[cfg(any(test, feature = "cli"))]
+pub(crate) struct MessageStateUpdateApplyContext {
+    pub(crate) user_identity: ThreemaId,
+    pub(crate) update: MessageStateUpdate,
+}
+#[cfg(any(test, feature = "cli"))]
+impl TryApply<MessageStateUpdateApplyContext> for MessageState {
+    type Error = ProviderError;
+
+    fn try_apply(
+        &mut self,
+        MessageStateUpdateApplyContext {
+            user_identity,
+            update,
+        }: MessageStateUpdateApplyContext,
+    ) -> Result<(), Self::Error> {
+        // Ensure the update is applied to a matching message.
+        if !(self.conversation_id == update.conversation_id && self.message_id == update.message_id) {
+            return Err(ProviderError::InvalidState(
+                "Message update does not match message".to_owned(),
+            ));
+        }
+
+        // Apply the update.
+        match update.update {
+            MessageStateBodyUpdate::ContactDeliveryReceipt(delivery_update) => {
+                self.try_apply(MessageStateUpdateApplyFrom {
+                    user_identity,
+                    creator_identity: update.creator_identity,
+                    update: delivery_update,
+                })
+            },
+            MessageStateBodyUpdate::UserSent(sent) => self.try_apply(MessageStateUpdateApplyFrom {
+                user_identity,
+                creator_identity: update.creator_identity,
+                update: sent,
+            }),
+            MessageStateBodyUpdate::UserRead(delivery_update) => {
+                self.try_apply(MessageStateUpdateApplyFrom {
+                    user_identity,
+                    creator_identity: update.creator_identity,
+                    update: delivery_update,
+                })
+            },
+            MessageStateBodyUpdate::Edit(text_revision) => self.try_apply(MessageStateUpdateApplyFrom {
+                user_identity,
+                creator_identity: update.creator_identity,
+                update: text_revision,
+            }),
+            MessageStateBodyUpdate::Delete(delete_marker) => self.try_apply(MessageStateUpdateApplyFrom {
+                user_identity,
+                creator_identity: update.creator_identity,
+                update: delete_marker,
+            }),
+            MessageStateBodyUpdate::StarMarker(star_marker) => self.try_apply(MessageStateUpdateApplyFrom {
+                user_identity,
+                creator_identity: update.creator_identity,
+                update: star_marker,
+            }),
+            MessageStateBodyUpdate::Reaction(reaction) => self.try_apply(MessageStateUpdateApplyFrom {
+                user_identity,
+                creator_identity: update.creator_identity,
+                update: reaction,
+            }),
+        }
     }
 }

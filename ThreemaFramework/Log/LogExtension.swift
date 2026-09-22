@@ -26,7 +26,7 @@ public func DDLogNotice(
     ddlog: DDLog = .sharedInstance
 ) {
     _DDLogMessage(
-        message(),
+        "\(message())",
         level: level,
         flag: DDLogFlag(rawValue: DDLogFlag.RawValue(DDLogFlagNotice)),
         context: context,

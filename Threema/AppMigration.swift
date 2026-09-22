@@ -21,7 +21,7 @@ import ThreemaMacros
 ///
 /// ```swift
 /// ...
-/// @objc func run() {
+/// func run() {
 ///     do {
 ///         if migratedTo < .v4_8 {
 ///             try migrateTo4_8()
@@ -43,7 +43,7 @@ import ThreemaMacros
 ///     DDLogNotice("[AppMigration] App migration to version 4.9 successfully finished")
 /// }
 /// ```
-public final class AppMigration {
+final class AppMigration {
 
     private let osPOILog = OSLog(subsystem: "ch.threema.iapp.appMigration", category: .pointsOfInterest)
 
@@ -61,7 +61,7 @@ public final class AppMigration {
     
     private lazy var persistenceMigration = PersistenceMigration(entityManager: businessInjector.entityManager)
 
-    public init(
+    init(
         businessInjector: BusinessInjectorProtocol,
         reset: Bool = false
     ) {
@@ -72,7 +72,7 @@ public final class AppMigration {
         }
     }
 
-    public convenience init(reset: Bool = false) {
+    convenience init(reset: Bool = false) {
         self.init(
             businessInjector: BusinessInjector(forBackgroundProcess: !Thread.isMainThread),
             reset: reset
@@ -85,7 +85,7 @@ public final class AppMigration {
     ///
     /// Errors thrown by `run` are always `NSErrors` i.e. they are directly usable by `ErrorHandler.abortWithError()`
     /// function.
-    public func run() throws {
+    func run() throws {
         // We do not perform migrations in safe mode
         guard !SettingsBundleHelper.safeMode else {
             DDLogNotice("[AppMigration] safe mode enabled no migrations will be performed")
@@ -186,6 +186,10 @@ public final class AppMigration {
             if migratedTo < .v7_3 {
                 try migrateTo7_3()
                 migratedTo = .v7_3
+            }
+            if migratedTo < .v7_4 {
+                try migrateTo7_4()
+                migratedTo = .v7_4
             }
 
             // Add here a check if migration is necessary for a particular version...
@@ -982,9 +986,7 @@ public final class AppMigration {
             Colors.resolveTheme()
         }
 
-        if SharedAppProvider.isSceneDelegateDevelopment {
-            migrateUserInterfaceStyleStoringKey()
-        }
+        migrateUserInterfaceStyleStoringKey()
 
         os_signpost(.end, log: osPOILog, name: "7.1 migration")
         DDLogNotice("[AppMigration] App migration to version 7.1 successfully finished")
@@ -1016,5 +1018,30 @@ public final class AppMigration {
         
         os_signpost(.end, log: osPOILog, name: "7.3 migration")
         DDLogNotice("[AppMigration] App migration to version 7.3 successfully finished")
+    }
+    
+    /// Migrate to version 7.4
+    /// - Delete document inbox if there is any
+    private func migrateTo7_4() throws {
+        DDLogNotice("[AppMigration] App migration to version 7.4 started")
+        os_signpost(.begin, log: osPOILog, name: "7.4 migration")
+        
+        if let fileUtility = FileUtility.shared,
+           let documentInboxURL = fileUtility.appDocumentsDirectory?.appending(
+               path: "Inbox",
+               directoryHint: .isDirectory
+           ) {
+            fileUtility.deleteIfExists(at: documentInboxURL)
+        }
+        else {
+            let dict = [
+                NSLocalizedDescriptionKey: "\(#localize("app_migration_uncompleted")). Unable to delete document inbox files",
+            ]
+            let nsError = NSError(domain: "\(type(of: self))", code: 1, userInfo: dict)
+            throw nsError
+        }
+            
+        os_signpost(.end, log: osPOILog, name: "7.4 migration")
+        DDLogNotice("[AppMigration] App migration to version 7.4 successfully finished")
     }
 }

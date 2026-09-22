@@ -1,9 +1,10 @@
+import AudioSessionManager
 import SwiftUI
 
 struct QRCodeCameraView: UIViewControllerRepresentable {
-    private let audioSessionManager: AudioSessionManagerProtocol
-    private let systemFeedbackManager: SystemFeedbackManagerProtocol
-    private let systemPermissionsManager: SystemPermissionsManagerProtocol
+    private let audioSessionManager: (any AudioSessionManagerProtocol)?
+    private let systemFeedbackManager: any SystemFeedbackManagerProtocol
+    private let systemPermissionsManager: any SystemPermissionsManagerProtocol
 
     @Binding
     var shouldResume: Bool
@@ -11,9 +12,9 @@ struct QRCodeCameraView: UIViewControllerRepresentable {
     var onCompletion: ((String?) -> Void)?
 
     init(
-        audioSessionManager: AudioSessionManagerProtocol,
-        systemFeedbackManager: SystemFeedbackManagerProtocol,
-        systemPermissionsManager: SystemPermissionsManagerProtocol,
+        audioSessionManager: (any AudioSessionManagerProtocol)?,
+        systemFeedbackManager: any SystemFeedbackManagerProtocol,
+        systemPermissionsManager: any SystemPermissionsManagerProtocol,
         shouldResume: Binding<Bool>,
         onCompletion: ((String?) -> Void)? = nil
     ) {

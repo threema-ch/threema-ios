@@ -1,4 +1,5 @@
 import Foundation
+import ThreemaFramework
 import ThreemaMacros
 
 extension SettingsCollectionViewDataSource {
@@ -28,8 +29,16 @@ extension SettingsCollectionViewDataSource {
                 return devRows
                 
             case .general:
-                return [.privacy, .appearance, .notifications, .chat, .media, .storage, .passcode, .calls]
-            
+                var generalRows = [Row]()
+                generalRows.append(contentsOf: [.privacy, .appearance, .notifications, .chat, .media])
+
+                if ThreemaEnvironment.backups2Enabled {
+                    generalRows.append(.backups)
+                }
+
+                generalRows.append(contentsOf: [.storage, .passcode, .calls])
+                return generalRows
+
             case .desktop:
                 var desktopRows = [Row]()
                 if !MDMSetup().disableMultiDevice() {
@@ -128,12 +137,13 @@ extension SettingsCollectionViewDataSource {
     enum Row {
         case betaFeedback
         case developer
-        
+
         case privacy
         case appearance
         case notifications
         case chat
         case media
+        case backups
         case storage
         case passcode
         case calls
@@ -175,6 +185,8 @@ extension SettingsCollectionViewDataSource {
                 #localize("settings_list_chat_title")
             case .media:
                 #localize("settings_list_media_title")
+            case .backups:
+                #localize("backup_center")
             case .storage:
                 #localize("settings_list_storage_management_title")
             case .passcode:
@@ -241,6 +253,8 @@ extension SettingsCollectionViewDataSource {
                 UIImage(systemName: "bubble.left.and.bubble.right.fill")
             case .media:
                 UIImage(systemName: "photo.on.rectangle.angled")
+            case .backups:
+                UIImage(systemName: "arrow.trianglehead.2.counterclockwise.rotate.90")
             case .storage:
                 UIImage(systemName: "externaldrive.fill")
             case .passcode:
@@ -278,6 +292,9 @@ extension SettingsCollectionViewDataSource {
                 .betaFeedback
             case .developer:
                 .developer
+            case .coordinatorDemo:
+                // Launched from within Developer Settings, not a list row.
+                nil
             case .privacy:
                 .privacy
             case .appearance:
@@ -288,6 +305,8 @@ extension SettingsCollectionViewDataSource {
                 .chat
             case .media:
                 .media
+            case .backups:
+                .backups
             case .storage:
                 .storage
             case .passcode:

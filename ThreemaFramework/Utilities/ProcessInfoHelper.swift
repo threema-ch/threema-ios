@@ -1,6 +1,6 @@
 import Foundation
 
-@objc public final class ProcessInfoHelper: NSObject {
+public final class ProcessInfoHelper: NSObject {
     
     @objc public static var isRunningForScreenshots: Bool = ProcessInfo.processInfo.arguments
         .contains("-isRunningForScreenshots")
@@ -11,8 +11,14 @@ import Foundation
     @objc public static var predefinedThemeDark: Bool = ProcessInfo.processInfo.arguments
         .contains("-predefinedThemeDark")
     
-    @objc public static var isRunningForTests: Bool = ProcessInfo.processInfo.arguments
+    public static var isRunningForTests: Bool = ProcessInfo.processInfo.arguments
         .contains("-isRunningForTests")
+
+    public static var isRunningForPreviews: Bool = ProcessInfo.processInfo
+        .environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1"
+
+    public static var isRunningForPlaygrounds: Bool = ProcessInfo.processInfo
+        .environment["XCODE_RUNNING_FOR_PLAYGROUNDS"] == "1"
     
     public static var targetManagerKeyForScreenshots: String? = ProcessInfo.processInfo.environment["TargetManagerKey"]
 }

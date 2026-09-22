@@ -1,6 +1,6 @@
 import Foundation
 
-class BadgeCountLabel: UILabel {
+final class BadgeCountLabel: UILabel {
     
     override var intrinsicContentSize: CGSize {
         var contentSize = super.intrinsicContentSize

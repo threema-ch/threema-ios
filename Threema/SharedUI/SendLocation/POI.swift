@@ -4,7 +4,7 @@ import MapKit
 
 // MARK: - ThreemaPOI
 
-public struct ThreemaPOI: Decodable {
+struct ThreemaPOI: Decodable {
     let id: Int
     let name: String
     let lat: Double
@@ -13,7 +13,7 @@ public struct ThreemaPOI: Decodable {
     let category: POICategory
     let subcategory: String
     
-    public init(from decoder: Decoder) throws {
+    init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         
         self.id = try container.decode(Int.self, forKey: CodingKeys.id)
@@ -59,21 +59,21 @@ public struct ThreemaPOI: Decodable {
 
 // MARK: - PointOfInterest
 
-public final class PointOfInterest: Equatable, Hashable {
+final class PointOfInterest: Equatable, Hashable {
         
-    public var type: POIType
-    public var name: String
-    public var location: CLLocation
-    public var distance: POIDistance
-    public var category: POICategory
-    public var detailCategory: String
-    public var address: String?
-    public var image: UIImage
-    public var updatedLocation: CLLocation
+    var type: POIType
+    var name: String
+    var location: CLLocation
+    var distance: POIDistance
+    var category: POICategory
+    var detailCategory: String
+    var address: String?
+    var image: UIImage
+    var updatedLocation: CLLocation
     
     // MARK: - Lifecycle
     
-    public init(receivedPOI: ThreemaPOI) {
+    init(receivedPOI: ThreemaPOI) {
         self.type = .threemaPOI(id: receivedPOI.id)
         self.name = receivedPOI.name
         self.location = CLLocation(latitude: receivedPOI.lat, longitude: receivedPOI.lon)
@@ -84,7 +84,7 @@ public final class PointOfInterest: Equatable, Hashable {
         self.image = PointOfInterest.icon(for: receivedPOI.subcategory)
     }
     
-    public init(
+    init(
         type: POIType,
         name: String,
         location: CLLocation,
@@ -102,7 +102,7 @@ public final class PointOfInterest: Equatable, Hashable {
         self.image = PointOfInterest.icon(for: detailCategory)
     }
     
-    public init(
+    init(
         type: POIType,
         name: String,
         location: CLLocation,
@@ -122,20 +122,20 @@ public final class PointOfInterest: Equatable, Hashable {
     
     // MARK: - Protocol Functions
 
-    public static func == (lhs: PointOfInterest, rhs: PointOfInterest) -> Bool {
+    static func == (lhs: PointOfInterest, rhs: PointOfInterest) -> Bool {
         lhs.type == rhs.type
     }
     
-    public func hash(into hasher: inout Hasher) {
+    func hash(into hasher: inout Hasher) {
         hasher.combine(type)
     }
 }
 
 // MARK: - Annotation
 
-public final class POIAnnotation: MKPointAnnotation {
+final class POIAnnotation: MKPointAnnotation {
     
-    public var type: POIType?
+    var type: POIType?
     
     init(for poi: PointOfInterest) {
         super.init()
@@ -148,19 +148,19 @@ public final class POIAnnotation: MKPointAnnotation {
 
 // MARK: - Enums
 
-public enum POIType: Hashable, Equatable {
+enum POIType: Hashable, Equatable {
     case currentLocationPOI
     case markedLocationPOI
     case threemaPOI(id: Int)
 }
 
-public enum POIDistance: Hashable, Equatable {
+enum POIDistance: Hashable, Equatable {
     case notAvailable
     case notSet
     case distance(Int)
 }
 
-public enum POICategory: String, CaseIterable {
+enum POICategory: String, CaseIterable {
     // Given by Backend
     case amenity
     case tourism

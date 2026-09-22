@@ -14,7 +14,7 @@ final class ThreemaSafeLearnMoreViewModel {
         .localizedStringWithFormat(#localize("safe_enable_explain"), appFlavor.localizedAppName)
     }
 
-    let doneButtonTitle = #localize("Done")
+    let doneButtonTitle = #localize("done")
 
     // MARK: - Private properties
 

@@ -2,32 +2,29 @@ import Foundation
 import UIKit
 
 /// Destinations to be shown from anywhere in the app.
-/// - Important: Destinations that are scoped to a `Coordinator` should be referenced in the respective implementation.
-public enum Destination: Equatable {
-    case app(AppDestination)
-    
-    /// Each case represents one of our tabs
-    public enum AppDestination: Equatable {
+///
+/// This is the vocabulary for *cross-surface* navigation (notifications, intents,
+/// URLs, screens deep-linking into another tab). Per-tab path elements are the tab
+/// coordinators' typed destination enums, erased to `AnyHashable` at this level;
+/// each tab coordinator narrows them back to its own `Destination` type.
+public enum Destination: Hashable {
+    /// Show a tab, replacing its navigation stack with `path`.
+    /// An empty path pops the tab to its root.
+    case app(AppDestination, path: [AnyHashable])
+
+    /// Each case represents one of our tabs.
+    public enum AppDestination: Hashable {
         case contacts
         case conversations
         case profile
         case settings
-        
-        public enum ContactsDestination: Equatable {
-            case todo
-        }
-        
-        public enum ConversationsDestination: Equatable {
-            case todo
-        }
-        
-        public enum ProfileDestination: Equatable {
-            case todo
-        }
-        
-        public enum SettingsDestination: Equatable {
-            case todo
-        }
+    }
+}
+
+extension Destination {
+    /// Show a tab at its root.
+    public static func app(_ tab: AppDestination) -> Destination {
+        .app(tab, path: [])
     }
 }
 

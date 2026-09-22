@@ -16,12 +16,13 @@
 //
 // There are two primary variants which use the same technology underneath:
 //
-// - A group call scoped to a (Threema) group is simple and easy to use. It does
-//   not have any advanced functionality such as administration or external
-//   guests. Only one group call is intended to run within a group.
+// - A group call is scoped to a (Threema) group. It does not have any advanced
+//   functionality such as moderation or external guests. Only one group call is
+//   intended to run within a group.
 // - A conference call is a more advanced type of group call and delivers more
-//   advanced functionality such as administration. Concrete specification
-//   pending.
+//   advanced functionality such as moderation and join policies (e.g. requiring
+//   moderator approval to join). It optionally also allows for external guests
+//   to join.
 //
 // The theoretical maximum amount of participants is 790 (due to the way we
 // derive WebRTC MIDs) but the practical limit is way below that.
@@ -33,8 +34,8 @@
 // - `GCNHAK`: Group Call Normal Handshake Authentication Key
 // - `GCHK`: Group Call Handshake Key
 // - `GCSK`: Group Call State Key
-// - `GCAK`: Group Call Administrator Key, only used for key derivation
-// - `GCAMK`: Group Call Administrator Message Key
+// - `GCMK`: Group Call Moderation Key, only used for key derivation
+// - `GCMMK`: Group Call Moderator Message Key
 // - `PCK`: Participant Call Key
 // - `PCMK`: Participant Call Media Key, only used for key derivation
 // - `PCMK`': Ratchet iteration of PCMK
@@ -73,7 +74,7 @@
 //     GCHK = BLAKE2b(key=GCK, salt='h', personal='3ma-call')
 //     GCSK = BLAKE2b(key=GCK, salt='s', personal='3ma-call')
 //
-//     GCAMK = BLAKE2b(key=GCAK, salt='am', personal='3ma-call', input=GCKH)
+//     GCMMK = BLAKE2b(key=GCMK, salt='mm', personal='3ma-call', input=GCKH)
 //
 //     PCMK' = BLAKE2b(key=PCMK, salt="m'", personal='3ma-call')
 //     PCMFK = BLAKE2b(key=PCMK, salt='mf', personal='3ma-call', input=GCKH)
@@ -95,13 +96,29 @@
 //         || utf8-encode(GroupCallStart.sfu_base_url),
 //     )
 //
+// For conference calls, the Group Call ID is derived by running BLAKE2b on
+// specific data provided by the `ConferenceCallInvite`:
+//
+//     group-call-id = BLAKE2b(
+//       out-length=32,
+//       salt='ic',
+//       personal='3ma-call',
+//       input=
+//         || u8(ConferenceCallInvite.protocol_version)
+//         || ConferenceCallInvite.gck
+//         || ConferenceCallInvite.gcmmk_public
+//         || u8(ConferenceCallInvite.guest_policy),
+//         || u8(ConferenceCallInvite.join_policy),
+//         || utf8-encode(ConferenceCallInvite.sfu_base_url)
+//     )
+//
 // ## Protocol Flow
 //
 // ### Obtain SFU Information
 //
-// Before a call can be joined or created, SFU information and an authentication
-// token need to be obtained via the Directory Server API. The obtained
-// information includes the following items referenced in subsequent sections:
+// Before a call can be created, SFU information and an authentication token
+// need to be obtained via the Directory Server API. The obtained information
+// includes the following items referenced in subsequent sections:
 //
 // - _SFU Base URL_: Base URL used to create and distribute new calls.
 // - _Allowed SFU Hostname Suffixes_: A set of allowed hostname suffixes to be
@@ -112,6 +129,29 @@
 // `https` and the included hostname ends with one of the _Allowed SFU Hostname
 // Suffixes_.
 //
+// ### Call Peeking
+//
+// The following steps are defined as the _Group Call Peek Steps_:
+//
+// 1. Let `call` be the targeted group call.
+// 2. Let `token` be the provided SFU token or be explicitly undefined (for
+//    external guest usage).
+// 3. If the user is currently participating in `call`, abort these steps and
+//    return the current status.
+// 4. _Peek_ the `call` via a `SfuHttpRequest.Peek` request with `token`. If
+//    this does not result in a response within 15s, abort these steps and
+//    return that the status is _unknown_.
+// 5. If the server could not be reached or the received status code is not
+//    `200` or if the `SfuHttpResponse.Peek` response could not be decoded:
+//    1. If the received status code is `401`, abort these steps and return the
+//       status _unauthorized_.
+//    2. If the received status code is `404`, abort these steps and return the
+//       status _not running_.
+//    3. Abort these steps and return that the status is _failed_.
+// 6. If the protocol version of the `call` is not supported, abort these steps
+//    and return the status _unsupported_.
+// 7. Return the status as provided by the `SfuHttpResponse.Peek` response.
+//
 // ### Scoped to Group
 //
 // #### Periodic Refresh
@@ -121,64 +161,56 @@
 // within a group, determining which one of them is the chosen call and
 // potentially join the chosen call:
 //
-// 1. Let `running` be the list of group calls that are currently considered
-//    running within the group.
-// 2. Let `calls` be a copy of `running`. Reset the _token-refreshed_ mark of
-//    each `call` of `calls` (or simply scope it to the execution of these
-//    steps).
-// 3. For each `call` of `calls`, run the following steps (labelled _peek-call_)
-//    concurrently and wait for them to return:
-//    1. If the user is currently participating in `call`, abort the _peek-call_
-//       sub-steps.
-//    2. _Peek_ the `call` via a `SfuHttpRequest.Peek` request. If this does not
-//       result in a response within 5s, remove `call` from `calls` and abort
-//       the _peek-call_ sub-steps.
-//    3. If the received status code for `call` is `401` and `call` is not
-//       marked with _token-refreshed_:
-//       1. Refresh the _SFU Token_. If the _SFU Token_ refresh fails or does
-//          not yield an _SFU Token_ within 10s, remove `call` from `calls` and
-//          abort the _peek-call_ sub-steps.
-//       2. Mark the `call` as _token-refreshed_.
-//       3. Restart the _peek-call_ sub-steps for this `call`.
-//    4. If the server could not be reached or the received status code is not
-//       `200` or if the _Peek_ response could not be decoded:
-//       1. Remove `call` from `calls`.
-//       2. If the received status code is `404`, remove `call` from `running`
-//          and abort the _peek-call_ sub-steps.
-//       3. If the `call`'s _failed_ counter is `>= 3` and the `call` was
-//          received more than 10h ago, remove `call` from `running` and abort
-//          the _peek-call_ sub-steps.
-//       4. Increase the _failed_ counter for `call` by `1` and abort the
-//          _peek-call_ sub-steps.
-//    5. Reset the `call`'s _failed_ counter to `0`.
-//    6. If the protocol version of the `call` is not supported, remove `call`
-//       from `calls`, log a warning that a group call with an unsupported
-//       version is currently running and abort the _peek-call_ sub-steps.
-//    7. (`call` is kept in `calls` and in `running`.)
-// 4. If `running` is empty, cancel the timer to periodically re-run the _Group
-//    Call Refresh Steps_ of this group. Otherwise, restart or schedule the
-//    timer to re-run the _Group Call Refresh Steps_ of this group in 10s.
-// 5. Let `chosen-call` be any call of `calls` with the highest `started_at`
-//    value (i.e. the most recently created call) as provided by the _peek_
-//    result.
-// 6. If `chosen-call` is not defined, signal that no group call is currently
-//    running within the group, abort these steps and return `chosen-call`.
-// 7. Signal `chosen-call` as the currently running group call within the group.
-// 8. If the _Group Call Join Steps_ are currently running with a different (or
-//    new) group call than `chosen-call`, cancel and restart the _Group Call
-//    Join Steps_ asynchronously with the same `intent` but with the
-//    `chosen-call`.
-// 9. If the user is currently participating in a group call of this group that
-//    is different to `chosen-call`, exit the running group call and run the
-//    _Group Call Join Steps_ asynchronously with the `intent` to _only join_
-//    `chosen-call`.
-// 10. Return `chosen-call`.
+// 1.  Let `running` be the list of group calls that are currently considered
+//     running within the group.
+// 2.  Let `calls` be a copy of `running`.
+// 3.  If the _SFU token_ would expire in the next 30s, refresh it and let
+//     `token` be the result. If the _SFU Token_ refresh fails or does not yield
+//     an _SFU Token_ within 15s, set `calls` to an empty list.
+// 4.  For each `call` of `calls`, run the following steps (labelled
+//     _peek-call_) concurrently and wait for them to return:
+//     1. Run the _Group Call Peek Steps_ for `call` and `token` and let
+//        `status` be the result.
+//     2. If `status` contains a valid status, reset the `call`'s _failed_
+//        counter to `0`, update `call` with `status` and abort the _peek-call_
+//        sub-steps.
+//     3. If `status` is _unauthorized_ or _not running_, remove `call` from
+//        `calls` and from `running` and abort the _peek-call_ sub-steps.
+//     4. If `status` is _unknown_, remove `call` from `calls` and abort the
+//        _peek-call_ sub-steps.
+//     5. If `status` is _unsupported_, reset the `call`'s _failed_ counter to
+//        `0`, remove `call` from `calls`, log a warning that a group call with
+//        an unsupported version is currently running and abort the _peek-call_
+//        sub-steps.
+//     6. If `status` is _failed_:
+//        1. Remove `call` from `calls`.
+//        2. If the `call`'s _failed_ counter is `>= 3` and the `call` was
+//           received more than 10h ago, remove `call` from `running` and abort
+//           the _peek-call_ sub-steps.
+//        3. Increase the _failed_ counter for `call` by `1` and abort the
+//           _peek-call_ sub-steps.
+// 5.  If `running` is empty, cancel the timer to periodically re-run the _Group
+//     Call Refresh Steps_ of this group. Otherwise, restart or schedule the
+//     timer to re-run the _Group Call Refresh Steps_ of this group in 10s.
+// 6.  Let `chosen-call` be any call of `calls` with the highest `started_at`
+//     value (i.e. the most recently created call) as provided by the _peek_
+//     result.
+// 7.  If `chosen-call` is not defined, signal that no group call is currently
+//     running within the group, abort these steps and return `chosen-call`.
+// 8.  Signal `chosen-call` as the currently running group call within the
+//     group.
+// 9.  If the _Group Call Join Steps_ are currently running with a different (or
+//     new) group call than `chosen-call`, cancel and restart the _Group Call
+//     Join Steps_ asynchronously with the same `intent` but with the
+//     `chosen-call`.
+// 10. If the user is currently participating in a group call of this group that
+//     is different to `chosen-call`, exit the running group call and run the
+//     _Group Call Join Steps_ asynchronously with the `intent` to _only join_
+//     `chosen-call`.
+// 11. Return `chosen-call`.
 //
 // Note: The above steps have been carefully crafted to gracefully handle cases
 // where the SFU of one call cannot be reached for a short period of time.
-//
-// When the Threema app is active, run the _Group Call Refresh Steps_ for each
-// group. This will start a timer to refresh any group call status.
 //
 // When the user leaves a group call, run the _Group Call Refresh Steps_ for the
 // respective group.
@@ -197,27 +229,138 @@
 //
 // 1. Let `intent` be the user's intent, i.e. to either _only join_ or _create
 //    or join_ a group call.
-// 2. Refresh the _SFU Token_ if necessary. If the _SFU Token_ refresh fails
-//    within 10s, abort these steps and notify the user.
-// 3. Run the _Group Call Refresh Steps_ for the respective group and let `call`
+// 2. Run the _Group Call Refresh Steps_ for the respective group and let `call`
 //    be the result.
-// 4. If `call` is undefined and `intent` is to _only join_, abort these steps
+// 3. If `call` is undefined and `intent` is to _only join_, abort these steps
 //    and notify the user that no group call is running / the group call is no
 //    longer running.
-// 5. If `call` is undefined, create (but don't send) a `GroupCallStart`
+// 4. If `call` is undefined, create (but don't send) a `GroupCallStart`
 //    message, apply it to `call` and mark `call` as _new_.
-// 6. Run the _Group Call Join Steps_ with the `intent` and `call`.
+// 5. Run the _Group Call Join Steps_ with the `intent` and `call`.
 //
 // The following steps are defined as the _Group Call Join Steps_ (also applied
-// for creating a group call).:
+// for creating a group call):
 //
-// 1. Let `intent` be either _only join_ or _create or join_. Let `call` be the
-//    given group call to be joined (or created).
-// 2.  _Join_ (or implicitly create) the group call via a `SfuHttpRequest.Join`
-//    request. If this does not result in a response within 10s, abort these
-//    steps and notify the user.
-// 3. If the received status code is `503`, notify the user that the group call
-//    is full and abort these steps.
+// 1.  Let `intent` be either _only join_ or _create or join_. Let `call` be the
+//     given group call to be joined (or created).
+// 2.   _Join_ (or implicitly create) the group call via a `SfuHttpRequest.Join`
+//     request. If this does not result in a response within 10s, abort these
+//     steps and notify the user.
+// 3.  If the received status code is `503`, notify the user that the group call
+//     is full and abort these steps.
+// 4.  If the server could not be reached or the received status code is not
+//     `200` or if the `SfuHttpResponse.Join` response could not be decoded,
+//     abort these steps and notify the user.
+// 5.  Let `response` be the decoded ``SfuHttpResponse.Join` response.
+// 6.  If `response.participant_uid` is empty, abort these steps and notify the
+//     user that the server does not support conference calls.
+// 7.  Establish a WebRTC connection to the SFU with the information provided in
+//     the `SfuHttpResponse.Join` response. Wait until the SFU sent the initial
+//     `SfuToParticipant.Hello` message via the associated data channel. Let
+//     `hello` be that message.
+// 8.  If the `hello.participants` contains less than 4 items, set the initial
+//     capture state of the microphone to _on_.
+// 9.  If `call` is marked as _new_:
+//     1. Optionally add an artificial wait period of 2s minus the time elapsed
+//        since step 1.¹
+//     2. Let `message-id` be a random message ID.
+//     3. Schedule a persistent task to run he _Bundled Messages Send Steps_
+//        with the following properties:
+//        - `id` set to `message-id`,
+//        - `receivers` set to all group members that have `GROUP_CALL_SUPPORT`,
+//        - to construct a `GroupCallStart` message from `call`.
+//     4. Add the created `call` to the list of group calls that are currently
+//        considered running.
+//     5. Asynchronously run the _Group Call Refresh Steps_.²
+// 10. The group call is now considered established and should asynchronously
+//     invoke the SFU to Participant and Participant to Participant flows.
+//
+// ¹: This prevents butter-fingered user from accidentally starting a group
+// call.
+//
+// ²: This will initiate the refresh timer for a newly created call and signal
+// it to the UI.
+//
+// Note: Implementations need to ensure that only one group call can be active
+// at the same time in the application. This means that only one invocation of
+// the _Create or Join_ flow and only one invocation of the _Group Call Join
+// Steps_ can be active. Be aware that these steps can be cancelled by the user
+// and by the _Group Call Refresh Steps_.
+//
+// ### Conference Call
+//
+// #### Overview: Periodic Refresh
+//
+// While the Conference Call Overview screen UI is visible, schedule a timer to
+// run the following steps every 10s (after the previous run returned):
+//
+// 1. Let `calls` be a copy of the set of stored conference calls.
+// 2. If the _SFU token_ would expire in the next 30s, refresh it and let
+//    `token` be the result. If the _SFU Token_ refresh fails or does not yield
+//    an _SFU Token_ within 15s, update the status of all `calls` to _unknown_.
+// 3. For each `call` of `calls`, run the following steps (labelled _peek-call_)
+//    concurrently and wait for them to return:
+//    1. Run the _Group Call Peek Steps_ for `call` and `token` and let `status`
+//       be the result.
+//    2. If `status` contains a valid status, set `call`'s display status to
+//       `status` and abort the _peek-call_ sub-steps.
+//    3. If `status` is _not running_, set `call`'s display status respectively
+//       and abort the _peek-call_ sub-steps.
+//    4. If `status` is _unsupported_, log a warning that a conference call with
+//       an unsupported version is currently running.
+//    5. Set `call`'s display status to unknown.
+//
+// #### Join Pre-Screen: Periodic Refresh
+//
+// While the Join Pre-Screen UI is visible as a Threema user, schedule a timer
+// to run the following steps every 10s (after the previous run returned):
+//
+// 1. Let `call` be the targeted conference call.
+// 2. If the _SFU token_ would expire in the next 30s, refresh it and let
+//    `token` be the result. If the _SFU Token_ refresh fails or does not yield
+//    an _SFU Token_ within 15s, abort these steps and return that the status is
+//    _unknown_.
+// 3. Run the _Group Call Peek Steps_ for `call` and `token` and let `status` be
+//    the result.
+// 4. If `status` contains a valid status, display the current `status` and
+//    abort these steps.
+// 5. If `status` is _not running_, display that the conference call is not
+//    currently running (but may be started by the user) and abort these steps.
+// 6. Display that the current status is unknown.
+//
+// While the Join Pre-Screen UI is visible as an external guest, schedule a
+// timer to run the following steps every 10s (after the previous run returned):
+//
+// 1. Let `call` be the targeted conference call.
+// 2. Run the _Group Call Peek Steps_ for `call` without a token and let
+//    `status` be the result.
+// 3. If `status` contains a valid status, display the current `status` and
+//    abort these steps.
+// 4. If `status` is _not running_ or _unauthorized_, display that the
+//    conference call is not currently running and abort these steps.
+// 5. Display that the current status is unknown.
+//
+// #### Create, Start or Join
+//
+// When a Threema users wants to create a conference invite:
+//
+// 1. If the _SFU token_ is expired, refresh it and let `token` be the result.
+//    If the _SFU Token_ refresh fails or does not yield an _SFU Token_ within
+//    15s, abort these steps and notify the user.
+// 2. Create a `ConferenceCallInvite` message with `token` and encode it as a
+//    URL as defined by that message.
+//
+// The following steps are to be run when a Threema user wants to start or join
+// a conference call:
+//
+// 1. If the _SFU token_ would expire in the next 15s, refresh it and let
+//    `token` be the result. If the _SFU Token_ refresh fails or does not yield
+//    an _SFU Token_ within 15s, abort these steps and notify the user.
+// 2.  _Join_ (or implicitly start) the conference call via a
+//    `SfuHttpRequest.Join` request using `token`. If this does not result in a
+//    response within 10s, abort these steps and notify the user.
+// 3. If the received status code is `503`, notify the user that the conference
+//    call is full and abort these steps.
 // 4. If the server could not be reached or the received status code is not
 //    `200` or if the _Join_ response could not be decoded, abort these steps
 //    and notify the user.
@@ -225,34 +368,30 @@
 //    the _Join_ response. Wait until the SFU sent the initial
 //    `SfuToParticipant.Hello` message via the associated data channel. Let
 //    `hello` be that message.
-// 6. If the `hello.participants` contains less than 4 items, set the initial
-//    capture state of the microphone to _on_.
-// 7. If `call` is marked as _new_:
-//    1. Optionally add an artificial wait period of 2s minus the time elapsed
-//       since step 1.[^1]
-//    2. Let `message-id` be a random message ID.
-//    3. Schedule a persistent task to run he _Bundled Messages Send Steps_ with
-//       the following properties:
-//       - `id` set to `message-id`,
-//       - `receivers` set to all group members that have `GROUP_CALL_SUPPORT`,
-//       - to construct a `GroupCallStart` message from `call`.
-//    4. Add the created `call` to the list of group calls that are currently
-//       considered running.
-//    5. Asynchronously run the _Group Call Refresh Steps_.[^2]
-// 8. The group call is now considered established and should asynchronously
-//    invoke the SFU to Participant and Participant to Participant flows.
+// 6. The conference call is now considered established and should
+//    asynchronously invoke the SFU to Participant and Participant to
+//    Participant flows.
 //
-// [^1]: This prevents butter-fingered user from accidentally starting a group
-// call.
+// The following steps are to be run when an external guest wants to join a
+// conference call:
 //
-// [^2]: This will initiate the refresh timer for a newly created call and
-// signal it to the UI.
-//
-// Note: Implementations need to ensure that only one group call can be active
-// at the same time in the application. This means that only one invocation of
-// the _Create or Join_ flow and only one invocation of the _Group Call Join
-// Steps_ can be active. Be aware that these steps can be cancelled by the user
-// and by the _Group Call Refresh Steps_.
+// 1.  _Join_ the conference call via a `SfuHttpRequest.Join` request without
+//    any SFU token. If this does not result in a response within 10s, abort
+//    these steps and notify the user.
+// 2. If the received status code is `401`, notify the user that the conference
+//    call is currently not running and abort these steps.
+// 3. If the received status code is `503`, notify the user that the conference
+//    call is full and abort these steps.
+// 4. If the server could not be reached or the received status code is not
+//    `200` or if the _Join_ response could not be decoded, abort these steps
+//    and notify the user.
+// 5. Establish a WebRTC connection to the SFU with the information provided in
+//    the _Join_ response. Wait until the SFU sent the initial
+//    `SfuToParticipant.Hello` message via the associated data channel. Let
+//    `hello` be that message.
+// 6. The conference call is now considered established and should
+//    asynchronously invoke the SFU to Participant and Participant to
+//    Participant flows.
 //
 // ### SFU to Participant Flow
 //
@@ -285,40 +424,24 @@
 // #### Handshake
 //
 // When a new participant (NP) joins, it must authenticate each other existing
-// participant (EP) and establish an ephemeral shared secret (`PCK`). The flow
-// depends on whether NP and EP are normal or guest participants:
+// participant (EP) and establish an ephemeral shared secret (`PCK`). The
+// message variant used depends on the participant's role. Normal participants
+// send `Hello` and `Auth` while guest participants send `GuestHello` and
+// `GuestAuth`, exemplary:
 //
 // If both are normal participants:
 //
-//     NP ----- Hello ---> EP
-//     NP <---- Hello ---- EP
-//     NP <---- Auth ----- EP
-//     NP ----- Auth ----> EP
-//
-// If both are guest participants:
-//
-//     NP -- GuestHello -> EP
-//     NP <- GuestHello -- EP
-//     NP <- GuestAuth --- EP
-//     NP -- GuestAuth --> EP
+//     NP ------ Hello -----> EP
+//     NP <----- Hello ------ EP
+//     NP <----- Auth ------- EP
+//     NP ------ Auth ------> EP
 //
 // If NP is a normal participant and EP is a guest participant:
 //
-//     NP ----- Hello ---> EP
-//     NP <- GuestHello -- EP
-//     NP <- GuestAuth --- EP
-//     NP -- GuestAuth --> EP
-//
-// If NP is a guest participant and EP is a normal participant:
-//
-//     NP -- GuestHello -> EP
-//     NP <---- Hello ---- EP
-//     NP <- GuestAuth --- EP
-//     NP -- GuestAuth --> EP
-//
-// Note: This looks more intimidating than it really is. Basically, if either is
-// a guest, we fulfill the guest handshake but both always start with sending
-// their respective role's _hello_ variant.
+//     NP ------ Hello -----> EP
+//     NP <--- GuestHello --- EP
+//     NP <--- GuestAuth ---- EP
+//     NP ------ Auth ------> EP
 //
 // For group calls scoped to groups:
 //
@@ -327,23 +450,48 @@
 // - External guests are not allowed and therefore the guest handshake is not
 //   allowed.
 //
+// For conference calls, external guests are allowed if the _guest policy_ is
+// `GuestPolicy.ALLOW_GUESTS`.
+//
+// #### Extended Handshake
+//
+// In case the call is a conference call and the _join policy_ is
+// `JoinPolicy.REQUIRES_MODERATOR_APPROVAL`, the handshake period is extended
+// such that both participants need to provide `Approval`, exemplary:
+//
+// If both NP and EP are moderators:
+//
+//     (Handshake until both sent `Auth`/`GuestAuth`)
+//     NP ---- Approval ----> EP
+//     NP <--- Approval ----- EP
+//
+// If EP is a moderator and EP approves NP (by user interaction):
+//
+//     (Handshake until both sent `Auth`/`GuestAuth`)
+//     NP <--- Approval ----- EP
+//     NP <- GrantApproval -- EP
+//     NP ---- Approval ----> EP
+//
 // #### Post-Handshake
 //
 // After the handshake, **both** sides run the following steps:
 //
 // 1. Subscribe to the other participant's microphone feed (i.e. send a
 //    `ParticipantMicrophone` message to the SFU).
-// 2. If the user is an administrator, send an `Admin.ReportAsAdmin` message to
-//    the other participant.
-// 3. If _hold_ is currently active, send a `Hold` message to the other
-//    participant.
-// 4. If _hold_ is not currently active, send a `CaptureState` message to the
-//    other participant for each device (camera, microphone, ...) that is
-//    currently activated (`Mode` is `ON`).
+// 2. If the user is a moderator, send a `Moderator.ReportAsModerator` message
+//    to the other participant.
 //
 // #### Join/Leave of Other Participants
 //
-// When a new participant joins, all other participants run the following steps:
+// The following steps are defined as the _Participant Joined Steps_ and are run
+// by existing participants once a new participant joined¹:
+//
+// 1. Set the _handshake state_ of this participant to `await-np-hello`.
+// 2. Run the _Reschedule State Task Steps_.
+//
+// The following steps are defined as the _Participant Active Steps_ and are run
+// by existing participants once a new participant's _handshake state_ moved
+// into `done`:
 //
 // 1. Let `pcmk` be the currently _applied_ PCMK with the associated context.
 // 2. If the amount of ratchet rounds for `pcmk` is `255`, abort the call with
@@ -351,14 +499,18 @@
 // 3. Advance the ratchet of `pcmk` once (i.e. replace the key by deriving
 //    PCMK') and apply for media encryption immediately. Note: Do **not** reset
 //    the MFSN!
-// 4. Set the _handshake state_ of this participant to `await-np-hello`.
+// 4. Send a _rekey_ message to the participant containing the updated `pcmk`
+// 5. If the currently _pending_ PCMK of the associated context is defined, send
+//    a _rekey_ message to the participant containing the _pending_ PCMK.
+// 6. Send a `CaptureState` message for each device whose capturing state is not
+//    _off_.
+// 7. Add the participant to the call as an _active_ participant.
 //
-// Note: The announcement of the new participant is guaranteed to be sent prior
-// to any handshake messages of the new participant.
+// The following steps are defined as the _Participant Left Steps_ and are run
+// by existing participants when a participant leaves²:
 //
-// When a participant leaves, all other participants run the following steps:
-//
-// 1. Let `pending-pcmk` be the currently _pending_ PCMK the associated context.
+// 1. Let `pending-pcmk` be the currently _pending_ PCMK of the associated
+//    context.
 // 2. If `pending-pcmk` exists, additionally mark `pending-pcmk` as _stale_ and
 //    abort these steps.
 // 3. Let `current-pcmk` be the currently _applied_ PCMK with the associated
@@ -371,8 +523,8 @@
 //    3. Set `pending-pcmk.ratchet_counter` to `0`.
 //    4. Do **not** reset the MFSN! Continue the existing MFSN counter of the
 //       previous PCMK.
-// 5. Send `pending-pcmk` to all authenticated participants via a _rekey_
-//    message.
+// 5. Send `pending-pcmk` to all participants with a _handshake state_ of `done`
+//    via a _rekey_ message.
 // 6. Schedule a volatile task bound to the call to run the following steps
 //    after 2s:
 //    1. Apply `pending-pcmk` for media encryption. This means that
@@ -380,8 +532,10 @@
 //       _pending_.
 //    2. If `pending-pcmk` is marked as _stale_, run the parent steps from the
 //       beginning.
+// 7. Run the _Reschedule State Task Steps_.
 //
-// When a participant receives a _rekey_ message from another participant.
+// The following steps are defined as the _Participant Rekey Steps_ and are run
+// when a participant receives a `MediaKey` message from another participant:
 //
 // 1. Let `current-pcmk` be the PCMK and its associated context used for the
 //    participant.
@@ -390,7 +544,10 @@
 //    already stored on `current-pcmk`) and follow the description of the media
 //    frame on when to apply it.
 //
-// Note: The result of the above steps is that re-keying is throttled but always
+// ¹: The announcement of the new participant is guaranteed to be sent prior to
+// any handshake messages of the new participant.
+//
+// ²: Re-keying after a participant leaving is therefore throttled but always
 // catches up to the current participant state with a maximum delay of 4s.
 //
 // #### State Update
@@ -400,23 +557,20 @@
 // or leaves. If the call state has not been updated/refreshed for 30s, the SFU
 // will delete it.
 //
-// After each change to the list of participants, run the following steps to
-// determine whether the user is designated:
+// The following steps are defined as the _Reschedule State Task Steps_:
 //
 // 1. Cancel any running timer to update the call state.
-// 2. Let `candidates` be a list of all currently authenticated non-guest
-//    participants.
-// 3. If `candidates` is empty, add all currently authenticated guest
-//    participants to the list.
-// 4. If the user is not in `candidates`, abort these steps.
-// 5. If the user does not have the lowest participant ID in `candidates`, abort
-//    these steps.
-// 6. Send a `ParticipantToSfu.UpdateCallState` message to the SFU and schedule
+// 2. Let `candidates` be a list of all other participants (in any _handshake
+//    _state).
+// 3. Compare the user's participant ID against all `candidates`. If any of the
+//    participant IDs in `candidates` is lower than the participant ID of the
+//    user, abort these steps.
+// 4. Send a `ParticipantToSfu.UpdateCallState` message to the SFU and schedule
 //    a repetitive timer to repeat this step every 10s.
 //
-// Note: The above algorithm is prone to races since the authentication process
-// is asynchronous for each participant pair. However, this should not be an
-// issue as they'd essentially post the same status (eventually).
+// Note: The above algorithm is prone to races since the handshake is
+// asynchronous for each participant pair. However, this should not be an issue
+// as they'd essentially post the same status (eventually).
 
 #if canImport(FoundationEssentials)
 import FoundationEssentials
@@ -430,13 +584,13 @@ import SwiftProtobuf
 // incompatible with the version of SwiftProtobuf to which you are linking.
 // Please ensure that you are building against the same version of the API
 // that was used to generate this file.
-fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAPIVersionCheck {
+fileprivate nonisolated struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAPIVersionCheck {
   struct _2: SwiftProtobuf.ProtobufAPIVersion_2 {}
   typealias Version = _2
 }
 
 /// Supported feature (to be used as a bitmask).
-public enum GroupCall_SupportedFeature: SwiftProtobuf.Enum, Swift.CaseIterable {
+public nonisolated enum GroupCall_SupportedFeature: SwiftProtobuf.Enum, Swift.CaseIterable {
   public typealias RawValue = Int
 
   /// Base feature support (always present).
@@ -477,8 +631,30 @@ public enum GroupCall_SupportedFeature: SwiftProtobuf.Enum, Swift.CaseIterable {
 /// Current call state as announced by the designated client.
 ///
 /// Note: The `CallState` accurateness must not be relied upon as it can be out
-///       of date and can be replayed by the SFU.
-public struct GroupCall_CallState: Sendable {
+/// of date and can be replayed by the SFU.
+///
+/// When creating this message:
+///
+/// 1. Set `state_created_by` to the user's participant ID.
+/// 2. Set `state_created_at` to the current UNIX-ish timestamp in milliseconds.
+/// 3. Add the user to the `participants` map:
+///    1. Set the `ParticipationState` to `PARTICIPATING`.
+///    2. If the call is a conference call and the _join policy_ is set to
+///       `JoinPolicy.REQUIRES_MODERATOR_APPROVAL` and the user does not have a
+///       local _approval_ signature from a moderator, set the
+///       `ParticipationState` to `AWAITING_MODERATOR_APPROVAL`.
+/// 4. For each other participant:
+///    1. If the _handshake state_ of the participant is `post-auth` add it to
+///       the `participants` map with `ParticipationState.PARTICIPATING` and
+///       abort these sub-steps.
+///    2. If the _handshake state_ of the participant is `await-approval`:
+///       1. If the _remote approval received_ flag is present, add it to the
+///          `participants` map with `ParticipationState.PARTICIPATING` and abort
+///          these sub-steps.
+///       2. Add it to the `participants` map with
+///          `ParticipationState.AWAITING_MODERATOR_APPROVAL` and abort these
+///          sub-steps.
+public nonisolated struct GroupCall_CallState: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -493,16 +669,18 @@ public struct GroupCall_CallState: Sendable {
   /// message.
   public var stateCreatedAt: UInt64 = 0
 
-  /// Information for each participant of the group call.
+  /// Information for each participant of the group call that is authenticated.
   public var participants: Dictionary<UInt32,GroupCall_CallState.Participant> = [:]
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
   /// Information for a single participant.
-  public struct Participant: Sendable {
+  public nonisolated struct Participant: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
+
+    public var participationState: GroupCall_CallState.Participant.ParticipationState = .participating
 
     /// Type-specific information.
     public var participant: GroupCall_CallState.Participant.OneOf_Participant? = nil
@@ -526,14 +704,57 @@ public struct GroupCall_CallState: Sendable {
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
     /// Type-specific information.
-    public enum OneOf_Participant: Equatable, Sendable {
+    public nonisolated enum OneOf_Participant: Equatable, Sendable {
       case threema(GroupCall_CallState.Participant.Normal)
       case guest(GroupCall_CallState.Participant.Guest)
 
     }
 
+    /// A participation state.
+    ///
+    /// Note: Participants that are not yet authenticated will not appear in the
+    /// `CallState` at all.
+    public nonisolated enum ParticipationState: SwiftProtobuf.Enum, Swift.CaseIterable {
+      public typealias RawValue = Int
+
+      /// Participating (i.e. active).
+      case participating // = 0
+
+      /// Waiting for approval by a moderator to participate (i.e. authenticated
+      /// but not active, yet).
+      case awaitingModeratorApproval // = 1
+      case UNRECOGNIZED(Int)
+
+      public init() {
+        self = .participating
+      }
+
+      public init?(rawValue: Int) {
+        switch rawValue {
+        case 0: self = .participating
+        case 1: self = .awaitingModeratorApproval
+        default: self = .UNRECOGNIZED(rawValue)
+        }
+      }
+
+      public var rawValue: Int {
+        switch self {
+        case .participating: return 0
+        case .awaitingModeratorApproval: return 1
+        case .UNRECOGNIZED(let i): return i
+        }
+      }
+
+      // The compiler won't synthesize support with the UNRECOGNIZED case.
+      public static let allCases: [GroupCall_CallState.Participant.ParticipationState] = [
+        .participating,
+        .awaitingModeratorApproval,
+      ]
+
+    }
+
     /// A _normal_ participant, i.e. a Threema client.
-    public struct Normal: Sendable {
+    public nonisolated struct Normal: Sendable {
       // SwiftProtobuf.Message conformance is added in an extension below. See the
       // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
       // methods supported on all messages.
@@ -550,7 +771,7 @@ public struct GroupCall_CallState: Sendable {
     }
 
     /// A _guest_ participant.
-    public struct Guest: Sendable {
+    public nonisolated struct Guest: Sendable {
       // SwiftProtobuf.Message conformance is added in an extension below. See the
       // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
       // methods supported on all messages.
@@ -570,7 +791,7 @@ public struct GroupCall_CallState: Sendable {
 }
 
 /// Request payloads sent to the SFU as part of an HTTP request.
-public struct GroupCall_SfuHttpRequest: Sendable {
+public nonisolated struct GroupCall_SfuHttpRequest: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -590,23 +811,29 @@ public struct GroupCall_SfuHttpRequest: Sendable {
   /// When sending this request:
   ///
   /// 1. Use `POST` as method.
-  /// 2. Set the `Authorization` header to `ThreemaSfuToken <sfu-token>`.
+  /// 2. If an SFU token has been provided, set the `Authorization` header to
+  ///    `ThreemaSfuToken <sfu-token>`.
   /// 3. Set the encoded `SfuHttpRequest.Peek` message as body.
   ///
   /// When receiving this request:
   ///
-  /// 1. If the `Authorization` header is missing, the provided `sfu-token` in
+  /// 1. If `call_id-as-hex` is not a valid Call ID, respond with status code
+  ///    `400` and abort these steps.
+  /// 2. If the `Authorization` header is present and the provided `sfu-token` in
   ///    the `Authorization` header is invalid or expired, respond with status
   ///    code `401` and abort these steps.
-  /// 2. If the provided data is invalid, respond with status code `400` and
+  /// 3. If the `Authorization` header is not present and no call for the given
+  ///    decoded `call_id-as-hex` is currently running, respond with status code
+  ///    `401` and abort these steps.
+  /// 4. If the provided data is invalid, respond with status code `400` and
   ///    abort these steps.
-  /// 3. If `call_id` does not equal the Call ID from the URL (decoded
-  ///    `call_id-as-hex`), respond with status code `400` and abort these steps.
-  /// 4. If no group call for the given `call_id` is currently running, respond
+  /// 5. If `call_id` does not equal the decoded `call_id-as-hex`, respond with
+  ///    status code `400` and abort these steps.
+  /// 6. If no group call for the given `call_id` is currently running, respond
   ///    with status code `404` and abort these steps.
-  /// 5. Respond with status code `200` and an encoded `SfuHttpResponse.Peek`
+  /// 7. Respond with status code `200` and an encoded `SfuHttpResponse.Peek`
   ///    message as body.
-  public struct Peek: Sendable {
+  public nonisolated struct Peek: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
@@ -628,31 +855,37 @@ public struct GroupCall_SfuHttpRequest: Sendable {
   /// When sending this request:
   ///
   /// 1. Use `POST` as method.
-  /// 2. Set the `Authorization` header to `ThreemaSfuToken <sfu-token>`.
+  /// 2. If an SFU token has been provided, set the `Authorization` header to
+  ///    `ThreemaSfuToken <sfu-token>`.
   /// 3. Set the encoded `SfuHttpRequest.Join` message as body.
   ///
   /// When receiving this request:
   ///
-  /// 1. If the `Authorization` header is missing, the provided `sfu-token` in
+  /// 1. If `call_id-as-hex` is not a valid Call ID, respond with status code
+  ///    `400` and abort these steps.
+  /// 2. If the `Authorization` header is present and the provided `sfu-token` in
   ///    the `Authorization` header is invalid or expired, respond with status
   ///    code `401` and abort these steps.
-  /// 2. If the provided data is invalid, respond with status code `400` and
+  /// 3. If the `Authorization` header is not present and no call for the given
+  ///    decoded `call_id-as-hex` is currently running, respond with status code
+  ///    `401` and abort these steps.
+  /// 4. If the provided data is invalid, respond with status code `400` and
   ///    abort these steps.
-  /// 3. If `call_id` does not equal the Call ID from the URL (decoded
-  ///    `call_id-as-hex`), respond with status code `400` and abort these steps.
-  /// 4. If the `protocol_version` is unsupported by the SFU, respond with status
+  /// 5. If `call_id` does not equal the decoded `call_id-as-hex`, respond with
+  ///    status code `400` and abort these steps.
+  /// 6. If the `protocol_version` is unsupported by the SFU, respond with status
   ///    code `419` and abort these steps.
-  /// 5. If no more participants can join the group call for the given `call_id`,
+  /// 7. If no more participants can join the group call for the given `call_id`,
   ///    respond with status code `503` and abort these steps.
-  /// 6. Respond with status code `200` and an encoded `SfuHttpResponse.Join`
+  /// 8. Respond with status code `200` and an encoded `SfuHttpResponse.Join`
   ///    message as body.
-  /// 7. Once the WebRTC connection has been established, announce the newly
+  /// 9. Once the WebRTC connection has been established, announce the newly
   ///    joined participant to all other participants via the corresponding data
   ///    channel. If no WebRTC connection is being established within 30s, the
   ///    participant ID is no longer reserved for the client and the group call
   ///    must be teared down if no other participant started joining this group
   ///    call.
-  public struct Join: Sendable {
+  public nonisolated struct Join: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
@@ -666,7 +899,7 @@ public struct GroupCall_SfuHttpRequest: Sendable {
     /// DTLS fingerprint of the x509 certificate that will be used by the client.
     ///
     /// Note: This is the authentication anchor for the WebRTC connection towards
-    ///       the SFU.
+    /// the SFU.
     public var dtlsFingerprint: Data = Data()
 
     public var unknownFields = SwiftProtobuf.UnknownStorage()
@@ -678,7 +911,7 @@ public struct GroupCall_SfuHttpRequest: Sendable {
 }
 
 /// Response payloads sent back from the SFU as part of an HTTP request.
-public struct GroupCall_SfuHttpResponse: Sendable {
+public nonisolated struct GroupCall_SfuHttpResponse: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -693,7 +926,7 @@ public struct GroupCall_SfuHttpResponse: Sendable {
   ///
   /// Note: The included `CallState` information may not be accurate and should
   /// not be relied upon.
-  public struct Peek: Sendable {
+  public nonisolated struct Peek: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
@@ -735,7 +968,7 @@ public struct GroupCall_SfuHttpResponse: Sendable {
   /// When receiving this response, initiate the WebRTC connection to the SFU and
   /// consider the connection established when the `SfuToParticipant.Hello`
   /// message has been received on the associated data channel.
-  public struct Join: Sendable {
+  public nonisolated struct Join: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
@@ -750,8 +983,17 @@ public struct GroupCall_SfuHttpResponse: Sendable {
     /// Participant ID assigned to the client.
     ///
     /// Note: The client needs to know the participant ID early to derive MIDs
-    ///       required to be present in the O/A SDP.
+    /// required to be present in the O/A SDP.
     public var participantID: UInt32 = 0
+
+    /// Participant UID, 16 byte unique random id, randomly generated by the SFU
+    /// and assigned to the client.
+    ///
+    /// Since SFU version v1.4.0. Not present (i.e. empty) otherwise.
+    ///
+    /// Note: Unused for group calls scope to groups, required for conference
+    /// calls.
+    public var participantUid: Data = Data()
 
     /// List of addresses the SFU listens for a WebRTC connection.
     ///
@@ -767,7 +1009,7 @@ public struct GroupCall_SfuHttpResponse: Sendable {
     /// DTLS fingerprint of the x509 certificate that will be used by the SFU.
     ///
     /// Note: This is the authentication anchor for the WebRTC connection towards
-    ///       the SFU.
+    /// the SFU.
     public var dtlsFingerprint: Data = Data()
 
     public var rtpHeaderExtensionIds: GroupCall_SfuHttpResponse.Join.RtpHeaderExtensionIds {
@@ -785,7 +1027,7 @@ public struct GroupCall_SfuHttpResponse: Sendable {
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
     /// Address the SFU is listening for a WebRTC connection.
-    public struct Address: Sendable {
+    public nonisolated struct Address: Sendable {
       // SwiftProtobuf.Message conformance is added in an extension below. See the
       // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
       // methods supported on all messages.
@@ -801,7 +1043,7 @@ public struct GroupCall_SfuHttpResponse: Sendable {
       public var unknownFields = SwiftProtobuf.UnknownStorage()
 
       /// Protocol.
-      public enum ProtocolEnum: SwiftProtobuf.Enum, Swift.CaseIterable {
+      public nonisolated enum ProtocolEnum: SwiftProtobuf.Enum, Swift.CaseIterable {
         public typealias RawValue = Int
         case udp // = 0
         case UNRECOGNIZED(Int)
@@ -836,9 +1078,13 @@ public struct GroupCall_SfuHttpResponse: Sendable {
 
     /// RTP header extension ID mapping.
     ///
-    /// Note: The same ID is applied for header extensions used for both microphone and
-    /// camera/screen.
-    public struct RtpHeaderExtensionIds: Sendable {
+    /// Since SFU version v1.3.0: Not present otherwise. Fall back to the
+    /// previous hard-coded RTP header extension ID parameter mapping if not
+    /// provided.
+    ///
+    /// Note: The same ID is applied for header extensions used for both
+    /// microphone and camera/screen.
+    public nonisolated struct RtpHeaderExtensionIds: Sendable {
       // SwiftProtobuf.Message conformance is added in an extension below. See the
       // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
       // methods supported on all messages.
@@ -884,7 +1130,7 @@ public struct GroupCall_SfuHttpResponse: Sendable {
 /// - `ordered`: `true`
 /// - `negotiated`: `true`
 /// - `id`: `0`
-public struct GroupCall_SfuToParticipant: Sendable {
+public nonisolated struct GroupCall_SfuToParticipant: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -899,7 +1145,11 @@ public struct GroupCall_SfuToParticipant: Sendable {
   /// IMPORTANT: The format of the `SfuToParticipant.Envelope` and
   /// `ParticipantToSfu.Envelope` must be compatible for the relay case, so the
   /// SFU can forward the data without having to re-encode.
-  public struct Envelope: Sendable {
+  ///
+  /// When receiving this message, handle the message according to the content.
+  /// If an unknown content variant has been received, log a warning and discard
+  /// the message.
+  public nonisolated struct Envelope: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
@@ -951,7 +1201,7 @@ public struct GroupCall_SfuToParticipant: Sendable {
 
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public enum OneOf_Content: Equatable, Sendable {
+    public nonisolated enum OneOf_Content: Equatable, Sendable {
       case relay(GroupCall_ParticipantToParticipant.OuterEnvelope)
       case hello(GroupCall_SfuToParticipant.Hello)
       case timestampResponse(GroupCall_SfuToParticipant.Timestamp)
@@ -969,18 +1219,53 @@ public struct GroupCall_SfuToParticipant: Sendable {
   ///
   /// 1. If a `Hello` was received before (i.e. if the receiver is not a newly
   ///    joined participant), log a warning and abort these steps.
-  /// 2. Initiate the participant to participate handshake for each participant
-  ///    listed in this message.
-  public struct Hello: Sendable {
+  /// 2. If the `SfuHttpResponse.Join.participant_uid` was present while joining,
+  ///    let `participants` be the `participants` map field.
+  /// 3. If the `SfuHttpResponse.Join.participant_uid` was not present while
+  ///    joining:
+  ///    1. If the group call is a conference call, abort the call with an error
+  ///       condition and abort these steps.
+  ///    2. Let `participants` be provided by the `deprecated_participant_ids`
+  ///       field.
+  /// 4. Initiate the participant to participant handshake for all
+  ///    `participants`.
+  /// 5. Run the _Reschedule State Task Steps_.
+  public nonisolated struct Hello: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
     /// All participants in the group call. This **excludes** the client's
     /// participant ID.
-    public var participantIds: [UInt32] = []
+    ///
+    /// DEPRECATED: Superseded by `participants` map.
+    ///
+    /// NOTE: This field was marked as deprecated in the .proto file.
+    public var deprecatedParticipantIds: [UInt32] = []
+
+    /// A map of all participant IDs to additional `Participant` information in
+    /// the group call. This **excludes** the client.
+    ///
+    /// Since SFU version v1.4.0. Not present (i.e. empty) otherwise. Required
+    /// for conference calls. Fall back to the `deprecated_participant_ids` if
+    /// not present for group calls scoped to groups.
+    public var participants: Dictionary<UInt32,GroupCall_SfuToParticipant.Hello.Participant> = [:]
 
     public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+    /// Additional participant information of other participants.
+    public nonisolated struct Participant: Sendable {
+      // SwiftProtobuf.Message conformance is added in an extension below. See the
+      // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+      // methods supported on all messages.
+
+      /// Participant UID, 16 byte unique random id.
+      public var participantUid: Data = Data()
+
+      public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+      public init() {}
+    }
 
     public init() {}
   }
@@ -991,13 +1276,22 @@ public struct GroupCall_SfuToParticipant: Sendable {
   ///
   /// 1. Look up the participant. If it already exists (i.e. never _left_), log a
   ///    warning and abort these steps.
-  /// 2. Run the corresponding steps described by the _Join/Leave_ section.
-  public struct ParticipantJoined: Sendable {
+  /// 2. If the group call is a conference call and `participant_uid` is empty,
+  ///    abort the call with an error condition and abort these steps.
+  /// 3. Run the _Participant Joined Steps_.
+  public nonisolated struct ParticipantJoined: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
+    /// Participant ID assigned to the newly joined participant.
     public var participantID: UInt32 = 0
+
+    /// Participant UID assigned to the newly joined participant, 16 byte unique
+    /// random id.
+    ///
+    /// Since SFU version v1.4.0. Not present (i.e. empty) otherwise.
+    public var participantUid: Data = Data()
 
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
@@ -1011,12 +1305,13 @@ public struct GroupCall_SfuToParticipant: Sendable {
   /// 1. Look up the participant. If it was never announced to have _joined_ by
   ///    an associated `ParticipantJoined` message, log a warning and abort these
   ///    steps.
-  /// 2. Run the corresponding steps described by the _Join/Leave_ section.
-  public struct ParticipantLeft: Sendable {
+  /// 2. Run the _Participant Left Steps_.
+  public nonisolated struct ParticipantLeft: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
+    /// Participant ID referring to the participant that left.
     public var participantID: UInt32 = 0
 
     public var unknownFields = SwiftProtobuf.UnknownStorage()
@@ -1029,7 +1324,7 @@ public struct GroupCall_SfuToParticipant: Sendable {
   /// When receiving this message:
   ///
   /// 1. Resolve the first pending timestamp request with the response.
-  public struct Timestamp: Sendable {
+  public nonisolated struct Timestamp: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
@@ -1051,7 +1346,7 @@ public struct GroupCall_SfuToParticipant: Sendable {
 /// - `ordered`: `true`
 /// - `negotiated`: `true`
 /// - `id`: `0`
-public struct GroupCall_ParticipantToSfu: Sendable {
+public nonisolated struct GroupCall_ParticipantToSfu: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -1066,7 +1361,11 @@ public struct GroupCall_ParticipantToSfu: Sendable {
   /// IMPORTANT: The format of the `SfuToParticipant.Envelope` and
   /// `ParticipantToSfu.Envelope` must be compatible for the relay case, so the
   /// SFU can forward the data without having to re-encode.
-  public struct Envelope: Sendable {
+  ///
+  /// When receiving this message, handle the message according to the content.
+  /// If an unknown content variant has been received, log a warning and discard
+  /// the message.
+  public nonisolated struct Envelope: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
@@ -1126,7 +1425,7 @@ public struct GroupCall_ParticipantToSfu: Sendable {
 
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public enum OneOf_Content: Equatable, Sendable {
+    public nonisolated enum OneOf_Content: Equatable, Sendable {
       case relay(GroupCall_ParticipantToParticipant.OuterEnvelope)
       case updateCallState(GroupCall_ParticipantToSfu.UpdateCallState)
       case requestTimestamp(GroupCall_ParticipantToSfu.RequestTimestamp)
@@ -1144,7 +1443,7 @@ public struct GroupCall_ParticipantToSfu: Sendable {
   /// When receiving this message:
   ///
   /// 1. Respond with a `TimestampResponse` message.
-  public struct RequestTimestamp: Sendable {
+  public nonisolated struct RequestTimestamp: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
@@ -1165,7 +1464,7 @@ public struct GroupCall_ParticipantToSfu: Sendable {
   /// 2. Start a timer to purge the call state after 30s. Subsequent
   ///    `UpdateCallState` messages will update the call state and reset the
   ///    timer.
-  public struct UpdateCallState: Sendable {
+  public nonisolated struct UpdateCallState: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
@@ -1189,7 +1488,7 @@ public struct GroupCall_ParticipantToSfu: Sendable {
   ///    fits best to the provided parameters.
   /// 3. If `unsubscribe` is set, stop forwarding microphone feed of this
   ///    participant to the client.
-  public struct ParticipantMicrophone: Sendable {
+  public nonisolated struct ParticipantMicrophone: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
@@ -1218,14 +1517,14 @@ public struct GroupCall_ParticipantToSfu: Sendable {
 
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public enum OneOf_Action: Equatable, Sendable {
+    public nonisolated enum OneOf_Action: Equatable, Sendable {
       case subscribe(GroupCall_ParticipantToSfu.ParticipantMicrophone.Subscribe)
       case unsubscribe(GroupCall_ParticipantToSfu.ParticipantMicrophone.Unsubscribe)
 
     }
 
     /// Subscribe to a participant's microphone feed.
-    public struct Subscribe: Sendable {
+    public nonisolated struct Subscribe: Sendable {
       // SwiftProtobuf.Message conformance is added in an extension below. See the
       // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
       // methods supported on all messages.
@@ -1236,7 +1535,7 @@ public struct GroupCall_ParticipantToSfu: Sendable {
     }
 
     /// Unsubscribe a participant's microphone feed.
-    public struct Unsubscribe: Sendable {
+    public nonisolated struct Unsubscribe: Sendable {
       // SwiftProtobuf.Message conformance is added in an extension below. See the
       // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
       // methods supported on all messages.
@@ -1259,7 +1558,7 @@ public struct GroupCall_ParticipantToSfu: Sendable {
   ///    best to the provided parameters.
   /// 3. If `unsubscribe` is set, stop forwarding camera feed of this participant
   ///    to the client.
-  public struct ParticipantCamera: Sendable {
+  public nonisolated struct ParticipantCamera: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
@@ -1288,14 +1587,14 @@ public struct GroupCall_ParticipantToSfu: Sendable {
 
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public enum OneOf_Action: Equatable, Sendable {
+    public nonisolated enum OneOf_Action: Equatable, Sendable {
       case subscribe(GroupCall_ParticipantToSfu.ParticipantCamera.Subscribe)
       case unsubscribe(GroupCall_ParticipantToSfu.ParticipantCamera.Unsubscribe)
 
     }
 
     /// Subscribe to a participant's camera feed.
-    public struct Subscribe: Sendable {
+    public nonisolated struct Subscribe: Sendable {
       // SwiftProtobuf.Message conformance is added in an extension below. See the
       // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
       // methods supported on all messages.
@@ -1324,7 +1623,7 @@ public struct GroupCall_ParticipantToSfu: Sendable {
     }
 
     /// Unsubscribe a participant's camera feed.
-    public struct Unsubscribe: Sendable {
+    public nonisolated struct Unsubscribe: Sendable {
       // SwiftProtobuf.Message conformance is added in an extension below. See the
       // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
       // methods supported on all messages.
@@ -1350,7 +1649,7 @@ public struct GroupCall_ParticipantToSfu: Sendable {
   ///    best to the provided parameters.
   /// 3. If `unsubscribe` is set, stop forwarding screen feed of this participant
   ///    to the client.
-  public struct ParticipantScreen: Sendable {
+  public nonisolated struct ParticipantScreen: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
@@ -1379,14 +1678,14 @@ public struct GroupCall_ParticipantToSfu: Sendable {
 
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public enum OneOf_Action: Equatable, Sendable {
+    public nonisolated enum OneOf_Action: Equatable, Sendable {
       case subscribe(GroupCall_ParticipantToSfu.ParticipantScreen.Subscribe)
       case unsubscribe(GroupCall_ParticipantToSfu.ParticipantScreen.Unsubscribe)
 
     }
 
     /// Subscribe to a participant's screen feed.
-    public struct Subscribe: Sendable {
+    public nonisolated struct Subscribe: Sendable {
       // SwiftProtobuf.Message conformance is added in an extension below. See the
       // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
       // methods supported on all messages.
@@ -1415,7 +1714,7 @@ public struct GroupCall_ParticipantToSfu: Sendable {
     }
 
     /// Unsubscribe a participant's screen feed.
-    public struct Unsubscribe: Sendable {
+    public nonisolated struct Unsubscribe: Sendable {
       // SwiftProtobuf.Message conformance is added in an extension below. See the
       // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
       // methods supported on all messages.
@@ -1436,12 +1735,51 @@ public struct GroupCall_ParticipantToSfu: Sendable {
 /// Note that these are relayed via `SfuToParticipant.Envelope` and
 /// `ParticipantToSfu.Envelope` in order to prevent races with
 /// `ParticipantJoined`/`ParticipantLeft`.
-public struct GroupCall_ParticipantToParticipant: Sendable {
+public nonisolated struct GroupCall_ParticipantToParticipant: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  /// Signature context, used as a prefix when signing to separate different use cases.
+  public nonisolated enum SignatureContext: SwiftProtobuf.Enum, Swift.CaseIterable {
+    public typealias RawValue = Int
+    case reserved // = 0
+    case joinApproval // = 1
+    case postAuthMessage // = 2
+    case UNRECOGNIZED(Int)
+
+    public init() {
+      self = .reserved
+    }
+
+    public init?(rawValue: Int) {
+      switch rawValue {
+      case 0: self = .reserved
+      case 1: self = .joinApproval
+      case 2: self = .postAuthMessage
+      default: self = .UNRECOGNIZED(rawValue)
+      }
+    }
+
+    public var rawValue: Int {
+      switch self {
+      case .reserved: return 0
+      case .joinApproval: return 1
+      case .postAuthMessage: return 2
+      case .UNRECOGNIZED(let i): return i
+      }
+    }
+
+    // The compiler won't synthesize support with the UNRECOGNIZED case.
+    public static let allCases: [GroupCall_ParticipantToParticipant.SignatureContext] = [
+      .reserved,
+      .joinApproval,
+      .postAuthMessage,
+    ]
+
+  }
 
   /// Used for all messages that are relayed from one participant to another via
   /// the SFU.
@@ -1456,8 +1794,9 @@ public struct GroupCall_ParticipantToParticipant: Sendable {
   ///    - `await-ep-hello` or `await-np-hello`: Expect a
   ///      `Handshake.HelloEnvelope`.
   ///    - `await-auth`: Expect a `Handshake.AuthEnvelope`.
+  ///    - `await-approval`: Expect a `Handshake.ApprovalEnvelope`.
   ///    - `done`: Expect a post-auth `Envelope`.
-  public struct OuterEnvelope: Sendable {
+  public nonisolated struct OuterEnvelope: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
@@ -1480,7 +1819,7 @@ public struct GroupCall_ParticipantToParticipant: Sendable {
   }
 
   /// Messages required for the initial lock-step handshake between participants.
-  public struct Handshake: Sendable {
+  public nonisolated struct Handshake: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
@@ -1490,7 +1829,12 @@ public struct GroupCall_ParticipantToParticipant: Sendable {
     /// The first message (`HelloEnvelope(Hello)` or `HelloEnvelope(GuestHello)`)
     /// of both sides is always encrypted by `GCHK`, prefixed with a
     /// random nonce.
-    public struct HelloEnvelope: Sendable {
+    ///
+    /// When receiving this message, handle the message according to the content.
+    /// If an unknown content variant has been received, log a warning, discard
+    /// the message and remove the participant by running the _Participant Left
+    /// Steps_.
+    public nonisolated struct HelloEnvelope: Sendable {
       // SwiftProtobuf.Message conformance is added in an extension below. See the
       // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
       // methods supported on all messages.
@@ -1518,7 +1862,7 @@ public struct GroupCall_ParticipantToParticipant: Sendable {
 
       public var unknownFields = SwiftProtobuf.UnknownStorage()
 
-      public enum OneOf_Content: Equatable, Sendable {
+      public nonisolated enum OneOf_Content: Equatable, Sendable {
         case hello(GroupCall_ParticipantToParticipant.Handshake.Hello)
         case guestHello(GroupCall_ParticipantToParticipant.Handshake.GuestHello)
 
@@ -1527,35 +1871,63 @@ public struct GroupCall_ParticipantToParticipant: Sendable {
       public init() {}
     }
 
-    /// If both sides started the normal handshake, the second message is
-    /// encrypted in the following way:
+    /// The second message is encrypted in the following way:
     ///
-    /// 1. Let `inner-nonce` be a random nonce.
-    /// 2. Let `inner-data` be encrypted by:
-    ///
-    /// ```text
-    /// S = X25519HSalsa20(<sender.CK>.secret, <receiver.CK>.public)
-    /// GCNHAK = Blake2b(
-    ///   key=S, salt='nha', personal='3ma-call', input=GCKH)
-    /// XSalsa20-Poly1305(
-    ///   key=GCNHAK,
-    ///   nonce=<inner-nonce>,
-    ///   data=<AuthEnvelope(Auth)>,
-    /// )
-    /// ```
-    /// 3. Let `outer-data` be encrypted by:
+    /// 1. If both user and the other participant are Threema users, let
+    ///    `auth-key` be the result of the following operation:
     ///
     /// ```text
-    /// XSalsa20-Poly1305(
-    ///   key=X25519HSalsa20(<sender.PCK>.secret, <receiver.PCK>.public),
-    ///   nonce=<sender.PCCK> || <sender.PCSN+>,
-    ///   data=<inner-nonce> || <inner-data>,
+    /// Blake2b(
+    ///   key=X25519HSalsa20(<user.CK>.secret, <participant.CK>.public),
+    ///   salt='nha', personal='3ma-call', input=GCKH,
     /// )
     /// ```
-    /// 4. Return `outer-data`.
+    /// 2. If the user is a Threema user and the other participant is a guest
+    ///    participant, let `auth-key` be the result of the following operation:
     ///
-    /// If either side started the guest handshake, the second message is
-    /// encrypted by:
+    /// ```text
+    /// Blake2b(
+    ///   key=X25519HSalsa20(<user.CK>.secret, <participant.PCK>.public),
+    ///   salt='gha', personal='3ma-call', input=GCKH,
+    /// )
+    /// ```
+    /// 3. If the user is a guest participant and the other participant is a
+    ///    Threema user, let `auth-key` be the result of the following operation:
+    ///
+    /// ```text
+    /// Blake2b(
+    ///   key=X25519HSalsa20(<user.PCK>.secret, <participant.CK>.public),
+    ///   salt='gha', personal='3ma-call', input=GCKH,
+    /// )
+    /// ```
+    /// 4. If both user and the other participant are guest participants, let
+    ///    `auth-key` be undefined.
+    /// 5. If `auth-key` is defined:
+    ///    1. If the sender is a Threema user, let `inner-data` be an
+    ///       `AuthEnvelope` with an `Auth` message. Otherwise, let `inner-data`
+    ///       be an `AuthEnvelope` with a `GuestAuth` message.
+    ///    2. Let `inner-nonce` be a random nonce.
+    ///    3. Let `inner-data` be encrypted by:
+    ///
+    ///    ```text
+    ///    XSalsa20-Poly1305(
+    ///      key=auth-key,
+    ///      nonce=inner-nonce,
+    ///      data=<AuthEnvelope(Auth)>,
+    ///    )
+    ///    ```
+    ///    3. Let `outer-data` be encrypted by:
+    ///
+    ///    ```text
+    ///    XSalsa20-Poly1305(
+    ///      key=X25519HSalsa20(<sender.PCK>.secret, <receiver.PCK>.public),
+    ///      nonce=<sender.PCCK> || <sender.PCSN+>,
+    ///      data=inner-nonce || inner-data,
+    ///    )
+    ///    ```
+    ///    4. Return `outer-data`.
+    /// 6. If `auth-key` is undefined, return an `AuthEnvelope` with a
+    ///    `GuestAuth` message encrypted in the following way:
     ///
     /// ```text
     /// XSalsa20-Poly1305(
@@ -1565,14 +1937,11 @@ public struct GroupCall_ParticipantToParticipant: Sendable {
     /// )
     /// ```
     ///
-    /// When receiving this message:
-    ///
-    /// 1. If either side initiated a guest handshake via a `GuestHello`, expect
-    ///    `guest_auth` to be set. If `guest_auth` is not set, log a warning and
-    ///    abort these steps.
-    /// 2. If both sides initiated the (normal) handshake, expect `auth` to be
-    ///    set. If `auth` is not set, log a warning and abort these steps.
-    public struct AuthEnvelope: Sendable {
+    /// When receiving this message, handle the message according to the content.
+    /// If an unknown content variant has been received, log a warning, discard
+    /// the message and remove the participant by running the _Participant Left
+    /// Steps_.
+    public nonisolated struct AuthEnvelope: Sendable {
       // SwiftProtobuf.Message conformance is added in an extension below. See the
       // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
       // methods supported on all messages.
@@ -1600,7 +1969,7 @@ public struct GroupCall_ParticipantToParticipant: Sendable {
 
       public var unknownFields = SwiftProtobuf.UnknownStorage()
 
-      public enum OneOf_Content: Equatable, Sendable {
+      public nonisolated enum OneOf_Content: Equatable, Sendable {
         case auth(GroupCall_ParticipantToParticipant.Handshake.Auth)
         case guestAuth(GroupCall_ParticipantToParticipant.Handshake.GuestAuth)
 
@@ -1617,35 +1986,44 @@ public struct GroupCall_ParticipantToParticipant: Sendable {
     /// 1. Set the participant's _handshake state_ to `await-ep-hello`.
     /// 2. Send this message.
     ///
-    /// When receiving this message as a guest participant:
+    /// When receiving this message:
     ///
-    /// 1. Map it to a `GuestHello` in the following way:
-    ///    - `name`: `Hello.nickname`
-    ///    - `pck`: `Hello.pck`
-    ///    - `pcck`: `Hello.pcck`
-    /// 2. Handle the mapped `GuestHello` as if it had been received directly.
-    ///
-    /// When receiving this message as a regular participant:
-    ///
-    /// 1. (Placeholder for conference call PCK != GCAMK step.)
-    /// 2. If the group call is scoped to a (Threema) group and `identity` is not
-    ///    part of the associated group (including the user itself), log a
-    ///    warning and abort these steps.
+    /// 1. If the group call is scoped to a (Threema) group:
+    ///    1. Lookup `identity` in the associated group (including the user
+    ///       itself) and let `contact` be the result.
+    ///    2. If `contact` is undefined or marked as _invalid_, log a warning,
+    ///       discard the message, remove the participant by running the
+    ///       _Participant Left Steps_ and abort these steps.
+    /// 2. If the group call is a conference call:
+    ///    1. Run the _Valid Contacts Lookup Steps_ with `identities` set to
+    ///       `identity` and let `contact` be the result.
+    ///    2. If `contact` is marked as _invalid_, log a warning, discard the
+    ///       message, remove the participant by running the _Participant Left
+    ///       Steps_ and abort these steps.
     /// 3. If the sender is a newly joined participant and therefore the
     ///    _handshake state_ was set to `await-np-hello` (as described by the
     ///    _Join/Leave_ section):
-    ///    1. Respond by sending a `Hello` message, immediately followed by an
-    ///       `Auth` message.
-    ///    2. Set the participant's _handshake state_ to `await-auth` and abort
+    ///    1. If the user is a Threema user, respond by sending a `Hello`
+    ///       message, immediately followed by an `Auth` message.
+    ///    2. If the user is a guest participant, respond by sending a
+    ///       `GuestHello` message, immediately followed by a `GuestAuth`
+    ///       message.
+    ///    3. Set the participant's _handshake state_ to `await-auth` and abort
     ///       these steps.
     /// 4. If the participant's _handshake state_ is `await-ep-hello`:
     ///    1. If the `pck` reflects the local PCK.public or the `pcck` reflects
-    ///       the local PCCK, log a warning and abort these steps.
-    ///    2. Respond by sending an `Auth` message.
-    ///    3. Set the participant's _handshake state_ to `await-auth` and abort
+    ///       the local PCCK, log a warning, discard the message, remove the
+    ///       participant by running the _Participant Left Steps_ and abort these
+    ///       steps.
+    ///    2. If the user is a Threema user, respond by sending an `Auth`
+    ///       message.
+    ///    3. If the user is a guest participant, respond by sending a
+    ///       `GuestAuth` message.
+    ///    4. Set the participant's _handshake state_ to `await-auth` and abort
     ///       these steps.
-    /// 5. Log a warning and abort these steps.
-    public struct Hello: Sendable {
+    /// 5. Log a warning, discard the message, remove the participant by running
+    ///    the _Participant Left Steps_ and abort these steps.
+    public nonisolated struct Hello: Sendable {
       // SwiftProtobuf.Message conformance is added in an extension below. See the
       // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
       // methods supported on all messages.
@@ -1671,18 +2049,40 @@ public struct GroupCall_ParticipantToParticipant: Sendable {
       public init() {}
     }
 
-    /// Second and final handshake message.
+    /// Second handshake message.
     ///
     /// When receiving this message:
     ///
     /// 1. If the participant's _handshake state_ is not `await-auth`, log a
-    ///    warning and abort these steps.
-    /// 2. If the repeated `pck` does not equal the local `PCK.public` used
-    ///    towards this participant, log a warning and abort these steps.
-    /// 3. If the repeated `pcck` does not equal the local `PCCK` used towards
-    ///    this participant, log a warning and abort these steps.
-    /// 4. Set the participant's _handshake state_ to `done`.
-    public struct Auth: Sendable {
+    ///    warning, discard the message, remove the participant by running the
+    ///    _Participant Left Steps_ and abort these steps.
+    /// 2. If the other participant initiated a guest handshake via a
+    ///    `GuestHello`, log a warning, discard the message, remove the
+    ///    participant by running the _Participant Left Steps_ and abort these
+    ///    steps.
+    /// 3. If the repeated `pck` does not equal the local `PCK.public` used
+    ///    towards this participant, log a warning, discard the message, remove
+    ///    the participant by running the _Participant Left Steps_ and abort
+    ///    these steps.
+    /// 4. If the repeated `pcck` does not equal the local `PCCK` used towards
+    ///    this participant, log a warning, discard the message, remove the
+    ///    participant by running the _Participant Left Steps_ and abort these
+    ///    steps.
+    /// 5. Run the _Participant Rekey Steps_ for each media key of
+    ///    `deprecated_early_media_keys`.
+    /// 6. If the call is not a conference call or the _join policy_ is not set
+    ///    to `JoinPolicy.REQUIRES_MODERATOR_APPROVAL`:
+    ///    1. Set the participant's handshake state to `done`.
+    ///    2. Run the _Participant Active Steps_.
+    /// 7. If the call is a conference call and the _join policy_ is set to
+    ///    `JoinPolicy.REQUIRES_MODERATOR_APPROVAL`:
+    ///    1. Set the participant's _handshake state_ to `await-approval`.
+    ///    2. If the user is a moderator or has a local _approval_ signature from
+    ///       a moderator, respond by sending an `Approval` message and update
+    ///       the _handshake state_ of `await-approval` with the _local approval
+    ///       sent_ flag.
+    /// 8. (Unreachable)
+    public nonisolated struct Auth: Sendable {
       // SwiftProtobuf.Message conformance is added in an extension below. See the
       // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
       // methods supported on all messages.
@@ -1695,16 +2095,26 @@ public struct GroupCall_ParticipantToParticipant: Sendable {
       /// 32 byte repeated random cookie from the `Hello` message.
       ///
       /// Note: Repeating the sender's `PCCK` prevents replay attacks while
-      ///       allowing the sender to use the same `PCK` for multiple
-      ///       participants.
+      /// allowing the sender to use the same `PCK` for multiple participants.
       public var pcck: Data = Data()
 
       /// The currently applied PCMK and any _pending_ PCMK used for media
       /// encryption, specifically in that order.
       ///
-      /// Note: An implementation can expect at least one media key to be
-      /// present.
-      public var mediaKeys: [GroupCall_ParticipantToParticipant.MediaKey] = []
+      /// DEPRECATED: The idea behind sending PCMKs early was that participants
+      /// should become visible in the UI once the `Auth`/`GuestAuth` is being
+      /// sent, even though they are not mutually authenticated yet. This would
+      /// make it apparent to the user that the other participant is now able to
+      /// hear and see everything said and done in the call. However, it turns
+      /// out that in practice it is quite complicated to have a pre-full-auth
+      /// state that affects the UI, making this a footgun. For the sake of
+      /// implementation simplicity and to avoid any other weird kind of
+      /// pre-full-auth attacks, newer implementations MUST sent an empty list
+      /// and follow up by sending a `Rekey` message after mutual authentication
+      /// (and join approval).
+      ///
+      /// NOTE: This field was marked as deprecated in the .proto file.
+      public var deprecatedEarlyMediaKeys: [GroupCall_ParticipantToParticipant.MediaKey] = []
 
       public var unknownFields = SwiftProtobuf.UnknownStorage()
 
@@ -1721,24 +2131,33 @@ public struct GroupCall_ParticipantToParticipant: Sendable {
     ///
     /// When receiving this message:
     ///
-    /// 1. If guest participants are not allowed for this call, log a warning
-    ///    and abort these steps.
-    /// 2. (Placeholder for conference call PCK != GCAMK step.)
+    /// 1. If guest participants are not allowed for this call, log a warning,
+    ///    discard the message, remove the participant by running the
+    ///    _Participant Left Steps_ and abort these steps.
     /// 3. If the sender is a newly joined participant and therefore the
     ///    _handshake state_ was set to `await-np-hello` (as described by the
     ///    _Join/Leave_ section):
-    ///    1. Respond by sending a `GuestHello` message, immediately followed by
-    ///       a `GuestAuth` message.
-    ///    2. Set the participant's _handshake state_ to `await-guest-auth` and
+    ///    1. If the user is a Threema user, respond by sending a `Hello`
+    ///       message, immediately followed by an `Auth` message.
+    ///    2. If the user is a guest participant, respond by sending a
+    ///       `GuestHello` message, immediately followed by a `GuestAuth`
+    ///       message.
+    ///    3. Set the participant's _handshake state_ to `await-guest-auth` and
     ///       abort these steps.
     /// 4. If the participant's _handshake state_ is `await-ep-hello`:
     ///    1. If the `pck` reflects the local PCK.public or the `pcck` reflects
-    ///       the local PCCK, log a warning and abort these steps.
-    ///    2. Respond by sending a `GuestAuth` message.
-    ///    3. Set the participant's _handshake state_ to `await-guest-auth` and
+    ///       the local PCCK, log a warning, discard the message, remove the
+    ///       participant by running the _Participant Left Steps_ and abort these
+    ///       steps.
+    ///    2. If the user is a Threema user, respond by sending an `Auth`
+    ///       message.
+    ///    3. If the user is a guest participant, respond by sending a
+    ///       `GuestAuth` message.
+    ///    4. Set the participant's _handshake state_ to `await-guest-auth` and
     ///       abort these steps.
-    /// 5. Log a warning and abort these steps.
-    public struct GuestHello: Sendable {
+    /// 5. Log a warning, discard the message, remove the participant by running
+    ///    the _Participant Left Steps_ and abort these steps.
+    public nonisolated struct GuestHello: Sendable {
       // SwiftProtobuf.Message conformance is added in an extension below. See the
       // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
       // methods supported on all messages.
@@ -1761,19 +2180,37 @@ public struct GroupCall_ParticipantToParticipant: Sendable {
       public init() {}
     }
 
-    /// Second and final handshake message triggered if either side initiated the
-    /// guest handshake.
+    /// Second handshake message.
     ///
     /// When receiving this message:
     ///
     /// 1. If the participant's _handshake state_ is not `await-guest-auth`, log
-    ///    a warning and abort these steps.
-    /// 2. If the repeated `pck` does not equal the local `PCK.public` used
-    ///    towards this participant, log a warning and abort these steps.
-    /// 3. If the repeated `pcck` does not equal the local `PCCK` used towards
-    ///    this participant, log a warning and abort these steps.
-    /// 4. Set the participant's _handshake state_ to `done`.
-    public struct GuestAuth: Sendable {
+    ///    a warning, discard the message, remove the participant by running the
+    ///    _Participant Left Steps_ and abort these steps.
+    /// 2. If the other participant initiated the (normal) handshake via a
+    ///    `Hello`, log a warning, discard the message, remove the participant by
+    ///    running the _Participant Left Steps_ and abort these steps.
+    /// 3. If the repeated `pck` does not equal the local `PCK.public` used
+    ///    towards this participant, log a warning, discard the message, remove
+    ///    the participant by running the _Participant Left Steps_ and abort
+    ///    these steps.
+    /// 4. If the repeated `pcck` does not equal the local `PCCK` used towards
+    ///    this participant, log a warning, discard the message, remove the
+    ///    participant by running the _Participant Left Steps_ and abort these
+    ///    steps.
+    /// 5. If the call is not a conference call or the _join policy_ is not set
+    ///    to `JoinPolicy.REQUIRES_MODERATOR_APPROVAL`:
+    ///    1. Set the participant's handshake state to `done`.
+    ///    2. Run the _Participant Active Steps_.
+    /// 6. If the call is a conference call and the _join policy_ is set to
+    ///    `JoinPolicy.REQUIRES_MODERATOR_APPROVAL`:
+    ///    1. Set the participant's _handshake state_ to `await-approval`.
+    ///    2. If the user is a moderator or has a local _approval_ signature from
+    ///       a moderator, respond by sending an `Approval` message and update
+    ///       the _handshake state_ of `await-approval` with the _local approval
+    ///       sent_ flag.
+    /// 7. (Unreachable)
+    public nonisolated struct GuestAuth: Sendable {
       // SwiftProtobuf.Message conformance is added in an extension below. See the
       // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
       // methods supported on all messages.
@@ -1790,12 +2227,157 @@ public struct GroupCall_ParticipantToParticipant: Sendable {
       ///       participants.
       public var pcck: Data = Data()
 
-      /// The currently applied PCMK and any _pending_ PCMK used for media
-      /// encryption, specifically in that order.
+      public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+      public init() {}
+    }
+
+    /// Final handshake phase for conference calls with _join policy_
+    /// `JoinPolicy.REQUIRES_MODERATOR_APPROVAL`, encrypted by:
+    ///
+    /// ```text
+    /// XSalsa20-Poly1305(
+    ///   key=X25519HSalsa20(<sender.PCK>.secret, <receiver.PCK>.public),
+    ///   nonce=<sender.PCCK> || <sender.PCSN+>,
+    /// )
+    /// ```
+    ///
+    /// When receiving this message:
+    ///
+    /// 1. If the participant's _handshake state_ is not `await-approval`, log a
+    ///    warning, discard the message, remove the participant by running the
+    ///    _Participant Left Steps_ and abort these steps.
+    /// 2. Handle the message according to the content. If an unknown content
+    ///    variant has been received, log a warning, discard the message and
+    ///    remove the participant by running the _Participant Left Steps_.
+    public nonisolated struct ApprovalEnvelope: Sendable {
+      // SwiftProtobuf.Message conformance is added in an extension below. See the
+      // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+      // methods supported on all messages.
+
+      /// Random amount of padding, ignored by the receiver
+      public var padding: Data = Data()
+
+      public var content: GroupCall_ParticipantToParticipant.Handshake.ApprovalEnvelope.OneOf_Content? = nil
+
+      public var grantApproval: GroupCall_ParticipantToParticipant.Handshake.GrantApproval {
+        get {
+          if case .grantApproval(let v)? = content {return v}
+          return GroupCall_ParticipantToParticipant.Handshake.GrantApproval()
+        }
+        set {content = .grantApproval(newValue)}
+      }
+
+      public var approval: GroupCall_ParticipantToParticipant.Handshake.Approval {
+        get {
+          if case .approval(let v)? = content {return v}
+          return GroupCall_ParticipantToParticipant.Handshake.Approval()
+        }
+        set {content = .approval(newValue)}
+      }
+
+      public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+      public nonisolated enum OneOf_Content: Equatable, Sendable {
+        case grantApproval(GroupCall_ParticipantToParticipant.Handshake.GrantApproval)
+        case approval(GroupCall_ParticipantToParticipant.Handshake.Approval)
+
+      }
+
+      public init() {}
+    }
+
+    /// Grants approval to join a conference call with _join policy_
+    /// `JoinPolicy.REQUIRES_MODERATOR_APPROVAL`.
+    ///
+    /// Note: While only a moderator should be able to grant approval, this
+    /// message can technically be sent by any participant.
+    ///
+    /// When the user intends to grant another participant an approval to join:
+    ///
+    /// 1. If the participant's _handshake state_ is not `await-approval`, log a
+    ///    warning and abort these steps.
+    /// 2. If the user is not a moderator, log a warning and abort these steps.
+    /// 3. Create and send an approval signature.
+    ///
+    /// When receiving this message:
+    ///
+    /// 1. Verify the `signature`. If it is invalid, log a warning, discard the
+    ///    message and abort these steps.
+    /// 2. If the user already has a local _approval_ signature from another
+    ///    moderator, discard the message and abort these steps.
+    /// 3. Store the `signature` as the local _approval_.
+    /// 4. For each other participant with a _handshake state_ of
+    ///    `await-approval` (including the sender of this message)¹:
+    ///    1. Send an `Approval` message and update the _handshake state_ of
+    ///       `await_approval` with the _local approval sent_ flag.
+    ///    2. If the _handshake state_ of `await-approval` also has the _remote
+    ///       approval received_ flag, set the _handshake state_ for this
+    ///       participant to `done` and run the _Participant Active
+    ///       Steps_.
+    ///
+    /// ¹: Due to step 2 and the steps defined for `Auth` and `GuestAuth`, it
+    /// must be assumed that the other participant's _handshake state_ of
+    /// `await-approval` does not have the _local approval sent_ flag.
+    public nonisolated struct GrantApproval: Sendable {
+      // SwiftProtobuf.Message conformance is added in an extension below. See the
+      // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+      // methods supported on all messages.
+
+      /// Signature over the participant's UID:
       ///
-      /// Note: An implementation can expect at least one media key to be
-      /// present.
-      public var mediaKeys: [GroupCall_ParticipantToParticipant.MediaKey] = []
+      /// ```text
+      /// Ed25519(
+      ///   key=GCMMK,
+      ///   message=
+      ///        u8(SignatureContext.JOIN_APPROVAL)
+      ///     || <receiver.participant-uid>
+      ///   )
+      /// ```
+      ///
+      /// IMPORTANT: The `ParticipantToParticipant.ApprovalEnvelope` that
+      /// encapsulates this message shall be encrypted by the same `PCSN` as
+      /// used to sign this message.
+      public var signature: Data = Data()
+
+      public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+      public init() {}
+    }
+
+    /// Present approval to join a conference call with _join policy_
+    /// `JoinPolicy.REQUIRES_MODERATOR_APPROVAL`.
+    ///
+    /// When receiving this message:
+    ///
+    /// 1. Verify the `signature`. If it is invalid, log a warning, discard the
+    ///    message, remove the participant by running the _Participant Left
+    ///    Steps_ and abort these steps.
+    /// 2. Update the _handshake state_ of `await-approval` with the _remote
+    ///    approval received_ flag.
+    /// 3. If the _handshake state_ of `await-approval` also has the _local
+    ///    approval sent_ flag, set the _handshake state_ for this participant to
+    ///    `done` and run the _Participant Active Steps_.
+    public nonisolated struct Approval: Sendable {
+      // SwiftProtobuf.Message conformance is added in an extension below. See the
+      // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+      // methods supported on all messages.
+
+      /// Signature over the participant's UID:
+      ///
+      /// ```text
+      /// Ed25519(
+      ///   key=GCMMK,
+      ///   message=
+      ///        u8(SignatureContext.JOIN_APPROVAL)
+      ///     || <receiver.participant-uid>
+      ///   )
+      /// ```
+      ///
+      /// IMPORTANT: The `ParticipantToParticipant.ApprovalEnvelope` that
+      /// encapsulates this message shall be encrypted by the same `PCSN` as
+      /// used to sign this message.
+      public var signature: Data = Data()
 
       public var unknownFields = SwiftProtobuf.UnknownStorage()
 
@@ -1815,20 +2397,22 @@ public struct GroupCall_ParticipantToParticipant: Sendable {
   /// )
   /// ```
   ///
-  /// Note: Since the guest handshake is TOFU, an attacker knowing `GCK` having
-  /// control over the SFU may apply a MITM attack between a guest participant
-  /// and another participant. The attacker would be able to silently eavesdrop
-  /// all media traffic between the two participants. This is repeatable for all
-  /// other participants and means the attacker is able to silently eavesdrop the
-  /// whole call. Therefore, if a call is not open for guests, `GuestHello` (and
-  /// `GuestAuth`) **must not** be accepted.
+  /// Note: Since guest to guest handshakes are TOFU, an attacker knowing `GCK`
+  /// having control over the SFU may apply a MITM attack between a guest
+  /// participant and another guest participant. The attacker would be able to
+  /// silently eavesdrop all media traffic between the two participants. This is
+  /// repeatable for all other participants and means the attacker is able to
+  /// silently eavesdrop the whole call. Therefore, if a call is not open for
+  /// guests, guest handshakes **must not** be accepted.
   ///
   /// When receiving this message:
   ///
-  /// 1. If the participant's _handshake state_ is not `done`, log a warning and
-  ///    abort these steps.
-  /// 2. Handle the message according to the content.
-  public struct Envelope: Sendable {
+  /// 1. If the participant's _handshake state_ is not `done`, log a warning,
+  ///    discard the message, remove the participant by running the _Participant
+  ///    Left Steps_ and abort these steps.
+  /// 2. Handle the message according to the content. If an unknown content
+  ///    variant has been received, log a warning and discard the message.
+  public nonisolated struct Envelope: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
@@ -1837,15 +2421,6 @@ public struct GroupCall_ParticipantToParticipant: Sendable {
     public var padding: Data = Data()
 
     public var content: GroupCall_ParticipantToParticipant.Envelope.OneOf_Content? = nil
-
-    /// An `Admin.Envelope`, encrypted as described by that message.
-    public var encryptedAdminEnvelope: Data {
-      get {
-        if case .encryptedAdminEnvelope(let v)? = content {return v}
-        return Data()
-      }
-      set {content = .encryptedAdminEnvelope(newValue)}
-    }
 
     /// Announces new media keys a participant will apply soon.
     public var rekey: GroupCall_ParticipantToParticipant.MediaKey {
@@ -1865,149 +2440,163 @@ public struct GroupCall_ParticipantToParticipant: Sendable {
       set {content = .captureState(newValue)}
     }
 
-    /// Announces that the participant entered the _hold_ state.
-    public var holdState: GroupCall_ParticipantToParticipant.HoldState {
+    /// A moderator message.
+    public var moderatorEnvelope: GroupCall_ParticipantToParticipant.Moderator.Envelope {
       get {
-        if case .holdState(let v)? = content {return v}
-        return GroupCall_ParticipantToParticipant.HoldState()
+        if case .moderatorEnvelope(let v)? = content {return v}
+        return GroupCall_ParticipantToParticipant.Moderator.Envelope()
       }
-      set {content = .holdState(newValue)}
+      set {content = .moderatorEnvelope(newValue)}
     }
 
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public enum OneOf_Content: Equatable, Sendable {
-      /// An `Admin.Envelope`, encrypted as described by that message.
-      case encryptedAdminEnvelope(Data)
+    public nonisolated enum OneOf_Content: Equatable, Sendable {
       /// Announces new media keys a participant will apply soon.
       case rekey(GroupCall_ParticipantToParticipant.MediaKey)
       /// Announces capture state changes of a participant.
       case captureState(GroupCall_ParticipantToParticipant.CaptureState)
-      /// Announces that the participant entered the _hold_ state.
-      case holdState(GroupCall_ParticipantToParticipant.HoldState)
+      /// A moderator message.
+      case moderatorEnvelope(GroupCall_ParticipantToParticipant.Moderator.Envelope)
 
     }
 
     public init() {}
   }
 
-  /// Messages from admins towards participants (including admins).
-  public struct Admin: Sendable {
+  /// Messages from moderators towards participants (including other moderators).
+  public nonisolated struct Moderator: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
 
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    /// Message from an administrator, encrypted by:
-    ///
-    /// ```text
-    /// XSalsa20-Poly1305(
-    ///   key=X25519HSalsa20(GCAMK.secret, <receiver.PCK>.public),
-    ///   nonce=<sender.PCCK> || <sender.PCSN+>,
-    /// )
-    /// ```
-    ///
-    /// IMPORTANT: The `ParticipantToParticipant.Envelope` that encapsulates this
-    /// message shall be encrypted by the same `PCSN` as used for this
-    /// `Envelope`. The only difference is that the sender uses `GCAMK` instead
-    /// of its ephemeral `PCK`.
-    public struct Envelope: Sendable {
-      // SwiftProtobuf.Message conformance is added in an extension below. See the
-      // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
-      // methods supported on all messages.
-
-      public var content: GroupCall_ParticipantToParticipant.Admin.Envelope.OneOf_Content? = nil
-
-      public var reportAsAdmin: GroupCall_ParticipantToParticipant.Admin.ReportAsAdmin {
-        get {
-          if case .reportAsAdmin(let v)? = content {return v}
-          return GroupCall_ParticipantToParticipant.Admin.ReportAsAdmin()
-        }
-        set {content = .reportAsAdmin(newValue)}
-      }
-
-      public var promoteToAdmin: GroupCall_ParticipantToParticipant.Admin.PromoteToAdmin {
-        get {
-          if case .promoteToAdmin(let v)? = content {return v}
-          return GroupCall_ParticipantToParticipant.Admin.PromoteToAdmin()
-        }
-        set {content = .promoteToAdmin(newValue)}
-      }
-
-      public var forceLeave: GroupCall_ParticipantToParticipant.Admin.ForceLeave {
-        get {
-          if case .forceLeave(let v)? = content {return v}
-          return GroupCall_ParticipantToParticipant.Admin.ForceLeave()
-        }
-        set {content = .forceLeave(newValue)}
-      }
-
-      public var forceCaptureStateOff: GroupCall_ParticipantToParticipant.Admin.ForceCaptureStateOff {
-        get {
-          if case .forceCaptureStateOff(let v)? = content {return v}
-          return GroupCall_ParticipantToParticipant.Admin.ForceCaptureStateOff()
-        }
-        set {content = .forceCaptureStateOff(newValue)}
-      }
-
-      public var forceFocus: GroupCall_ParticipantToParticipant.Admin.ForceFocus {
-        get {
-          if case .forceFocus(let v)? = content {return v}
-          return GroupCall_ParticipantToParticipant.Admin.ForceFocus()
-        }
-        set {content = .forceFocus(newValue)}
-      }
-
-      public var unknownFields = SwiftProtobuf.UnknownStorage()
-
-      public enum OneOf_Content: Equatable, Sendable {
-        case reportAsAdmin(GroupCall_ParticipantToParticipant.Admin.ReportAsAdmin)
-        case promoteToAdmin(GroupCall_ParticipantToParticipant.Admin.PromoteToAdmin)
-        case forceLeave(GroupCall_ParticipantToParticipant.Admin.ForceLeave)
-        case forceCaptureStateOff(GroupCall_ParticipantToParticipant.Admin.ForceCaptureStateOff)
-        case forceFocus(GroupCall_ParticipantToParticipant.Admin.ForceFocus)
-
-      }
-
-      public init() {}
-    }
-
-    /// Report as an administrator.
-    ///
-    /// When receiving this message, mark the sender as an administrator in the
-    /// UI.
-    public struct ReportAsAdmin: Sendable {
-      // SwiftProtobuf.Message conformance is added in an extension below. See the
-      // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
-      // methods supported on all messages.
-
-      public var unknownFields = SwiftProtobuf.UnknownStorage()
-
-      public init() {}
-    }
-
-    /// Promote the receiver to an administrator.
-    ///
-    /// Note: This is final for the scope of this Group Call. An administrator
-    ///       cannot be demoted.
+    /// A message from a moderator.
     ///
     /// When receiving this message:
     ///
-    /// 1. If the user already is an administrator, abort these steps.
-    /// 2. Derive GCAMK and calculate the associated public key from the received
-    ///    `gcak`. If it does not match the known `GCAMK.public`, log a warning
-    ///    and abort these steps.
-    /// 3. Send an `Admin.ReportAsAdmin` message to all other participants
-    ///    (including the sender who promoted the user to an admin).
-    /// 4. Notify the user of its admin status and enable administration
-    ///    functionality in the UI.
-    public struct PromoteToAdmin: Sendable {
+    /// 1. Verify the `signature`. If it does not match, log a warning, discard
+    ///    the message and abort these steps.
+    /// 2. Handle the message according to the content. If an unknown content
+    ///    variant has been received, log a warning and discard the message.
+    public nonisolated struct Envelope: Sendable {
       // SwiftProtobuf.Message conformance is added in an extension below. See the
       // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
       // methods supported on all messages.
 
-      public var gcak: Data = Data()
+      public var content: Data = Data()
+
+      /// Signature over the encoded `Content` message.
+      public var signature: Data = Data()
+
+      public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+      /// An `Content` message. After encoding, it is signed by:
+      ///
+      /// ```text
+      /// Ed25519(
+      ///   key=GCMMK,
+      ///   message=
+      ///        u8(SignatureContext.POST_AUTH_MESSAGE)
+      ///     || X25519HSalsa20(<sender.PCK>.secret, <receiver.PCK>.public)
+      ///     || <sender.PCCK>
+      ///     || <sender.PCSN+>
+      ///     || <message>
+      ///   )
+      /// ```
+      ///
+      /// IMPORTANT: The `ParticipantToParticipant.Envelope` that encapsulates this message shall be
+      /// encrypted by the same `PCSN` as used to sign this message.
+      public nonisolated struct Content: Sendable {
+        // SwiftProtobuf.Message conformance is added in an extension below. See the
+        // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+        // methods supported on all messages.
+
+        public var content: GroupCall_ParticipantToParticipant.Moderator.Envelope.Content.OneOf_Content? = nil
+
+        public var reportAsModerator: GroupCall_ParticipantToParticipant.Moderator.ReportAsModerator {
+          get {
+            if case .reportAsModerator(let v)? = content {return v}
+            return GroupCall_ParticipantToParticipant.Moderator.ReportAsModerator()
+          }
+          set {content = .reportAsModerator(newValue)}
+        }
+
+        public var promoteToModerator: GroupCall_ParticipantToParticipant.Moderator.PromoteToModerator {
+          get {
+            if case .promoteToModerator(let v)? = content {return v}
+            return GroupCall_ParticipantToParticipant.Moderator.PromoteToModerator()
+          }
+          set {content = .promoteToModerator(newValue)}
+        }
+
+        public var forceLeave: GroupCall_ParticipantToParticipant.Moderator.ForceLeave {
+          get {
+            if case .forceLeave(let v)? = content {return v}
+            return GroupCall_ParticipantToParticipant.Moderator.ForceLeave()
+          }
+          set {content = .forceLeave(newValue)}
+        }
+
+        public var forceCaptureStateOff: GroupCall_ParticipantToParticipant.Moderator.ForceCaptureStateOff {
+          get {
+            if case .forceCaptureStateOff(let v)? = content {return v}
+            return GroupCall_ParticipantToParticipant.Moderator.ForceCaptureStateOff()
+          }
+          set {content = .forceCaptureStateOff(newValue)}
+        }
+
+        public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+        public nonisolated enum OneOf_Content: Equatable, Sendable {
+          case reportAsModerator(GroupCall_ParticipantToParticipant.Moderator.ReportAsModerator)
+          case promoteToModerator(GroupCall_ParticipantToParticipant.Moderator.PromoteToModerator)
+          case forceLeave(GroupCall_ParticipantToParticipant.Moderator.ForceLeave)
+          case forceCaptureStateOff(GroupCall_ParticipantToParticipant.Moderator.ForceCaptureStateOff)
+
+        }
+
+        public init() {}
+      }
+
+      public init() {}
+    }
+
+    /// Report as a moderator.
+    ///
+    /// When receiving this message, mark the sender as a moderator in the UI.
+    public nonisolated struct ReportAsModerator: Sendable {
+      // SwiftProtobuf.Message conformance is added in an extension below. See the
+      // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+      // methods supported on all messages.
+
+      public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+      public init() {}
+    }
+
+    /// Promote the receiver to a moderator.
+    ///
+    /// Note: This is final for the duration of the Group Call. A moderator
+    /// cannot be demoted.
+    ///
+    /// When receiving this message:
+    ///
+    /// 1. If the user already is a moderator, abort these steps.
+    /// 2. Derive GCMMK and calculate the associated public key from the received
+    ///    `gcmk`. If it does not match the known `GCMMK.public`, log a warning
+    ///    and abort these steps.
+    /// 3. Send a `Moderator.ReportAsModerator` message to all other participants
+    ///    (including the sender who promoted the user to a moderator).
+    /// 4. Notify the user of its moderator status and enable moderation
+    ///    functionality in the UI.
+    public nonisolated struct PromoteToModerator: Sendable {
+      // SwiftProtobuf.Message conformance is added in an extension below. See the
+      // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+      // methods supported on all messages.
+
+      public var gcmk: Data = Data()
 
       public var unknownFields = SwiftProtobuf.UnknownStorage()
 
@@ -2015,7 +2604,9 @@ public struct GroupCall_ParticipantToParticipant: Sendable {
     }
 
     /// Force the receiver to leave the call.
-    public struct ForceLeave: Sendable {
+    ///
+    /// When receiving this message, immediately leave the call.
+    public nonisolated struct ForceLeave: Sendable {
       // SwiftProtobuf.Message conformance is added in an extension below. See the
       // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
       // methods supported on all messages.
@@ -2038,16 +2629,16 @@ public struct GroupCall_ParticipantToParticipant: Sendable {
     /// 2. If the device's capture state is already _off_, abort these steps.
     /// 3. Send a `CaptureState` message for the device and follow the creation
     ///    steps of that message (i.e. stop capturing, etc.).
-    public struct ForceCaptureStateOff: Sendable {
+    public nonisolated struct ForceCaptureStateOff: Sendable {
       // SwiftProtobuf.Message conformance is added in an extension below. See the
       // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
       // methods supported on all messages.
 
-      public var device: GroupCall_ParticipantToParticipant.Admin.ForceCaptureStateOff.Device = .all
+      public var device: GroupCall_ParticipantToParticipant.Moderator.ForceCaptureStateOff.Device = .all
 
       public var unknownFields = SwiftProtobuf.UnknownStorage()
 
-      public enum Device: SwiftProtobuf.Enum, Swift.CaseIterable {
+      public nonisolated enum Device: SwiftProtobuf.Enum, Swift.CaseIterable {
         public typealias RawValue = Int
 
         /// Stop capturing all devices
@@ -2088,7 +2679,7 @@ public struct GroupCall_ParticipantToParticipant: Sendable {
         }
 
         // The compiler won't synthesize support with the UNRECOGNIZED case.
-        public static let allCases: [GroupCall_ParticipantToParticipant.Admin.ForceCaptureStateOff.Device] = [
+        public static let allCases: [GroupCall_ParticipantToParticipant.Moderator.ForceCaptureStateOff.Device] = [
           .all,
           .microphone,
           .camera,
@@ -2100,40 +2691,13 @@ public struct GroupCall_ParticipantToParticipant: Sendable {
       public init() {}
     }
 
-    /// Force focus on a specific participant.
-    ///
-    /// Note: This is a momentary enforcement. A participant may immediately
-    ///       remove the focus and the message is not repeated towards newly
-    ///       joined participants.
-    ///
-    /// When receiving this message:
-    ///
-    /// 1. Look up the participant to be focused. If none could be found, abort
-    ///    these steps.
-    /// 2. Focus the participant in the UI. The camera or screen feed
-    ///    subscription may need to be created (e.g. participant was not visible
-    ///    in the viewport before) or updated (e.g. display resolution changes
-    ///    due to focus) by a corresponding `Subscribe` message sent to the SFU.
-    public struct ForceFocus: Sendable {
-      // SwiftProtobuf.Message conformance is added in an extension below. See the
-      // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
-      // methods supported on all messages.
-
-      public var participantID: UInt32 = 0
-
-      public var unknownFields = SwiftProtobuf.UnknownStorage()
-
-      public init() {}
-    }
-
     public init() {}
   }
 
   /// Media keys a participant will use for sending.
   ///
-  /// Will be sent towards new and existing participants as described by the
-  /// _Join/Leave_ section.
-  public struct MediaKey: Sendable {
+  /// When receiving this message, run the _Participant Rekey Steps_.
+  public nonisolated struct MediaKey: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
@@ -2205,7 +2769,7 @@ public struct GroupCall_ParticipantToParticipant: Sendable {
   ///       2. If `device`'s `started_at` timestamp is the most recent timestamp
   ///          from all currently active screen shares of all participants, set
   ///          the focus to this participant's screen.
-  public struct CaptureState: Sendable {
+  public nonisolated struct CaptureState: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
@@ -2238,7 +2802,7 @@ public struct GroupCall_ParticipantToParticipant: Sendable {
 
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public enum OneOf_State: Equatable, Sendable {
+    public nonisolated enum OneOf_State: Equatable, Sendable {
       case microphone(GroupCall_ParticipantToParticipant.CaptureState.Microphone)
       case camera(GroupCall_ParticipantToParticipant.CaptureState.Camera)
       case screen(GroupCall_ParticipantToParticipant.CaptureState.Screen)
@@ -2246,7 +2810,7 @@ public struct GroupCall_ParticipantToParticipant: Sendable {
     }
 
     /// Capture state of the microphone.
-    public struct Microphone: Sendable {
+    public nonisolated struct Microphone: Sendable {
       // SwiftProtobuf.Message conformance is added in an extension below. See the
       // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
       // methods supported on all messages.
@@ -2271,7 +2835,7 @@ public struct GroupCall_ParticipantToParticipant: Sendable {
 
       public var unknownFields = SwiftProtobuf.UnknownStorage()
 
-      public enum OneOf_State: Equatable, Sendable {
+      public nonisolated enum OneOf_State: Equatable, Sendable {
         case on(Common_Unit)
         case off(Common_Unit)
 
@@ -2281,7 +2845,7 @@ public struct GroupCall_ParticipantToParticipant: Sendable {
     }
 
     /// Capture state of the camera.
-    public struct Camera: Sendable {
+    public nonisolated struct Camera: Sendable {
       // SwiftProtobuf.Message conformance is added in an extension below. See the
       // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
       // methods supported on all messages.
@@ -2306,7 +2870,7 @@ public struct GroupCall_ParticipantToParticipant: Sendable {
 
       public var unknownFields = SwiftProtobuf.UnknownStorage()
 
-      public enum OneOf_State: Equatable, Sendable {
+      public nonisolated enum OneOf_State: Equatable, Sendable {
         case on(Common_Unit)
         case off(Common_Unit)
 
@@ -2316,7 +2880,7 @@ public struct GroupCall_ParticipantToParticipant: Sendable {
     }
 
     /// Capture state of the screen.
-    public struct Screen: Sendable {
+    public nonisolated struct Screen: Sendable {
       // SwiftProtobuf.Message conformance is added in an extension below. See the
       // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
       // methods supported on all messages.
@@ -2341,13 +2905,13 @@ public struct GroupCall_ParticipantToParticipant: Sendable {
 
       public var unknownFields = SwiftProtobuf.UnknownStorage()
 
-      public enum OneOf_State: Equatable, Sendable {
+      public nonisolated enum OneOf_State: Equatable, Sendable {
         case on(GroupCall_ParticipantToParticipant.CaptureState.Screen.On)
         case off(Common_Unit)
 
       }
 
-      public struct On: Sendable {
+      public nonisolated struct On: Sendable {
         // SwiftProtobuf.Message conformance is added in an extension below. See the
         // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
         // methods supported on all messages.
@@ -2367,44 +2931,18 @@ public struct GroupCall_ParticipantToParticipant: Sendable {
     public init() {}
   }
 
-  /// Signals that a participant is currently on hold / temporarily away.
-  ///
-  /// When creating this message:
-  ///
-  /// 1. Send a `CaptureState` message for each capture device. Follow the
-  ///    creation steps of that message.
-  /// 2. Send the `HoldState` message.
-  ///
-  /// When receiving this message:
-  ///
-  /// 1. Apply the _hold_ state in the UI for the participant.
-  /// 2. Pause any video-based media tracks of the participant.
-  /// 3. If subscribed to the participant's camera feed, send a
-  ///    `ParticipantCamera.Unsubscribe` message to the SFU.
-  /// 4. If subscribed to the participant's screen feed, send a
-  ///    `ParticipantScreen.Unsubscribe` message to the SFU.
-  public struct HoldState: Sendable {
-    // SwiftProtobuf.Message conformance is added in an extension below. See the
-    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
-    // methods supported on all messages.
-
-    public var unknownFields = SwiftProtobuf.UnknownStorage()
-
-    public init() {}
-  }
-
   public init() {}
 }
 
 // MARK: - Code below here is support for the SwiftProtobuf runtime.
 
-fileprivate let _protobuf_package = "group_call"
+fileprivate nonisolated let _protobuf_package = "group_call"
 
-extension GroupCall_SupportedFeature: SwiftProtobuf._ProtoNameProviding {
+nonisolated extension GroupCall_SupportedFeature: SwiftProtobuf._ProtoNameProviding {
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0BASE\0\u{1}SCREEN_SHARE\0")
 }
 
-extension GroupCall_CallState: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension GroupCall_CallState: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".CallState"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}padding\0\u{3}state_created_by\0\u{3}state_created_at\0\u{1}participants\0")
 
@@ -2449,9 +2987,9 @@ extension GroupCall_CallState: SwiftProtobuf.Message, SwiftProtobuf._MessageImpl
   }
 }
 
-extension GroupCall_CallState.Participant: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension GroupCall_CallState.Participant: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = GroupCall_CallState.protoMessageName + ".Participant"
-  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\u{2}threema\0\u{1}guest\0\u{c}\u{1}\u{1}")
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\u{2}threema\0\u{1}guest\0\u{3}participation_state\0\u{c}\u{1}\u{1}")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -2485,6 +3023,7 @@ extension GroupCall_CallState.Participant: SwiftProtobuf.Message, SwiftProtobuf.
           self.participant = .guest(v)
         }
       }()
+      case 4: try { try decoder.decodeSingularEnumField(value: &self.participationState) }()
       default: break
       }
     }
@@ -2506,17 +3045,25 @@ extension GroupCall_CallState.Participant: SwiftProtobuf.Message, SwiftProtobuf.
     }()
     case nil: break
     }
+    if self.participationState != .participating {
+      try visitor.visitSingularEnumField(value: self.participationState, fieldNumber: 4)
+    }
     try unknownFields.traverse(visitor: &visitor)
   }
 
   public static func ==(lhs: GroupCall_CallState.Participant, rhs: GroupCall_CallState.Participant) -> Bool {
+    if lhs.participationState != rhs.participationState {return false}
     if lhs.participant != rhs.participant {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
 }
 
-extension GroupCall_CallState.Participant.Normal: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension GroupCall_CallState.Participant.ParticipationState: SwiftProtobuf._ProtoNameProviding {
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0PARTICIPATING\0\u{1}AWAITING_MODERATOR_APPROVAL\0")
+}
+
+nonisolated extension GroupCall_CallState.Participant.Normal: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = GroupCall_CallState.Participant.protoMessageName + ".Normal"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}identity\0\u{1}nickname\0")
 
@@ -2551,7 +3098,7 @@ extension GroupCall_CallState.Participant.Normal: SwiftProtobuf.Message, SwiftPr
   }
 }
 
-extension GroupCall_CallState.Participant.Guest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension GroupCall_CallState.Participant.Guest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = GroupCall_CallState.Participant.protoMessageName + ".Guest"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}name\0")
 
@@ -2581,7 +3128,7 @@ extension GroupCall_CallState.Participant.Guest: SwiftProtobuf.Message, SwiftPro
   }
 }
 
-extension GroupCall_SfuHttpRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension GroupCall_SfuHttpRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".SfuHttpRequest"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap()
 
@@ -2600,7 +3147,7 @@ extension GroupCall_SfuHttpRequest: SwiftProtobuf.Message, SwiftProtobuf._Messag
   }
 }
 
-extension GroupCall_SfuHttpRequest.Peek: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension GroupCall_SfuHttpRequest.Peek: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = GroupCall_SfuHttpRequest.protoMessageName + ".Peek"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}call_id\0")
 
@@ -2630,7 +3177,7 @@ extension GroupCall_SfuHttpRequest.Peek: SwiftProtobuf.Message, SwiftProtobuf._M
   }
 }
 
-extension GroupCall_SfuHttpRequest.Join: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension GroupCall_SfuHttpRequest.Join: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = GroupCall_SfuHttpRequest.protoMessageName + ".Join"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}call_id\0\u{3}protocol_version\0\u{3}dtls_fingerprint\0")
 
@@ -2670,7 +3217,7 @@ extension GroupCall_SfuHttpRequest.Join: SwiftProtobuf.Message, SwiftProtobuf._M
   }
 }
 
-extension GroupCall_SfuHttpResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension GroupCall_SfuHttpResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".SfuHttpResponse"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap()
 
@@ -2689,7 +3236,7 @@ extension GroupCall_SfuHttpResponse: SwiftProtobuf.Message, SwiftProtobuf._Messa
   }
 }
 
-extension GroupCall_SfuHttpResponse.Peek: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension GroupCall_SfuHttpResponse.Peek: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = GroupCall_SfuHttpResponse.protoMessageName + ".Peek"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}started_at\0\u{3}max_participants\0\u{3}encrypted_call_state\0")
 
@@ -2733,9 +3280,9 @@ extension GroupCall_SfuHttpResponse.Peek: SwiftProtobuf.Message, SwiftProtobuf._
   }
 }
 
-extension GroupCall_SfuHttpResponse.Join: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension GroupCall_SfuHttpResponse.Join: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = GroupCall_SfuHttpResponse.protoMessageName + ".Join"
-  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}started_at\0\u{3}max_participants\0\u{3}participant_id\0\u{1}addresses\0\u{3}ice_username_fragment\0\u{3}ice_password\0\u{3}dtls_fingerprint\0\u{3}supported_features\0\u{3}rtp_header_extension_ids\0")
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}started_at\0\u{3}max_participants\0\u{3}participant_id\0\u{1}addresses\0\u{3}ice_username_fragment\0\u{3}ice_password\0\u{3}dtls_fingerprint\0\u{3}supported_features\0\u{3}rtp_header_extension_ids\0\u{3}participant_uid\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -2752,6 +3299,7 @@ extension GroupCall_SfuHttpResponse.Join: SwiftProtobuf.Message, SwiftProtobuf._
       case 7: try { try decoder.decodeSingularBytesField(value: &self.dtlsFingerprint) }()
       case 8: try { try decoder.decodeSingularUInt64Field(value: &self.supportedFeatures) }()
       case 9: try { try decoder.decodeSingularMessageField(value: &self._rtpHeaderExtensionIds) }()
+      case 10: try { try decoder.decodeSingularBytesField(value: &self.participantUid) }()
       default: break
       }
     }
@@ -2789,6 +3337,9 @@ extension GroupCall_SfuHttpResponse.Join: SwiftProtobuf.Message, SwiftProtobuf._
     try { if let v = self._rtpHeaderExtensionIds {
       try visitor.visitSingularMessageField(value: v, fieldNumber: 9)
     } }()
+    if !self.participantUid.isEmpty {
+      try visitor.visitSingularBytesField(value: self.participantUid, fieldNumber: 10)
+    }
     try unknownFields.traverse(visitor: &visitor)
   }
 
@@ -2796,6 +3347,7 @@ extension GroupCall_SfuHttpResponse.Join: SwiftProtobuf.Message, SwiftProtobuf._
     if lhs.startedAt != rhs.startedAt {return false}
     if lhs.maxParticipants != rhs.maxParticipants {return false}
     if lhs.participantID != rhs.participantID {return false}
+    if lhs.participantUid != rhs.participantUid {return false}
     if lhs.addresses != rhs.addresses {return false}
     if lhs.iceUsernameFragment != rhs.iceUsernameFragment {return false}
     if lhs.icePassword != rhs.icePassword {return false}
@@ -2807,7 +3359,7 @@ extension GroupCall_SfuHttpResponse.Join: SwiftProtobuf.Message, SwiftProtobuf._
   }
 }
 
-extension GroupCall_SfuHttpResponse.Join.Address: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension GroupCall_SfuHttpResponse.Join.Address: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = GroupCall_SfuHttpResponse.Join.protoMessageName + ".Address"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}protocol\0\u{1}port\0\u{1}ip\0")
 
@@ -2847,11 +3399,11 @@ extension GroupCall_SfuHttpResponse.Join.Address: SwiftProtobuf.Message, SwiftPr
   }
 }
 
-extension GroupCall_SfuHttpResponse.Join.Address.ProtocolEnum: SwiftProtobuf._ProtoNameProviding {
+nonisolated extension GroupCall_SfuHttpResponse.Join.Address.ProtocolEnum: SwiftProtobuf._ProtoNameProviding {
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0UDP\0")
 }
 
-extension GroupCall_SfuHttpResponse.Join.RtpHeaderExtensionIds: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension GroupCall_SfuHttpResponse.Join.RtpHeaderExtensionIds: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = GroupCall_SfuHttpResponse.Join.protoMessageName + ".RtpHeaderExtensionIds"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}mid\0\u{3}rtp_stream_id\0\u{3}repaired_rtp_stream_id\0\u{3}absolute_send_time\0\u{3}transport_wide_congestion_control_01\0\u{3}video_orientation\0\u{3}time_offset\0")
 
@@ -2911,7 +3463,7 @@ extension GroupCall_SfuHttpResponse.Join.RtpHeaderExtensionIds: SwiftProtobuf.Me
   }
 }
 
-extension GroupCall_SfuToParticipant: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension GroupCall_SfuToParticipant: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".SfuToParticipant"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap()
 
@@ -2930,7 +3482,7 @@ extension GroupCall_SfuToParticipant: SwiftProtobuf.Message, SwiftProtobuf._Mess
   }
 }
 
-extension GroupCall_SfuToParticipant.Envelope: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension GroupCall_SfuToParticipant.Envelope: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = GroupCall_SfuToParticipant.protoMessageName + ".Envelope"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}padding\0\u{1}relay\0\u{1}hello\0\u{3}participant_joined\0\u{3}participant_left\0\u{3}timestamp_response\0")
 
@@ -3053,9 +3605,9 @@ extension GroupCall_SfuToParticipant.Envelope: SwiftProtobuf.Message, SwiftProto
   }
 }
 
-extension GroupCall_SfuToParticipant.Hello: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension GroupCall_SfuToParticipant.Hello: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = GroupCall_SfuToParticipant.protoMessageName + ".Hello"
-  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}participant_ids\0")
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}deprecated_participant_ids\0\u{2}\u{3}participants\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -3063,29 +3615,64 @@ extension GroupCall_SfuToParticipant.Hello: SwiftProtobuf.Message, SwiftProtobuf
       // allocates stack space for every case branch when no optimizations are
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
-      case 1: try { try decoder.decodeRepeatedUInt32Field(value: &self.participantIds) }()
+      case 1: try { try decoder.decodeRepeatedUInt32Field(value: &self.deprecatedParticipantIds) }()
+      case 4: try { try decoder.decodeMapField(fieldType: SwiftProtobuf._ProtobufMessageMap<SwiftProtobuf.ProtobufUInt32,GroupCall_SfuToParticipant.Hello.Participant>.self, value: &self.participants) }()
       default: break
       }
     }
   }
 
   public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    if !self.participantIds.isEmpty {
-      try visitor.visitPackedUInt32Field(value: self.participantIds, fieldNumber: 1)
+    if !self.deprecatedParticipantIds.isEmpty {
+      try visitor.visitPackedUInt32Field(value: self.deprecatedParticipantIds, fieldNumber: 1)
+    }
+    if !self.participants.isEmpty {
+      try visitor.visitMapField(fieldType: SwiftProtobuf._ProtobufMessageMap<SwiftProtobuf.ProtobufUInt32,GroupCall_SfuToParticipant.Hello.Participant>.self, value: self.participants, fieldNumber: 4)
     }
     try unknownFields.traverse(visitor: &visitor)
   }
 
   public static func ==(lhs: GroupCall_SfuToParticipant.Hello, rhs: GroupCall_SfuToParticipant.Hello) -> Bool {
-    if lhs.participantIds != rhs.participantIds {return false}
+    if lhs.deprecatedParticipantIds != rhs.deprecatedParticipantIds {return false}
+    if lhs.participants != rhs.participants {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
 }
 
-extension GroupCall_SfuToParticipant.ParticipantJoined: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension GroupCall_SfuToParticipant.Hello.Participant: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = GroupCall_SfuToParticipant.Hello.protoMessageName + ".Participant"
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}participant_uid\0")
+
+  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularBytesField(value: &self.participantUid) }()
+      default: break
+      }
+    }
+  }
+
+  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if !self.participantUid.isEmpty {
+      try visitor.visitSingularBytesField(value: self.participantUid, fieldNumber: 1)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  public static func ==(lhs: GroupCall_SfuToParticipant.Hello.Participant, rhs: GroupCall_SfuToParticipant.Hello.Participant) -> Bool {
+    if lhs.participantUid != rhs.participantUid {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+nonisolated extension GroupCall_SfuToParticipant.ParticipantJoined: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = GroupCall_SfuToParticipant.protoMessageName + ".ParticipantJoined"
-  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}participant_id\0")
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}participant_id\0\u{3}participant_uid\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -3094,6 +3681,7 @@ extension GroupCall_SfuToParticipant.ParticipantJoined: SwiftProtobuf.Message, S
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
       case 1: try { try decoder.decodeSingularUInt32Field(value: &self.participantID) }()
+      case 2: try { try decoder.decodeSingularBytesField(value: &self.participantUid) }()
       default: break
       }
     }
@@ -3103,17 +3691,21 @@ extension GroupCall_SfuToParticipant.ParticipantJoined: SwiftProtobuf.Message, S
     if self.participantID != 0 {
       try visitor.visitSingularUInt32Field(value: self.participantID, fieldNumber: 1)
     }
+    if !self.participantUid.isEmpty {
+      try visitor.visitSingularBytesField(value: self.participantUid, fieldNumber: 2)
+    }
     try unknownFields.traverse(visitor: &visitor)
   }
 
   public static func ==(lhs: GroupCall_SfuToParticipant.ParticipantJoined, rhs: GroupCall_SfuToParticipant.ParticipantJoined) -> Bool {
     if lhs.participantID != rhs.participantID {return false}
+    if lhs.participantUid != rhs.participantUid {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
 }
 
-extension GroupCall_SfuToParticipant.ParticipantLeft: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension GroupCall_SfuToParticipant.ParticipantLeft: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = GroupCall_SfuToParticipant.protoMessageName + ".ParticipantLeft"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}participant_id\0")
 
@@ -3143,7 +3735,7 @@ extension GroupCall_SfuToParticipant.ParticipantLeft: SwiftProtobuf.Message, Swi
   }
 }
 
-extension GroupCall_SfuToParticipant.Timestamp: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension GroupCall_SfuToParticipant.Timestamp: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = GroupCall_SfuToParticipant.protoMessageName + ".Timestamp"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}ms\0")
 
@@ -3173,7 +3765,7 @@ extension GroupCall_SfuToParticipant.Timestamp: SwiftProtobuf.Message, SwiftProt
   }
 }
 
-extension GroupCall_ParticipantToSfu: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension GroupCall_ParticipantToSfu: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".ParticipantToSfu"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap()
 
@@ -3192,7 +3784,7 @@ extension GroupCall_ParticipantToSfu: SwiftProtobuf.Message, SwiftProtobuf._Mess
   }
 }
 
-extension GroupCall_ParticipantToSfu.Envelope: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension GroupCall_ParticipantToSfu.Envelope: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = GroupCall_ParticipantToSfu.protoMessageName + ".Envelope"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}padding\0\u{1}relay\0\u{3}update_call_state\0\u{3}request_participant_camera\0\u{3}request_participant_screen\0\u{3}request_participant_microphone\0\u{3}request_timestamp\0")
 
@@ -3332,7 +3924,7 @@ extension GroupCall_ParticipantToSfu.Envelope: SwiftProtobuf.Message, SwiftProto
   }
 }
 
-extension GroupCall_ParticipantToSfu.RequestTimestamp: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension GroupCall_ParticipantToSfu.RequestTimestamp: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = GroupCall_ParticipantToSfu.protoMessageName + ".RequestTimestamp"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap()
 
@@ -3351,7 +3943,7 @@ extension GroupCall_ParticipantToSfu.RequestTimestamp: SwiftProtobuf.Message, Sw
   }
 }
 
-extension GroupCall_ParticipantToSfu.UpdateCallState: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension GroupCall_ParticipantToSfu.UpdateCallState: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = GroupCall_ParticipantToSfu.protoMessageName + ".UpdateCallState"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}encrypted_call_state\0")
 
@@ -3381,7 +3973,7 @@ extension GroupCall_ParticipantToSfu.UpdateCallState: SwiftProtobuf.Message, Swi
   }
 }
 
-extension GroupCall_ParticipantToSfu.ParticipantMicrophone: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension GroupCall_ParticipantToSfu.ParticipantMicrophone: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = GroupCall_ParticipantToSfu.protoMessageName + ".ParticipantMicrophone"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}participant_id\0\u{1}subscribe\0\u{1}unsubscribe\0")
 
@@ -3453,7 +4045,7 @@ extension GroupCall_ParticipantToSfu.ParticipantMicrophone: SwiftProtobuf.Messag
   }
 }
 
-extension GroupCall_ParticipantToSfu.ParticipantMicrophone.Subscribe: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension GroupCall_ParticipantToSfu.ParticipantMicrophone.Subscribe: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = GroupCall_ParticipantToSfu.ParticipantMicrophone.protoMessageName + ".Subscribe"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap()
 
@@ -3472,7 +4064,7 @@ extension GroupCall_ParticipantToSfu.ParticipantMicrophone.Subscribe: SwiftProto
   }
 }
 
-extension GroupCall_ParticipantToSfu.ParticipantMicrophone.Unsubscribe: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension GroupCall_ParticipantToSfu.ParticipantMicrophone.Unsubscribe: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = GroupCall_ParticipantToSfu.ParticipantMicrophone.protoMessageName + ".Unsubscribe"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap()
 
@@ -3491,7 +4083,7 @@ extension GroupCall_ParticipantToSfu.ParticipantMicrophone.Unsubscribe: SwiftPro
   }
 }
 
-extension GroupCall_ParticipantToSfu.ParticipantCamera: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension GroupCall_ParticipantToSfu.ParticipantCamera: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = GroupCall_ParticipantToSfu.protoMessageName + ".ParticipantCamera"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}participant_id\0\u{1}subscribe\0\u{1}unsubscribe\0")
 
@@ -3563,7 +4155,7 @@ extension GroupCall_ParticipantToSfu.ParticipantCamera: SwiftProtobuf.Message, S
   }
 }
 
-extension GroupCall_ParticipantToSfu.ParticipantCamera.Subscribe: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension GroupCall_ParticipantToSfu.ParticipantCamera.Subscribe: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = GroupCall_ParticipantToSfu.ParticipantCamera.protoMessageName + ".Subscribe"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}desired_resolution\0\u{3}desired_fps\0")
 
@@ -3602,7 +4194,7 @@ extension GroupCall_ParticipantToSfu.ParticipantCamera.Subscribe: SwiftProtobuf.
   }
 }
 
-extension GroupCall_ParticipantToSfu.ParticipantCamera.Unsubscribe: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension GroupCall_ParticipantToSfu.ParticipantCamera.Unsubscribe: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = GroupCall_ParticipantToSfu.ParticipantCamera.protoMessageName + ".Unsubscribe"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap()
 
@@ -3621,7 +4213,7 @@ extension GroupCall_ParticipantToSfu.ParticipantCamera.Unsubscribe: SwiftProtobu
   }
 }
 
-extension GroupCall_ParticipantToSfu.ParticipantScreen: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension GroupCall_ParticipantToSfu.ParticipantScreen: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = GroupCall_ParticipantToSfu.protoMessageName + ".ParticipantScreen"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}participant_id\0\u{1}subscribe\0\u{1}unsubscribe\0")
 
@@ -3693,7 +4285,7 @@ extension GroupCall_ParticipantToSfu.ParticipantScreen: SwiftProtobuf.Message, S
   }
 }
 
-extension GroupCall_ParticipantToSfu.ParticipantScreen.Subscribe: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension GroupCall_ParticipantToSfu.ParticipantScreen.Subscribe: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = GroupCall_ParticipantToSfu.ParticipantScreen.protoMessageName + ".Subscribe"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}desired_resolution\0\u{3}desired_fps\0")
 
@@ -3732,7 +4324,7 @@ extension GroupCall_ParticipantToSfu.ParticipantScreen.Subscribe: SwiftProtobuf.
   }
 }
 
-extension GroupCall_ParticipantToSfu.ParticipantScreen.Unsubscribe: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension GroupCall_ParticipantToSfu.ParticipantScreen.Unsubscribe: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = GroupCall_ParticipantToSfu.ParticipantScreen.protoMessageName + ".Unsubscribe"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap()
 
@@ -3751,7 +4343,7 @@ extension GroupCall_ParticipantToSfu.ParticipantScreen.Unsubscribe: SwiftProtobu
   }
 }
 
-extension GroupCall_ParticipantToParticipant: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension GroupCall_ParticipantToParticipant: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".ParticipantToParticipant"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap()
 
@@ -3770,7 +4362,11 @@ extension GroupCall_ParticipantToParticipant: SwiftProtobuf.Message, SwiftProtob
   }
 }
 
-extension GroupCall_ParticipantToParticipant.OuterEnvelope: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension GroupCall_ParticipantToParticipant.SignatureContext: SwiftProtobuf._ProtoNameProviding {
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0RESERVED\0\u{1}JOIN_APPROVAL\0\u{1}POST_AUTH_MESSAGE\0")
+}
+
+nonisolated extension GroupCall_ParticipantToParticipant.OuterEnvelope: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = GroupCall_ParticipantToParticipant.protoMessageName + ".OuterEnvelope"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}sender\0\u{1}receiver\0\u{4}\u{2}encrypted_data\0")
 
@@ -3810,7 +4406,7 @@ extension GroupCall_ParticipantToParticipant.OuterEnvelope: SwiftProtobuf.Messag
   }
 }
 
-extension GroupCall_ParticipantToParticipant.Handshake: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension GroupCall_ParticipantToParticipant.Handshake: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = GroupCall_ParticipantToParticipant.protoMessageName + ".Handshake"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap()
 
@@ -3829,7 +4425,7 @@ extension GroupCall_ParticipantToParticipant.Handshake: SwiftProtobuf.Message, S
   }
 }
 
-extension GroupCall_ParticipantToParticipant.Handshake.HelloEnvelope: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension GroupCall_ParticipantToParticipant.Handshake.HelloEnvelope: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = GroupCall_ParticipantToParticipant.Handshake.protoMessageName + ".HelloEnvelope"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}padding\0\u{1}hello\0\u{3}guest_hello\0")
 
@@ -3901,7 +4497,7 @@ extension GroupCall_ParticipantToParticipant.Handshake.HelloEnvelope: SwiftProto
   }
 }
 
-extension GroupCall_ParticipantToParticipant.Handshake.AuthEnvelope: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension GroupCall_ParticipantToParticipant.Handshake.AuthEnvelope: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = GroupCall_ParticipantToParticipant.Handshake.protoMessageName + ".AuthEnvelope"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}padding\0\u{1}auth\0\u{3}guest_auth\0")
 
@@ -3973,7 +4569,7 @@ extension GroupCall_ParticipantToParticipant.Handshake.AuthEnvelope: SwiftProtob
   }
 }
 
-extension GroupCall_ParticipantToParticipant.Handshake.Hello: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension GroupCall_ParticipantToParticipant.Handshake.Hello: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = GroupCall_ParticipantToParticipant.Handshake.protoMessageName + ".Hello"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}identity\0\u{1}nickname\0\u{1}pck\0\u{1}pcck\0")
 
@@ -4018,9 +4614,9 @@ extension GroupCall_ParticipantToParticipant.Handshake.Hello: SwiftProtobuf.Mess
   }
 }
 
-extension GroupCall_ParticipantToParticipant.Handshake.Auth: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension GroupCall_ParticipantToParticipant.Handshake.Auth: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = GroupCall_ParticipantToParticipant.Handshake.protoMessageName + ".Auth"
-  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}pck\0\u{1}pcck\0\u{3}media_keys\0")
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}pck\0\u{1}pcck\0\u{3}deprecated_early_media_keys\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -4030,7 +4626,7 @@ extension GroupCall_ParticipantToParticipant.Handshake.Auth: SwiftProtobuf.Messa
       switch fieldNumber {
       case 1: try { try decoder.decodeSingularBytesField(value: &self.pck) }()
       case 2: try { try decoder.decodeSingularBytesField(value: &self.pcck) }()
-      case 3: try { try decoder.decodeRepeatedMessageField(value: &self.mediaKeys) }()
+      case 3: try { try decoder.decodeRepeatedMessageField(value: &self.deprecatedEarlyMediaKeys) }()
       default: break
       }
     }
@@ -4043,8 +4639,8 @@ extension GroupCall_ParticipantToParticipant.Handshake.Auth: SwiftProtobuf.Messa
     if !self.pcck.isEmpty {
       try visitor.visitSingularBytesField(value: self.pcck, fieldNumber: 2)
     }
-    if !self.mediaKeys.isEmpty {
-      try visitor.visitRepeatedMessageField(value: self.mediaKeys, fieldNumber: 3)
+    if !self.deprecatedEarlyMediaKeys.isEmpty {
+      try visitor.visitRepeatedMessageField(value: self.deprecatedEarlyMediaKeys, fieldNumber: 3)
     }
     try unknownFields.traverse(visitor: &visitor)
   }
@@ -4052,13 +4648,13 @@ extension GroupCall_ParticipantToParticipant.Handshake.Auth: SwiftProtobuf.Messa
   public static func ==(lhs: GroupCall_ParticipantToParticipant.Handshake.Auth, rhs: GroupCall_ParticipantToParticipant.Handshake.Auth) -> Bool {
     if lhs.pck != rhs.pck {return false}
     if lhs.pcck != rhs.pcck {return false}
-    if lhs.mediaKeys != rhs.mediaKeys {return false}
+    if lhs.deprecatedEarlyMediaKeys != rhs.deprecatedEarlyMediaKeys {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
 }
 
-extension GroupCall_ParticipantToParticipant.Handshake.GuestHello: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension GroupCall_ParticipantToParticipant.Handshake.GuestHello: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = GroupCall_ParticipantToParticipant.Handshake.protoMessageName + ".GuestHello"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}name\0\u{1}pck\0\u{1}pcck\0")
 
@@ -4098,9 +4694,9 @@ extension GroupCall_ParticipantToParticipant.Handshake.GuestHello: SwiftProtobuf
   }
 }
 
-extension GroupCall_ParticipantToParticipant.Handshake.GuestAuth: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension GroupCall_ParticipantToParticipant.Handshake.GuestAuth: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = GroupCall_ParticipantToParticipant.Handshake.protoMessageName + ".GuestAuth"
-  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}pck\0\u{1}pcck\0\u{3}media_keys\0")
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}pck\0\u{1}pcck\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -4110,7 +4706,6 @@ extension GroupCall_ParticipantToParticipant.Handshake.GuestAuth: SwiftProtobuf.
       switch fieldNumber {
       case 1: try { try decoder.decodeSingularBytesField(value: &self.pck) }()
       case 2: try { try decoder.decodeSingularBytesField(value: &self.pcck) }()
-      case 3: try { try decoder.decodeRepeatedMessageField(value: &self.mediaKeys) }()
       default: break
       }
     }
@@ -4123,24 +4718,20 @@ extension GroupCall_ParticipantToParticipant.Handshake.GuestAuth: SwiftProtobuf.
     if !self.pcck.isEmpty {
       try visitor.visitSingularBytesField(value: self.pcck, fieldNumber: 2)
     }
-    if !self.mediaKeys.isEmpty {
-      try visitor.visitRepeatedMessageField(value: self.mediaKeys, fieldNumber: 3)
-    }
     try unknownFields.traverse(visitor: &visitor)
   }
 
   public static func ==(lhs: GroupCall_ParticipantToParticipant.Handshake.GuestAuth, rhs: GroupCall_ParticipantToParticipant.Handshake.GuestAuth) -> Bool {
     if lhs.pck != rhs.pck {return false}
     if lhs.pcck != rhs.pcck {return false}
-    if lhs.mediaKeys != rhs.mediaKeys {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
 }
 
-extension GroupCall_ParticipantToParticipant.Envelope: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = GroupCall_ParticipantToParticipant.protoMessageName + ".Envelope"
-  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}padding\0\u{3}encrypted_admin_envelope\0\u{1}rekey\0\u{3}capture_state\0\u{3}hold_state\0")
+nonisolated extension GroupCall_ParticipantToParticipant.Handshake.ApprovalEnvelope: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = GroupCall_ParticipantToParticipant.Handshake.protoMessageName + ".ApprovalEnvelope"
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}padding\0\u{3}grant_approval\0\u{1}approval\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -4150,11 +4741,148 @@ extension GroupCall_ParticipantToParticipant.Envelope: SwiftProtobuf.Message, Sw
       switch fieldNumber {
       case 1: try { try decoder.decodeSingularBytesField(value: &self.padding) }()
       case 2: try {
-        var v: Data?
-        try decoder.decodeSingularBytesField(value: &v)
+        var v: GroupCall_ParticipantToParticipant.Handshake.GrantApproval?
+        var hadOneofValue = false
+        if let current = self.content {
+          hadOneofValue = true
+          if case .grantApproval(let m) = current {v = m}
+        }
+        try decoder.decodeSingularMessageField(value: &v)
         if let v = v {
-          if self.content != nil {try decoder.handleConflictingOneOf()}
-          self.content = .encryptedAdminEnvelope(v)
+          if hadOneofValue {try decoder.handleConflictingOneOf()}
+          self.content = .grantApproval(v)
+        }
+      }()
+      case 3: try {
+        var v: GroupCall_ParticipantToParticipant.Handshake.Approval?
+        var hadOneofValue = false
+        if let current = self.content {
+          hadOneofValue = true
+          if case .approval(let m) = current {v = m}
+        }
+        try decoder.decodeSingularMessageField(value: &v)
+        if let v = v {
+          if hadOneofValue {try decoder.handleConflictingOneOf()}
+          self.content = .approval(v)
+        }
+      }()
+      default: break
+      }
+    }
+  }
+
+  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
+    if !self.padding.isEmpty {
+      try visitor.visitSingularBytesField(value: self.padding, fieldNumber: 1)
+    }
+    switch self.content {
+    case .grantApproval?: try {
+      guard case .grantApproval(let v)? = self.content else { preconditionFailure() }
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
+    }()
+    case .approval?: try {
+      guard case .approval(let v)? = self.content else { preconditionFailure() }
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 3)
+    }()
+    case nil: break
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  public static func ==(lhs: GroupCall_ParticipantToParticipant.Handshake.ApprovalEnvelope, rhs: GroupCall_ParticipantToParticipant.Handshake.ApprovalEnvelope) -> Bool {
+    if lhs.padding != rhs.padding {return false}
+    if lhs.content != rhs.content {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+nonisolated extension GroupCall_ParticipantToParticipant.Handshake.GrantApproval: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = GroupCall_ParticipantToParticipant.Handshake.protoMessageName + ".GrantApproval"
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}signature\0")
+
+  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularBytesField(value: &self.signature) }()
+      default: break
+      }
+    }
+  }
+
+  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if !self.signature.isEmpty {
+      try visitor.visitSingularBytesField(value: self.signature, fieldNumber: 1)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  public static func ==(lhs: GroupCall_ParticipantToParticipant.Handshake.GrantApproval, rhs: GroupCall_ParticipantToParticipant.Handshake.GrantApproval) -> Bool {
+    if lhs.signature != rhs.signature {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+nonisolated extension GroupCall_ParticipantToParticipant.Handshake.Approval: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = GroupCall_ParticipantToParticipant.Handshake.protoMessageName + ".Approval"
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}signature\0")
+
+  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularBytesField(value: &self.signature) }()
+      default: break
+      }
+    }
+  }
+
+  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if !self.signature.isEmpty {
+      try visitor.visitSingularBytesField(value: self.signature, fieldNumber: 1)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  public static func ==(lhs: GroupCall_ParticipantToParticipant.Handshake.Approval, rhs: GroupCall_ParticipantToParticipant.Handshake.Approval) -> Bool {
+    if lhs.signature != rhs.signature {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+nonisolated extension GroupCall_ParticipantToParticipant.Envelope: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = GroupCall_ParticipantToParticipant.protoMessageName + ".Envelope"
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}padding\0\u{3}moderator_envelope\0\u{1}rekey\0\u{3}capture_state\0")
+
+  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularBytesField(value: &self.padding) }()
+      case 2: try {
+        var v: GroupCall_ParticipantToParticipant.Moderator.Envelope?
+        var hadOneofValue = false
+        if let current = self.content {
+          hadOneofValue = true
+          if case .moderatorEnvelope(let m) = current {v = m}
+        }
+        try decoder.decodeSingularMessageField(value: &v)
+        if let v = v {
+          if hadOneofValue {try decoder.handleConflictingOneOf()}
+          self.content = .moderatorEnvelope(v)
         }
       }()
       case 3: try {
@@ -4183,19 +4911,6 @@ extension GroupCall_ParticipantToParticipant.Envelope: SwiftProtobuf.Message, Sw
           self.content = .captureState(v)
         }
       }()
-      case 5: try {
-        var v: GroupCall_ParticipantToParticipant.HoldState?
-        var hadOneofValue = false
-        if let current = self.content {
-          hadOneofValue = true
-          if case .holdState(let m) = current {v = m}
-        }
-        try decoder.decodeSingularMessageField(value: &v)
-        if let v = v {
-          if hadOneofValue {try decoder.handleConflictingOneOf()}
-          self.content = .holdState(v)
-        }
-      }()
       default: break
       }
     }
@@ -4210,9 +4925,9 @@ extension GroupCall_ParticipantToParticipant.Envelope: SwiftProtobuf.Message, Sw
       try visitor.visitSingularBytesField(value: self.padding, fieldNumber: 1)
     }
     switch self.content {
-    case .encryptedAdminEnvelope?: try {
-      guard case .encryptedAdminEnvelope(let v)? = self.content else { preconditionFailure() }
-      try visitor.visitSingularBytesField(value: v, fieldNumber: 2)
+    case .moderatorEnvelope?: try {
+      guard case .moderatorEnvelope(let v)? = self.content else { preconditionFailure() }
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
     }()
     case .rekey?: try {
       guard case .rekey(let v)? = self.content else { preconditionFailure() }
@@ -4221,10 +4936,6 @@ extension GroupCall_ParticipantToParticipant.Envelope: SwiftProtobuf.Message, Sw
     case .captureState?: try {
       guard case .captureState(let v)? = self.content else { preconditionFailure() }
       try visitor.visitSingularMessageField(value: v, fieldNumber: 4)
-    }()
-    case .holdState?: try {
-      guard case .holdState(let v)? = self.content else { preconditionFailure() }
-      try visitor.visitSingularMessageField(value: v, fieldNumber: 5)
     }()
     case nil: break
     }
@@ -4239,8 +4950,8 @@ extension GroupCall_ParticipantToParticipant.Envelope: SwiftProtobuf.Message, Sw
   }
 }
 
-extension GroupCall_ParticipantToParticipant.Admin: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = GroupCall_ParticipantToParticipant.protoMessageName + ".Admin"
+nonisolated extension GroupCall_ParticipantToParticipant.Moderator: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = GroupCall_ParticipantToParticipant.protoMessageName + ".Moderator"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap()
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -4252,15 +4963,50 @@ extension GroupCall_ParticipantToParticipant.Admin: SwiftProtobuf.Message, Swift
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: GroupCall_ParticipantToParticipant.Admin, rhs: GroupCall_ParticipantToParticipant.Admin) -> Bool {
+  public static func ==(lhs: GroupCall_ParticipantToParticipant.Moderator, rhs: GroupCall_ParticipantToParticipant.Moderator) -> Bool {
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
 }
 
-extension GroupCall_ParticipantToParticipant.Admin.Envelope: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = GroupCall_ParticipantToParticipant.Admin.protoMessageName + ".Envelope"
-  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}report_as_admin\0\u{3}promote_to_admin\0\u{3}force_leave\0\u{3}force_capture_state_off\0\u{3}force_focus\0")
+nonisolated extension GroupCall_ParticipantToParticipant.Moderator.Envelope: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = GroupCall_ParticipantToParticipant.Moderator.protoMessageName + ".Envelope"
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}content\0\u{1}signature\0")
+
+  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularBytesField(value: &self.content) }()
+      case 2: try { try decoder.decodeSingularBytesField(value: &self.signature) }()
+      default: break
+      }
+    }
+  }
+
+  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if !self.content.isEmpty {
+      try visitor.visitSingularBytesField(value: self.content, fieldNumber: 1)
+    }
+    if !self.signature.isEmpty {
+      try visitor.visitSingularBytesField(value: self.signature, fieldNumber: 2)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  public static func ==(lhs: GroupCall_ParticipantToParticipant.Moderator.Envelope, rhs: GroupCall_ParticipantToParticipant.Moderator.Envelope) -> Bool {
+    if lhs.content != rhs.content {return false}
+    if lhs.signature != rhs.signature {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+nonisolated extension GroupCall_ParticipantToParticipant.Moderator.Envelope.Content: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = GroupCall_ParticipantToParticipant.Moderator.Envelope.protoMessageName + ".Content"
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}report_as_moderator\0\u{3}promote_to_moderator\0\u{3}force_leave\0\u{3}force_capture_state_off\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -4269,33 +5015,33 @@ extension GroupCall_ParticipantToParticipant.Admin.Envelope: SwiftProtobuf.Messa
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
       case 1: try {
-        var v: GroupCall_ParticipantToParticipant.Admin.ReportAsAdmin?
+        var v: GroupCall_ParticipantToParticipant.Moderator.ReportAsModerator?
         var hadOneofValue = false
         if let current = self.content {
           hadOneofValue = true
-          if case .reportAsAdmin(let m) = current {v = m}
+          if case .reportAsModerator(let m) = current {v = m}
         }
         try decoder.decodeSingularMessageField(value: &v)
         if let v = v {
           if hadOneofValue {try decoder.handleConflictingOneOf()}
-          self.content = .reportAsAdmin(v)
+          self.content = .reportAsModerator(v)
         }
       }()
       case 2: try {
-        var v: GroupCall_ParticipantToParticipant.Admin.PromoteToAdmin?
+        var v: GroupCall_ParticipantToParticipant.Moderator.PromoteToModerator?
         var hadOneofValue = false
         if let current = self.content {
           hadOneofValue = true
-          if case .promoteToAdmin(let m) = current {v = m}
+          if case .promoteToModerator(let m) = current {v = m}
         }
         try decoder.decodeSingularMessageField(value: &v)
         if let v = v {
           if hadOneofValue {try decoder.handleConflictingOneOf()}
-          self.content = .promoteToAdmin(v)
+          self.content = .promoteToModerator(v)
         }
       }()
       case 3: try {
-        var v: GroupCall_ParticipantToParticipant.Admin.ForceLeave?
+        var v: GroupCall_ParticipantToParticipant.Moderator.ForceLeave?
         var hadOneofValue = false
         if let current = self.content {
           hadOneofValue = true
@@ -4308,7 +5054,7 @@ extension GroupCall_ParticipantToParticipant.Admin.Envelope: SwiftProtobuf.Messa
         }
       }()
       case 4: try {
-        var v: GroupCall_ParticipantToParticipant.Admin.ForceCaptureStateOff?
+        var v: GroupCall_ParticipantToParticipant.Moderator.ForceCaptureStateOff?
         var hadOneofValue = false
         if let current = self.content {
           hadOneofValue = true
@@ -4318,19 +5064,6 @@ extension GroupCall_ParticipantToParticipant.Admin.Envelope: SwiftProtobuf.Messa
         if let v = v {
           if hadOneofValue {try decoder.handleConflictingOneOf()}
           self.content = .forceCaptureStateOff(v)
-        }
-      }()
-      case 5: try {
-        var v: GroupCall_ParticipantToParticipant.Admin.ForceFocus?
-        var hadOneofValue = false
-        if let current = self.content {
-          hadOneofValue = true
-          if case .forceFocus(let m) = current {v = m}
-        }
-        try decoder.decodeSingularMessageField(value: &v)
-        if let v = v {
-          if hadOneofValue {try decoder.handleConflictingOneOf()}
-          self.content = .forceFocus(v)
         }
       }()
       default: break
@@ -4344,12 +5077,12 @@ extension GroupCall_ParticipantToParticipant.Admin.Envelope: SwiftProtobuf.Messa
     // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
     // https://github.com/apple/swift-protobuf/issues/1182
     switch self.content {
-    case .reportAsAdmin?: try {
-      guard case .reportAsAdmin(let v)? = self.content else { preconditionFailure() }
+    case .reportAsModerator?: try {
+      guard case .reportAsModerator(let v)? = self.content else { preconditionFailure() }
       try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
     }()
-    case .promoteToAdmin?: try {
-      guard case .promoteToAdmin(let v)? = self.content else { preconditionFailure() }
+    case .promoteToModerator?: try {
+      guard case .promoteToModerator(let v)? = self.content else { preconditionFailure() }
       try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
     }()
     case .forceLeave?: try {
@@ -4360,24 +5093,20 @@ extension GroupCall_ParticipantToParticipant.Admin.Envelope: SwiftProtobuf.Messa
       guard case .forceCaptureStateOff(let v)? = self.content else { preconditionFailure() }
       try visitor.visitSingularMessageField(value: v, fieldNumber: 4)
     }()
-    case .forceFocus?: try {
-      guard case .forceFocus(let v)? = self.content else { preconditionFailure() }
-      try visitor.visitSingularMessageField(value: v, fieldNumber: 5)
-    }()
     case nil: break
     }
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: GroupCall_ParticipantToParticipant.Admin.Envelope, rhs: GroupCall_ParticipantToParticipant.Admin.Envelope) -> Bool {
+  public static func ==(lhs: GroupCall_ParticipantToParticipant.Moderator.Envelope.Content, rhs: GroupCall_ParticipantToParticipant.Moderator.Envelope.Content) -> Bool {
     if lhs.content != rhs.content {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
 }
 
-extension GroupCall_ParticipantToParticipant.Admin.ReportAsAdmin: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = GroupCall_ParticipantToParticipant.Admin.protoMessageName + ".ReportAsAdmin"
+nonisolated extension GroupCall_ParticipantToParticipant.Moderator.ReportAsModerator: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = GroupCall_ParticipantToParticipant.Moderator.protoMessageName + ".ReportAsModerator"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap()
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -4389,15 +5118,15 @@ extension GroupCall_ParticipantToParticipant.Admin.ReportAsAdmin: SwiftProtobuf.
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: GroupCall_ParticipantToParticipant.Admin.ReportAsAdmin, rhs: GroupCall_ParticipantToParticipant.Admin.ReportAsAdmin) -> Bool {
+  public static func ==(lhs: GroupCall_ParticipantToParticipant.Moderator.ReportAsModerator, rhs: GroupCall_ParticipantToParticipant.Moderator.ReportAsModerator) -> Bool {
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
 }
 
-extension GroupCall_ParticipantToParticipant.Admin.PromoteToAdmin: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = GroupCall_ParticipantToParticipant.Admin.protoMessageName + ".PromoteToAdmin"
-  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}gcak\0")
+nonisolated extension GroupCall_ParticipantToParticipant.Moderator.PromoteToModerator: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = GroupCall_ParticipantToParticipant.Moderator.protoMessageName + ".PromoteToModerator"
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}gcmk\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -4405,28 +5134,28 @@ extension GroupCall_ParticipantToParticipant.Admin.PromoteToAdmin: SwiftProtobuf
       // allocates stack space for every case branch when no optimizations are
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
-      case 1: try { try decoder.decodeSingularBytesField(value: &self.gcak) }()
+      case 1: try { try decoder.decodeSingularBytesField(value: &self.gcmk) }()
       default: break
       }
     }
   }
 
   public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    if !self.gcak.isEmpty {
-      try visitor.visitSingularBytesField(value: self.gcak, fieldNumber: 1)
+    if !self.gcmk.isEmpty {
+      try visitor.visitSingularBytesField(value: self.gcmk, fieldNumber: 1)
     }
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: GroupCall_ParticipantToParticipant.Admin.PromoteToAdmin, rhs: GroupCall_ParticipantToParticipant.Admin.PromoteToAdmin) -> Bool {
-    if lhs.gcak != rhs.gcak {return false}
+  public static func ==(lhs: GroupCall_ParticipantToParticipant.Moderator.PromoteToModerator, rhs: GroupCall_ParticipantToParticipant.Moderator.PromoteToModerator) -> Bool {
+    if lhs.gcmk != rhs.gcmk {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
 }
 
-extension GroupCall_ParticipantToParticipant.Admin.ForceLeave: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = GroupCall_ParticipantToParticipant.Admin.protoMessageName + ".ForceLeave"
+nonisolated extension GroupCall_ParticipantToParticipant.Moderator.ForceLeave: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = GroupCall_ParticipantToParticipant.Moderator.protoMessageName + ".ForceLeave"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap()
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -4438,14 +5167,14 @@ extension GroupCall_ParticipantToParticipant.Admin.ForceLeave: SwiftProtobuf.Mes
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: GroupCall_ParticipantToParticipant.Admin.ForceLeave, rhs: GroupCall_ParticipantToParticipant.Admin.ForceLeave) -> Bool {
+  public static func ==(lhs: GroupCall_ParticipantToParticipant.Moderator.ForceLeave, rhs: GroupCall_ParticipantToParticipant.Moderator.ForceLeave) -> Bool {
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
 }
 
-extension GroupCall_ParticipantToParticipant.Admin.ForceCaptureStateOff: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = GroupCall_ParticipantToParticipant.Admin.protoMessageName + ".ForceCaptureStateOff"
+nonisolated extension GroupCall_ParticipantToParticipant.Moderator.ForceCaptureStateOff: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = GroupCall_ParticipantToParticipant.Moderator.protoMessageName + ".ForceCaptureStateOff"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}device\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -4467,48 +5196,18 @@ extension GroupCall_ParticipantToParticipant.Admin.ForceCaptureStateOff: SwiftPr
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  public static func ==(lhs: GroupCall_ParticipantToParticipant.Admin.ForceCaptureStateOff, rhs: GroupCall_ParticipantToParticipant.Admin.ForceCaptureStateOff) -> Bool {
+  public static func ==(lhs: GroupCall_ParticipantToParticipant.Moderator.ForceCaptureStateOff, rhs: GroupCall_ParticipantToParticipant.Moderator.ForceCaptureStateOff) -> Bool {
     if lhs.device != rhs.device {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
 }
 
-extension GroupCall_ParticipantToParticipant.Admin.ForceCaptureStateOff.Device: SwiftProtobuf._ProtoNameProviding {
+nonisolated extension GroupCall_ParticipantToParticipant.Moderator.ForceCaptureStateOff.Device: SwiftProtobuf._ProtoNameProviding {
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0ALL\0\u{1}MICROPHONE\0\u{1}CAMERA\0\u{1}SCREEN\0")
 }
 
-extension GroupCall_ParticipantToParticipant.Admin.ForceFocus: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = GroupCall_ParticipantToParticipant.Admin.protoMessageName + ".ForceFocus"
-  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}participant_id\0")
-
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
-    while let fieldNumber = try decoder.nextFieldNumber() {
-      // The use of inline closures is to circumvent an issue where the compiler
-      // allocates stack space for every case branch when no optimizations are
-      // enabled. https://github.com/apple/swift-protobuf/issues/1034
-      switch fieldNumber {
-      case 1: try { try decoder.decodeSingularUInt32Field(value: &self.participantID) }()
-      default: break
-      }
-    }
-  }
-
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    if self.participantID != 0 {
-      try visitor.visitSingularUInt32Field(value: self.participantID, fieldNumber: 1)
-    }
-    try unknownFields.traverse(visitor: &visitor)
-  }
-
-  public static func ==(lhs: GroupCall_ParticipantToParticipant.Admin.ForceFocus, rhs: GroupCall_ParticipantToParticipant.Admin.ForceFocus) -> Bool {
-    if lhs.participantID != rhs.participantID {return false}
-    if lhs.unknownFields != rhs.unknownFields {return false}
-    return true
-  }
-}
-
-extension GroupCall_ParticipantToParticipant.MediaKey: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension GroupCall_ParticipantToParticipant.MediaKey: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = GroupCall_ParticipantToParticipant.protoMessageName + ".MediaKey"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}epoch\0\u{3}ratchet_counter\0\u{1}pcmk\0")
 
@@ -4548,7 +5247,7 @@ extension GroupCall_ParticipantToParticipant.MediaKey: SwiftProtobuf.Message, Sw
   }
 }
 
-extension GroupCall_ParticipantToParticipant.CaptureState: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension GroupCall_ParticipantToParticipant.CaptureState: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = GroupCall_ParticipantToParticipant.protoMessageName + ".CaptureState"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}microphone\0\u{1}camera\0\u{1}screen\0")
 
@@ -4632,7 +5331,7 @@ extension GroupCall_ParticipantToParticipant.CaptureState: SwiftProtobuf.Message
   }
 }
 
-extension GroupCall_ParticipantToParticipant.CaptureState.Microphone: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension GroupCall_ParticipantToParticipant.CaptureState.Microphone: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = GroupCall_ParticipantToParticipant.CaptureState.protoMessageName + ".Microphone"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}on\0\u{1}off\0")
 
@@ -4699,7 +5398,7 @@ extension GroupCall_ParticipantToParticipant.CaptureState.Microphone: SwiftProto
   }
 }
 
-extension GroupCall_ParticipantToParticipant.CaptureState.Camera: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension GroupCall_ParticipantToParticipant.CaptureState.Camera: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = GroupCall_ParticipantToParticipant.CaptureState.protoMessageName + ".Camera"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}on\0\u{1}off\0")
 
@@ -4766,7 +5465,7 @@ extension GroupCall_ParticipantToParticipant.CaptureState.Camera: SwiftProtobuf.
   }
 }
 
-extension GroupCall_ParticipantToParticipant.CaptureState.Screen: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension GroupCall_ParticipantToParticipant.CaptureState.Screen: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = GroupCall_ParticipantToParticipant.CaptureState.protoMessageName + ".Screen"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}on\0\u{1}off\0")
 
@@ -4833,7 +5532,7 @@ extension GroupCall_ParticipantToParticipant.CaptureState.Screen: SwiftProtobuf.
   }
 }
 
-extension GroupCall_ParticipantToParticipant.CaptureState.Screen.On: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension GroupCall_ParticipantToParticipant.CaptureState.Screen.On: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = GroupCall_ParticipantToParticipant.CaptureState.Screen.protoMessageName + ".On"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}started_at\0")
 
@@ -4858,25 +5557,6 @@ extension GroupCall_ParticipantToParticipant.CaptureState.Screen.On: SwiftProtob
 
   public static func ==(lhs: GroupCall_ParticipantToParticipant.CaptureState.Screen.On, rhs: GroupCall_ParticipantToParticipant.CaptureState.Screen.On) -> Bool {
     if lhs.startedAt != rhs.startedAt {return false}
-    if lhs.unknownFields != rhs.unknownFields {return false}
-    return true
-  }
-}
-
-extension GroupCall_ParticipantToParticipant.HoldState: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  public static let protoMessageName: String = GroupCall_ParticipantToParticipant.protoMessageName + ".HoldState"
-  public static let _protobuf_nameMap = SwiftProtobuf._NameMap()
-
-  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
-    // Load everything into unknown fields
-    while try decoder.nextFieldNumber() != nil {}
-  }
-
-  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    try unknownFields.traverse(visitor: &visitor)
-  }
-
-  public static func ==(lhs: GroupCall_ParticipantToParticipant.HoldState, rhs: GroupCall_ParticipantToParticipant.HoldState) -> Bool {
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

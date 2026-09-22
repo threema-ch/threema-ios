@@ -4,7 +4,7 @@ import Photos
 import ThreemaMacros
 import UIKit
 
-@objc public protocol PPAssetsActionHelperDelegate: AnyObject {
+protocol PPAssetsActionHelperDelegate: AnyObject {
     /// Called when a user dismisses a picker by tapping cancel or background.
     /// Implementation is optional.
     /// - Parameter picker: Picker Controller that was dismissed.
@@ -62,11 +62,11 @@ extension PPAssetsActionHelperDelegate {
     func assetsActionHelperDidSelectScanDocument(_ picker: PPAssetsActionHelper) { }
 }
 
-public final class PPAssetsActionHelper: NSObject {
+final class PPAssetsActionHelper: NSObject {
     
-    @objc public weak var delegate: PPAssetsActionHelperDelegate?
+    weak var delegate: PPAssetsActionHelperDelegate?
         
-    override public required init() {
+    override required init() {
         super.init()
     }
     
@@ -89,7 +89,7 @@ public final class PPAssetsActionHelper: NSObject {
         isPhone() && isSizeOrLarger(height: .Inches_4_7)
     }
     
-    @objc public func buildAction() -> PPAssetsActionController {
+    func buildAction() -> PPAssetsActionController {
         var options = [PPOption]()
         
         let shareLocationImage = UIImage(
@@ -212,12 +212,12 @@ public final class PPAssetsActionHelper: NSObject {
 // MARK: - PPAssetsActionControllerDelegate
 
 extension PPAssetsActionHelper: PPAssetsActionControllerDelegate {
-    public func assetsPickerDidCancel(_ picker: PPAssetsActionController) {
+    func assetsPickerDidCancel(_ picker: PPAssetsActionController) {
         delegate?.assetsActionHelperDidCancel(self)
         print("assetsPickerDidCancel")
     }
     
-    public func assetsPicker(_ picker: PPAssetsActionController, didFinishPicking media: [MediaProvider]) {
+    func assetsPicker(_ picker: PPAssetsActionController, didFinishPicking media: [MediaProvider]) {
         var mediaArray = [Any]()
         
         for m in media {
@@ -236,11 +236,11 @@ extension PPAssetsActionHelper: PPAssetsActionControllerDelegate {
         print("assetsPicker didFinishPicking with \(media)")
     }
     
-    public func assetsPicker(_ picker: PPAssetsActionController, didSnapImage image: UIImage) { }
+    func assetsPicker(_ picker: PPAssetsActionController, didSnapImage image: UIImage) { }
     
-    public func assetsPicker(_ picker: PPAssetsActionController, didSnapVideo videoURL: URL) { }
+    func assetsPicker(_ picker: PPAssetsActionController, didSnapVideo videoURL: URL) { }
     
-    public func assetsPickerDidSelectOwnOption(
+    func assetsPickerDidSelectOwnOption(
         _ picker: PPAssetsActionController,
         didFinishPicking media: [MediaProvider]
     ) {
@@ -262,7 +262,7 @@ extension PPAssetsActionHelper: PPAssetsActionControllerDelegate {
         print("assetsPicker didSelectOwnOption")
     }
     
-    public func assetsPickerDidSelectOwnSnapButton(
+    func assetsPickerDidSelectOwnSnapButton(
         _ picker: PPAssetsActionController,
         didFinishPicking media: [MediaProvider]
     ) {
@@ -284,7 +284,7 @@ extension PPAssetsActionHelper: PPAssetsActionControllerDelegate {
         print("assetsPicker didSelectOwnSnapButton")
     }
     
-    public func assetsPickerDidSelectLiveCameraCell(_ picker: PPAssetsActionController) {
+    func assetsPickerDidSelectLiveCameraCell(_ picker: PPAssetsActionController) {
         delegate?.assetsActionHelperDidSelectLiveCameraCell(self)
     }
 }

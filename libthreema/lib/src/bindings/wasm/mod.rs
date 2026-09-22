@@ -1,6 +1,9 @@
 //! WASM (FFI) bindings.
-use logging::{LogDispatcher, LogLevel, PanicDispatcher, init_logging, init_panic_dispatcher};
 use wasm_bindgen::prelude::*;
+
+use crate::bindings::wasm::utils::logging::{
+    LogDispatcher, LogLevel, PanicDispatcher, init_logging, init_panic_dispatcher,
+};
 
 // The crypto dependencies require getrandom and we need to explicitly list it as a dependency
 // when compiling for WASM since it requires the feature 'js'. If we don't declare this here,
@@ -9,14 +12,14 @@ mod external_crate_false_positives {
     use getrandom as _;
 }
 
-pub mod config;
-pub mod create_identity;
+pub mod common;
 pub mod crypto;
+pub mod csp_e2e;
 pub mod d2d_rendezvous;
 pub mod https;
-pub mod logging;
 pub mod remote_secret;
-pub mod work_properties;
+pub mod utils;
+pub mod work;
 
 /// Initialise libthreema.
 ///

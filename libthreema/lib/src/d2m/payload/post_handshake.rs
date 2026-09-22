@@ -10,7 +10,7 @@ use crate::{
         D2mProtocolError, D2mProtocolInternalEncodingErrorCause, D2mProtocolInternalErrorCause,
         payload::{PayloadDecoder, PayloadEncoder, ReflectFlags},
     },
-    protobuf::d2m as protobuf,
+    protobuf,
     utils::{
         bytes::{ByteReader as _, ByteWriter, OwnedVecByteReader},
         debug::{Name as _, debug_slice_length},
@@ -170,22 +170,22 @@ pub struct AugmentedDeviceInfo {
     pub encrypted_device_info: Vec<u8>,
 
     /// Expiration policy of the device.
-    pub device_slot_expiration_policy: Option<protobuf::DeviceSlotExpirationPolicy>,
+    pub device_slot_expiration_policy: Option<protobuf::d2m::DeviceSlotExpirationPolicy>,
 
     /// Connection state of the device.
-    pub connection_state: Option<protobuf::devices_info::augmented_device_info::ConnectionState>,
+    pub connection_state: Option<protobuf::d2m::devices_info::augmented_device_info::ConnectionState>,
 }
-impl From<protobuf::devices_info::AugmentedDeviceInfo> for AugmentedDeviceInfo {
+impl From<protobuf::d2m::devices_info::AugmentedDeviceInfo> for AugmentedDeviceInfo {
     fn from(
-        protobuf::devices_info::AugmentedDeviceInfo {
+        protobuf::d2m::devices_info::AugmentedDeviceInfo {
             encrypted_device_info,
             device_slot_expiration_policy,
             connection_state,
-        }: protobuf::devices_info::AugmentedDeviceInfo,
+        }: protobuf::d2m::devices_info::AugmentedDeviceInfo,
     ) -> Self {
         Self {
             encrypted_device_info,
-            device_slot_expiration_policy: protobuf::DeviceSlotExpirationPolicy::try_from(
+            device_slot_expiration_policy: protobuf::d2m::DeviceSlotExpirationPolicy::try_from(
                 device_slot_expiration_policy,
             )
             .ok(),
@@ -197,11 +197,11 @@ impl From<protobuf::devices_info::AugmentedDeviceInfo> for AugmentedDeviceInfo {
 /// Device information of all devices.
 #[derive(Debug)]
 pub struct DevicesInfo(pub HashMap<D2xDeviceId, AugmentedDeviceInfo>);
-impl From<protobuf::DevicesInfo> for DevicesInfo {
+impl From<protobuf::d2m::DevicesInfo> for DevicesInfo {
     fn from(
-        protobuf::DevicesInfo {
+        protobuf::d2m::DevicesInfo {
             augmented_device_info,
-        }: protobuf::DevicesInfo,
+        }: protobuf::d2m::DevicesInfo,
     ) -> Self {
         Self(
             augmented_device_info
@@ -224,12 +224,12 @@ pub struct TransactionRejected {
     #[educe(Debug(method(debug_slice_length)))]
     pub encrypted_scope: Vec<u8>,
 }
-impl From<protobuf::TransactionRejected> for TransactionRejected {
+impl From<protobuf::d2m::TransactionRejected> for TransactionRejected {
     fn from(
-        protobuf::TransactionRejected {
+        protobuf::d2m::TransactionRejected {
             device_id,
             encrypted_scope,
-        }: protobuf::TransactionRejected,
+        }: protobuf::d2m::TransactionRejected,
     ) -> Self {
         Self {
             device_id: D2xDeviceId(device_id),
@@ -254,12 +254,12 @@ pub struct TransactionEnded {
     #[educe(Debug(method(debug_slice_length)))]
     pub encrypted_scope: Vec<u8>,
 }
-impl From<protobuf::TransactionEnded> for TransactionEnded {
+impl From<protobuf::d2m::TransactionEnded> for TransactionEnded {
     fn from(
-        protobuf::TransactionEnded {
+        protobuf::d2m::TransactionEnded {
             device_id,
             encrypted_scope,
-        }: protobuf::TransactionEnded,
+        }: protobuf::d2m::TransactionEnded,
     ) -> Self {
         Self {
             device_id: D2xDeviceId(device_id),
@@ -328,57 +328,59 @@ impl PayloadDecoder for IncomingPayload {
 
         // Create the corresponding variant by decoding the payload accordingly
         Ok(match r#type {
-            IncomingPayloadType::Proxy => IncomingPayload::Proxy(reader.read_remaining_owned()),
+            IncomingPayloadType::Proxy => Self::Proxy(reader.read_remaining_owned()),
 
             IncomingPayloadType::ReflectionQueueDry => {
-                let protobuf::ReflectionQueueDry {} =
-                    Self::decode_protobuf::<protobuf::ReflectionQueueDry>(reader)?;
-                IncomingPayload::ReflectionQueueDry
+                let protobuf::d2m::ReflectionQueueDry {} =
+                    Self::decode_protobuf::<protobuf::d2m::ReflectionQueueDry>(reader)?;
+                Self::ReflectionQueueDry
             },
 
             IncomingPayloadType::RolePromotedToLeader => {
-                let protobuf::RolePromotedToLeader {} =
-                    Self::decode_protobuf::<protobuf::RolePromotedToLeader>(reader)?;
-                IncomingPayload::RolePromotedToLeader
+                let protobuf::d2m::RolePromotedToLeader {} =
+                    Self::decode_protobuf::<protobuf::d2m::RolePromotedToLeader>(reader)?;
+                Self::RolePromotedToLeader
             },
 
-            IncomingPayloadType::DevicesInfo => IncomingPayload::DevicesInfo(DevicesInfo::from(
-                Self::decode_protobuf::<protobuf::DevicesInfo>(reader)?,
-            )),
+            IncomingPayloadType::DevicesInfo => {
+                Self::DevicesInfo(DevicesInfo::from(Self::decode_protobuf::<
+                    protobuf::d2m::DevicesInfo,
+                >(reader)?))
+            },
 
             IncomingPayloadType::DropDeviceAck => {
-                let protobuf::DropDeviceAck { device_id } =
-                    Self::decode_protobuf::<protobuf::DropDeviceAck>(reader)?;
-                IncomingPayload::DropDeviceAck(D2xDeviceId(device_id))
+                let protobuf::d2m::DropDeviceAck { device_id } =
+                    Self::decode_protobuf::<protobuf::d2m::DropDeviceAck>(reader)?;
+                Self::DropDeviceAck(D2xDeviceId(device_id))
             },
 
             IncomingPayloadType::BeginTransactionAck => {
-                let protobuf::BeginTransactionAck {} =
-                    Self::decode_protobuf::<protobuf::BeginTransactionAck>(reader)?;
-                IncomingPayload::BeginTransactionAck
+                let protobuf::d2m::BeginTransactionAck {} =
+                    Self::decode_protobuf::<protobuf::d2m::BeginTransactionAck>(reader)?;
+                Self::BeginTransactionAck
             },
 
             IncomingPayloadType::CommitTransactionAck => {
-                let protobuf::CommitTransactionAck {} =
-                    Self::decode_protobuf::<protobuf::CommitTransactionAck>(reader)?;
-                IncomingPayload::CommitTransactionAck
+                let protobuf::d2m::CommitTransactionAck {} =
+                    Self::decode_protobuf::<protobuf::d2m::CommitTransactionAck>(reader)?;
+                Self::CommitTransactionAck
             },
 
             IncomingPayloadType::TransactionRejected => {
-                IncomingPayload::TransactionRejected(TransactionRejected::from(Self::decode_protobuf::<
-                    protobuf::TransactionRejected,
+                Self::TransactionRejected(TransactionRejected::from(Self::decode_protobuf::<
+                    protobuf::d2m::TransactionRejected,
                 >(reader)?))
             },
 
             IncomingPayloadType::TransactionEnded => {
-                IncomingPayload::TransactionEnded(TransactionEnded::from(Self::decode_protobuf::<
-                    protobuf::TransactionEnded,
+                Self::TransactionEnded(TransactionEnded::from(Self::decode_protobuf::<
+                    protobuf::d2m::TransactionEnded,
                 >(reader)?))
             },
 
-            IncomingPayloadType::ReflectAck => IncomingPayload::ReflectAck(ReflectAck::decode(reader)?),
+            IncomingPayloadType::ReflectAck => Self::ReflectAck(ReflectAck::decode(reader)?),
 
-            IncomingPayloadType::Reflected => IncomingPayload::Reflected(Reflected::decode(reader)?),
+            IncomingPayloadType::Reflected => Self::Reflected(Reflected::decode(reader)?),
         })
     }
 }
@@ -405,7 +407,7 @@ enum OutgoingPayloadType {
 
 /// Acquires a device group lock for an atomic operation shared across the device group.
 ///
-/// See [`protobuf::BeginTransaction`] for further details.
+/// See [`protobuf::d2m::BeginTransaction`] for further details.
 #[derive(Educe)]
 #[educe(Debug)]
 pub struct BeginTransaction {
@@ -419,7 +421,7 @@ pub struct BeginTransaction {
     /// be used.
     pub ttl: Option<Duration>,
 }
-impl TryFrom<BeginTransaction> for protobuf::BeginTransaction {
+impl TryFrom<BeginTransaction> for protobuf::d2m::BeginTransaction {
     type Error = D2mProtocolError;
 
     fn try_from(BeginTransaction { encrypted_scope, ttl }: BeginTransaction) -> Result<Self, Self::Error> {
@@ -441,7 +443,7 @@ pub struct SharedDeviceData {
     #[educe(Debug(method(debug_slice_length)))]
     pub encrypted_shared_device_data: Vec<u8>,
 }
-impl From<SharedDeviceData> for protobuf::SetSharedDeviceData {
+impl From<SharedDeviceData> for protobuf::d2m::SetSharedDeviceData {
     fn from(
         SharedDeviceData {
             encrypted_shared_device_data,
@@ -553,14 +555,14 @@ pub enum OutgoingPayload {
 impl PayloadEncoder for OutgoingPayload {
     fn type_and_length(&self) -> (u8, Option<usize>) {
         match self {
-            OutgoingPayload::Proxy(data) => (OutgoingPayloadType::Proxy as u8, Some(data.len())),
-            OutgoingPayload::GetDevicesInfo => (OutgoingPayloadType::GetDevicesInfo as u8, None),
-            OutgoingPayload::DropDevice(_) => (OutgoingPayloadType::DropDevice as u8, None),
-            OutgoingPayload::BeginTransaction(_) => (OutgoingPayloadType::BeginTransaction as u8, None),
-            OutgoingPayload::SetSharedDeviceData(_) => (OutgoingPayloadType::SetSharedDeviceData as u8, None),
-            OutgoingPayload::CommitTransaction => (OutgoingPayloadType::CommitTransaction as u8, None),
-            OutgoingPayload::Reflect(reflect) => (OutgoingPayloadType::Reflect as u8, Some(reflect.length())),
-            OutgoingPayload::ReflectedAck(_) => (
+            Self::Proxy(data) => (OutgoingPayloadType::Proxy as u8, Some(data.len())),
+            Self::GetDevicesInfo => (OutgoingPayloadType::GetDevicesInfo as u8, None),
+            Self::DropDevice(_) => (OutgoingPayloadType::DropDevice as u8, None),
+            Self::BeginTransaction(_) => (OutgoingPayloadType::BeginTransaction as u8, None),
+            Self::SetSharedDeviceData(_) => (OutgoingPayloadType::SetSharedDeviceData as u8, None),
+            Self::CommitTransaction => (OutgoingPayloadType::CommitTransaction as u8, None),
+            Self::Reflect(reflect) => (OutgoingPayloadType::Reflect as u8, Some(reflect.length())),
+            Self::ReflectedAck(_) => (
                 OutgoingPayloadType::ReflectedAck as u8,
                 Some(ReflectedAck::LENGTH),
             ),
@@ -570,37 +572,37 @@ impl PayloadEncoder for OutgoingPayload {
     fn encode_into<TWriter: ByteWriter>(self, writer: &mut TWriter) -> Result<(), D2mProtocolError> {
         let name = self.variant_name();
         match self {
-            OutgoingPayload::Proxy(data) => writer.write(&data).map_err(|error| {
+            Self::Proxy(data) => writer.write(&data).map_err(|error| {
                 D2mProtocolError::InternalError(D2mProtocolInternalErrorCause::EncodingFailed {
                     name,
                     source: D2mProtocolInternalEncodingErrorCause::ByteWriterError(error),
                 })
             }),
 
-            OutgoingPayload::GetDevicesInfo => Self::encode_protobuf(protobuf::GetDevicesInfo {}, writer),
+            Self::GetDevicesInfo => Self::encode_protobuf(protobuf::d2m::GetDevicesInfo {}, writer),
 
-            OutgoingPayload::DropDevice(device_id) => Self::encode_protobuf(
-                protobuf::DropDevice {
+            Self::DropDevice(device_id) => Self::encode_protobuf(
+                protobuf::d2m::DropDevice {
                     device_id: device_id.0,
                 },
                 writer,
             ),
 
-            OutgoingPayload::BeginTransaction(begin_transaction) => {
-                Self::encode_protobuf(protobuf::BeginTransaction::try_from(begin_transaction)?, writer)
-            },
+            Self::BeginTransaction(begin_transaction) => Self::encode_protobuf(
+                protobuf::d2m::BeginTransaction::try_from(begin_transaction)?,
+                writer,
+            ),
 
-            OutgoingPayload::SetSharedDeviceData(shared_device_data) => {
-                Self::encode_protobuf(protobuf::SetSharedDeviceData::from(shared_device_data), writer)
-            },
+            Self::SetSharedDeviceData(shared_device_data) => Self::encode_protobuf(
+                protobuf::d2m::SetSharedDeviceData::from(shared_device_data),
+                writer,
+            ),
 
-            OutgoingPayload::CommitTransaction => {
-                Self::encode_protobuf(protobuf::CommitTransaction {}, writer)
-            },
+            Self::CommitTransaction => Self::encode_protobuf(protobuf::d2m::CommitTransaction {}, writer),
 
-            OutgoingPayload::Reflect(reflect) => reflect.encode_into(writer),
+            Self::Reflect(reflect) => reflect.encode_into(writer),
 
-            OutgoingPayload::ReflectedAck(reflected_ack) => reflected_ack.encode_into(writer),
+            Self::ReflectedAck(reflected_ack) => reflected_ack.encode_into(writer),
         }
     }
 }

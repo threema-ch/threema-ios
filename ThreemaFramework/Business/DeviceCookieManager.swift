@@ -69,7 +69,7 @@ final class DeviceCookieManager: NSObject {
         return false
     }
 
-    @objc static func deleteDeviceCookie() {
+    static func deleteDeviceCookie() {
         do {
             try KeychainManager.deleteDeviceCookie()
         }

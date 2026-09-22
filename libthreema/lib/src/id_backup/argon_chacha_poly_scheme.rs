@@ -7,16 +7,11 @@
 //! AHCV-YVN5-MZF6-H47E-BFDA-XPQ4-523T-QEJ7-Q7TB-5O2G-U3LM-IPAY-PMO3-
 //! RWYJ-FZ5F-VRAH-5MHT-IP2E-ODYI-GXW4-4NAF-EOCO-OZPR-NZK4-CHVE-LYVL
 //! ```
+use libthreema_dependencies::crypto::{aead::AeadInPlace as _, argon2, chacha20, cipher::KeyInit as _};
 #[cfg(all(test, feature = "slow_tests"))]
 use libthreema_macros::concat_fixed_bytes;
 
 use super::{BackupKey, BackupVersion, IdentityBackupData, IdentityBackupError, Salt};
-use crate::crypto::{
-    aead::AeadInPlace as _,
-    argon2::{Argon2, Argon2id, Params},
-    chacha20::ChaCha20Poly1305,
-    cipher::KeyInit as _,
-};
 
 // Authentication tag length
 const TAG_LENGTH: usize = 16;
@@ -36,10 +31,10 @@ const ENCRYPTED_LENGTH: usize = ASSOCIATED_DATA_LENGTH + ENCRYPTED_DATA_LENGTH;
 /// Derive the symmetric backup encryption key.
 fn derive_key(password: &str, salt: Salt) -> Result<BackupKey, IdentityBackupError> {
     let mut key = [0; BackupKey::LENGTH];
-    Argon2::new(
-        Argon2id,
+    argon2::Argon2::new(
+        argon2::Argon2id,
         argon2::Version::V0x13,
-        Params::new(
+        argon2::Params::new(
             128 * 1024,              // 128 MiB memory
             8,                       // iterations
             1,                       // No parallelization
@@ -63,7 +58,7 @@ pub(super) fn encrypt(
     // Encrypt backup data
     let salt = Salt::random();
     let key = derive_key(password, salt)?;
-    let cipher = ChaCha20Poly1305::new(&key.0.into());
+    let cipher = chacha20::ChaCha20Poly1305::new(&key.0.into());
     let associated_data: [u8; ASSOCIATED_DATA_LENGTH] =
         concat_fixed_bytes!([BackupVersion::ArgonChachaPolyV1 as u8], salt.0);
     cipher
@@ -104,7 +99,7 @@ pub(super) fn decrypt(
                     .expect("Unable to extract salt from associated data"),
             )?,
         )?;
-        ChaCha20Poly1305::new(&key.0.into())
+        chacha20::ChaCha20Poly1305::new(&key.0.into())
             .decrypt_in_place(&NONCE.into(), &associated_data, &mut encrypted_data)
             .map_err(|_| IdentityBackupError::DecryptionFailed)?;
         encrypted_data
@@ -194,7 +189,7 @@ mod tests {
     #[test]
     fn invalid_backup_data() {
         let backup_data = IdentityBackupData {
-            threema_id: ThreemaId::predefined(*b"!$%&/()="),
+            identity: ThreemaId::predefined(*b"!$%&/()="),
             client_key: ClientKey::from([0_u8; ClientKey::LENGTH]),
         };
 
@@ -223,7 +218,7 @@ mod tests {
         let encrypted_backup = encrypt(PASSWORD, &backup_data)?;
         let decrypted_backup = decrypt(PASSWORD, encrypted_backup.to_vec())?;
 
-        assert_eq!(backup_data.threema_id, decrypted_backup.threema_id);
+        assert_eq!(backup_data.identity, decrypted_backup.identity);
         assert_eq!(
             backup_data.client_key.as_bytes(),
             decrypted_backup.client_key.as_bytes()
@@ -240,7 +235,7 @@ mod tests {
             RWYJ-FZ5F-VRAH-5MHT-IP2E-ODYI-GXW4-4NAF-EOCO-OZPR-NZK4-CHVE-LYVL";
         let decrypted_backup = decrypt(PASSWORD, decode_chunked_base32(encrypted_backup)?)?;
 
-        assert_eq!(decrypted_backup.threema_id, backup_data.threema_id);
+        assert_eq!(decrypted_backup.identity, backup_data.identity);
         assert_eq!(
             decrypted_backup.client_key.as_bytes(),
             backup_data.client_key.as_bytes(),

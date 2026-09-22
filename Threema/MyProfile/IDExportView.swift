@@ -52,7 +52,7 @@ struct IDExportView: View {
                             .frame(maxWidth: 350)
                             .padding()
                             .onTapGesture {
-                                UIPasteboard.general.string = exportString
+                                UIPasteboard.general.set(string: exportString, sensitiveContent: .secretAllDevices)
                                 NotificationPresenterWrapper.shared.present(type: .copySuccess)
                             }
                         Divider()

@@ -6,12 +6,13 @@
 //
 // There are two primary variants which use the same technology underneath:
 //
-// - A group call scoped to a (Threema) group is simple and easy to use. It does
-//   not have any advanced functionality such as administration or external
-//   guests. Only one group call is intended to run within a group.
+// - A group call is scoped to a (Threema) group. It does not have any advanced
+//   functionality such as moderation or external guests. Only one group call is
+//   intended to run within a group.
 // - A conference call is a more advanced type of group call and delivers more
-//   advanced functionality such as administration. Concrete specification
-//   pending.
+//   advanced functionality such as moderation and join policies (e.g. requiring
+//   moderator approval to join). It optionally also allows for external guests
+//   to join.
 //
 // The theoretical maximum amount of participants is 790 (due to the way we
 // derive WebRTC MIDs) but the practical limit is way below that.
@@ -23,8 +24,8 @@
 // - `GCNHAK`: Group Call Normal Handshake Authentication Key
 // - `GCHK`: Group Call Handshake Key
 // - `GCSK`: Group Call State Key
-// - `GCAK`: Group Call Administrator Key, only used for key derivation
-// - `GCAMK`: Group Call Administrator Message Key
+// - `GCMK`: Group Call Moderation Key, only used for key derivation
+// - `GCMMK`: Group Call Moderator Message Key
 // - `PCK`: Participant Call Key
 // - `PCMK`: Participant Call Media Key, only used for key derivation
 // - `PCMK`': Ratchet iteration of PCMK
@@ -63,7 +64,7 @@
 //     GCHK = BLAKE2b(key=GCK, salt='h', personal='3ma-call')
 //     GCSK = BLAKE2b(key=GCK, salt='s', personal='3ma-call')
 //
-//     GCAMK = BLAKE2b(key=GCAK, salt='am', personal='3ma-call', input=GCKH)
+//     GCMMK = BLAKE2b(key=GCMK, salt='mm', personal='3ma-call', input=GCKH)
 //
 //     PCMK' = BLAKE2b(key=PCMK, salt="m'", personal='3ma-call')
 //     PCMFK = BLAKE2b(key=PCMK, salt='mf', personal='3ma-call', input=GCKH)
@@ -85,13 +86,29 @@
 //         || utf8-encode(GroupCallStart.sfu_base_url),
 //     )
 //
+// For conference calls, the Group Call ID is derived by running BLAKE2b on
+// specific data provided by the `ConferenceCallInvite`:
+//
+//     group-call-id = BLAKE2b(
+//       out-length=32,
+//       salt='ic',
+//       personal='3ma-call',
+//       input=
+//         || u8(ConferenceCallInvite.protocol_version)
+//         || ConferenceCallInvite.gck
+//         || ConferenceCallInvite.gcmmk_public
+//         || u8(ConferenceCallInvite.guest_policy),
+//         || u8(ConferenceCallInvite.join_policy),
+//         || utf8-encode(ConferenceCallInvite.sfu_base_url)
+//     )
+//
 // ## Protocol Flow
 //
 // ### Obtain SFU Information
 //
-// Before a call can be joined or created, SFU information and an authentication
-// token need to be obtained via the Directory Server API. The obtained
-// information includes the following items referenced in subsequent sections:
+// Before a call can be created, SFU information and an authentication token
+// need to be obtained via the Directory Server API. The obtained information
+// includes the following items referenced in subsequent sections:
 //
 // - _SFU Base URL_: Base URL used to create and distribute new calls.
 // - _Allowed SFU Hostname Suffixes_: A set of allowed hostname suffixes to be
@@ -102,6 +119,29 @@
 // `https` and the included hostname ends with one of the _Allowed SFU Hostname
 // Suffixes_.
 //
+// ### Call Peeking
+//
+// The following steps are defined as the _Group Call Peek Steps_:
+//
+// 1. Let `call` be the targeted group call.
+// 2. Let `token` be the provided SFU token or be explicitly undefined (for
+//    external guest usage).
+// 3. If the user is currently participating in `call`, abort these steps and
+//    return the current status.
+// 4. _Peek_ the `call` via a `SfuHttpRequest.Peek` request with `token`. If
+//    this does not result in a response within 15s, abort these steps and
+//    return that the status is _unknown_.
+// 5. If the server could not be reached or the received status code is not
+//    `200` or if the `SfuHttpResponse.Peek` response could not be decoded:
+//    1. If the received status code is `401`, abort these steps and return the
+//       status _unauthorized_.
+//    2. If the received status code is `404`, abort these steps and return the
+//       status _not running_.
+//    3. Abort these steps and return that the status is _failed_.
+// 6. If the protocol version of the `call` is not supported, abort these steps
+//    and return the status _unsupported_.
+// 7. Return the status as provided by the `SfuHttpResponse.Peek` response.
+//
 // ### Scoped to Group
 //
 // #### Periodic Refresh
@@ -111,64 +151,56 @@
 // within a group, determining which one of them is the chosen call and
 // potentially join the chosen call:
 //
-// 1. Let `running` be the list of group calls that are currently considered
-//    running within the group.
-// 2. Let `calls` be a copy of `running`. Reset the _token-refreshed_ mark of
-//    each `call` of `calls` (or simply scope it to the execution of these
-//    steps).
-// 3. For each `call` of `calls`, run the following steps (labelled _peek-call_)
-//    concurrently and wait for them to return:
-//    1. If the user is currently participating in `call`, abort the _peek-call_
-//       sub-steps.
-//    2. _Peek_ the `call` via a `SfuHttpRequest.Peek` request. If this does not
-//       result in a response within 5s, remove `call` from `calls` and abort
-//       the _peek-call_ sub-steps.
-//    3. If the received status code for `call` is `401` and `call` is not
-//       marked with _token-refreshed_:
-//       1. Refresh the _SFU Token_. If the _SFU Token_ refresh fails or does
-//          not yield an _SFU Token_ within 10s, remove `call` from `calls` and
-//          abort the _peek-call_ sub-steps.
-//       2. Mark the `call` as _token-refreshed_.
-//       3. Restart the _peek-call_ sub-steps for this `call`.
-//    4. If the server could not be reached or the received status code is not
-//       `200` or if the _Peek_ response could not be decoded:
-//       1. Remove `call` from `calls`.
-//       2. If the received status code is `404`, remove `call` from `running`
-//          and abort the _peek-call_ sub-steps.
-//       3. If the `call`'s _failed_ counter is `>= 3` and the `call` was
-//          received more than 10h ago, remove `call` from `running` and abort
-//          the _peek-call_ sub-steps.
-//       4. Increase the _failed_ counter for `call` by `1` and abort the
-//          _peek-call_ sub-steps.
-//    5. Reset the `call`'s _failed_ counter to `0`.
-//    6. If the protocol version of the `call` is not supported, remove `call`
-//       from `calls`, log a warning that a group call with an unsupported
-//       version is currently running and abort the _peek-call_ sub-steps.
-//    7. (`call` is kept in `calls` and in `running`.)
-// 4. If `running` is empty, cancel the timer to periodically re-run the _Group
-//    Call Refresh Steps_ of this group. Otherwise, restart or schedule the
-//    timer to re-run the _Group Call Refresh Steps_ of this group in 10s.
-// 5. Let `chosen-call` be any call of `calls` with the highest `started_at`
-//    value (i.e. the most recently created call) as provided by the _peek_
-//    result.
-// 6. If `chosen-call` is not defined, signal that no group call is currently
-//    running within the group, abort these steps and return `chosen-call`.
-// 7. Signal `chosen-call` as the currently running group call within the group.
-// 8. If the _Group Call Join Steps_ are currently running with a different (or
-//    new) group call than `chosen-call`, cancel and restart the _Group Call
-//    Join Steps_ asynchronously with the same `intent` but with the
-//    `chosen-call`.
-// 9. If the user is currently participating in a group call of this group that
-//    is different to `chosen-call`, exit the running group call and run the
-//    _Group Call Join Steps_ asynchronously with the `intent` to _only join_
-//    `chosen-call`.
-// 10. Return `chosen-call`.
+// 1.  Let `running` be the list of group calls that are currently considered
+//     running within the group.
+// 2.  Let `calls` be a copy of `running`.
+// 3.  If the _SFU token_ would expire in the next 30s, refresh it and let
+//     `token` be the result. If the _SFU Token_ refresh fails or does not yield
+//     an _SFU Token_ within 15s, set `calls` to an empty list.
+// 4.  For each `call` of `calls`, run the following steps (labelled
+//     _peek-call_) concurrently and wait for them to return:
+//     1. Run the _Group Call Peek Steps_ for `call` and `token` and let
+//        `status` be the result.
+//     2. If `status` contains a valid status, reset the `call`'s _failed_
+//        counter to `0`, update `call` with `status` and abort the _peek-call_
+//        sub-steps.
+//     3. If `status` is _unauthorized_ or _not running_, remove `call` from
+//        `calls` and from `running` and abort the _peek-call_ sub-steps.
+//     4. If `status` is _unknown_, remove `call` from `calls` and abort the
+//        _peek-call_ sub-steps.
+//     5. If `status` is _unsupported_, reset the `call`'s _failed_ counter to
+//        `0`, remove `call` from `calls`, log a warning that a group call with
+//        an unsupported version is currently running and abort the _peek-call_
+//        sub-steps.
+//     6. If `status` is _failed_:
+//        1. Remove `call` from `calls`.
+//        2. If the `call`'s _failed_ counter is `>= 3` and the `call` was
+//           received more than 10h ago, remove `call` from `running` and abort
+//           the _peek-call_ sub-steps.
+//        3. Increase the _failed_ counter for `call` by `1` and abort the
+//           _peek-call_ sub-steps.
+// 5.  If `running` is empty, cancel the timer to periodically re-run the _Group
+//     Call Refresh Steps_ of this group. Otherwise, restart or schedule the
+//     timer to re-run the _Group Call Refresh Steps_ of this group in 10s.
+// 6.  Let `chosen-call` be any call of `calls` with the highest `started_at`
+//     value (i.e. the most recently created call) as provided by the _peek_
+//     result.
+// 7.  If `chosen-call` is not defined, signal that no group call is currently
+//     running within the group, abort these steps and return `chosen-call`.
+// 8.  Signal `chosen-call` as the currently running group call within the
+//     group.
+// 9.  If the _Group Call Join Steps_ are currently running with a different (or
+//     new) group call than `chosen-call`, cancel and restart the _Group Call
+//     Join Steps_ asynchronously with the same `intent` but with the
+//     `chosen-call`.
+// 10. If the user is currently participating in a group call of this group that
+//     is different to `chosen-call`, exit the running group call and run the
+//     _Group Call Join Steps_ asynchronously with the `intent` to _only join_
+//     `chosen-call`.
+// 11. Return `chosen-call`.
 //
 // Note: The above steps have been carefully crafted to gracefully handle cases
 // where the SFU of one call cannot be reached for a short period of time.
-//
-// When the Threema app is active, run the _Group Call Refresh Steps_ for each
-// group. This will start a timer to refresh any group call status.
 //
 // When the user leaves a group call, run the _Group Call Refresh Steps_ for the
 // respective group.
@@ -187,27 +219,138 @@
 //
 // 1. Let `intent` be the user's intent, i.e. to either _only join_ or _create
 //    or join_ a group call.
-// 2. Refresh the _SFU Token_ if necessary. If the _SFU Token_ refresh fails
-//    within 10s, abort these steps and notify the user.
-// 3. Run the _Group Call Refresh Steps_ for the respective group and let `call`
+// 2. Run the _Group Call Refresh Steps_ for the respective group and let `call`
 //    be the result.
-// 4. If `call` is undefined and `intent` is to _only join_, abort these steps
+// 3. If `call` is undefined and `intent` is to _only join_, abort these steps
 //    and notify the user that no group call is running / the group call is no
 //    longer running.
-// 5. If `call` is undefined, create (but don't send) a `GroupCallStart`
+// 4. If `call` is undefined, create (but don't send) a `GroupCallStart`
 //    message, apply it to `call` and mark `call` as _new_.
-// 6. Run the _Group Call Join Steps_ with the `intent` and `call`.
+// 5. Run the _Group Call Join Steps_ with the `intent` and `call`.
 //
 // The following steps are defined as the _Group Call Join Steps_ (also applied
-// for creating a group call).:
+// for creating a group call):
 //
-// 1. Let `intent` be either _only join_ or _create or join_. Let `call` be the
-//    given group call to be joined (or created).
-// 2.  _Join_ (or implicitly create) the group call via a `SfuHttpRequest.Join`
-//    request. If this does not result in a response within 10s, abort these
-//    steps and notify the user.
-// 3. If the received status code is `503`, notify the user that the group call
-//    is full and abort these steps.
+// 1.  Let `intent` be either _only join_ or _create or join_. Let `call` be the
+//     given group call to be joined (or created).
+// 2.   _Join_ (or implicitly create) the group call via a `SfuHttpRequest.Join`
+//     request. If this does not result in a response within 10s, abort these
+//     steps and notify the user.
+// 3.  If the received status code is `503`, notify the user that the group call
+//     is full and abort these steps.
+// 4.  If the server could not be reached or the received status code is not
+//     `200` or if the `SfuHttpResponse.Join` response could not be decoded,
+//     abort these steps and notify the user.
+// 5.  Let `response` be the decoded ``SfuHttpResponse.Join` response.
+// 6.  If `response.participant_uid` is empty, abort these steps and notify the
+//     user that the server does not support conference calls.
+// 7.  Establish a WebRTC connection to the SFU with the information provided in
+//     the `SfuHttpResponse.Join` response. Wait until the SFU sent the initial
+//     `SfuToParticipant.Hello` message via the associated data channel. Let
+//     `hello` be that message.
+// 8.  If the `hello.participants` contains less than 4 items, set the initial
+//     capture state of the microphone to _on_.
+// 9.  If `call` is marked as _new_:
+//     1. Optionally add an artificial wait period of 2s minus the time elapsed
+//        since step 1.¹
+//     2. Let `message-id` be a random message ID.
+//     3. Schedule a persistent task to run he _Bundled Messages Send Steps_
+//        with the following properties:
+//        - `id` set to `message-id`,
+//        - `receivers` set to all group members that have `GROUP_CALL_SUPPORT`,
+//        - to construct a `GroupCallStart` message from `call`.
+//     4. Add the created `call` to the list of group calls that are currently
+//        considered running.
+//     5. Asynchronously run the _Group Call Refresh Steps_.²
+// 10. The group call is now considered established and should asynchronously
+//     invoke the SFU to Participant and Participant to Participant flows.
+//
+// ¹: This prevents butter-fingered user from accidentally starting a group
+// call.
+//
+// ²: This will initiate the refresh timer for a newly created call and signal
+// it to the UI.
+//
+// Note: Implementations need to ensure that only one group call can be active
+// at the same time in the application. This means that only one invocation of
+// the _Create or Join_ flow and only one invocation of the _Group Call Join
+// Steps_ can be active. Be aware that these steps can be cancelled by the user
+// and by the _Group Call Refresh Steps_.
+//
+// ### Conference Call
+//
+// #### Overview: Periodic Refresh
+//
+// While the Conference Call Overview screen UI is visible, schedule a timer to
+// run the following steps every 10s (after the previous run returned):
+//
+// 1. Let `calls` be a copy of the set of stored conference calls.
+// 2. If the _SFU token_ would expire in the next 30s, refresh it and let
+//    `token` be the result. If the _SFU Token_ refresh fails or does not yield
+//    an _SFU Token_ within 15s, update the status of all `calls` to _unknown_.
+// 3. For each `call` of `calls`, run the following steps (labelled _peek-call_)
+//    concurrently and wait for them to return:
+//    1. Run the _Group Call Peek Steps_ for `call` and `token` and let `status`
+//       be the result.
+//    2. If `status` contains a valid status, set `call`'s display status to
+//       `status` and abort the _peek-call_ sub-steps.
+//    3. If `status` is _not running_, set `call`'s display status respectively
+//       and abort the _peek-call_ sub-steps.
+//    4. If `status` is _unsupported_, log a warning that a conference call with
+//       an unsupported version is currently running.
+//    5. Set `call`'s display status to unknown.
+//
+// #### Join Pre-Screen: Periodic Refresh
+//
+// While the Join Pre-Screen UI is visible as a Threema user, schedule a timer
+// to run the following steps every 10s (after the previous run returned):
+//
+// 1. Let `call` be the targeted conference call.
+// 2. If the _SFU token_ would expire in the next 30s, refresh it and let
+//    `token` be the result. If the _SFU Token_ refresh fails or does not yield
+//    an _SFU Token_ within 15s, abort these steps and return that the status is
+//    _unknown_.
+// 3. Run the _Group Call Peek Steps_ for `call` and `token` and let `status` be
+//    the result.
+// 4. If `status` contains a valid status, display the current `status` and
+//    abort these steps.
+// 5. If `status` is _not running_, display that the conference call is not
+//    currently running (but may be started by the user) and abort these steps.
+// 6. Display that the current status is unknown.
+//
+// While the Join Pre-Screen UI is visible as an external guest, schedule a
+// timer to run the following steps every 10s (after the previous run returned):
+//
+// 1. Let `call` be the targeted conference call.
+// 2. Run the _Group Call Peek Steps_ for `call` without a token and let
+//    `status` be the result.
+// 3. If `status` contains a valid status, display the current `status` and
+//    abort these steps.
+// 4. If `status` is _not running_ or _unauthorized_, display that the
+//    conference call is not currently running and abort these steps.
+// 5. Display that the current status is unknown.
+//
+// #### Create, Start or Join
+//
+// When a Threema users wants to create a conference invite:
+//
+// 1. If the _SFU token_ is expired, refresh it and let `token` be the result.
+//    If the _SFU Token_ refresh fails or does not yield an _SFU Token_ within
+//    15s, abort these steps and notify the user.
+// 2. Create a `ConferenceCallInvite` message with `token` and encode it as a
+//    URL as defined by that message.
+//
+// The following steps are to be run when a Threema user wants to start or join
+// a conference call:
+//
+// 1. If the _SFU token_ would expire in the next 15s, refresh it and let
+//    `token` be the result. If the _SFU Token_ refresh fails or does not yield
+//    an _SFU Token_ within 15s, abort these steps and notify the user.
+// 2.  _Join_ (or implicitly start) the conference call via a
+//    `SfuHttpRequest.Join` request using `token`. If this does not result in a
+//    response within 10s, abort these steps and notify the user.
+// 3. If the received status code is `503`, notify the user that the conference
+//    call is full and abort these steps.
 // 4. If the server could not be reached or the received status code is not
 //    `200` or if the _Join_ response could not be decoded, abort these steps
 //    and notify the user.
@@ -215,34 +358,30 @@
 //    the _Join_ response. Wait until the SFU sent the initial
 //    `SfuToParticipant.Hello` message via the associated data channel. Let
 //    `hello` be that message.
-// 6. If the `hello.participants` contains less than 4 items, set the initial
-//    capture state of the microphone to _on_.
-// 7. If `call` is marked as _new_:
-//    1. Optionally add an artificial wait period of 2s minus the time elapsed
-//       since step 1.[^1]
-//    2. Let `message-id` be a random message ID.
-//    3. Schedule a persistent task to run he _Bundled Messages Send Steps_ with
-//       the following properties:
-//       - `id` set to `message-id`,
-//       - `receivers` set to all group members that have `GROUP_CALL_SUPPORT`,
-//       - to construct a `GroupCallStart` message from `call`.
-//    4. Add the created `call` to the list of group calls that are currently
-//       considered running.
-//    5. Asynchronously run the _Group Call Refresh Steps_.[^2]
-// 8. The group call is now considered established and should asynchronously
-//    invoke the SFU to Participant and Participant to Participant flows.
+// 6. The conference call is now considered established and should
+//    asynchronously invoke the SFU to Participant and Participant to
+//    Participant flows.
 //
-// [^1]: This prevents butter-fingered user from accidentally starting a group
-// call.
+// The following steps are to be run when an external guest wants to join a
+// conference call:
 //
-// [^2]: This will initiate the refresh timer for a newly created call and
-// signal it to the UI.
-//
-// Note: Implementations need to ensure that only one group call can be active
-// at the same time in the application. This means that only one invocation of
-// the _Create or Join_ flow and only one invocation of the _Group Call Join
-// Steps_ can be active. Be aware that these steps can be cancelled by the user
-// and by the _Group Call Refresh Steps_.
+// 1.  _Join_ the conference call via a `SfuHttpRequest.Join` request without
+//    any SFU token. If this does not result in a response within 10s, abort
+//    these steps and notify the user.
+// 2. If the received status code is `401`, notify the user that the conference
+//    call is currently not running and abort these steps.
+// 3. If the received status code is `503`, notify the user that the conference
+//    call is full and abort these steps.
+// 4. If the server could not be reached or the received status code is not
+//    `200` or if the _Join_ response could not be decoded, abort these steps
+//    and notify the user.
+// 5. Establish a WebRTC connection to the SFU with the information provided in
+//    the _Join_ response. Wait until the SFU sent the initial
+//    `SfuToParticipant.Hello` message via the associated data channel. Let
+//    `hello` be that message.
+// 6. The conference call is now considered established and should
+//    asynchronously invoke the SFU to Participant and Participant to
+//    Participant flows.
 //
 // ### SFU to Participant Flow
 //
@@ -275,40 +414,24 @@
 // #### Handshake
 //
 // When a new participant (NP) joins, it must authenticate each other existing
-// participant (EP) and establish an ephemeral shared secret (`PCK`). The flow
-// depends on whether NP and EP are normal or guest participants:
+// participant (EP) and establish an ephemeral shared secret (`PCK`). The
+// message variant used depends on the participant's role. Normal participants
+// send `Hello` and `Auth` while guest participants send `GuestHello` and
+// `GuestAuth`, exemplary:
 //
 // If both are normal participants:
 //
-//     NP ----- Hello ---> EP
-//     NP <---- Hello ---- EP
-//     NP <---- Auth ----- EP
-//     NP ----- Auth ----> EP
-//
-// If both are guest participants:
-//
-//     NP -- GuestHello -> EP
-//     NP <- GuestHello -- EP
-//     NP <- GuestAuth --- EP
-//     NP -- GuestAuth --> EP
+//     NP ------ Hello -----> EP
+//     NP <----- Hello ------ EP
+//     NP <----- Auth ------- EP
+//     NP ------ Auth ------> EP
 //
 // If NP is a normal participant and EP is a guest participant:
 //
-//     NP ----- Hello ---> EP
-//     NP <- GuestHello -- EP
-//     NP <- GuestAuth --- EP
-//     NP -- GuestAuth --> EP
-//
-// If NP is a guest participant and EP is a normal participant:
-//
-//     NP -- GuestHello -> EP
-//     NP <---- Hello ---- EP
-//     NP <- GuestAuth --- EP
-//     NP -- GuestAuth --> EP
-//
-// Note: This looks more intimidating than it really is. Basically, if either is
-// a guest, we fulfill the guest handshake but both always start with sending
-// their respective role's _hello_ variant.
+//     NP ------ Hello -----> EP
+//     NP <--- GuestHello --- EP
+//     NP <--- GuestAuth ---- EP
+//     NP ------ Auth ------> EP
 //
 // For group calls scoped to groups:
 //
@@ -317,23 +440,48 @@
 // - External guests are not allowed and therefore the guest handshake is not
 //   allowed.
 //
+// For conference calls, external guests are allowed if the _guest policy_ is
+// `GuestPolicy.ALLOW_GUESTS`.
+//
+// #### Extended Handshake
+//
+// In case the call is a conference call and the _join policy_ is
+// `JoinPolicy.REQUIRES_MODERATOR_APPROVAL`, the handshake period is extended
+// such that both participants need to provide `Approval`, exemplary:
+//
+// If both NP and EP are moderators:
+//
+//     (Handshake until both sent `Auth`/`GuestAuth`)
+//     NP ---- Approval ----> EP
+//     NP <--- Approval ----- EP
+//
+// If EP is a moderator and EP approves NP (by user interaction):
+//
+//     (Handshake until both sent `Auth`/`GuestAuth`)
+//     NP <--- Approval ----- EP
+//     NP <- GrantApproval -- EP
+//     NP ---- Approval ----> EP
+//
 // #### Post-Handshake
 //
 // After the handshake, **both** sides run the following steps:
 //
 // 1. Subscribe to the other participant's microphone feed (i.e. send a
 //    `ParticipantMicrophone` message to the SFU).
-// 2. If the user is an administrator, send an `Admin.ReportAsAdmin` message to
-//    the other participant.
-// 3. If _hold_ is currently active, send a `Hold` message to the other
-//    participant.
-// 4. If _hold_ is not currently active, send a `CaptureState` message to the
-//    other participant for each device (camera, microphone, ...) that is
-//    currently activated (`Mode` is `ON`).
+// 2. If the user is a moderator, send a `Moderator.ReportAsModerator` message
+//    to the other participant.
 //
 // #### Join/Leave of Other Participants
 //
-// When a new participant joins, all other participants run the following steps:
+// The following steps are defined as the _Participant Joined Steps_ and are run
+// by existing participants once a new participant joined¹:
+//
+// 1. Set the _handshake state_ of this participant to `await-np-hello`.
+// 2. Run the _Reschedule State Task Steps_.
+//
+// The following steps are defined as the _Participant Active Steps_ and are run
+// by existing participants once a new participant's _handshake state_ moved
+// into `done`:
 //
 // 1. Let `pcmk` be the currently _applied_ PCMK with the associated context.
 // 2. If the amount of ratchet rounds for `pcmk` is `255`, abort the call with
@@ -341,14 +489,18 @@
 // 3. Advance the ratchet of `pcmk` once (i.e. replace the key by deriving
 //    PCMK') and apply for media encryption immediately. Note: Do **not** reset
 //    the MFSN!
-// 4. Set the _handshake state_ of this participant to `await-np-hello`.
+// 4. Send a _rekey_ message to the participant containing the updated `pcmk`
+// 5. If the currently _pending_ PCMK of the associated context is defined, send
+//    a _rekey_ message to the participant containing the _pending_ PCMK.
+// 6. Send a `CaptureState` message for each device whose capturing state is not
+//    _off_.
+// 7. Add the participant to the call as an _active_ participant.
 //
-// Note: The announcement of the new participant is guaranteed to be sent prior
-// to any handshake messages of the new participant.
+// The following steps are defined as the _Participant Left Steps_ and are run
+// by existing participants when a participant leaves²:
 //
-// When a participant leaves, all other participants run the following steps:
-//
-// 1. Let `pending-pcmk` be the currently _pending_ PCMK the associated context.
+// 1. Let `pending-pcmk` be the currently _pending_ PCMK of the associated
+//    context.
 // 2. If `pending-pcmk` exists, additionally mark `pending-pcmk` as _stale_ and
 //    abort these steps.
 // 3. Let `current-pcmk` be the currently _applied_ PCMK with the associated
@@ -361,8 +513,8 @@
 //    3. Set `pending-pcmk.ratchet_counter` to `0`.
 //    4. Do **not** reset the MFSN! Continue the existing MFSN counter of the
 //       previous PCMK.
-// 5. Send `pending-pcmk` to all authenticated participants via a _rekey_
-//    message.
+// 5. Send `pending-pcmk` to all participants with a _handshake state_ of `done`
+//    via a _rekey_ message.
 // 6. Schedule a volatile task bound to the call to run the following steps
 //    after 2s:
 //    1. Apply `pending-pcmk` for media encryption. This means that
@@ -370,8 +522,10 @@
 //       _pending_.
 //    2. If `pending-pcmk` is marked as _stale_, run the parent steps from the
 //       beginning.
+// 7. Run the _Reschedule State Task Steps_.
 //
-// When a participant receives a _rekey_ message from another participant.
+// The following steps are defined as the _Participant Rekey Steps_ and are run
+// when a participant receives a `MediaKey` message from another participant:
 //
 // 1. Let `current-pcmk` be the PCMK and its associated context used for the
 //    participant.
@@ -380,7 +534,10 @@
 //    already stored on `current-pcmk`) and follow the description of the media
 //    frame on when to apply it.
 //
-// Note: The result of the above steps is that re-keying is throttled but always
+// ¹: The announcement of the new participant is guaranteed to be sent prior to
+// any handshake messages of the new participant.
+//
+// ²: Re-keying after a participant leaving is therefore throttled but always
 // catches up to the current participant state with a maximum delay of 4s.
 //
 // #### State Update
@@ -390,23 +547,20 @@
 // or leaves. If the call state has not been updated/refreshed for 30s, the SFU
 // will delete it.
 //
-// After each change to the list of participants, run the following steps to
-// determine whether the user is designated:
+// The following steps are defined as the _Reschedule State Task Steps_:
 //
 // 1. Cancel any running timer to update the call state.
-// 2. Let `candidates` be a list of all currently authenticated non-guest
-//    participants.
-// 3. If `candidates` is empty, add all currently authenticated guest
-//    participants to the list.
-// 4. If the user is not in `candidates`, abort these steps.
-// 5. If the user does not have the lowest participant ID in `candidates`, abort
-//    these steps.
-// 6. Send a `ParticipantToSfu.UpdateCallState` message to the SFU and schedule
+// 2. Let `candidates` be a list of all other participants (in any _handshake
+//    _state).
+// 3. Compare the user's participant ID against all `candidates`. If any of the
+//    participant IDs in `candidates` is lower than the participant ID of the
+//    user, abort these steps.
+// 4. Send a `ParticipantToSfu.UpdateCallState` message to the SFU and schedule
 //    a repetitive timer to repeat this step every 10s.
 //
-// Note: The above algorithm is prone to races since the authentication process
-// is asynchronous for each participant pair. However, this should not be an
-// issue as they'd essentially post the same status (eventually).
+// Note: The above algorithm is prone to races since the handshake is
+// asynchronous for each participant pair. However, this should not be an issue
+// as they'd essentially post the same status (eventually).
 
 syntax = "proto3";
 
@@ -421,7 +575,29 @@ import "common.proto";
 // Current call state as announced by the designated client.
 //
 // Note: The `CallState` accurateness must not be relied upon as it can be out
-//       of date and can be replayed by the SFU.
+// of date and can be replayed by the SFU.
+//
+// When creating this message:
+//
+// 1. Set `state_created_by` to the user's participant ID.
+// 2. Set `state_created_at` to the current UNIX-ish timestamp in milliseconds.
+// 3. Add the user to the `participants` map:
+//    1. Set the `ParticipationState` to `PARTICIPATING`.
+//    2. If the call is a conference call and the _join policy_ is set to
+//       `JoinPolicy.REQUIRES_MODERATOR_APPROVAL` and the user does not have a
+//       local _approval_ signature from a moderator, set the
+//       `ParticipationState` to `AWAITING_MODERATOR_APPROVAL`.
+// 4. For each other participant:
+//    1. If the _handshake state_ of the participant is `post-auth` add it to
+//       the `participants` map with `ParticipationState.PARTICIPATING` and
+//       abort these sub-steps.
+//    2. If the _handshake state_ of the participant is `await-approval`:
+//       1. If the _remote approval received_ flag is present, add it to the
+//          `participants` map with `ParticipationState.PARTICIPATING` and abort
+//          these sub-steps.
+//       2. Add it to the `participants` map with
+//          `ParticipationState.AWAITING_MODERATOR_APPROVAL` and abort these
+//          sub-steps.
 message CallState {
   // Random amount of padding, ignored by the receiver.
   bytes padding = 1;
@@ -436,6 +612,20 @@ message CallState {
   // Information for a single participant.
   message Participant {
     reserved 1; // Redundant participant ID
+
+    // A participation state.
+    //
+    // Note: Participants that are not yet authenticated will not appear in the
+    // `CallState` at all.
+    enum ParticipationState {
+      // Participating (i.e. active).
+      PARTICIPATING = 0;
+
+      // Waiting for approval by a moderator to participate (i.e. authenticated
+      // but not active, yet).
+      AWAITING_MODERATOR_APPROVAL = 1;
+    }
+    ParticipationState participation_state = 4;
 
     // A _normal_ participant, i.e. a Threema client.
     message Normal {
@@ -459,7 +649,7 @@ message CallState {
     }
   }
 
-  // Information for each participant of the group call.
+  // Information for each participant of the group call that is authenticated.
   map<uint32, Participant> participants = 4;
 }
 
@@ -467,6 +657,7 @@ message CallState {
 enum SupportedFeature {
   // Base feature support (always present).
   BASE = 0x0000;
+
   // Support for screen sharing.
   SCREEN_SHARE = 0x0001;
 }
@@ -486,21 +677,27 @@ message SfuHttpRequest {
   // When sending this request:
   //
   // 1. Use `POST` as method.
-  // 2. Set the `Authorization` header to `ThreemaSfuToken <sfu-token>`.
+  // 2. If an SFU token has been provided, set the `Authorization` header to
+  //    `ThreemaSfuToken <sfu-token>`.
   // 3. Set the encoded `SfuHttpRequest.Peek` message as body.
   //
   // When receiving this request:
   //
-  // 1. If the `Authorization` header is missing, the provided `sfu-token` in
+  // 1. If `call_id-as-hex` is not a valid Call ID, respond with status code
+  //    `400` and abort these steps.
+  // 2. If the `Authorization` header is present and the provided `sfu-token` in
   //    the `Authorization` header is invalid or expired, respond with status
   //    code `401` and abort these steps.
-  // 2. If the provided data is invalid, respond with status code `400` and
+  // 3. If the `Authorization` header is not present and no call for the given
+  //    decoded `call_id-as-hex` is currently running, respond with status code
+  //    `401` and abort these steps.
+  // 4. If the provided data is invalid, respond with status code `400` and
   //    abort these steps.
-  // 3. If `call_id` does not equal the Call ID from the URL (decoded
-  //    `call_id-as-hex`), respond with status code `400` and abort these steps.
-  // 4. If no group call for the given `call_id` is currently running, respond
+  // 5. If `call_id` does not equal the decoded `call_id-as-hex`, respond with
+  //    status code `400` and abort these steps.
+  // 6. If no group call for the given `call_id` is currently running, respond
   //    with status code `404` and abort these steps.
-  // 5. Respond with status code `200` and an encoded `SfuHttpResponse.Peek`
+  // 7. Respond with status code `200` and an encoded `SfuHttpResponse.Peek`
   //    message as body.
   message Peek {
     // Group Call ID associated to the group call.
@@ -516,25 +713,31 @@ message SfuHttpRequest {
   // When sending this request:
   //
   // 1. Use `POST` as method.
-  // 2. Set the `Authorization` header to `ThreemaSfuToken <sfu-token>`.
+  // 2. If an SFU token has been provided, set the `Authorization` header to
+  //    `ThreemaSfuToken <sfu-token>`.
   // 3. Set the encoded `SfuHttpRequest.Join` message as body.
   //
   // When receiving this request:
   //
-  // 1. If the `Authorization` header is missing, the provided `sfu-token` in
+  // 1. If `call_id-as-hex` is not a valid Call ID, respond with status code
+  //    `400` and abort these steps.
+  // 2. If the `Authorization` header is present and the provided `sfu-token` in
   //    the `Authorization` header is invalid or expired, respond with status
   //    code `401` and abort these steps.
-  // 2. If the provided data is invalid, respond with status code `400` and
+  // 3. If the `Authorization` header is not present and no call for the given
+  //    decoded `call_id-as-hex` is currently running, respond with status code
+  //    `401` and abort these steps.
+  // 4. If the provided data is invalid, respond with status code `400` and
   //    abort these steps.
-  // 3. If `call_id` does not equal the Call ID from the URL (decoded
-  //    `call_id-as-hex`), respond with status code `400` and abort these steps.
-  // 4. If the `protocol_version` is unsupported by the SFU, respond with status
+  // 5. If `call_id` does not equal the decoded `call_id-as-hex`, respond with
+  //    status code `400` and abort these steps.
+  // 6. If the `protocol_version` is unsupported by the SFU, respond with status
   //    code `419` and abort these steps.
-  // 5. If no more participants can join the group call for the given `call_id`,
+  // 7. If no more participants can join the group call for the given `call_id`,
   //    respond with status code `503` and abort these steps.
-  // 6. Respond with status code `200` and an encoded `SfuHttpResponse.Join`
+  // 8. Respond with status code `200` and an encoded `SfuHttpResponse.Join`
   //    message as body.
-  // 7. Once the WebRTC connection has been established, announce the newly
+  // 9. Once the WebRTC connection has been established, announce the newly
   //    joined participant to all other participants via the corresponding data
   //    channel. If no WebRTC connection is being established within 30s, the
   //    participant ID is no longer reserved for the client and the group call
@@ -550,7 +753,7 @@ message SfuHttpRequest {
     // DTLS fingerprint of the x509 certificate that will be used by the client.
     //
     // Note: This is the authentication anchor for the WebRTC connection towards
-    //       the SFU.
+    // the SFU.
     bytes dtls_fingerprint = 3;
   }
 }
@@ -601,8 +804,17 @@ message SfuHttpResponse {
     // Participant ID assigned to the client.
     //
     // Note: The client needs to know the participant ID early to derive MIDs
-    //       required to be present in the O/A SDP.
+    // required to be present in the O/A SDP.
     uint32 participant_id = 3;
+
+    // Participant UID, 16 byte unique random id, randomly generated by the SFU
+    // and assigned to the client.
+    //
+    // Since SFU version v1.4.0. Not present (i.e. empty) otherwise.
+    //
+    // Note: Unused for group calls scope to groups, required for conference
+    // calls.
+    bytes participant_uid = 10;
 
     // Address the SFU is listening for a WebRTC connection.
     message Address {
@@ -631,13 +843,17 @@ message SfuHttpResponse {
     // DTLS fingerprint of the x509 certificate that will be used by the SFU.
     //
     // Note: This is the authentication anchor for the WebRTC connection towards
-    //       the SFU.
+    // the SFU.
     bytes dtls_fingerprint = 7;
 
     // RTP header extension ID mapping.
     //
-    // Note: The same ID is applied for header extensions used for both microphone and
-    // camera/screen.
+    // Since SFU version v1.3.0: Not present otherwise. Fall back to the
+    // previous hard-coded RTP header extension ID parameter mapping if not
+    // provided.
+    //
+    // Note: The same ID is applied for header extensions used for both
+    // microphone and camera/screen.
     message RtpHeaderExtensionIds {
       // urn:ietf:params:rtp-hdrext:sdes:mid
       uint32 mid = 1;
@@ -683,6 +899,10 @@ message SfuToParticipant {
   // IMPORTANT: The format of the `SfuToParticipant.Envelope` and
   // `ParticipantToSfu.Envelope` must be compatible for the relay case, so the
   // SFU can forward the data without having to re-encode.
+  //
+  // When receiving this message, handle the message according to the content.
+  // If an unknown content variant has been received, log a warning and discard
+  // the message.
   message Envelope {
     // Random amount of padding, ignored by the receiver.
     bytes padding = 1;
@@ -702,12 +922,37 @@ message SfuToParticipant {
   //
   // 1. If a `Hello` was received before (i.e. if the receiver is not a newly
   //    joined participant), log a warning and abort these steps.
-  // 2. Initiate the participant to participate handshake for each participant
-  //    listed in this message.
+  // 2. If the `SfuHttpResponse.Join.participant_uid` was present while joining,
+  //    let `participants` be the `participants` map field.
+  // 3. If the `SfuHttpResponse.Join.participant_uid` was not present while
+  //    joining:
+  //    1. If the group call is a conference call, abort the call with an error
+  //       condition and abort these steps.
+  //    2. Let `participants` be provided by the `deprecated_participant_ids`
+  //       field.
+  // 4. Initiate the participant to participant handshake for all
+  //    `participants`.
+  // 5. Run the _Reschedule State Task Steps_.
   message Hello {
     // All participants in the group call. This **excludes** the client's
     // participant ID.
-    repeated uint32 participant_ids = 1;
+    //
+    // DEPRECATED: Superseded by `participants` map.
+    repeated uint32 deprecated_participant_ids = 1 [deprecated = true];
+
+    // Additional participant information of other participants.
+    message Participant {
+      // Participant UID, 16 byte unique random id.
+      bytes participant_uid = 1;
+    }
+
+    // A map of all participant IDs to additional `Participant` information in
+    // the group call. This **excludes** the client.
+    //
+    // Since SFU version v1.4.0. Not present (i.e. empty) otherwise. Required
+    // for conference calls. Fall back to the `deprecated_participant_ids` if
+    // not present for group calls scoped to groups.
+    map<uint32, Participant> participants = 4;
   }
 
   // Announces that a new participant joined to existing participants.
@@ -716,8 +961,19 @@ message SfuToParticipant {
   //
   // 1. Look up the participant. If it already exists (i.e. never _left_), log a
   //    warning and abort these steps.
-  // 2. Run the corresponding steps described by the _Join/Leave_ section.
-  message ParticipantJoined { uint32 participant_id = 1; }
+  // 2. If the group call is a conference call and `participant_uid` is empty,
+  //    abort the call with an error condition and abort these steps.
+  // 3. Run the _Participant Joined Steps_.
+  message ParticipantJoined {
+    // Participant ID assigned to the newly joined participant.
+    uint32 participant_id = 1;
+
+    // Participant UID assigned to the newly joined participant, 16 byte unique
+    // random id.
+    //
+    // Since SFU version v1.4.0. Not present (i.e. empty) otherwise.
+    bytes participant_uid = 2;
+  }
 
   // Announces that a participant left to existing participants.
   //
@@ -726,8 +982,11 @@ message SfuToParticipant {
   // 1. Look up the participant. If it was never announced to have _joined_ by
   //    an associated `ParticipantJoined` message, log a warning and abort these
   //    steps.
-  // 2. Run the corresponding steps described by the _Join/Leave_ section.
-  message ParticipantLeft { uint32 participant_id = 1; }
+  // 2. Run the _Participant Left Steps_.
+  message ParticipantLeft {
+    // Participant ID referring to the participant that left.
+    uint32 participant_id = 1;
+  }
 
   // Current UNIX-ish timestamp in milliseconds of the SFU.
   //
@@ -753,6 +1012,10 @@ message ParticipantToSfu {
   // IMPORTANT: The format of the `SfuToParticipant.Envelope` and
   // `ParticipantToSfu.Envelope` must be compatible for the relay case, so the
   // SFU can forward the data without having to re-encode.
+  //
+  // When receiving this message, handle the message according to the content.
+  // If an unknown content variant has been received, log a warning and discard
+  // the message.
   message Envelope {
     // Random amount of padding, ignored by the receiver.
     bytes padding = 1;
@@ -900,6 +1163,13 @@ message ParticipantToSfu {
 // `ParticipantToSfu.Envelope` in order to prevent races with
 // `ParticipantJoined`/`ParticipantLeft`.
 message ParticipantToParticipant {
+  // Signature context, used as a prefix when signing to separate different use cases.
+  enum SignatureContext {
+    RESERVED = 0x00;
+    JOIN_APPROVAL = 0x01;
+    POST_AUTH_MESSAGE = 0x02;
+  }
+
   // Used for all messages that are relayed from one participant to another via
   // the SFU.
   //
@@ -913,6 +1183,7 @@ message ParticipantToParticipant {
   //    - `await-ep-hello` or `await-np-hello`: Expect a
   //      `Handshake.HelloEnvelope`.
   //    - `await-auth`: Expect a `Handshake.AuthEnvelope`.
+  //    - `await-approval`: Expect a `Handshake.ApprovalEnvelope`.
   //    - `done`: Expect a post-auth `Envelope`.
   message OuterEnvelope {
     // Participant ID of the sender. Checked by the SFU to be correct, dropped
@@ -933,6 +1204,11 @@ message ParticipantToParticipant {
     // The first message (`HelloEnvelope(Hello)` or `HelloEnvelope(GuestHello)`)
     // of both sides is always encrypted by `GCHK`, prefixed with a
     // random nonce.
+    //
+    // When receiving this message, handle the message according to the content.
+    // If an unknown content variant has been received, log a warning, discard
+    // the message and remove the participant by running the _Participant Left
+    // Steps_.
     message HelloEnvelope {
       // Random amount of padding, ignored by the receiver
       bytes padding = 1;
@@ -943,35 +1219,63 @@ message ParticipantToParticipant {
       }
     }
 
-    // If both sides started the normal handshake, the second message is
-    // encrypted in the following way:
+    // The second message is encrypted in the following way:
     //
-    // 1. Let `inner-nonce` be a random nonce.
-    // 2. Let `inner-data` be encrypted by:
-    //
-    // ```text
-    // S = X25519HSalsa20(<sender.CK>.secret, <receiver.CK>.public)
-    // GCNHAK = Blake2b(
-    //   key=S, salt='nha', personal='3ma-call', input=GCKH)
-    // XSalsa20-Poly1305(
-    //   key=GCNHAK,
-    //   nonce=<inner-nonce>,
-    //   data=<AuthEnvelope(Auth)>,
-    // )
-    // ```
-    // 3. Let `outer-data` be encrypted by:
+    // 1. If both user and the other participant are Threema users, let
+    //    `auth-key` be the result of the following operation:
     //
     // ```text
-    // XSalsa20-Poly1305(
-    //   key=X25519HSalsa20(<sender.PCK>.secret, <receiver.PCK>.public),
-    //   nonce=<sender.PCCK> || <sender.PCSN+>,
-    //   data=<inner-nonce> || <inner-data>,
+    // Blake2b(
+    //   key=X25519HSalsa20(<user.CK>.secret, <participant.CK>.public),
+    //   salt='nha', personal='3ma-call', input=GCKH,
     // )
     // ```
-    // 4. Return `outer-data`.
+    // 2. If the user is a Threema user and the other participant is a guest
+    //    participant, let `auth-key` be the result of the following operation:
     //
-    // If either side started the guest handshake, the second message is
-    // encrypted by:
+    // ```text
+    // Blake2b(
+    //   key=X25519HSalsa20(<user.CK>.secret, <participant.PCK>.public),
+    //   salt='gha', personal='3ma-call', input=GCKH,
+    // )
+    // ```
+    // 3. If the user is a guest participant and the other participant is a
+    //    Threema user, let `auth-key` be the result of the following operation:
+    //
+    // ```text
+    // Blake2b(
+    //   key=X25519HSalsa20(<user.PCK>.secret, <participant.CK>.public),
+    //   salt='gha', personal='3ma-call', input=GCKH,
+    // )
+    // ```
+    // 4. If both user and the other participant are guest participants, let
+    //    `auth-key` be undefined.
+    // 5. If `auth-key` is defined:
+    //    1. If the sender is a Threema user, let `inner-data` be an
+    //       `AuthEnvelope` with an `Auth` message. Otherwise, let `inner-data`
+    //       be an `AuthEnvelope` with a `GuestAuth` message.
+    //    2. Let `inner-nonce` be a random nonce.
+    //    3. Let `inner-data` be encrypted by:
+    //
+    //    ```text
+    //    XSalsa20-Poly1305(
+    //      key=auth-key,
+    //      nonce=inner-nonce,
+    //      data=<AuthEnvelope(Auth)>,
+    //    )
+    //    ```
+    //    3. Let `outer-data` be encrypted by:
+    //
+    //    ```text
+    //    XSalsa20-Poly1305(
+    //      key=X25519HSalsa20(<sender.PCK>.secret, <receiver.PCK>.public),
+    //      nonce=<sender.PCCK> || <sender.PCSN+>,
+    //      data=inner-nonce || inner-data,
+    //    )
+    //    ```
+    //    4. Return `outer-data`.
+    // 6. If `auth-key` is undefined, return an `AuthEnvelope` with a
+    //    `GuestAuth` message encrypted in the following way:
     //
     // ```text
     // XSalsa20-Poly1305(
@@ -981,13 +1285,10 @@ message ParticipantToParticipant {
     // )
     // ```
     //
-    // When receiving this message:
-    //
-    // 1. If either side initiated a guest handshake via a `GuestHello`, expect
-    //    `guest_auth` to be set. If `guest_auth` is not set, log a warning and
-    //    abort these steps.
-    // 2. If both sides initiated the (normal) handshake, expect `auth` to be
-    //    set. If `auth` is not set, log a warning and abort these steps.
+    // When receiving this message, handle the message according to the content.
+    // If an unknown content variant has been received, log a warning, discard
+    // the message and remove the participant by running the _Participant Left
+    // Steps_.
     message AuthEnvelope {
       // Random amount of padding, ignored by the receiver
       bytes padding = 1;
@@ -1006,34 +1307,43 @@ message ParticipantToParticipant {
     // 1. Set the participant's _handshake state_ to `await-ep-hello`.
     // 2. Send this message.
     //
-    // When receiving this message as a guest participant:
+    // When receiving this message:
     //
-    // 1. Map it to a `GuestHello` in the following way:
-    //    - `name`: `Hello.nickname`
-    //    - `pck`: `Hello.pck`
-    //    - `pcck`: `Hello.pcck`
-    // 2. Handle the mapped `GuestHello` as if it had been received directly.
-    //
-    // When receiving this message as a regular participant:
-    //
-    // 1. (Placeholder for conference call PCK != GCAMK step.)
-    // 2. If the group call is scoped to a (Threema) group and `identity` is not
-    //    part of the associated group (including the user itself), log a
-    //    warning and abort these steps.
+    // 1. If the group call is scoped to a (Threema) group:
+    //    1. Lookup `identity` in the associated group (including the user
+    //       itself) and let `contact` be the result.
+    //    2. If `contact` is undefined or marked as _invalid_, log a warning,
+    //       discard the message, remove the participant by running the
+    //       _Participant Left Steps_ and abort these steps.
+    // 2. If the group call is a conference call:
+    //    1. Run the _Valid Contacts Lookup Steps_ with `identities` set to
+    //       `identity` and let `contact` be the result.
+    //    2. If `contact` is marked as _invalid_, log a warning, discard the
+    //       message, remove the participant by running the _Participant Left
+    //       Steps_ and abort these steps.
     // 3. If the sender is a newly joined participant and therefore the
     //    _handshake state_ was set to `await-np-hello` (as described by the
     //    _Join/Leave_ section):
-    //    1. Respond by sending a `Hello` message, immediately followed by an
-    //       `Auth` message.
-    //    2. Set the participant's _handshake state_ to `await-auth` and abort
+    //    1. If the user is a Threema user, respond by sending a `Hello`
+    //       message, immediately followed by an `Auth` message.
+    //    2. If the user is a guest participant, respond by sending a
+    //       `GuestHello` message, immediately followed by a `GuestAuth`
+    //       message.
+    //    3. Set the participant's _handshake state_ to `await-auth` and abort
     //       these steps.
     // 4. If the participant's _handshake state_ is `await-ep-hello`:
     //    1. If the `pck` reflects the local PCK.public or the `pcck` reflects
-    //       the local PCCK, log a warning and abort these steps.
-    //    2. Respond by sending an `Auth` message.
-    //    3. Set the participant's _handshake state_ to `await-auth` and abort
+    //       the local PCCK, log a warning, discard the message, remove the
+    //       participant by running the _Participant Left Steps_ and abort these
+    //       steps.
+    //    2. If the user is a Threema user, respond by sending an `Auth`
+    //       message.
+    //    3. If the user is a guest participant, respond by sending a
+    //       `GuestAuth` message.
+    //    4. Set the participant's _handshake state_ to `await-auth` and abort
     //       these steps.
-    // 5. Log a warning and abort these steps.
+    // 5. Log a warning, discard the message, remove the participant by running
+    //    the _Participant Left Steps_ and abort these steps.
     message Hello {
       // Threema ID of the sender.
       string identity = 1;
@@ -1052,17 +1362,39 @@ message ParticipantToParticipant {
       bytes pcck = 4;
     }
 
-    // Second and final handshake message.
+    // Second handshake message.
     //
     // When receiving this message:
     //
     // 1. If the participant's _handshake state_ is not `await-auth`, log a
-    //    warning and abort these steps.
-    // 2. If the repeated `pck` does not equal the local `PCK.public` used
-    //    towards this participant, log a warning and abort these steps.
-    // 3. If the repeated `pcck` does not equal the local `PCCK` used towards
-    //    this participant, log a warning and abort these steps.
-    // 4. Set the participant's _handshake state_ to `done`.
+    //    warning, discard the message, remove the participant by running the
+    //    _Participant Left Steps_ and abort these steps.
+    // 2. If the other participant initiated a guest handshake via a
+    //    `GuestHello`, log a warning, discard the message, remove the
+    //    participant by running the _Participant Left Steps_ and abort these
+    //    steps.
+    // 3. If the repeated `pck` does not equal the local `PCK.public` used
+    //    towards this participant, log a warning, discard the message, remove
+    //    the participant by running the _Participant Left Steps_ and abort
+    //    these steps.
+    // 4. If the repeated `pcck` does not equal the local `PCCK` used towards
+    //    this participant, log a warning, discard the message, remove the
+    //    participant by running the _Participant Left Steps_ and abort these
+    //    steps.
+    // 5. Run the _Participant Rekey Steps_ for each media key of
+    //    `deprecated_early_media_keys`.
+    // 6. If the call is not a conference call or the _join policy_ is not set
+    //    to `JoinPolicy.REQUIRES_MODERATOR_APPROVAL`:
+    //    1. Set the participant's handshake state to `done`.
+    //    2. Run the _Participant Active Steps_.
+    // 7. If the call is a conference call and the _join policy_ is set to
+    //    `JoinPolicy.REQUIRES_MODERATOR_APPROVAL`:
+    //    1. Set the participant's _handshake state_ to `await-approval`.
+    //    2. If the user is a moderator or has a local _approval_ signature from
+    //       a moderator, respond by sending an `Approval` message and update
+    //       the _handshake state_ of `await-approval` with the _local approval
+    //       sent_ flag.
+    // 8. (Unreachable)
     message Auth {
       // 32 byte repeated ephemeral public key from the `Hello` message.
       //
@@ -1072,16 +1404,24 @@ message ParticipantToParticipant {
       // 32 byte repeated random cookie from the `Hello` message.
       //
       // Note: Repeating the sender's `PCCK` prevents replay attacks while
-      //       allowing the sender to use the same `PCK` for multiple
-      //       participants.
+      // allowing the sender to use the same `PCK` for multiple participants.
       bytes pcck = 2;
 
       // The currently applied PCMK and any _pending_ PCMK used for media
       // encryption, specifically in that order.
       //
-      // Note: An implementation can expect at least one media key to be
-      // present.
-      repeated MediaKey media_keys = 3;
+      // DEPRECATED: The idea behind sending PCMKs early was that participants
+      // should become visible in the UI once the `Auth`/`GuestAuth` is being
+      // sent, even though they are not mutually authenticated yet. This would
+      // make it apparent to the user that the other participant is now able to
+      // hear and see everything said and done in the call. However, it turns
+      // out that in practice it is quite complicated to have a pre-full-auth
+      // state that affects the UI, making this a footgun. For the sake of
+      // implementation simplicity and to avoid any other weird kind of
+      // pre-full-auth attacks, newer implementations MUST sent an empty list
+      // and follow up by sending a `Rekey` message after mutual authentication
+      // (and join approval).
+      repeated MediaKey deprecated_early_media_keys = 3 [deprecated = true];
     }
 
     // Initial guest handshake message.
@@ -1094,23 +1434,32 @@ message ParticipantToParticipant {
     //
     // When receiving this message:
     //
-    // 1. If guest participants are not allowed for this call, log a warning
-    //    and abort these steps.
-    // 2. (Placeholder for conference call PCK != GCAMK step.)
+    // 1. If guest participants are not allowed for this call, log a warning,
+    //    discard the message, remove the participant by running the
+    //    _Participant Left Steps_ and abort these steps.
     // 3. If the sender is a newly joined participant and therefore the
     //    _handshake state_ was set to `await-np-hello` (as described by the
     //    _Join/Leave_ section):
-    //    1. Respond by sending a `GuestHello` message, immediately followed by
-    //       a `GuestAuth` message.
-    //    2. Set the participant's _handshake state_ to `await-guest-auth` and
+    //    1. If the user is a Threema user, respond by sending a `Hello`
+    //       message, immediately followed by an `Auth` message.
+    //    2. If the user is a guest participant, respond by sending a
+    //       `GuestHello` message, immediately followed by a `GuestAuth`
+    //       message.
+    //    3. Set the participant's _handshake state_ to `await-guest-auth` and
     //       abort these steps.
     // 4. If the participant's _handshake state_ is `await-ep-hello`:
     //    1. If the `pck` reflects the local PCK.public or the `pcck` reflects
-    //       the local PCCK, log a warning and abort these steps.
-    //    2. Respond by sending a `GuestAuth` message.
-    //    3. Set the participant's _handshake state_ to `await-guest-auth` and
+    //       the local PCCK, log a warning, discard the message, remove the
+    //       participant by running the _Participant Left Steps_ and abort these
+    //       steps.
+    //    2. If the user is a Threema user, respond by sending an `Auth`
+    //       message.
+    //    3. If the user is a guest participant, respond by sending a
+    //       `GuestAuth` message.
+    //    4. Set the participant's _handshake state_ to `await-guest-auth` and
     //       abort these steps.
-    // 5. Log a warning and abort these steps.
+    // 5. Log a warning, discard the message, remove the participant by running
+    //    the _Participant Left Steps_ and abort these steps.
     message GuestHello {
       // The guest's self-assigned name.
       string name = 1;
@@ -1126,18 +1475,36 @@ message ParticipantToParticipant {
       bytes pcck = 3;
     }
 
-    // Second and final handshake message triggered if either side initiated the
-    // guest handshake.
+    // Second handshake message.
     //
     // When receiving this message:
     //
     // 1. If the participant's _handshake state_ is not `await-guest-auth`, log
-    //    a warning and abort these steps.
-    // 2. If the repeated `pck` does not equal the local `PCK.public` used
-    //    towards this participant, log a warning and abort these steps.
-    // 3. If the repeated `pcck` does not equal the local `PCCK` used towards
-    //    this participant, log a warning and abort these steps.
-    // 4. Set the participant's _handshake state_ to `done`.
+    //    a warning, discard the message, remove the participant by running the
+    //    _Participant Left Steps_ and abort these steps.
+    // 2. If the other participant initiated the (normal) handshake via a
+    //    `Hello`, log a warning, discard the message, remove the participant by
+    //    running the _Participant Left Steps_ and abort these steps.
+    // 3. If the repeated `pck` does not equal the local `PCK.public` used
+    //    towards this participant, log a warning, discard the message, remove
+    //    the participant by running the _Participant Left Steps_ and abort
+    //    these steps.
+    // 4. If the repeated `pcck` does not equal the local `PCCK` used towards
+    //    this participant, log a warning, discard the message, remove the
+    //    participant by running the _Participant Left Steps_ and abort these
+    //    steps.
+    // 5. If the call is not a conference call or the _join policy_ is not set
+    //    to `JoinPolicy.REQUIRES_MODERATOR_APPROVAL`:
+    //    1. Set the participant's handshake state to `done`.
+    //    2. Run the _Participant Active Steps_.
+    // 6. If the call is a conference call and the _join policy_ is set to
+    //    `JoinPolicy.REQUIRES_MODERATOR_APPROVAL`:
+    //    1. Set the participant's _handshake state_ to `await-approval`.
+    //    2. If the user is a moderator or has a local _approval_ signature from
+    //       a moderator, respond by sending an `Approval` message and update
+    //       the _handshake state_ of `await-approval` with the _local approval
+    //       sent_ flag.
+    // 7. (Unreachable)
     message GuestAuth {
       // 32 byte repeated ephemeral public key from the `GuestHello` message.
       //
@@ -1150,13 +1517,115 @@ message ParticipantToParticipant {
       //       allowing the sender to use the same `PCK` for multiple
       //       participants.
       bytes pcck = 2;
+    }
 
-      // The currently applied PCMK and any _pending_ PCMK used for media
-      // encryption, specifically in that order.
+    // Final handshake phase for conference calls with _join policy_
+    // `JoinPolicy.REQUIRES_MODERATOR_APPROVAL`, encrypted by:
+    //
+    // ```text
+    // XSalsa20-Poly1305(
+    //   key=X25519HSalsa20(<sender.PCK>.secret, <receiver.PCK>.public),
+    //   nonce=<sender.PCCK> || <sender.PCSN+>,
+    // )
+    // ```
+    //
+    // When receiving this message:
+    //
+    // 1. If the participant's _handshake state_ is not `await-approval`, log a
+    //    warning, discard the message, remove the participant by running the
+    //    _Participant Left Steps_ and abort these steps.
+    // 2. Handle the message according to the content. If an unknown content
+    //    variant has been received, log a warning, discard the message and
+    //    remove the participant by running the _Participant Left Steps_.
+    message ApprovalEnvelope {
+      // Random amount of padding, ignored by the receiver
+      bytes padding = 1;
+
+      oneof content {
+        GrantApproval grant_approval = 2;
+        Approval approval = 3;
+      }
+    }
+
+    // Grants approval to join a conference call with _join policy_
+    // `JoinPolicy.REQUIRES_MODERATOR_APPROVAL`.
+    //
+    // Note: While only a moderator should be able to grant approval, this
+    // message can technically be sent by any participant.
+    //
+    // When the user intends to grant another participant an approval to join:
+    //
+    // 1. If the participant's _handshake state_ is not `await-approval`, log a
+    //    warning and abort these steps.
+    // 2. If the user is not a moderator, log a warning and abort these steps.
+    // 3. Create and send an approval signature.
+    //
+    // When receiving this message:
+    //
+    // 1. Verify the `signature`. If it is invalid, log a warning, discard the
+    //    message and abort these steps.
+    // 2. If the user already has a local _approval_ signature from another
+    //    moderator, discard the message and abort these steps.
+    // 3. Store the `signature` as the local _approval_.
+    // 4. For each other participant with a _handshake state_ of
+    //    `await-approval` (including the sender of this message)¹:
+    //    1. Send an `Approval` message and update the _handshake state_ of
+    //       `await_approval` with the _local approval sent_ flag.
+    //    2. If the _handshake state_ of `await-approval` also has the _remote
+    //       approval received_ flag, set the _handshake state_ for this
+    //       participant to `done` and run the _Participant Active
+    //       Steps_.
+    //
+    // ¹: Due to step 2 and the steps defined for `Auth` and `GuestAuth`, it
+    // must be assumed that the other participant's _handshake state_ of
+    // `await-approval` does not have the _local approval sent_ flag.
+    message GrantApproval {
+      // Signature over the participant's UID:
       //
-      // Note: An implementation can expect at least one media key to be
-      // present.
-      repeated MediaKey media_keys = 3;
+      // ```text
+      // Ed25519(
+      //   key=GCMMK,
+      //   message=
+      //        u8(SignatureContext.JOIN_APPROVAL)
+      //     || <receiver.participant-uid>
+      //   )
+      // ```
+      //
+      // IMPORTANT: The `ParticipantToParticipant.ApprovalEnvelope` that
+      // encapsulates this message shall be encrypted by the same `PCSN` as
+      // used to sign this message.
+      bytes signature = 1;
+    }
+
+    // Present approval to join a conference call with _join policy_
+    // `JoinPolicy.REQUIRES_MODERATOR_APPROVAL`.
+    //
+    // When receiving this message:
+    //
+    // 1. Verify the `signature`. If it is invalid, log a warning, discard the
+    //    message, remove the participant by running the _Participant Left
+    //    Steps_ and abort these steps.
+    // 2. Update the _handshake state_ of `await-approval` with the _remote
+    //    approval received_ flag.
+    // 3. If the _handshake state_ of `await-approval` also has the _local
+    //    approval sent_ flag, set the _handshake state_ for this participant to
+    //    `done` and run the _Participant Active Steps_.
+    message Approval {
+      // Signature over the participant's UID:
+      //
+      // ```text
+      // Ed25519(
+      //   key=GCMMK,
+      //   message=
+      //        u8(SignatureContext.JOIN_APPROVAL)
+      //     || <receiver.participant-uid>
+      //   )
+      // ```
+      //
+      // IMPORTANT: The `ParticipantToParticipant.ApprovalEnvelope` that
+      // encapsulates this message shall be encrypted by the same `PCSN` as
+      // used to sign this message.
+      bytes signature = 1;
     }
   }
 
@@ -1170,87 +1639,103 @@ message ParticipantToParticipant {
   // )
   // ```
   //
-  // Note: Since the guest handshake is TOFU, an attacker knowing `GCK` having
-  // control over the SFU may apply a MITM attack between a guest participant
-  // and another participant. The attacker would be able to silently eavesdrop
-  // all media traffic between the two participants. This is repeatable for all
-  // other participants and means the attacker is able to silently eavesdrop the
-  // whole call. Therefore, if a call is not open for guests, `GuestHello` (and
-  // `GuestAuth`) **must not** be accepted.
+  // Note: Since guest to guest handshakes are TOFU, an attacker knowing `GCK`
+  // having control over the SFU may apply a MITM attack between a guest
+  // participant and another guest participant. The attacker would be able to
+  // silently eavesdrop all media traffic between the two participants. This is
+  // repeatable for all other participants and means the attacker is able to
+  // silently eavesdrop the whole call. Therefore, if a call is not open for
+  // guests, guest handshakes **must not** be accepted.
   //
   // When receiving this message:
   //
-  // 1. If the participant's _handshake state_ is not `done`, log a warning and
-  //    abort these steps.
-  // 2. Handle the message according to the content.
+  // 1. If the participant's _handshake state_ is not `done`, log a warning,
+  //    discard the message, remove the participant by running the _Participant
+  //    Left Steps_ and abort these steps.
+  // 2. Handle the message according to the content. If an unknown content
+  //    variant has been received, log a warning and discard the message.
   message Envelope {
     // Random amount of padding, ignored by the receiver
     bytes padding = 1;
 
     oneof content {
-      // An `Admin.Envelope`, encrypted as described by that message.
-      bytes encrypted_admin_envelope = 2;
-
       // Announces new media keys a participant will apply soon.
       MediaKey rekey = 3;
 
       // Announces capture state changes of a participant.
       CaptureState capture_state = 4;
 
-      // Announces that the participant entered the _hold_ state.
-      HoldState hold_state = 5;
+      // A moderator message.
+      Moderator.Envelope moderator_envelope = 2;
     }
   }
 
-  // Messages from admins towards participants (including admins).
-  message Admin {
-    // Message from an administrator, encrypted by:
-    //
-    // ```text
-    // XSalsa20-Poly1305(
-    //   key=X25519HSalsa20(GCAMK.secret, <receiver.PCK>.public),
-    //   nonce=<sender.PCCK> || <sender.PCSN+>,
-    // )
-    // ```
-    //
-    // IMPORTANT: The `ParticipantToParticipant.Envelope` that encapsulates this
-    // message shall be encrypted by the same `PCSN` as used for this
-    // `Envelope`. The only difference is that the sender uses `GCAMK` instead
-    // of its ephemeral `PCK`.
-    message Envelope {
-      oneof content {
-        ReportAsAdmin report_as_admin = 1;
-        PromoteToAdmin promote_to_admin = 2;
-        ForceLeave force_leave = 3;
-        ForceCaptureStateOff force_capture_state_off = 4;
-        ForceFocus force_focus = 5;
-      }
-    }
-
-    // Report as an administrator.
-    //
-    // When receiving this message, mark the sender as an administrator in the
-    // UI.
-    message ReportAsAdmin {}
-
-    // Promote the receiver to an administrator.
-    //
-    // Note: This is final for the scope of this Group Call. An administrator
-    //       cannot be demoted.
+  // Messages from moderators towards participants (including other moderators).
+  message Moderator {
+    // A message from a moderator.
     //
     // When receiving this message:
     //
-    // 1. If the user already is an administrator, abort these steps.
-    // 2. Derive GCAMK and calculate the associated public key from the received
-    //    `gcak`. If it does not match the known `GCAMK.public`, log a warning
+    // 1. Verify the `signature`. If it does not match, log a warning, discard
+    //    the message and abort these steps.
+    // 2. Handle the message according to the content. If an unknown content
+    //    variant has been received, log a warning and discard the message.
+    message Envelope {
+      // An `Content` message. After encoding, it is signed by:
+      //
+      // ```text
+      // Ed25519(
+      //   key=GCMMK,
+      //   message=
+      //        u8(SignatureContext.POST_AUTH_MESSAGE)
+      //     || X25519HSalsa20(<sender.PCK>.secret, <receiver.PCK>.public)
+      //     || <sender.PCCK>
+      //     || <sender.PCSN+>
+      //     || <message>
+      //   )
+      // ```
+      //
+      // IMPORTANT: The `ParticipantToParticipant.Envelope` that encapsulates this message shall be
+      // encrypted by the same `PCSN` as used to sign this message.
+      message Content {
+        oneof content {
+          ReportAsModerator report_as_moderator = 1;
+          PromoteToModerator promote_to_moderator = 2;
+          ForceLeave force_leave = 3;
+          ForceCaptureStateOff force_capture_state_off = 4;
+        }
+      }
+      bytes content = 1;
+
+      // Signature over the encoded `Content` message.
+      bytes signature = 2;
+    }
+
+    // Report as a moderator.
+    //
+    // When receiving this message, mark the sender as a moderator in the UI.
+    message ReportAsModerator {}
+
+    // Promote the receiver to a moderator.
+    //
+    // Note: This is final for the duration of the Group Call. A moderator
+    // cannot be demoted.
+    //
+    // When receiving this message:
+    //
+    // 1. If the user already is a moderator, abort these steps.
+    // 2. Derive GCMMK and calculate the associated public key from the received
+    //    `gcmk`. If it does not match the known `GCMMK.public`, log a warning
     //    and abort these steps.
-    // 3. Send an `Admin.ReportAsAdmin` message to all other participants
-    //    (including the sender who promoted the user to an admin).
-    // 4. Notify the user of its admin status and enable administration
+    // 3. Send a `Moderator.ReportAsModerator` message to all other participants
+    //    (including the sender who promoted the user to a moderator).
+    // 4. Notify the user of its moderator status and enable moderation
     //    functionality in the UI.
-    message PromoteToAdmin { bytes gcak = 1; }
+    message PromoteToModerator { bytes gcmk = 1; }
 
     // Force the receiver to leave the call.
+    //
+    // When receiving this message, immediately leave the call.
     message ForceLeave {}
 
     // Force the receiver's capture device to be turned off.
@@ -1279,28 +1764,11 @@ message ParticipantToParticipant {
       }
       Device device = 1;
     }
-
-    // Force focus on a specific participant.
-    //
-    // Note: This is a momentary enforcement. A participant may immediately
-    //       remove the focus and the message is not repeated towards newly
-    //       joined participants.
-    //
-    // When receiving this message:
-    //
-    // 1. Look up the participant to be focused. If none could be found, abort
-    //    these steps.
-    // 2. Focus the participant in the UI. The camera or screen feed
-    //    subscription may need to be created (e.g. participant was not visible
-    //    in the viewport before) or updated (e.g. display resolution changes
-    //    due to focus) by a corresponding `Subscribe` message sent to the SFU.
-    message ForceFocus { uint32 participant_id = 1; }
   }
 
   // Media keys a participant will use for sending.
   //
-  // Will be sent towards new and existing participants as described by the
-  // _Join/Leave_ section.
+  // When receiving this message, run the _Participant Rekey Steps_.
   message MediaKey {
     // The current epoch reflecting the PCMK state.
     //
@@ -1402,22 +1870,4 @@ message ParticipantToParticipant {
       Screen screen = 3;
     }
   }
-
-  // Signals that a participant is currently on hold / temporarily away.
-  //
-  // When creating this message:
-  //
-  // 1. Send a `CaptureState` message for each capture device. Follow the
-  //    creation steps of that message.
-  // 2. Send the `HoldState` message.
-  //
-  // When receiving this message:
-  //
-  // 1. Apply the _hold_ state in the UI for the participant.
-  // 2. Pause any video-based media tracks of the participant.
-  // 3. If subscribed to the participant's camera feed, send a
-  //    `ParticipantCamera.Unsubscribe` message to the SFU.
-  // 4. If subscribed to the participant's screen feed, send a
-  //    `ParticipantScreen.Unsubscribe` message to the SFU.
-  message HoldState {}
 }

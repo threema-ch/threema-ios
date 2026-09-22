@@ -93,7 +93,7 @@ struct PrivacySettingsView: View {
                             Text(#localize("this_device_decision_additional_info"))
                                 
                             Link(
-                                #localize("learn_more"),
+                                #localize("learn_more_dots"),
                                 destination: ThreemaURLProvider.thisDeviceOnlyFAQ
                             )
                             .font(.footnote)
@@ -126,7 +126,7 @@ struct PrivacySettingsView: View {
                             TargetManager.appName
                         ))
                         Link(
-                            #localize("learn_more"),
+                            #localize("learn_more_dots"),
                             destination: ThreemaURLProvider.interactionFAQ
                         )
                         .font(.footnote)

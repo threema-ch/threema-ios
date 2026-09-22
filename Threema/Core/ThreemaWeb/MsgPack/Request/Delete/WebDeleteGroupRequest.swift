@@ -67,7 +67,7 @@ final class WebDeleteGroupRequest: WebAbstractMessage {
             }
 
             DispatchQueue.main.async {
-                let notificationManager = NotificationManager()
+                let notificationManager = NotificationManager(businessInjector: BusinessInjector.ui)
                 notificationManager.updateUnreadMessagesCount()
 
                 let info = [kKeyConversation: conversation]

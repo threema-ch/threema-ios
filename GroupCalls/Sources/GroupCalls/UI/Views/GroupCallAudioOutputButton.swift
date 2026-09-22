@@ -1,3 +1,4 @@
+import AudioSessionManager
 import AVKit
 import Foundation
 import UIKit
@@ -7,6 +8,9 @@ final class GroupCallAudioOutputButton: UIButton {
     
     private typealias buttonConfig = GroupCallUIConfiguration.ToolbarButton
     private var dependencies: Dependencies
+
+    /// The route the button is currently drawing.
+    private var currentOutputs: [AVAudioSession.Port] = []
     
     private lazy var routePickerView: AVRoutePickerView = {
         let routePickerView = AVRoutePickerView(frame: CGRect(
@@ -110,13 +114,24 @@ final class GroupCallAudioOutputButton: UIButton {
             name: AVAudioSession.routeChangeNotification,
             object: nil
         )
+
+        refreshCurrentOutputs()
     }
     
     // MARK: - Notifications
     
     @objc private func audioSessionRouteChanged() {
-        Task { @MainActor in
-            self.setNeedsUpdateConfiguration()
+        refreshCurrentOutputs()
+    }
+
+    private func refreshCurrentOutputs() {
+        Task { @MainActor [weak self] in
+            guard let self else {
+                return
+            }
+
+            currentOutputs = await dependencies.audioSessionManager.currentRoute().outputs
+            setNeedsUpdateConfiguration()
         }
     }
     
@@ -125,8 +140,8 @@ final class GroupCallAudioOutputButton: UIButton {
     private func updateConfig(config: UIButton.Configuration) -> UIButton.Configuration {
         var newConfig = config
         
-        for output in AVAudioSession.sharedInstance().currentRoute.outputs {
-            switch output.portType {
+        for output in currentOutputs {
+            switch output {
             case .builtInSpeaker:
                 newConfig.image = UIImage(
                     systemName: "speaker.wave.3",

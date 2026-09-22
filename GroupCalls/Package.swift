@@ -17,12 +17,13 @@ let package = Package(
     dependencies: [
         // Dependencies declare other packages that this package depends on.
         // .package(url: /* package url */, from: "1.0.0"),
+        .package(path: "../AudioSessionManager"),
         .package(path: "../ThreemaProtocols"),
         .package(path: "../ThreemaBlake2b"),
         .package(path: "../ThreemaEssentials"),
-        .package(url: "https://github.com/apple/swift-protobuf.git", from: "1.6.0"),
+        .package(url: "https://github.com/apple/swift-protobuf.git", exact: "1.38.1"),
         .package(url: "https://github.com/apple/swift-async-algorithms", from: "1.0.0"),
-        .package(url: "https://github.com/CocoaLumberjack/CocoaLumberjack.git", exact: "3.8.5"),
+        .package(url: "https://github.com/CocoaLumberjack/CocoaLumberjack.git", exact: "3.9.1"),
     ],
     targets: [
         // Targets are the basic building blocks of a package. A target can define a module or a test suite.
@@ -30,7 +31,6 @@ let package = Package(
         .target(
             name: "GroupCalls",
             dependencies: [
-                "WebRTC",
                 "ThreemaProtocols",
                 "ThreemaBlake2b",
                 "ThreemaEssentials",
@@ -38,6 +38,8 @@ let package = Package(
                 .product(name: "SwiftProtobuf", package: "swift-protobuf"),
                 .product(name: "CocoaLumberjackSwift", package: "CocoaLumberjack"),
                 .product(name: "CocoaLumberjack", package: "CocoaLumberjack"),
+                .product(name: "AudioSessionManager", package: "AudioSessionManager"),
+                .product(name: "WebRTC", package: "AudioSessionManager"),
             ],
             swiftSettings: [
                 .unsafeFlags([
@@ -48,16 +50,11 @@ let package = Package(
         ),
         .testTarget(
             name: "GroupCallsTests",
-            dependencies: ["GroupCalls"]
+            dependencies: [
+                "GroupCalls",
+                .product(name: "AudioSessionManagerTestHelper", package: "AudioSessionManager"),
+            ]
         ),
-        // Importing frameworks that are already used in our existing app targets
-        .binaryTarget(name: "WebRTC", path: "../WebRTC.xcframework"),
-        
-        // To run tests in Xcode the WebRTC framework needs to be signed
-        // WARN: The failure will tell you that the module cannot be loaded but not that it is because it wasn't signed.
-        //
-        // codesign --sign - --force WebRTC.xcframework/ios-arm64/WebRTC.framework/
-        // codesign --sign - --force WebRTC.xcframework
     ],
     swiftLanguageModes: [.v5],
 )

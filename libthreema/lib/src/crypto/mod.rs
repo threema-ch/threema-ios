@@ -1,41 +1,16 @@
-//! Higher-level wrappers around crypto libraries used and some commonly used abstractions.
-//!
-//! Note: Always use this module instead of using the crypto dependencies directly!
+//! Crypto extensions.
 pub mod chunked;
 
-/// Minimal interface of a generic fixed-size array (used for some ciphers).
-pub(crate) mod generic_array {
-    pub(crate) use cipher::generic_array::GenericArray;
-}
-
-/// Type aliases for all constants used by Threema protocols.
-pub(crate) mod consts {
-    pub(crate) use cipher::consts::{U16, U24, U32, U64};
-}
-
-/// Minimal abstract interface for general ciphers.
-pub(crate) mod cipher {
-    pub(crate) use cipher::{KeyInit, KeyIvInit, StreamCipher, StreamCipherSeek, Unsigned};
-}
-
-/// Minimal abstract interface for hash digests.
-pub(crate) mod digest {
-    pub(crate) use digest::{Digest, FixedOutput, Mac, block_buffer::EagerBuffer};
-
-    pub(crate) const MAC_256_LENGTH: usize = 32;
-}
-
-/// Minimal utility functions.
-pub(crate) mod subtle {
-    pub(crate) use subtle::ConstantTimeEq;
-}
-
-/// Minimal abstract interface for AEAD ciphers.
+/// Extensions for AEAD ciphers.
 pub(crate) mod aead {
-    pub(crate) use aead::{AeadInPlace, Buffer, Error};
-    use aead::{Nonce, Payload, Result};
+    use libthreema_dependencies::{
+        crypto::{
+            aead::{AeadInPlace, Error, Nonce, Payload, Result},
+            cipher::Unsigned as _,
+        },
+        rand,
+    };
 
-    use super::cipher::Unsigned as _;
     use crate::utils::bytes::InsertSlice as _;
 
     // TODO(LIB-31): Use `ByteWriter`?
@@ -115,7 +90,7 @@ pub(crate) mod aead {
         /// let ciphertext = b"...";
         /// let plaintext = cipher.decrypt_random_nonce_ahead(ciphertext)?;
         /// ```
-        #[expect(dead_code, reason = "May use later")]
+        #[cfg(test)]
         fn decrypt_random_nonce_ahead<'message, 'aad, TCiphertext: Into<Payload<'message, 'aad>>>(
             &self,
             ciphertext: TCiphertext,
@@ -128,426 +103,225 @@ pub(crate) mod aead {
     }
 
     impl<TAlgorithm: AeadInPlace> AeadRandomNonceAhead for TAlgorithm {}
-}
 
-/// Argon2id for password-based key derivations as used by Threema protocols.
-pub(crate) mod argon2 {
-    pub(crate) use argon2::{Algorithm::Argon2id, Argon2, Params, Version};
-}
+    #[cfg(test)]
+    mod tests {
+        use assert_matches::assert_matches;
+        use libthreema_dependencies::{
+            crypto::{
+                chacha20::{ChaCha20Poly1305, XChaCha20Poly1305},
+                cipher::{KeyInit as _, Unsigned as _},
+                salsa20::XSalsa20Poly1305,
+            },
+            rand,
+        };
+        use rstest::rstest;
 
-/// BLAKE2b for hashing and key derivations as used by Threema protocols.
-pub(crate) mod blake2b {
-    use blake2::Blake2bMac;
+        use crate::crypto::aead::AeadRandomNonceAhead;
 
-    /// A BLAKE2b MAC, commonly used for key derivations and authentication challenges in Threema
-    /// protocols.
-    pub(crate) type Blake2bMac256 = Blake2bMac<super::consts::U32>;
-    pub(crate) type Blake2bMac512 = Blake2bMac<super::consts::U64>;
+        #[rstest]
+        #[case(XSalsa20Poly1305::new_from_slice(&[1; 32]).unwrap())]
+        #[case(XChaCha20Poly1305::new_from_slice(&[1; 32]).unwrap())]
+        #[case(ChaCha20Poly1305::new_from_slice(&[1; 32]).unwrap())]
+        fn encrypt_nonce_in_place_ahead<TCipher: AeadRandomNonceAhead>(
+            #[case] cipher: TCipher,
+        ) -> anyhow::Result<()> {
+            let mut buffer = vec![1_u8; 300];
+            let data_length = buffer.len();
+            let nonce = cipher
+                .encrypt_in_place_random_nonce_ahead(b"", &mut buffer)?
+                .to_vec();
 
-    pub(crate) const MAC_256_LENGTH: usize = 32;
-}
+            let nonce_length = TCipher::NonceSize::to_usize();
 
-/// SHA2 and HMAC-SHA-2 for hashing as used by various internal mechanisms in Threema and some
-/// legacy Threema protocols.
-pub(crate) mod sha2 {
-    use hmac::Hmac;
-    pub(crate) use sha2::Sha256;
+            assert_eq!(nonce, buffer.get(0..nonce_length).unwrap());
 
-    pub(crate) type HmacSha256 = Hmac<Sha256>;
-}
+            assert_eq!(
+                buffer.len(),
+                nonce_length + data_length + TCipher::TagSize::to_usize()
+            );
 
-/// ChaCha20Poly1305 and XChaCha20Poly1305 ciphers as used by modern Threema protocols.
-pub(crate) mod chacha20 {
-    pub(crate) use chacha20::XChaCha20;
-    pub(crate) use chacha20poly1305::{ChaCha20Poly1305, Key, XChaCha20Poly1305};
-
-    pub(crate) const KEY_LENGTH: usize = 32;
-    pub(crate) const NONCE_LENGTH: usize = 24;
-    pub(crate) const TAG_LENGTH: usize = 16;
-}
-
-/// XSalsa20Poly1305 cipher as used by legacy Threema protocols.
-pub(crate) mod salsa20 {
-    pub(crate) use crypto_secretbox::{Key, XSalsa20Poly1305};
-    pub(crate) use salsa20::XSalsa20;
-
-    use crate::utils::bytes;
-
-    pub(crate) const KEY_LENGTH: usize = 32;
-    pub(crate) const NONCE_LENGTH: usize = 24;
-    pub(crate) const TAG_LENGTH: usize = 16;
-
-    pub(crate) type EncryptedDataRange = bytes::EncryptedDataRange<{ TAG_LENGTH }>;
-}
-
-/// Poly1305 for hashing in combination with XSalsa20/XChaCha20. Should only be used for chunked crypto.
-pub(crate) mod poly1305 {
-    pub(crate) use poly1305::{Key, Tag};
-    use poly1305::{Poly1305, universal_hash::UniversalHash as _};
-
-    use super::cipher::KeyInit as _;
-
-    /// Poly1305 as a MAC construction with an internal buffer handling incomplete blocks.
-    pub(crate) struct ChunkedPoly1305 {
-        hash: Poly1305,
-        buffer: super::digest::EagerBuffer<super::consts::U16>,
-    }
-    impl ChunkedPoly1305 {
-        #[inline]
-        pub(crate) fn new(key: &Key) -> Self {
-            Self {
-                hash: Poly1305::new(key),
-                buffer: super::digest::EagerBuffer::default(),
-            }
+            Ok(())
         }
 
-        /// Update with any full blocks and store any leftover bytes for later processing.
-        #[inline]
-        pub(crate) fn update(&mut self, chunk: &[u8]) {
-            // Update the hash from fully constructed blocks and store any leftover bytes in the internal
-            // buffer
-            self.buffer.digest_blocks(chunk, |blocks| {
-                self.hash.update(blocks);
-            });
-        }
-    }
+        #[rstest]
+        #[case(XSalsa20Poly1305::new_from_slice(&[1; 32]).unwrap())]
+        #[case(XChaCha20Poly1305::new_from_slice(&[1; 32]).unwrap())]
+        #[case(ChaCha20Poly1305::new_from_slice(&[1; 32]).unwrap())]
+        fn encrypt_nonce_ahead<TCipher: AeadRandomNonceAhead>(#[case] cipher: TCipher) -> anyhow::Result<()> {
+            let data = vec![1_u8; 300];
+            let (nonce, encrypted_data) = cipher.encrypt_random_nonce_ahead(data.as_slice())?;
 
-    pub(crate) trait ChunkedPoly1305XChaCha20 {
-        /// Zero-pad a _pending_ block.
-        ///
-        /// If no bytes are in the internal buffer, the block is not considered _pending_. In other words,
-        /// this prevents a full block of just zero-padding.
-        fn zeropad_pending_block(&mut self);
+            let nonce_length = TCipher::NonceSize::to_usize();
 
-        /// Hand out the resulting tag.
-        ///
-        /// WARNING: This disregards any pending blocks. The caller must ensure that all pending blocks have
-        /// been written.
-        fn finalize_complete_block(self) -> Tag;
-    }
+            assert_eq!(nonce.to_vec(), encrypted_data.get(0..nonce_length).unwrap());
 
-    impl ChunkedPoly1305XChaCha20 for ChunkedPoly1305 {
-        #[inline]
-        fn zeropad_pending_block(&mut self) {
-            if self.buffer.get_pos() == 0 {
-                return;
-            }
-            self.hash.update(&[*self.buffer.pad_with_zeros()]);
+            assert_eq!(
+                encrypted_data.len(),
+                nonce_length + data.len() + TCipher::TagSize::to_usize()
+            );
+
+            Ok(())
         }
 
-        #[inline]
-        fn finalize_complete_block(self) -> Tag {
-            self.hash.finalize()
-        }
-    }
+        #[rstest]
+        #[case(XSalsa20Poly1305::new_from_slice(&[1; 32]).unwrap())]
+        #[case(XChaCha20Poly1305::new_from_slice(&[1; 32]).unwrap())]
+        #[case(ChaCha20Poly1305::new_from_slice(&[1; 32]).unwrap())]
+        fn decrypt_nonce_ahead_nonce_fail_too_small<TCipher: AeadRandomNonceAhead>(#[case] cipher: TCipher) {
+            let mut buffer = vec![1_u8; 3];
 
-    pub(crate) trait ChunkedPoly1305XSalsa20 {
-        /// Hand out the hash unpadded (yet still hashing the remaining bytes).
-        fn finalize_unpadded(self) -> Tag;
-    }
-
-    impl ChunkedPoly1305XSalsa20 for ChunkedPoly1305 {
-        #[inline]
-        fn finalize_unpadded(self) -> Tag {
-            self.hash.compute_unpadded(self.buffer.get_data())
-        }
-    }
-}
-
-/// Deprecated stuff that only exists for the sake of backwards compatibility.
-pub(crate) mod deprecated {
-    pub(crate) mod pbkdf2 {
-        pub(crate) use pbkdf2::pbkdf2_hmac_array;
-    }
-
-    pub(crate) mod salsa20 {
-        pub(crate) use salsa20::XSalsa20;
-    }
-
-    pub(crate) mod scrypt {
-        pub(crate) use scrypt::{Params, scrypt};
-    }
-}
-
-// Ed25519-related keys and signatures.
-pub(crate) mod ed25519 {
-    pub(crate) use ed25519_dalek::{PUBLIC_KEY_LENGTH, SIGNATURE_LENGTH, Signature, VerifyingKey};
-}
-
-/// X25519-related derivation and keys, including the intermediate X25519HSalsa20 hash on top of a
-/// montgomery point as used by many Threema protocols to derive further keys from.
-pub(crate) mod x25519 {
-    use aead::consts::U10;
-    use salsa20::hsalsa;
-    pub(crate) use x25519_dalek::{EphemeralSecret, PublicKey, SharedSecret, StaticSecret};
-    use zeroize::ZeroizeOnDrop;
-
-    use super::generic_array::GenericArray;
-
-    pub(crate) const KEY_LENGTH: usize = 32;
-
-    /// A uniformly distributed [`SharedSecret`], compatible with classic NaCl shared secret
-    /// derivation.
-    #[derive(ZeroizeOnDrop)]
-    pub(crate) struct SharedSecretHSalsa20([u8; Self::LENGTH]);
-
-    impl SharedSecretHSalsa20 {
-        /// The byte length.
-        pub(crate) const LENGTH: usize = KEY_LENGTH;
-
-        /// Convert this shared secret key to a byte array.
-        #[inline]
-        #[must_use]
-        pub(crate) fn to_bytes(&self) -> [u8; Self::LENGTH] {
-            self.0
+            assert!(
+                cipher
+                    .decrypt_in_place_random_nonce_ahead(b"", &mut buffer)
+                    .is_err()
+            );
         }
 
-        /// View this shared secret key as a byte array.
-        #[inline]
-        #[must_use]
-        pub(crate) fn as_bytes(&self) -> &[u8; Self::LENGTH] {
-            &self.0
+        #[rstest]
+        #[case(XSalsa20Poly1305::new_from_slice(&[1; 32]).unwrap())]
+        #[case(XChaCha20Poly1305::new_from_slice(&[1; 32]).unwrap())]
+        #[case(ChaCha20Poly1305::new_from_slice(&[1; 32]).unwrap())]
+        fn decrypt_in_place_nonce_ahead_fail_tag<TCipher: AeadRandomNonceAhead>(#[case] cipher: TCipher) {
+            let mut buffer = vec![1_u8; 128];
+            let error = cipher.decrypt_in_place_random_nonce_ahead(b"", &mut buffer);
+            assert_matches!(error, Err(_));
+
+            let buffer = &[1_u8; 128];
+            assert!(cipher.decrypt_random_nonce_ahead(buffer.as_slice()).is_err());
         }
-    }
 
-    impl From<SharedSecret> for SharedSecretHSalsa20 {
-        fn from(secret: SharedSecret) -> Self {
-            // Use HSalsa20 to create a uniformly random key from the shared secret
-            Self(
-                hsalsa::<U10>(
-                    GenericArray::from_slice(secret.as_bytes()),
-                    &GenericArray::default(),
-                )
-                .into(),
-            )
+        #[rstest]
+        #[case(XSalsa20Poly1305::new_from_slice(&[1; 32]).unwrap())]
+        #[case(XChaCha20Poly1305::new_from_slice(&[1; 32]).unwrap())]
+        #[case(ChaCha20Poly1305::new_from_slice(&[1; 32]).unwrap())]
+        fn decrypt_in_place_nonce_ahead_valid<TCipher: AeadRandomNonceAhead>(
+            #[case] cipher: TCipher,
+        ) -> anyhow::Result<()> {
+            let mut buffer = vec![1_u8; 300];
+            let decrypted_data = buffer.clone();
+            let nonce = cipher
+                .encrypt_in_place_random_nonce_ahead(b"", &mut buffer)?
+                .to_vec();
+
+            let decryption_nonce = cipher
+                .decrypt_in_place_random_nonce_ahead(b"", &mut buffer)?
+                .to_vec();
+
+            let nonce_length = TCipher::NonceSize::to_usize();
+
+            assert_eq!(nonce, decryption_nonce);
+            assert_eq!(decryption_nonce.len(), nonce_length);
+            assert_eq!(buffer, decrypted_data);
+
+            Ok(())
         }
-    }
-}
 
-#[cfg(test)]
-mod tests {
-    use assert_matches::assert_matches;
-    use rand::rngs::OsRng;
-    use rstest::rstest;
+        #[rstest]
+        #[case(XSalsa20Poly1305::new_from_slice(&[1; 32]).unwrap())]
+        #[case(XChaCha20Poly1305::new_from_slice(&[1; 32]).unwrap())]
+        #[case(ChaCha20Poly1305::new_from_slice(&[1; 32]).unwrap())]
+        fn decrypt_nonce_ahead_valid<TCipher: AeadRandomNonceAhead>(
+            #[case] cipher: TCipher,
+        ) -> anyhow::Result<()> {
+            let mut buffer = vec![1_u8; 300];
+            let original_data = buffer.clone();
+            let nonce = cipher
+                .encrypt_in_place_random_nonce_ahead(b"", &mut buffer)?
+                .to_vec();
 
-    use crate::crypto::{
-        aead::AeadRandomNonceAhead,
-        chacha20::{ChaCha20Poly1305, XChaCha20Poly1305},
-        cipher::{KeyInit as _, Unsigned as _},
-        salsa20::XSalsa20Poly1305,
-    };
+            let (decryption_nonce, decrypted_data) = cipher.decrypt_random_nonce_ahead(buffer.as_slice())?;
 
-    #[rstest]
-    #[case(XSalsa20Poly1305::new_from_slice(&[0; 32]).unwrap())]
-    #[case(XChaCha20Poly1305::new_from_slice(&[0; 32]).unwrap())]
-    #[case(ChaCha20Poly1305::new_from_slice(&[0; 32]).unwrap())]
-    fn encrypt_nonce_in_place_ahead<TCipher: AeadRandomNonceAhead>(
-        #[case] cipher: TCipher,
-    ) -> anyhow::Result<()> {
-        let mut buffer = vec![1_u8; 300];
-        let data_length = buffer.len();
-        let nonce = cipher
-            .encrypt_in_place_random_nonce_ahead(b"", &mut buffer)?
-            .to_vec();
+            let nonce_length = TCipher::NonceSize::to_usize();
 
-        let nonce_length = TCipher::NonceSize::to_usize();
+            assert_eq!(nonce, decryption_nonce.to_vec());
+            assert_eq!(decryption_nonce.len(), nonce_length);
+            assert_eq!(original_data, decrypted_data);
 
-        assert_eq!(
-            nonce,
-            buffer.get(0..nonce_length).expect("Nonce should be present")
-        );
+            Ok(())
+        }
 
-        assert_eq!(
-            buffer.len(),
-            nonce_length + data_length + TCipher::TagSize::to_usize()
-        );
+        #[rstest]
+        #[case(XSalsa20Poly1305::new_from_slice(&[1; 32]).unwrap())]
+        #[case(XChaCha20Poly1305::new_from_slice(&[1; 32]).unwrap())]
+        #[case(ChaCha20Poly1305::new_from_slice(&[1; 32]).unwrap())]
+        fn check_nonce_randomness_in_place<TCipher: AeadRandomNonceAhead>(
+            #[case] cipher: TCipher,
+        ) -> anyhow::Result<()> {
+            let mut first_buffer = vec![1_u8; 300];
+            let mut second_buffer = first_buffer.clone();
+            let first_nonce = cipher
+                .encrypt_in_place_random_nonce_ahead(b"", &mut first_buffer)?
+                .to_vec();
 
-        Ok(())
-    }
+            let second_nonce = cipher
+                .encrypt_in_place_random_nonce_ahead(b"", &mut second_buffer)?
+                .to_vec();
 
-    #[rstest]
-    #[case(XSalsa20Poly1305::new_from_slice(&[0; 32]).unwrap())]
-    #[case(XChaCha20Poly1305::new_from_slice(&[0; 32]).unwrap())]
-    #[case(ChaCha20Poly1305::new_from_slice(&[0; 32]).unwrap())]
-    fn encrypt_nonce_ahead<TCipher: AeadRandomNonceAhead>(#[case] cipher: TCipher) -> anyhow::Result<()> {
-        let data = vec![1_u8; 300];
-        let (nonce, encrypted_data) = cipher.encrypt_random_nonce_ahead(data.as_slice())?;
+            assert_ne!(first_nonce, second_nonce);
+            assert_ne!(first_buffer, second_buffer);
 
-        let nonce_length = TCipher::NonceSize::to_usize();
+            Ok(())
+        }
 
-        assert_eq!(
-            nonce.to_vec(),
-            encrypted_data
-                .get(0..nonce_length)
-                .expect("Nonce should be present")
-        );
+        #[rstest]
+        #[case(XSalsa20Poly1305::new_from_slice(&[1; 32]).unwrap())]
+        #[case(XChaCha20Poly1305::new_from_slice(&[1; 32]).unwrap())]
+        #[case(ChaCha20Poly1305::new_from_slice(&[1; 32]).unwrap())]
+        fn check_nonce_randomness<TCipher: AeadRandomNonceAhead>(
+            #[case] cipher: TCipher,
+        ) -> anyhow::Result<()> {
+            let data = vec![1_u8; 300];
+            let (first_nonce, first_encrypted_data) = cipher.encrypt_random_nonce_ahead(data.as_slice())?;
 
-        assert_eq!(
-            encrypted_data.len(),
-            nonce_length + data.len() + TCipher::TagSize::to_usize()
-        );
+            let (second_nonce, second_encrypted_data) = cipher.encrypt_random_nonce_ahead(data.as_slice())?;
 
-        Ok(())
-    }
+            assert_ne!(first_nonce, second_nonce);
+            assert_ne!(first_encrypted_data, second_encrypted_data);
 
-    #[rstest]
-    #[case(XSalsa20Poly1305::new_from_slice(&[0; 32]).unwrap())]
-    #[case(XChaCha20Poly1305::new_from_slice(&[0; 32]).unwrap())]
-    #[case(ChaCha20Poly1305::new_from_slice(&[0; 32]).unwrap())]
-    fn decrypt_nonce_ahead_nonce_fail_too_small<TCipher: AeadRandomNonceAhead>(#[case] cipher: TCipher) {
-        let mut buffer = vec![1_u8; 3];
+            Ok(())
+        }
 
-        assert!(
-            cipher
-                .decrypt_in_place_random_nonce_ahead(b"", &mut buffer)
-                .is_err()
-        );
-    }
+        #[rstest]
+        #[case(XSalsa20Poly1305::new_from_slice(&[1; 32]).unwrap())]
+        #[case(XChaCha20Poly1305::new_from_slice(&[1; 32]).unwrap())]
+        #[case(ChaCha20Poly1305::new_from_slice(&[1; 32]).unwrap())]
+        fn nonce_ahead_encryption_compatibility<TCipher: AeadRandomNonceAhead>(
+            #[case] cipher: TCipher,
+        ) -> anyhow::Result<()> {
+            let mut buffer = vec![1_u8; 12];
+            let data = buffer.clone();
+            let nonce = cipher.encrypt_in_place_random_nonce_ahead(b"", &mut buffer)?;
 
-    #[rstest]
-    #[case(XSalsa20Poly1305::new_from_slice(&[0; 32]).unwrap())]
-    #[case(XChaCha20Poly1305::new_from_slice(&[0; 32]).unwrap())]
-    #[case(ChaCha20Poly1305::new_from_slice(&[0; 32]).unwrap())]
-    fn decrypt_in_place_nonce_ahead_fail_tag<TCipher: AeadRandomNonceAhead>(#[case] cipher: TCipher) {
-        let mut buffer = vec![1_u8; 128];
-        let error = cipher.decrypt_in_place_random_nonce_ahead(b"", &mut buffer);
-        assert_matches!(error, Err(_));
+            let mut buffer = buffer.get(TCipher::NonceSize::to_usize()..).unwrap().to_vec();
+            cipher.decrypt_in_place(&nonce, b"", &mut buffer)?;
 
-        let buffer = &[1_u8; 128];
-        assert!(cipher.decrypt_random_nonce_ahead(buffer.as_slice()).is_err());
-    }
+            assert_eq!(data, buffer);
 
-    #[rstest]
-    #[case(XSalsa20Poly1305::new_from_slice(&[0; 32]).unwrap())]
-    #[case(XChaCha20Poly1305::new_from_slice(&[0; 32]).unwrap())]
-    #[case(ChaCha20Poly1305::new_from_slice(&[0; 32]).unwrap())]
-    fn decrypt_in_place_nonce_ahead_valid<TCipher: AeadRandomNonceAhead>(
-        #[case] cipher: TCipher,
-    ) -> anyhow::Result<()> {
-        let mut buffer = vec![1_u8; 300];
-        let decrypted_data = buffer.clone();
-        let nonce = cipher
-            .encrypt_in_place_random_nonce_ahead(b"", &mut buffer)?
-            .to_vec();
+            Ok(())
+        }
 
-        let decryption_nonce = cipher
-            .decrypt_in_place_random_nonce_ahead(b"", &mut buffer)?
-            .to_vec();
+        #[rstest]
+        #[case(XSalsa20Poly1305::new_from_slice(&[1; 32]).unwrap())]
+        #[case(XChaCha20Poly1305::new_from_slice(&[1; 32]).unwrap())]
+        #[case(ChaCha20Poly1305::new_from_slice(&[1; 32]).unwrap())]
+        fn nonce_ahead_decryption_compatibility<TCipher: AeadRandomNonceAhead>(
+            #[case] cipher: TCipher,
+        ) -> anyhow::Result<()> {
+            let mut buffer = vec![1_u8; 300];
+            let nonce = TCipher::generate_nonce(rand::thread_rng());
+            let data = buffer.clone();
+            cipher.encrypt_in_place(&nonce, b"", &mut buffer)?;
 
-        let nonce_length = TCipher::NonceSize::to_usize();
+            let mut ciphertext = nonce.clone().as_slice().to_vec();
+            ciphertext.extend(buffer);
 
-        assert_eq!(nonce, decryption_nonce);
-        assert_eq!(decryption_nonce.len(), nonce_length);
-        assert_eq!(buffer, decrypted_data);
+            let extracted_nonce = cipher.decrypt_in_place_random_nonce_ahead(b"", &mut ciphertext)?;
 
-        Ok(())
-    }
+            assert_eq!(data, ciphertext);
+            assert_eq!(extracted_nonce, nonce);
 
-    #[rstest]
-    #[case(XSalsa20Poly1305::new_from_slice(&[0; 32]).unwrap())]
-    #[case(XChaCha20Poly1305::new_from_slice(&[0; 32]).unwrap())]
-    #[case(ChaCha20Poly1305::new_from_slice(&[0; 32]).unwrap())]
-    fn decrypt_nonce_ahead_valid<TCipher: AeadRandomNonceAhead>(
-        #[case] cipher: TCipher,
-    ) -> anyhow::Result<()> {
-        let mut buffer = vec![1_u8; 300];
-        let original_data = buffer.clone();
-        let nonce = cipher
-            .encrypt_in_place_random_nonce_ahead(b"", &mut buffer)?
-            .to_vec();
-
-        let (decryption_nonce, decrypted_data) = cipher.decrypt_random_nonce_ahead(buffer.as_slice())?;
-
-        let nonce_length = TCipher::NonceSize::to_usize();
-
-        assert_eq!(nonce, decryption_nonce.to_vec());
-        assert_eq!(decryption_nonce.len(), nonce_length);
-        assert_eq!(original_data, decrypted_data);
-
-        Ok(())
-    }
-
-    #[rstest]
-    #[case(XSalsa20Poly1305::new_from_slice(&[0; 32]).unwrap())]
-    #[case(XChaCha20Poly1305::new_from_slice(&[0; 32]).unwrap())]
-    #[case(ChaCha20Poly1305::new_from_slice(&[0; 32]).unwrap())]
-    fn check_nonce_randomness_in_place<TCipher: AeadRandomNonceAhead>(
-        #[case] cipher: TCipher,
-    ) -> anyhow::Result<()> {
-        let mut first_buffer = vec![1_u8; 300];
-        let mut second_buffer = first_buffer.clone();
-        let first_nonce = cipher
-            .encrypt_in_place_random_nonce_ahead(b"", &mut first_buffer)?
-            .to_vec();
-
-        let second_nonce = cipher
-            .encrypt_in_place_random_nonce_ahead(b"", &mut second_buffer)?
-            .to_vec();
-
-        assert_ne!(first_nonce, second_nonce);
-        assert_ne!(first_buffer, second_buffer);
-
-        Ok(())
-    }
-
-    #[rstest]
-    #[case(XSalsa20Poly1305::new_from_slice(&[0; 32]).unwrap())]
-    #[case(XChaCha20Poly1305::new_from_slice(&[0; 32]).unwrap())]
-    #[case(ChaCha20Poly1305::new_from_slice(&[0; 32]).unwrap())]
-    fn check_nonce_randomness<TCipher: AeadRandomNonceAhead>(#[case] cipher: TCipher) -> anyhow::Result<()> {
-        let data = vec![1_u8; 300];
-        let (first_nonce, first_encrypted_data) = cipher.encrypt_random_nonce_ahead(data.as_slice())?;
-
-        let (second_nonce, second_encrypted_data) = cipher.encrypt_random_nonce_ahead(data.as_slice())?;
-
-        assert_ne!(first_nonce, second_nonce);
-        assert_ne!(first_encrypted_data, second_encrypted_data);
-
-        Ok(())
-    }
-
-    #[rstest]
-    #[case(XSalsa20Poly1305::new_from_slice(&[0; 32]).unwrap())]
-    #[case(XChaCha20Poly1305::new_from_slice(&[0; 32]).unwrap())]
-    #[case(ChaCha20Poly1305::new_from_slice(&[0; 32]).unwrap())]
-    fn test_encryption_compatibility<TCipher: AeadRandomNonceAhead>(
-        #[case] cipher: TCipher,
-    ) -> anyhow::Result<()> {
-        let mut buffer = vec![1_u8; 12];
-        let data = buffer.clone();
-        let nonce = cipher.encrypt_in_place_random_nonce_ahead(b"", &mut buffer)?;
-
-        let mut buffer = buffer
-            .get(TCipher::NonceSize::to_usize()..)
-            .expect("Should be long enough")
-            .to_vec();
-        cipher.decrypt_in_place(&nonce, b"", &mut buffer)?;
-
-        assert_eq!(data, buffer);
-
-        Ok(())
-    }
-
-    #[rstest]
-    #[case(XSalsa20Poly1305::new_from_slice(&[0; 32]).unwrap())]
-    #[case(XChaCha20Poly1305::new_from_slice(&[0; 32]).unwrap())]
-    #[case(ChaCha20Poly1305::new_from_slice(&[0; 32]).unwrap())]
-    fn test_decryption_compatibility<TCipher: AeadRandomNonceAhead>(
-        #[case] cipher: TCipher,
-    ) -> anyhow::Result<()> {
-        let mut buffer = vec![1_u8; 300];
-        let nonce = TCipher::generate_nonce(&mut OsRng);
-        let data = buffer.clone();
-        cipher.encrypt_in_place(&nonce, b"", &mut buffer)?;
-
-        let mut ciphertext = nonce.clone().as_slice().to_vec();
-        ciphertext.extend(buffer);
-
-        let extracted_nonce = cipher.decrypt_in_place_random_nonce_ahead(b"", &mut ciphertext)?;
-
-        assert_eq!(data, ciphertext);
-        assert_eq!(extracted_nonce, nonce);
-
-        Ok(())
+            Ok(())
+        }
     }
 }

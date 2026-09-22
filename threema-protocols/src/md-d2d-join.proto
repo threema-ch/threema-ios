@@ -250,9 +250,9 @@ message EssentialData {
 
   // Threema Work credentials
   //
-  // Shall not be present in the _Consumer_ flavour.
+  // Shall not be present in the _Consumer_ or _Green_ flavour.
   //
-  // Required in the _Work_ flavour.
+  // Required in the _Work_, _Blue_ or _OnPrem_ flavour.
   d2d_sync.ThreemaWorkCredentials work_credentials = 12;
 
   // Device group data
@@ -270,9 +270,9 @@ message EssentialData {
 
   // MDM parameters
   //
-  // Shall not be present in the _Consumer_ flavour.
+  // Shall not be present in the _Consumer_ or _Green_ flavour.
   //
-  // Optional in the _Work_ flavour.
+  // Optional in the _Work_, _Blue_ or _OnPrem_ flavour.
   //
   // [//]: # "TODO(SE-307): Make this required for Threema Work!"
   d2d_sync.MdmParameters mdm_parameters = 6;

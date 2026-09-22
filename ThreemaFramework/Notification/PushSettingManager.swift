@@ -310,11 +310,3 @@ public actor PushSettingManager: PushSettingManagerProtocol {
         userSettings.pushSettings = items
     }
 }
-
-@available(swift, obsoleted: 1.0, renamed: "PushSettingManager", message: "Only use from Objective-C")
-public final class PushSettingManagerObjC: NSObject {
-    @objc public static func canSendPush(for message: BaseMessageEntity, entityManager: EntityManager) -> Bool {
-        BusinessInjector(entityManager: entityManager)
-            .pushSettingManager.canSendPush(for: message)
-    }
-}

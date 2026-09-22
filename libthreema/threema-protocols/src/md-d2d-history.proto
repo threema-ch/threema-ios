@@ -93,11 +93,12 @@ syntax = "proto3";
 
 package d2d_history;
 
-option java_package = "ch.threema.protobuf.d2d.history";
 option java_multiple_files = true;
+option java_package = "ch.threema.protobuf.d2d.history";
 option php_namespace = "Threema\\Protocols\\D2d\\History";
 
 import "common.proto";
+import "data-backup.proto";
 import "md-d2d.proto";
 
 // Root message envelope for messages from the destination device (DD) to the
@@ -241,22 +242,7 @@ message PastMessage {
   }
 }
 
-// A reaction to a message
-message Reaction {
-  // Unix-ish timestamp in milliseconds when the reaction happened.
-  uint64 at = 1;
-
-  // The reaction type.
-  enum Type {
-    // Message explicitly acknowledged
-    ACKNOWLEDGE = 0;
-    // Message explicitly declined
-    DECLINE = 1;
-  }
-  Type type = 2;
-}
-
-// A past outgoing message
+// A past outgoing message marked as as _Include in snapshot_.
 message PastOutgoingMessage {
   // Enclosed outgoing message
   d2d.OutgoingMessage message = 1;
@@ -268,11 +254,11 @@ message PastOutgoingMessage {
   // marked as read
   optional uint64 read_at = 3;
 
-  // Optional last reaction to the message
-  Reaction last_reaction_at = 4;
+  // Optional reactions to the message
+  repeated data_backup.MessageReaction reactions = 4;
 }
 
-// A past incoming message
+// A past incoming message marked as as _Include in snapshot_.
 message PastIncomingMessage {
   // Enclosed incoming message
   d2d.IncomingMessage message = 1;
@@ -284,6 +270,6 @@ message PastIncomingMessage {
   // marked as read
   optional uint64 read_at = 3;
 
-  // Optional last reaction to the message
-  Reaction last_reaction_at = 4;
+  // Optional reactions to the message
+  repeated data_backup.MessageReaction reactions = 4;
 }

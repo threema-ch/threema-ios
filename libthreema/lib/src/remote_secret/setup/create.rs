@@ -275,6 +275,29 @@ mod tests {
     }
 
     #[test]
+    fn challenge_invalid_public_key() -> anyhow::Result<()> {
+        let context = setup_context();
+        let state = ChallengeState {
+            remote_secret: RemoteSecret([1_u8; 32]),
+            response: Some(RemoteSecretSetupResponse {
+                result: Ok(HttpsResponse {
+                    status: 200,
+                    body: serde_json::to_vec(&json!({
+                        // All-zero public key.
+                        "challengePublicKey": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+                        "challenge": "bWVvdw==",
+                    }))?,
+                }),
+            }),
+        };
+
+        let result = State::poll_challenge(&context, state);
+        assert_matches!(result, Err(RemoteSecretSetupError::ServerError(_)));
+
+        Ok(())
+    }
+
+    #[test]
     fn challenge_valid() -> anyhow::Result<()> {
         let context = setup_context();
         let state = ChallengeState {
@@ -283,7 +306,7 @@ mod tests {
                 result: Ok(HttpsResponse {
                     status: 200,
                     body: serde_json::to_vec(&json!({
-                        "challengePublicKey": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+                        "challengePublicKey": "BAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
                         "challenge": "bWVvdw==",
                     }))?,
                 }),
@@ -400,7 +423,7 @@ mod tests {
             result: Ok(HttpsResponse {
                 status: 200,
                 body: serde_json::to_vec(&json!({
-                    "challengePublicKey": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+                    "challengePublicKey": "BAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
                     "challenge": "bWVvdw==",
                 }))?,
             }),

@@ -29,11 +29,11 @@ final class MultiThisDeviceCell: MultiDeviceCell {
         return uiSwitch
     }()
     
-    @objc func enabledSwitchValueChanged(_ sender: UISwitch) {
+    @objc private func enabledSwitchValueChanged(_ sender: UISwitch) {
         if sender.isOn {
             if let duplicates = BusinessInjector.ui.entityManager.entityFetcher.duplicateContactIdentities() {
                 let duplicateIdentitiesDesc = duplicates.joined(separator: ", ")
-                UIAlertTemplate.showAlert(
+                UIAlertTemplate.showOKAlert(
                     owner: parentViewController!,
                     title: #localize("multi_device_linked_duplicate_contacts_title"),
                     message: String(

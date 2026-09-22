@@ -5,9 +5,9 @@
 use std::io;
 
 use anyhow::bail;
-use clap::Parser;
+use clap::{ArgAction, Parser};
 use libthreema::{
-    cli::{FullIdentityConfig, FullIdentityConfigOptions},
+    cli::config::{FullIdentityConfig, FullIdentityConfigOptions},
     csp::{CspProtocol, CspProtocolContext, CspStateUpdate, payload::OutgoingFrame},
     https::cli::https_client_builder,
     utils::logging::init_stderr_logging,
@@ -20,9 +20,14 @@ use tracing::{Level, debug, error, info, trace, warn};
 
 #[derive(Parser)]
 #[command()]
-struct CspPingPongCommand {
+struct CspLoginCommand {
     #[command(flatten)]
     config: FullIdentityConfigOptions,
+
+    /// Turn on debugging information.
+    /// Use -v -vv to control log level.
+    #[arg(short, action = ArgAction::Count)]
+    verbose: u8,
 }
 
 struct CspProtocolRunner {
@@ -164,14 +169,19 @@ impl CspProtocolRunner {
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
+    // Parse arguments for command
+    let arguments = CspLoginCommand::parse();
+
     // Configure logging
-    init_stderr_logging(Level::TRACE);
+    let log_level = match arguments.verbose {
+        1 => Level::DEBUG,
+        2 => Level::TRACE,
+        _ => Level::INFO,
+    };
+    init_stderr_logging(log_level);
 
     // Create HTTP client
     let http_client = https_client_builder().build()?;
-
-    // Parse arguments for command
-    let arguments = CspPingPongCommand::parse();
     let config = FullIdentityConfig::from_options(&http_client, arguments.config).await?;
 
     // Create CSP protocol and establish a connection
@@ -181,7 +191,7 @@ async fn main() -> anyhow::Result<()> {
             .common
             .config
             .chat_server_address
-            .addresses(config.csp_server_group),
+            .addresses(&config.csp_server_group),
         config
             .csp_context_init()
             .try_into()
@@ -200,5 +210,5 @@ async fn main() -> anyhow::Result<()> {
 #[test]
 fn verify_cli() {
     use clap::CommandFactory;
-    CspPingPongCommand::command().debug_assert();
+    CspLoginCommand::command().debug_assert();
 }

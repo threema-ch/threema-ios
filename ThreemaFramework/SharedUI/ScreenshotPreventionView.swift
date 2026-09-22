@@ -3,11 +3,22 @@ import ThreemaMacros
 
 public struct ScreenshotPreventionView: View {
 
+    private static var resolvedColorScheme: ColorScheme {
+        switch UserSettings.shared().interfaceStyle {
+        case UIUserInterfaceStyle.light.rawValue:
+            .light
+        case UIUserInterfaceStyle.dark.rawValue:
+            .dark
+        default:
+            UITraitCollection.current.userInterfaceStyle == .dark ? .dark : .light
+        }
+    }
+    
     public init() { }
 
     public var body: some View {
         ZStack {
-            Colors.textInverted.color
+            Color(.systemBackground)
             
             VStack(spacing: 8) {
                 Image(uiImage: Colors.threemaLogo)
@@ -22,11 +33,13 @@ public struct ScreenshotPreventionView: View {
                     .resizable()
                     .aspectRatio(contentMode: .fit)
                     .frame(maxHeight: 80)
+                    .foregroundStyle(.primary)
                     .padding()
 
                 Text(#localize("screenshot_prevention_info"))
                     .font(.title3)
                     .fontWeight(.medium)
+                    .foregroundStyle(.primary)
                 
                 Spacer()
                 Spacer()
@@ -37,6 +50,7 @@ public struct ScreenshotPreventionView: View {
             .multilineTextAlignment(.center)
         }
         .ignoresSafeArea()
+        .environment(\.colorScheme, Self.resolvedColorScheme)
     }
 }
 

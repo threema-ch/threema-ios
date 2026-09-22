@@ -196,12 +196,12 @@ final class EntityFetcherTests: XCTestCase {
             ThreemaIdentity("MEMBER04"),
         ]
 
-        try databasePreparer.save {
+        databasePreparer.save {
             for memberIdentity in memberIdentities {
                 databasePreparer.createContact(identity: memberIdentity.rawValue)
             }
 
-            _ = try databasePreparer.createGroup(
+            databasePreparer.createGroup(
                 groupID: BytesUtility.generateGroupID(),
                 groupCreatorIdentity: creatorIdentity.rawValue,
                 members: memberIdentities.map(\.rawValue)
@@ -235,7 +235,7 @@ final class EntityFetcherTests: XCTestCase {
                 databasePreparer.createContact(identity: memberIdentity.rawValue)
             }
 
-            _ = try databasePreparer.createGroup(
+            databasePreparer.createGroup(
                 groupID: BytesUtility.generateGroupID(),
                 groupCreatorIdentity: myIdentity,
                 members: memberIdentities.map(\.rawValue)
@@ -273,7 +273,7 @@ final class EntityFetcherTests: XCTestCase {
                 databasePreparer.createContact(identity: memberIdentity.rawValue)
             }
 
-            let (_, group, _) = try databasePreparer.createGroup(
+            let (_, group, _) = databasePreparer.createGroup(
                 groupID: BytesUtility.generateGroupID(),
                 groupCreatorIdentity: creatorIdentity.rawValue,
                 members: memberIdentities.map(\.rawValue)
@@ -311,7 +311,7 @@ final class EntityFetcherTests: XCTestCase {
                 databasePreparer.createContact(identity: memberIdentity.rawValue)
             }
 
-            let (_, group, _) = try databasePreparer.createGroup(
+            let (_, group, _) = databasePreparer.createGroup(
                 groupID: BytesUtility.generateGroupID(),
                 groupCreatorIdentity: creatorIdentity.rawValue,
                 members: memberIdentities.map(\.rawValue)
@@ -384,7 +384,7 @@ final class EntityFetcherTests: XCTestCase {
         // Group 1: Normal
         let creator1 = identities[0]
         let members1 = Array(identities[0..<10])
-        let _ = try databasePreparer.createGroup(
+        databasePreparer.createGroup(
             groupID: BytesUtility.generateGroupID(),
             groupCreatorIdentity: creator1.rawValue,
             members: members1.map(\.rawValue)
@@ -395,7 +395,7 @@ final class EntityFetcherTests: XCTestCase {
         // Group 2: Normal
         let creator2 = identities[5]
         let members2 = Array(identities[4..<30])
-        let _ = try databasePreparer.createGroup(
+        databasePreparer.createGroup(
             groupID: BytesUtility.generateGroupID(),
             groupCreatorIdentity: creator2.rawValue,
             members: members2.map(\.rawValue)
@@ -406,7 +406,7 @@ final class EntityFetcherTests: XCTestCase {
         // Group 3: Left
         let creator3 = identities[10]
         let members3 = Array(identities[10..<40])
-        let (_, group3, _) = try databasePreparer.createGroup(
+        let (_, group3, _) = databasePreparer.createGroup(
             groupID: BytesUtility.generateGroupID(),
             groupCreatorIdentity: creator3.rawValue,
             members: members3.map(\.rawValue)
@@ -425,6 +425,415 @@ final class EntityFetcherTests: XCTestCase {
 
         XCTAssertEqual(expectedIdentities.count, solicitedContacts.count)
         XCTAssertTrue(solicitedContacts.subtracting(expectedIdentities.map(\.rawValue)).isEmpty)
+    }
+    
+    // MARK: - Test dateOfOldestContentMessage
+    
+    func testNoOldestMessageDate() {
+        // Setup
+        let conversationEntity = testDatabase.preparer.createConversation()
+        
+        // Run
+        
+        let entityFetcher = testDatabase.entityManager.entityFetcher
+        let oldestMessageDate = entityFetcher.dateOfOldestContentMessage(in: conversationEntity)
+        
+        // Validate
+        
+        XCTAssertNil(oldestMessageDate)
+    }
+    
+    func testOneOldestMessageDate() {
+        // Setup
+        let expectedOldestMessageDate: Date = .now
+        
+        let conversationEntity = testDatabase.preparer.createConversation()
+        
+        testDatabase.preparer.createTextMessage(
+            conversation: conversationEntity,
+            date: expectedOldestMessageDate,
+            isOwn: true,
+            sender: nil,
+            remoteSentDate: nil
+        )
+        
+        // Run
+        
+        let entityFetcher = testDatabase.entityManager.entityFetcher
+        let actualOldestMessageDate = entityFetcher.dateOfOldestContentMessage(in: conversationEntity)
+        
+        // Validate
+        
+        XCTAssertEqual(expectedOldestMessageDate, actualOldestMessageDate)
+    }
+    
+    func testOldestMessageDate() {
+        // Setup
+        let numberOfMessage = 100
+        let expectedOldestMessageDate: Date = .now.addingTimeInterval(-100_000 * Double(numberOfMessage))
+        
+        let conversationEntity = testDatabase.preparer.createConversation()
+        
+        for messageNumber in 0..<numberOfMessage {
+            testDatabase.preparer.createTextMessage(
+                conversation: conversationEntity,
+                date: expectedOldestMessageDate.addingTimeInterval(Double(messageNumber) * 60 * 60),
+                isOwn: true,
+                sender: nil,
+                remoteSentDate: nil
+            )
+        }
+        
+        // Run
+        
+        let entityFetcher = testDatabase.entityManager.entityFetcher
+        let actualOldestMessageDate = entityFetcher.dateOfOldestContentMessage(in: conversationEntity)
+        
+        // Validate
+        
+        XCTAssertEqual(expectedOldestMessageDate, actualOldestMessageDate)
+    }
+    
+    func testContentAndNotContentOldestContentMessageDate() {
+        // Setup
+        let oldestSystemMessageDate: Date = .now.addingTimeInterval(-60 * 60 * 20)
+        let oldestTextMessageDate: Date = .now
+        
+        for systemMessageEntityType in SystemMessageEntity.SystemMessageEntityType.allCases {
+            let conversationEntity = testDatabase.preparer.createConversation()
+            
+            testDatabase.preparer.createSystemMessage(
+                conversation: conversationEntity,
+                type: systemMessageEntityType,
+                date: oldestSystemMessageDate
+            )
+            
+            testDatabase.preparer.createTextMessage(
+                conversation: conversationEntity,
+                date: oldestTextMessageDate,
+                isOwn: true,
+                sender: nil,
+                remoteSentDate: nil
+            )
+            
+            // Run
+            
+            let entityFetcher = testDatabase.entityManager.entityFetcher
+            let actualOldestMessageDate = entityFetcher.dateOfOldestContentMessage(in: conversationEntity)
+            
+            // Validate
+            
+            if SystemMessageEntity.SystemMessageEntityType.contentTypes.contains(systemMessageEntityType) {
+                XCTAssertEqual(oldestSystemMessageDate, actualOldestMessageDate)
+            }
+            else {
+                XCTAssertEqual(oldestTextMessageDate, actualOldestMessageDate)
+            }
+        }
+    }
+    
+    // MARK: - Test nonSystemMessagesCount
+    
+    func testNoMessageNonSystemMessagesCount() {
+        // Setup
+        
+        let conversationEntity = testDatabase.preparer.createConversation()
+        
+        // Run
+        
+        let entityFetcher = testDatabase.entityManager.entityFetcher
+        let nonSystemMessagesCount = entityFetcher.nonSystemMessagesCount(in: conversationEntity)
+        
+        // Validate
+        
+        XCTAssertEqual(0, nonSystemMessagesCount)
+    }
+    
+    func testJustSystemMessagesNonSystemMessagesCount() {
+        // Setup
+        
+        let conversationEntity = testDatabase.preparer.createConversation()
+        
+        for systemMessageEntityType in SystemMessageEntity.SystemMessageEntityType.allCases {
+            testDatabase.preparer.createSystemMessage(
+                conversation: conversationEntity,
+                type: systemMessageEntityType
+            )
+        }
+        
+        // Run
+        
+        let entityFetcher = testDatabase.entityManager.entityFetcher
+        let nonSystemMessagesCount = entityFetcher.nonSystemMessagesCount(in: conversationEntity)
+        
+        // Validate
+        
+        XCTAssertEqual(0, nonSystemMessagesCount)
+    }
+    
+    func testMixOfSystemAndNonSystemMessagesNonSystemMessagesCount() {
+        // Setup
+        
+        let expectedNumberOfNonSystemMessages = 100
+        
+        let conversationEntity = testDatabase.preparer.createConversation()
+        
+        for _ in 0..<(expectedNumberOfNonSystemMessages / 2) {
+            testDatabase.preparer.createTextMessage(
+                conversation: conversationEntity,
+                isOwn: true,
+                sender: nil,
+                remoteSentDate: nil
+            )
+        }
+        
+        for systemMessageEntityType in SystemMessageEntity.SystemMessageEntityType.allCases {
+            testDatabase.preparer.createSystemMessage(
+                conversation: conversationEntity,
+                type: systemMessageEntityType
+            )
+        }
+        
+        for _ in 0..<(expectedNumberOfNonSystemMessages / 2) {
+            testDatabase.preparer.createFileMessageEntity(conversation: conversationEntity)
+        }
+        
+        // Run
+        
+        let entityFetcher = testDatabase.entityManager.entityFetcher
+        let nonSystemMessagesCount = entityFetcher.nonSystemMessagesCount(in: conversationEntity)
+        
+        // Validate
+        
+        XCTAssertEqual(expectedNumberOfNonSystemMessages, nonSystemMessagesCount)
+    }
+    
+    // MARK: - Test outgoingContentMessagesCount
+    
+    func testNoMessagesOutgoingMessagesCount() {
+        // Setup
+        
+        let conversationEntity = testDatabase.preparer.createConversation()
+        
+        // Run
+        
+        let entityFetcher = testDatabase.entityManager.entityFetcher
+        let outgoingMessagesCount = entityFetcher.outgoingContentMessagesCount(in: conversationEntity)
+        
+        // Validate
+        
+        XCTAssertEqual(0, outgoingMessagesCount)
+    }
+    
+    func testNoOutgoingMessagesOutgoingMessagesCount() {
+        // Setup
+        
+        let conversationEntity = testDatabase.preparer.createConversation()
+        
+        for _ in 0..<100 {
+            testDatabase.preparer.createTextMessage(
+                conversation: conversationEntity,
+                isOwn: false,
+                sender: nil, // This should not matter for this test
+                remoteSentDate: nil // This should not matter for this test
+            )
+        }
+        
+        // Run
+        
+        let entityFetcher = testDatabase.entityManager.entityFetcher
+        let outgoingMessagesCount = entityFetcher.outgoingContentMessagesCount(in: conversationEntity)
+        
+        // Validate
+        
+        XCTAssertEqual(0, outgoingMessagesCount)
+    }
+    
+    func testFSSessionMessagesShouldNotCountAsOutgoingMessagesCount() {
+        // Setup
+        
+        let conversationEntity = testDatabase.preparer.createConversation()
+        
+        testDatabase.preparer.createTextMessage(
+            conversation: conversationEntity,
+            isOwn: false,
+            sender: nil, // This should not matter for this test
+            remoteSentDate: nil // This should not matter for this test
+        )
+        
+        testDatabase.preparer.createSystemMessage(
+            conversation: conversationEntity,
+            type: .fsSessionEstablished
+        )
+        
+        // It is not clear if such message even exist, but just to be sure we test for system messages that are not
+        // marked as outgoing
+        let systemMessage = testDatabase.preparer.createSystemMessage(
+            conversation: conversationEntity,
+            type: .fsSessionReset
+        )
+        systemMessage.isOwn = false
+        
+        // Run
+        
+        let entityFetcher = testDatabase.entityManager.entityFetcher
+        let outgoingMessagesCount = entityFetcher.outgoingContentMessagesCount(in: conversationEntity)
+        
+        // Validate
+        
+        XCTAssertEqual(0, outgoingMessagesCount)
+    }
+
+    func testOutgoingMessagesCount() {
+        // Setup
+        
+        let expectedNumberOfOutgoingMessages = 150
+        
+        let conversationEntity = testDatabase.preparer.createConversation()
+        
+        for _ in 0..<(expectedNumberOfOutgoingMessages / 2) {
+            testDatabase.preparer.createTextMessage(
+                conversation: conversationEntity,
+                isOwn: true,
+                sender: nil,
+                remoteSentDate: nil
+            )
+        }
+        
+        for _ in 0..<100 {
+            testDatabase.preparer.createTextMessage(
+                conversation: conversationEntity,
+                isOwn: false,
+                sender: nil, // This should not matter for this test
+                remoteSentDate: nil // This should not matter for this test
+            )
+        }
+        
+        for _ in 0..<(expectedNumberOfOutgoingMessages / 2) {
+            testDatabase.preparer.createFileMessageEntity(conversation: conversationEntity, isOwn: true)
+        }
+        
+        // Run
+        
+        let entityFetcher = testDatabase.entityManager.entityFetcher
+        let outgoingMessagesCount = entityFetcher.outgoingContentMessagesCount(in: conversationEntity)
+        
+        // Validate
+        
+        XCTAssertEqual(expectedNumberOfOutgoingMessages, outgoingMessagesCount)
+    }
+    
+    func testAllSystemMessagesOutgoingContentMessagesCount() {
+        // Setup
+        
+        let systemMessagesCountingAsContentMessagesCount = SystemMessageEntity.SystemMessageEntityType.contentTypes.count
+        
+        let conversationEntity = testDatabase.preparer.createConversation()
+        
+        for systemMessageEntityType in SystemMessageEntity.SystemMessageEntityType.allCases {
+            testDatabase.preparer.createSystemMessage(conversation: conversationEntity, type: systemMessageEntityType)
+        }
+        
+        // Run
+        
+        let entityFetcher = testDatabase.entityManager.entityFetcher
+        let outgoingMessagesCount = entityFetcher.outgoingContentMessagesCount(in: conversationEntity)
+        
+        XCTAssertEqual(systemMessagesCountingAsContentMessagesCount, outgoingMessagesCount)
+    }
+    
+    // MARK: - isInNotLeftGroup
+    
+    func testIsInNotLeftGroupWithoutAnyGroups() throws {
+        // Setup
+        
+        let testIdentity = try ThreemaIdentity(identity: "ABCDEFGH")
+        let testContactEntity = testDatabase.preparer.createContact(identity: testIdentity.rawValue)
+
+        // Run
+        
+        let entityFetcher = testDatabase.entityManager.entityFetcher
+        let isInNotLeftGroup = entityFetcher.isInNotLeftGroup(contact: testContactEntity)
+        
+        // Assert
+        
+        XCTAssertFalse(isInNotLeftGroup)
+    }
+    
+    func testIsInNotLeftGroupWithOnlyLeftGroups() throws {
+        // Setup
+        
+        let numberOfGroupsFromEachLeftState = 100
+        
+        let testIdentity = try ThreemaIdentity(identity: "ABCDEFGH")
+        let testContactEntity = testDatabase.preparer.createContact(identity: testIdentity.rawValue)
+        
+        let creatorIdentity = try ThreemaIdentity(identity: "CREATOR1")
+        let memberIdentities = try [
+            creatorIdentity,
+            testIdentity,
+            ThreemaIdentity(identity: "MEMBER01"),
+            ThreemaIdentity(identity: "MEMBER02"),
+            ThreemaIdentity(identity: "MEMBER03"),
+            ThreemaIdentity(identity: "MEMBER04"),
+        ]
+        
+        for _ in 0..<numberOfGroupsFromEachLeftState {
+            for groupState in [GroupEntity.GroupState.active, .requestedSync] {
+                let (_, groupEntity, _) = testDatabase.preparer.createGroup(
+                    groupCreatorIdentity: creatorIdentity.rawValue,
+                    members: memberIdentities.map(\.rawValue)
+                )
+                groupEntity.state = groupState.rawValue as NSNumber
+            }
+        }
+        
+        // Run
+        
+        let entityFetcher = testDatabase.entityManager.entityFetcher
+        let isInNotLeftGroup = entityFetcher.isInNotLeftGroup(contact: testContactEntity)
+        
+        // Assert
+        
+        XCTAssertTrue(isInNotLeftGroup)
+    }
+    
+    func testIsInNotLeftGroup() throws {
+        // Setup
+        
+        let numberOfGroupsFromEachState = 100
+        
+        let testIdentity = try ThreemaIdentity(identity: "ABCDEFGH")
+        let testContactEntity = testDatabase.preparer.createContact(identity: testIdentity.rawValue)
+        
+        let creatorIdentity = try ThreemaIdentity(identity: "CREATOR1")
+        let memberIdentities = try [
+            creatorIdentity,
+            testIdentity,
+            ThreemaIdentity(identity: "MEMBER01"),
+            ThreemaIdentity(identity: "MEMBER02"),
+            ThreemaIdentity(identity: "MEMBER03"),
+            ThreemaIdentity(identity: "MEMBER04"),
+        ]
+        
+        for _ in 0..<numberOfGroupsFromEachState {
+            for groupState in GroupEntity.GroupState.allCases {
+                let (_, groupEntity, _) = testDatabase.preparer.createGroup(
+                    groupCreatorIdentity: creatorIdentity.rawValue,
+                    members: memberIdentities.map(\.rawValue)
+                )
+                groupEntity.state = groupState.rawValue as NSNumber
+            }
+        }
+        
+        // Run
+        
+        let entityFetcher = testDatabase.entityManager.entityFetcher
+        let isInNotLeftGroup = entityFetcher.isInNotLeftGroup(contact: testContactEntity)
+        
+        // Assert
+        
+        XCTAssertTrue(isInNotLeftGroup)
     }
 
     // MARK: - Measurements
@@ -500,7 +909,7 @@ final class EntityFetcherTests: XCTestCase {
             let testDatabaseLocal = TestDatabase(encrypted: testCase.isDBEncrypted)
 
             let databasePreparer = testDatabaseLocal.preparer
-            try databasePreparer.save {
+            databasePreparer.save {
                 let contact = databasePreparer.createContact(
                     publicKey: BytesUtility.generateRandomBytes(length: ThreemaProtocol.publicKeyLength)!,
                     identity: expectedSenderIdentity,
@@ -519,7 +928,7 @@ final class EntityFetcherTests: XCTestCase {
                     remoteSentDate: nil
                 )
 
-                let (_, _, groupConversation) = try databasePreparer.createGroup(
+                let (_, _, groupConversation) = databasePreparer.createGroup(
                     groupID: BytesUtility.generateGroupID(),
                     groupCreatorIdentity: expectedSenderIdentity,
                     members: [expectedSenderIdentity]

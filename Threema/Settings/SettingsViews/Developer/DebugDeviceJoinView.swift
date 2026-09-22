@@ -154,7 +154,7 @@ struct DebugDeviceJoinView_Previews: PreviewProvider {
         DebugDeviceJoinView(
             model: .init(
                 mode: .multiDeviceLink,
-                audioSessionManager: .null,
+                audioSessionManager: nil,
                 systemFeedbackManager: .null,
                 systemPermissionsManager: .alwaysAllows
             )

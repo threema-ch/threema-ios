@@ -10,9 +10,9 @@ use core::time::Duration;
 use std::io;
 
 use anyhow::bail;
-use clap::Parser;
+use clap::{ArgAction, Parser};
 use libthreema::{
-    cli::{FullIdentityConfig, FullIdentityConfigOptions},
+    cli::config::{FullIdentityConfig, FullIdentityConfigOptions},
     csp::{
         CspProtocol, CspProtocolContext, CspStateUpdate,
         payload::{EchoPayload, IncomingPayload, OutgoingFrame, OutgoingPayload},
@@ -34,6 +34,11 @@ use tracing::{Level, debug, error, info, trace, warn};
 struct CspPingPongCommand {
     #[command(flatten)]
     config: FullIdentityConfigOptions,
+
+    /// Turn on debugging information.
+    /// Use -v -vv to control log level.
+    #[arg(short, action = ArgAction::Count)]
+    verbose: u8,
 }
 
 /// Payload queues for the main process.
@@ -303,14 +308,19 @@ async fn run_ping_pong_flow(mut queues: PayloadQueuesForCspPingPong) -> anyhow::
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
+    // Parse command
+    let arguments = CspPingPongCommand::parse();
+
     // Configure logging
-    init_stderr_logging(Level::TRACE);
+    let log_level = match arguments.verbose {
+        1 => Level::DEBUG,
+        2 => Level::TRACE,
+        _ => Level::INFO,
+    };
+    init_stderr_logging(log_level);
 
     // Create HTTP client
     let http_client = https_client_builder().build()?;
-
-    // Parse command
-    let arguments = CspPingPongCommand::parse();
     let config = FullIdentityConfig::from_options(&http_client, arguments.config).await?;
 
     // Create payload queues
@@ -336,7 +346,7 @@ async fn main() -> anyhow::Result<()> {
             .common
             .config
             .chat_server_address
-            .addresses(config.csp_server_group),
+            .addresses(&config.csp_server_group),
         config
             .csp_context_init()
             .try_into()

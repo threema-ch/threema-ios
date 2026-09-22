@@ -176,7 +176,11 @@ static const NSUInteger newMaxLength = 6;
     [super viewDidAppear:animated];
     // [일반모드] 였을 경우
     BOOL isModeNormal = (_lockScreenMode == LockScreenModeNormal || _lockScreenMode == LockScreenModeExtension);
-    if (isModeNormal && [_delegate respondsToSelector:@selector(allowTouchIDLockScreenViewController:)]) {
+    //------------------ Threema edit begin ---------------------------
+    // `allowTouchIDLockScreenViewController:` is a data source selector, so ask the data source. A nil
+    // data source opts out and leaves biometrics to the owner (see `PasscodeCoordinator`).
+    if (isModeNormal && [_dataSource respondsToSelector:@selector(allowTouchIDLockScreenViewController:)]) {
+    //------------------ Threema edit end ---------------------------
         if ([_dataSource allowTouchIDLockScreenViewController:self]) {
             // Touch ID 암호 입력창 호출
             [self lsv_policyDeviceOwnerAuthentication];

@@ -1,5 +1,5 @@
 import Foundation
 
-public struct OnPremConfigWork: Decodable, Sendable {
+struct OnPremConfigWork: Decodable, Sendable {
     let url: String
 }

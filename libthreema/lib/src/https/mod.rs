@@ -1,6 +1,6 @@
 //! HTTPS request/response structures and endpoints.
-use data_encoding::BASE64;
 use educe::Educe;
+use libthreema_dependencies::data_encoding::BASE64;
 
 use crate::{
     common::ClientInfo,
@@ -192,10 +192,10 @@ pub mod cli {
     impl From<HttpsMethod> for reqwest::Method {
         fn from(method: HttpsMethod) -> Self {
             match method {
-                HttpsMethod::Delete => reqwest::Method::DELETE,
-                HttpsMethod::Get => reqwest::Method::GET,
-                HttpsMethod::Post => reqwest::Method::POST,
-                HttpsMethod::Put => reqwest::Method::PUT,
+                HttpsMethod::Delete => Self::DELETE,
+                HttpsMethod::Get => Self::GET,
+                HttpsMethod::Post => Self::POST,
+                HttpsMethod::Put => Self::PUT,
             }
         }
     }
@@ -213,7 +213,7 @@ pub mod cli {
                     .map_err(|_| HttpsError::InvalidRequest("Invalid header value".into()))?;
                 let _ = map.insert(name, value);
             }
-            Ok(HttpsHeaderMap(map))
+            Ok(Self(map))
         }
     }
 

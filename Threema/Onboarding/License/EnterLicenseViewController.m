@@ -370,7 +370,7 @@
 - (void)tappedFeedbackImageView:(UITapGestureRecognizer *)sender {
     NSString *title = [NSString stringWithFormat:@"%i", _licenseStore.error.code];
     NSString *message = [NSString stringWithFormat:@"%@", _licenseStore.error.description];
-    [UIAlertTemplate showAlertWithOwner:self title:title message:message actionOk:nil];
+    [UIAlertTemplate showOKAlertWithOwner:self title:title message:message actionOk:nil];
 }
 
 @end

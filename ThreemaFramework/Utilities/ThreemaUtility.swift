@@ -77,9 +77,13 @@ public final class ThreemaUtility: NSObject {
     }()
     
     private static let additionalMDMString: String = {
-        // Here we need MDM without BusinessInjector, becaus at this point RS is not initialized
-        var mdmDescription = MDMSetup(appSetupStateRawValue: AppSetupState.notSetup.rawValue)
-            .supportDescriptionString() ?? ""
+        // The setup state is passed explicitly to keep `MDMSetup()` from reading `AppSetup.state`: this runs from
+        // `preLaunchSetup()`, before `AppSetup.registerIfADatabaseFileExists()`, and reading the state that early
+        // persists a wrong one if it was never stored before. The value itself does not matter here, because
+        // `supportDescriptionString()` reads the two MDM dictionaries from the user defaults directly.
+        var mdmDescription = MDMSetup(
+            appSetupStateRawValue: AppSetupState.notSetup.rawValue
+        ).supportDescriptionString() ?? ""
         if AppGroup.getCurrentType() == AppGroupTypeApp {
             let mdmDes = MyIdentityStore.shared().lastWorkInfoMdmDescription
             if mdmDescription != mdmDes {
@@ -118,7 +122,7 @@ public final class ThreemaUtility: NSObject {
     /// Icon to show if `Contact.showOtherThreemaIcon` is `true`
     ///
     /// If you need a view for it use `OtherThreemaTypeImageView`
-    @objc public static var otherThreemaTypeIcon: UIImage {
+    public static var otherThreemaTypeIcon: UIImage {
         if TargetManager.isBusinessApp {
             StyleKit.houseIcon
         }

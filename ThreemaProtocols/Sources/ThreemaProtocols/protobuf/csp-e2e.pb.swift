@@ -26,13 +26,13 @@ import SwiftProtobuf
 // incompatible with the version of SwiftProtobuf to which you are linking.
 // Please ensure that you are building against the same version of the API
 // that was used to generate this file.
-fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAPIVersionCheck {
+fileprivate nonisolated struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAPIVersionCheck {
   struct _2: SwiftProtobuf.ProtobufAPIVersion_2 {}
   typealias Version = _2
 }
 
 /// Metadata sent within a CSP payload `message-with-metadata-box` struct.
-public struct CspE2e_MessageMetadata: Sendable {
+public nonisolated struct CspE2e_MessageMetadata: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -235,7 +235,7 @@ public struct CspE2e_MessageMetadata: Sendable {
 /// group when the message was sent. However, any ordinary client will discard
 /// `EditMessage` for unknown messages. This leak is not great but considered
 /// acceptable for now.
-public struct CspE2e_EditMessage: Sendable {
+public nonisolated struct CspE2e_EditMessage: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -382,7 +382,7 @@ public struct CspE2e_EditMessage: Sendable {
 /// so that the message content is no longer visible. An implementation should
 /// also try to withdraw or update any notification created for a removed
 /// message.
-public struct CspE2e_DeleteMessage: Sendable {
+public nonisolated struct CspE2e_DeleteMessage: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -457,7 +457,7 @@ public struct CspE2e_DeleteMessage: Sendable {
 ///
 /// ²: This ensures that the user automatically switches to the chosen call if it
 /// is currently participating in a group call of this group.
-public struct CspE2e_GroupCallStart: Sendable {
+public nonisolated struct CspE2e_GroupCallStart: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -467,7 +467,7 @@ public struct CspE2e_GroupCallStart: Sendable {
   ///
   /// Note: This is a _major_ version and may only be increased in case of
   /// breaking changes due to the significant UX impact this has when running the
-  /// _Common Group Receive Steps_ (i.e. only calls with supported protocol
+  /// _Group Call Refresh Steps_ (i.e. only calls with supported protocol
   /// versions can be _chosen_).
   public var protocolVersion: UInt32 = 0
 
@@ -659,7 +659,7 @@ public struct CspE2e_GroupCallStart: Sendable {
 /// individual code sequences still have individual display buckets.
 ///
 /// [emoji-test.txt]: https://www.unicode.org/Public/emoji/latest/emoji-test.txt
-public struct CspE2e_Reaction: Sendable {
+public nonisolated struct CspE2e_Reaction: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -691,7 +691,7 @@ public struct CspE2e_Reaction: Sendable {
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
   /// A single emoji reaction to be applied or withdrawn.
-  public enum OneOf_Action: Equatable, Sendable {
+  public nonisolated enum OneOf_Action: Equatable, Sendable {
     /// Apply a new emoji reaction.
     case apply(Data)
     /// Withdraw a specific emoji reaction.
@@ -727,8 +727,8 @@ public struct CspE2e_Reaction: Sendable {
 ///
 /// When receiving this message:
 ///
-/// 1. If not Work flavour, log a warning, discard the message and abort these
-///    steps.
+/// 1. If the application is not built for the _Work_, _Blue_ or _OnPrem_
+///    flavour, log a warning, discard the message and abort these steps.
 /// 2. If the sender is not `*3MAW0RK`, discard the message and abort these
 ///    steps.
 /// 3. If `action` is of variant `require_work_sync`, schedule a persistent task
@@ -745,8 +745,8 @@ public struct CspE2e_Reaction: Sendable {
 ///       2. Run the _Work Sync Delta Change Determination Steps_ another time
 ///          and update `changes` with the result.¹
 ///       3. If `changes` is a marker that a _full Work Sync is required_,
-///          schedule a persistent task to make a full Work Sync. Otherwise, reflect
-///          all `changes`.
+///          schedule a persistent task to make a full Work Sync. Otherwise,
+///          reflect all `changes`.
 ///       4. Commit the transaction and await acknowledgement.
 ///    5. Apply all `changes` persistently.
 /// 5. If `action` is an unknown variant, log a warning that an unknown Work Sync
@@ -796,7 +796,7 @@ public struct CspE2e_Reaction: Sendable {
 /// example, if a change to a contact is currently in progress by another
 /// device's transaction while this device determines that no change is required.
 /// This is considered acceptable.
-public struct CspE2e_WorkSyncDelta: Sendable {
+public nonisolated struct CspE2e_WorkSyncDelta: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -821,14 +821,14 @@ public struct CspE2e_WorkSyncDelta: Sendable {
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public enum OneOf_Action: Equatable, Sendable {
+  public nonisolated enum OneOf_Action: Equatable, Sendable {
     case requireWorkSync(Common_Unit)
     case apply(CspE2e_WorkSyncDelta.Apply)
 
   }
 
   /// Work contact synchronisation message.
-  public struct ContactSync: Sendable {
+  public nonisolated struct ContactSync: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
@@ -848,14 +848,14 @@ public struct CspE2e_WorkSyncDelta: Sendable {
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
     /// Synchronisation type.
-    public enum OneOf_Action: Equatable, Sendable {
+    public nonisolated enum OneOf_Action: Equatable, Sendable {
       /// Update a Work contact.
       case update(CspE2e_WorkSyncDelta.ContactSync.Update)
 
     }
 
     /// Update a Work contact.
-    public struct Update: Sendable {
+    public nonisolated struct Update: Sendable {
       // SwiftProtobuf.Message conformance is added in an extension below. See the
       // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
       // methods supported on all messages.
@@ -887,7 +887,7 @@ public struct CspE2e_WorkSyncDelta: Sendable {
     public init() {}
   }
 
-  public struct Delta: Sendable {
+  public nonisolated struct Delta: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
@@ -910,7 +910,7 @@ public struct CspE2e_WorkSyncDelta: Sendable {
 
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public enum OneOf_Action: Equatable, Sendable {
+    public nonisolated enum OneOf_Action: Equatable, Sendable {
       case contactSync(CspE2e_WorkSyncDelta.ContactSync)
 
     }
@@ -918,7 +918,7 @@ public struct CspE2e_WorkSyncDelta: Sendable {
     public init() {}
   }
 
-  public struct Apply: Sendable {
+  public nonisolated struct Apply: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
@@ -935,9 +935,9 @@ public struct CspE2e_WorkSyncDelta: Sendable {
 
 // MARK: - Code below here is support for the SwiftProtobuf runtime.
 
-fileprivate let _protobuf_package = "csp_e2e"
+fileprivate nonisolated let _protobuf_package = "csp_e2e"
 
-extension CspE2e_MessageMetadata: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension CspE2e_MessageMetadata: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".MessageMetadata"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}padding\0\u{1}nickname\0\u{3}message_id\0\u{3}created_at\0")
 
@@ -986,7 +986,7 @@ extension CspE2e_MessageMetadata: SwiftProtobuf.Message, SwiftProtobuf._MessageI
   }
 }
 
-extension CspE2e_EditMessage: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension CspE2e_EditMessage: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".EditMessage"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}message_id\0\u{1}text\0")
 
@@ -1021,7 +1021,7 @@ extension CspE2e_EditMessage: SwiftProtobuf.Message, SwiftProtobuf._MessageImple
   }
 }
 
-extension CspE2e_DeleteMessage: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension CspE2e_DeleteMessage: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".DeleteMessage"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}message_id\0")
 
@@ -1051,7 +1051,7 @@ extension CspE2e_DeleteMessage: SwiftProtobuf.Message, SwiftProtobuf._MessageImp
   }
 }
 
-extension CspE2e_GroupCallStart: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension CspE2e_GroupCallStart: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".GroupCallStart"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}protocol_version\0\u{1}gck\0\u{3}sfu_base_url\0")
 
@@ -1091,7 +1091,7 @@ extension CspE2e_GroupCallStart: SwiftProtobuf.Message, SwiftProtobuf._MessageIm
   }
 }
 
-extension CspE2e_Reaction: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension CspE2e_Reaction: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".Reaction"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}message_id\0\u{1}apply\0\u{1}withdraw\0")
 
@@ -1153,7 +1153,7 @@ extension CspE2e_Reaction: SwiftProtobuf.Message, SwiftProtobuf._MessageImplemen
   }
 }
 
-extension CspE2e_WorkSyncDelta: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension CspE2e_WorkSyncDelta: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".WorkSyncDelta"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}require_work_sync\0\u{1}apply\0")
 
@@ -1220,7 +1220,7 @@ extension CspE2e_WorkSyncDelta: SwiftProtobuf.Message, SwiftProtobuf._MessageImp
   }
 }
 
-extension CspE2e_WorkSyncDelta.ContactSync: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension CspE2e_WorkSyncDelta.ContactSync: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = CspE2e_WorkSyncDelta.protoMessageName + ".ContactSync"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}update\0")
 
@@ -1266,7 +1266,7 @@ extension CspE2e_WorkSyncDelta.ContactSync: SwiftProtobuf.Message, SwiftProtobuf
   }
 }
 
-extension CspE2e_WorkSyncDelta.ContactSync.Update: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension CspE2e_WorkSyncDelta.ContactSync.Update: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = CspE2e_WorkSyncDelta.ContactSync.protoMessageName + ".Update"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}identity\0\u{3}availability_status\0")
 
@@ -1305,7 +1305,7 @@ extension CspE2e_WorkSyncDelta.ContactSync.Update: SwiftProtobuf.Message, SwiftP
   }
 }
 
-extension CspE2e_WorkSyncDelta.Delta: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension CspE2e_WorkSyncDelta.Delta: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = CspE2e_WorkSyncDelta.protoMessageName + ".Delta"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}applied_at\0\u{3}contact_sync\0")
 
@@ -1356,7 +1356,7 @@ extension CspE2e_WorkSyncDelta.Delta: SwiftProtobuf.Message, SwiftProtobuf._Mess
   }
 }
 
-extension CspE2e_WorkSyncDelta.Apply: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension CspE2e_WorkSyncDelta.Apply: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = CspE2e_WorkSyncDelta.protoMessageName + ".Apply"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}deltas\0")
 

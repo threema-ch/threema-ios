@@ -1,6 +1,6 @@
 import Foundation
 
-class VoIPCallConstants: NSObject {
+final class VoIPCallConstants: NSObject {
     static let JSON_OFFER_OFFER = "offer"
     
     static let JSON_FEATURES = "features"
@@ -19,4 +19,6 @@ class VoIPCallConstants: NSObject {
     static let JSON_ICE_CANDIDATE_CANDIDATES = "candidates"
     
     static let callIDKey = "callId"
+    
+    static let callDurationKey = "duration"
 }

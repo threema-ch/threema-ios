@@ -3,7 +3,7 @@ import Foundation
 /// Sequence number as defined in various Threema protocol specifications
 ///
 /// Initialized at 0 so the first `next()` number is 1
-public class SequenceNumber<T: UnsignedInteger> {
+public final class SequenceNumber<T: UnsignedInteger> {
     
     private var current: T = 0
     

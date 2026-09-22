@@ -28,7 +28,19 @@ public final class FileUtility: NSObject, FileUtilityProtocol {
     /// Please remove data stored here that is no longer needed: https://stackoverflow.com/a/25067497
     public let appTemporaryDirectory: URL
     
-    @objc public let appTemporaryUnencryptedDirectory: URL
+    /// Temporary app directory for unencrypted files.
+    ///
+    /// The directory is created on access if it is missing. Do not cache the returned URL: several routines wipe
+    /// `tmp/` wholesale and take this directory with them, `removeItemsInDirectory(directoryURL:)` on
+    /// `appTemporaryDirectory` and `cleanTemporaryDirectory(olderThan:)`, which lists top-level entries with
+    /// `.skipsSubdirectoryDescendants`, among them.
+    @objc public var appTemporaryUnencryptedDirectory: URL {
+        createDirectoryIfNeeded(at: temporaryUnencryptedDirectory)
+        return temporaryUnencryptedDirectory
+    }
+
+    /// Location of `appTemporaryUnencryptedDirectory`. Use that property, it also creates the directory.
+    private let temporaryUnencryptedDirectory: URL
     
     @objc override public convenience init() {
         self.init(resolver: FileManagerResolver())
@@ -38,7 +50,7 @@ public final class FileUtility: NSObject, FileUtilityProtocol {
         let fileManager = resolver.fileManager
         self.fileManager = fileManager
         self.appTemporaryDirectory = fileManager.temporaryDirectory
-        self.appTemporaryUnencryptedDirectory =
+        self.temporaryUnencryptedDirectory =
             fileManager.temporaryDirectory.appendingPathComponent("unencrypted")
         self.appDocumentsDirectory = fileManager.urls(
             for: .documentDirectory,
@@ -51,11 +63,7 @@ public final class FileUtility: NSObject, FileUtilityProtocol {
         
         super.init()
         
-        try? mkDir(
-            at: appTemporaryUnencryptedDirectory,
-            withIntermediateDirectories: false,
-            attributes: nil
-        )
+        createDirectoryIfNeeded(at: temporaryUnencryptedDirectory)
     }
 
     public func appDataDirectory(appGroupID: String) -> URL? {
@@ -127,7 +135,7 @@ public final class FileUtility: NSObject, FileUtilityProtocol {
 
     // MARK: Generate file names
 
-    @objc public func getTemporaryFileName() -> String {
+    public func getTemporaryFileName() -> String {
         var filename = ProcessInfo().globallyUniqueString
         let url = fileManager.temporaryDirectory
         var fileURL = url.appendingPathComponent(filename)
@@ -154,7 +162,7 @@ public final class FileUtility: NSObject, FileUtilityProtocol {
         return getUniqueFilename(from: filename, directoryURL: directoryURL, pathExtension: pathExtension)
     }
 
-    @objc public func getUniqueFilename(
+    public func getUniqueFilename(
         from filename: String,
         directoryURL: URL,
         pathExtension: String? = nil
@@ -188,7 +196,15 @@ public final class FileUtility: NSObject, FileUtilityProtocol {
 
         return fileManager.fileExists(atPath: fileURL.path)
     }
-    
+
+    public func createEmptyFile(atURL url: URL) throws {
+        guard !fileExists(at: url) else {
+            throw FileUtilityError.fileAlreadyExists
+        }
+
+        try "".write(to: url, atomically: true, encoding: .utf8)
+    }
+
     @objc @discardableResult
     public func createFile(
         atPath path: String,
@@ -197,7 +213,19 @@ public final class FileUtility: NSObject, FileUtilityProtocol {
     ) -> Bool {
         fileManager.createFile(atPath: path, contents: data, attributes: attr)
     }
-    
+
+    public func createFileHandle(forReadingFromURL url: URL) throws -> FileHandle {
+        try FileHandle(forReadingFrom: url)
+    }
+
+    public func createFileHandle(forWritingToURL url: URL) throws -> FileHandle {
+        try FileHandle(forWritingTo: url)
+    }
+
+    public func closeFileHandle(_ fileHandle: FileHandle) throws {
+        try fileHandle.close()
+    }
+
     @objc public func fileExists(atPath path: String) -> Bool {
         fileManager.fileExists(atPath: path)
     }
@@ -210,9 +238,30 @@ public final class FileUtility: NSObject, FileUtilityProtocol {
         try fileManager.createDirectory(
             at: url,
             withIntermediateDirectories: createIntermediates,
-            attributes: nil
+            attributes: attributes
         )
         DDLogInfo("Created directory at \(url.path)")
+    }
+
+    /// Create a directory unless there already is one at `url`.
+    private func createDirectoryIfNeeded(at url: URL) {
+        var isDirectory: ObjCBool = false
+
+        if fileManager.fileExists(atPath: url.path, isDirectory: &isDirectory) {
+            guard !isDirectory.boolValue else {
+                return
+            }
+
+            DDLogWarn("A file occupies the directory path \(url.path), removing it")
+            deleteIfExists(at: url)
+        }
+
+        do {
+            try mkDir(at: url, withIntermediateDirectories: true, attributes: nil)
+        }
+        catch {
+            DDLogError("Failed to create directory at \(url.path): \(error)")
+        }
     }
     
     public func mkDir(
@@ -337,35 +386,64 @@ public final class FileUtility: NSObject, FileUtilityProtocol {
         }
     }
 
-    @objc public func cleanTemporaryDirectory(olderThan: Date?) {
+    public func cleanTemporaryDirectory(olderThan: Date?) {
         guard let twoDaysAgo = Calendar.current.date(byAdding: .day, value: -2, to: Date()) else {
-            DDLogError("Could not get date for five days ago")
+            DDLogError("Could not get date for two days ago")
             return
         }
-        let directoryURL = fileManager.temporaryDirectory
+
+        let cutOffDate = olderThan ?? twoDaysAgo
+
+        // The unencrypted directory is a top level entry of `tmp/`, so it is a removal candidate as soon as its own
+        // modification date is old enough, and removing it takes everything in it along, however recent. Clean its
+        // contents instead and leave the directory in place.
+        removeItems(in: appTemporaryDirectory, olderThan: cutOffDate, preserving: [temporaryUnencryptedDirectory])
+
+        if fileExists(at: temporaryUnencryptedDirectory) {
+            removeItems(in: temporaryUnencryptedDirectory, olderThan: cutOffDate)
+        }
+    }
+
+    /// Remove the top level items of a directory that were last modified before a date.
+    ///
+    /// Subdirectories are removed as a whole, judged by their own modification date. The directory itself is kept.
+    /// A failure on one item does not stop the remaining ones from being removed.
+    ///
+    /// - Parameters:
+    ///   - directoryURL: Directory to remove items in
+    ///   - date: Items last modified before this date are removed
+    ///   - preserved: Items that are never removed, and whose contents are not inspected
+    private func removeItems(in directoryURL: URL, olderThan date: Date, preserving preserved: [URL] = []) {
+        let preservedPaths = Set(preserved.map(\.path))
+
         do {
-            let oldTempFiles = try fileManager.contentsOfDirectory(
+            let items = try fileManager.contentsOfDirectory(
                 at: directoryURL,
                 includingPropertiesForKeys: [.contentModificationDateKey],
                 options: [.skipsHiddenFiles, .skipsSubdirectoryDescendants]
             )
-            .filter {
-                guard let contentModificationDate = try $0
-                    .promisedItemResourceValues(forKeys: [.contentModificationDateKey])
-                    .contentModificationDate else {
-                    return false
+
+            for item in items where !preservedPaths.contains(item.path) {
+                // Keep anything whose age cannot be established
+                guard let contentModificationDate = try? item
+                    .resourceValues(forKeys: [.contentModificationDateKey])
+                    .contentModificationDate,
+                    contentModificationDate < date
+                else {
+                    continue
                 }
 
-                return contentModificationDate < olderThan ?? twoDaysAgo
-            }
-
-            for item in oldTempFiles {
-                DDLogInfo("Removing file: \(item)")
-                try fileManager.removeItem(at: item)
+                do {
+                    try fileManager.removeItem(at: item)
+                    DDLogInfo("Removed \(item.path)")
+                }
+                catch {
+                    DDLogError("Failed to remove \(item.path): \(error)")
+                }
             }
         }
         catch {
-            DDLogError("An error occurred while cleaning the temporary directory \(error)")
+            DDLogError("An error occurred while cleaning \(directoryURL.path): \(error)")
         }
     }
     
@@ -373,11 +451,11 @@ public final class FileUtility: NSObject, FileUtilityProtocol {
         try fileManager.attributesOfFileSystem(forPath: path)
     }
     
-    @objc public func contentsOfDirectory(atPath path: String) throws -> [String] {
+    public func contentsOfDirectory(atPath path: String) throws -> [String] {
         try fileManager.contentsOfDirectory(atPath: path)
     }
 
-    @objc public func contentsOfDirectory(
+    public func contentsOfDirectory(
         at url: URL,
         includingPropertiesForKeys keys: [URLResourceKey]?,
         options mask: FileManager.DirectoryEnumerationOptions = []
@@ -404,6 +482,35 @@ public final class FileUtility: NSObject, FileUtilityProtocol {
         }
 
         return content
+    }
+
+    public func read(offset: UInt64?, length: UInt64?, from fileHandle: FileHandle, fileURL: URL) throws -> Data {
+        if let offset {
+            try fileHandle.seek(toOffset: offset)
+        }
+
+        if let length {
+            guard let data = try fileHandle.read(upToCount: Int(length)) else {
+                throw FileUtilityError.readFailed
+            }
+            return data
+        }
+        else {
+            guard let data = try fileHandle.readToEnd() else {
+                throw FileUtilityError.readFailed
+            }
+            return data
+        }
+    }
+
+    public func write(contents: Data, offset: UInt64?, to fileHandle: FileHandle, fileURL: URL) throws {
+        if let offset {
+            try fileHandle.seek(toOffset: offset)
+        }
+        else {
+            try fileHandle.seekToEnd()
+        }
+        try fileHandle.write(contentsOf: contents)
     }
 
     @discardableResult

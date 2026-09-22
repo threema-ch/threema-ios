@@ -357,7 +357,7 @@ extension EditProfilePictureView: UINavigationControllerDelegate, UIImagePickerC
 
         guard let selectedImage = info[.originalImage] as? UIImage else {
             picker.dismiss(animated: true) { [presentingViewController] in
-                UIAlertTemplate.showAlert(
+                UIAlertTemplate.showOKAlert(
                     owner: presentingViewController,
                     title: #localize("edit_avatar_no_image_found_title"),
                     message: #localize("edit_avatar_no_image_found_message")

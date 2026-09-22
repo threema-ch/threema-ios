@@ -64,6 +64,11 @@
 @property (nullable, strong, nonatomic, readwrite) NSData *lastWorkUpdateRequestHash;
 @property (nullable, strong, nonatomic, readwrite) NSDate *lastWorkUpdateDate;
 
+- (void)restoreFromBackup:(nonnull NSString *)myIdentity
+            withSecretKey:(nonnull NSData *)mySecretKey
+             onCompletion:(nonnull void (^)(void))onCompletion
+                  onError:(nonnull void (^)(NSError * _Nonnull error))onError;
+
 @end
 
 @interface MyIdentityStore : NSObject <MyIdentityStoreProtocol>

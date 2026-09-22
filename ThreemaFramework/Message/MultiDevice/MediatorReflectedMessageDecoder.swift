@@ -1,7 +1,7 @@
 import Foundation
 import ThreemaProtocols
 
-class MediatorReflectedMessageDecoder {
+final class MediatorReflectedMessageDecoder {
 
     private let frameworkInjector: FrameworkInjectorProtocol
 

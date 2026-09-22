@@ -73,6 +73,30 @@ public enum ThreemaURLProvider {
         }
     }()
     
+    /// Support page for private users, in the app's language with an English fallback
+    public static var privateSupport: URL {
+        privateSupport(for: Bundle.main.preferredLocalizations.first)
+    }
+
+    /// Support page for private users in the language closest to the provided one
+    /// - Parameter languageTag: BCP-47 language tag, e.g. `de-CH`, `gsw-CH` or `pt-BR`
+    static func privateSupport(for languageTag: String?) -> URL {
+        URL(string: defaultURLString + supportPageLanguage(for: languageTag) + "/support/private")!
+    }
+
+    /// Language of the support page closest to the provided language, `en` if there is none
+    private static func supportPageLanguage(for languageTag: String?) -> String {
+        let languageCode = languageTag
+            .flatMap { Locale(identifier: $0).language.languageCode?.identifier } ?? "en"
+
+        return switch languageCode {
+        case "de", "gsw", "rm": "de"
+        case "fr": "fr"
+        case "es", "ca", "gl": "es"
+        default: "en"
+        }
+    }
+
     public static let deviceJoinDownloadString = {
         switch TargetManager.current {
         case .threema, .green:

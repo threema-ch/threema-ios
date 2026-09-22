@@ -1,31 +1,48 @@
 import CocoaLumberjackSwift
 import Foundation
+import ThreemaEssentials
 
 public final class VoIPCallSender {
-    private let messageSender: MessageSenderProtocol
-    private let myIdentityStore: MyIdentityStoreProtocol
+    private let messageSender: any MessageSenderProtocol
+    private let myIdentity: ThreemaIdentity
+    private let isMultiDeviceEnabled: Bool
+
+    // MARK: - Lifecycle
     
-    public init(messageSender: MessageSenderProtocol, myIdentityStore: MyIdentityStoreProtocol) {
+    public init(
+        messageSender: any MessageSenderProtocol,
+        myIdentity: ThreemaIdentity,
+        isMultiDeviceEnabled: Bool
+    ) {
         self.messageSender = messageSender
-        self.myIdentityStore = myIdentityStore
+        self.myIdentity = myIdentity
+        self.isMultiDeviceEnabled = isMultiDeviceEnabled
     }
+    
+    // MARK: - Public functions
     
     public func sendVoIPCall(offer: VoIPCallOfferMessage) {
         let msg = BoxVoIPCallOfferMessage()
         do {
             msg.jsonData = try offer.encodeAsJson()
             msg.toIdentity = offer.contactIdentity
-            msg.fromIdentity = myIdentityStore.identity
+            msg.fromIdentity = myIdentity.rawValue
 
             DDLogNotice(
-                "VoipCallService: [cid=\(offer.callID.callID)]: Call offer enqueued to \(offer.contactIdentity ?? "?")"
+                "VoipCallService: [cid=\(offer.callID)]: Call offer enqueued to \(offer.contactIdentity ?? "?")"
             )
             
-            messageSender.sendMessage(abstractMessage: msg, isPersistent: false)
+            // When multi device is enabled, we need a transaction to send this type of message
+            if isMultiDeviceEnabled {
+                messageSender.sendTransactionRequiredCallMessage(abstractMessage: msg, callID: offer.callID)
+            }
+            else {
+                messageSender.sendMessage(abstractMessage: msg, isPersistent: false)
+            }
         }
         catch {
             DDLogError(
-                "VoipCallService: [cid=\(offer.callID.callID)]: Can't send offer message to \(offer.contactIdentity ?? "?") -> \(error.localizedDescription)"
+                "VoipCallService: [cid=\(offer.callID)]: Can't send offer message to \(offer.contactIdentity ?? "?") -> \(error.localizedDescription)"
             )
         }
     }
@@ -35,18 +52,24 @@ public final class VoIPCallSender {
         do {
             msg.jsonData = try answer.encodeAsJson()
             msg.toIdentity = answer.contactIdentity
-            msg.fromIdentity = myIdentityStore.identity
+            msg.fromIdentity = myIdentity.rawValue
             msg.isUserInteraction = answer.isUserInteraction
                         
             DDLogNotice(
-                "VoipCallService: [cid=\(answer.callID.callID)]: Call answer enqueued to \(answer.contactIdentity ?? "?"): \(answer.action.description())"
+                "VoipCallService: [cid=\(answer.callID)]: Call answer enqueued to \(answer.contactIdentity ?? "?"): \(answer.action.description)"
             )
 
-            messageSender.sendMessage(abstractMessage: msg, isPersistent: false)
+            // When multi device is enabled, we need a transaction to send this type of message
+            if isMultiDeviceEnabled {
+                messageSender.sendTransactionRequiredCallMessage(abstractMessage: msg, callID: answer.callID)
+            }
+            else {
+                messageSender.sendMessage(abstractMessage: msg, isPersistent: false)
+            }
         }
         catch {
             DDLogError(
-                "VoipCallService: [cid=\(answer.callID.callID)]: Can't send answer message to \(answer.contactIdentity ?? "?") -> \(error.localizedDescription)"
+                "VoipCallService: [cid=\(answer.callID)]: Can't send answer message to \(answer.contactIdentity ?? "?") -> \(error.localizedDescription)"
             )
         }
     }
@@ -56,15 +79,15 @@ public final class VoIPCallSender {
         do {
             msg.jsonData = try iceCandidates.encodeAsJson()
             msg.toIdentity = iceCandidates.contactIdentity
-            msg.fromIdentity = myIdentityStore.identity
-            
+            msg.fromIdentity = myIdentity.rawValue
+
             DDLogNotice(
-                "VoipCallService: [cid=\(iceCandidates.callID.callID)]: Call ICE candidate message enqueued to \(iceCandidates.contactIdentity ?? "?") (\(iceCandidates.candidates.count) candidates)"
+                "VoipCallService: [cid=\(iceCandidates.callID)]: Call ICE candidate message enqueued to \(iceCandidates.contactIdentity ?? "?") (\(iceCandidates.candidates.count) candidates)"
             )
             
             for candidate in iceCandidates.candidates {
                 DDLogNotice(
-                    "VoipCallService: [cid=\(iceCandidates.callID.callID)]: Outgoing ICE candidate: \(candidate.sdp)"
+                    "VoipCallService: [cid=\(iceCandidates.callID)]: Outgoing ICE candidate: \(candidate.sdp)"
                 )
             }
 
@@ -72,7 +95,7 @@ public final class VoIPCallSender {
         }
         catch {
             DDLogError(
-                "VoipCallService: [cid=\(iceCandidates.callID.callID)]: Can't send ice candidates message \(iceCandidates.contactIdentity ?? "?") -> \(error.localizedDescription)"
+                "VoipCallService: [cid=\(iceCandidates.callID)]: Can't send ice candidates message \(iceCandidates.contactIdentity ?? "?") -> \(error.localizedDescription)"
             )
         }
     }
@@ -89,10 +112,10 @@ public final class VoIPCallSender {
         do {
             msg.jsonData = try hangupMessage.encodeAsJson()
             msg.toIdentity = hangupMessage.contactIdentity
-            msg.fromIdentity = myIdentityStore.identity
-            
+            msg.fromIdentity = myIdentity.rawValue
+
             DDLogNotice(
-                "VoipCallService: [cid=\(hangupMessage.callID.callID)]: Call hangup message enqueued to \(hangupMessage.contactIdentity ?? "?")"
+                "VoipCallService: [cid=\(hangupMessage.callID)]: Call hangup message enqueued to \(hangupMessage.contactIdentity ?? "?")"
             )
         
             if wait, !Thread.isMainThread {
@@ -127,7 +150,7 @@ public final class VoIPCallSender {
         }
         catch {
             DDLogError(
-                "VoipCallService: [cid=\(hangupMessage.callID.callID)]: Can't send hangup message to \(hangupMessage.contactIdentity ?? "?") -> \(error.localizedDescription)"
+                "VoipCallService: [cid=\(hangupMessage.callID)]: Can't send hangup message to \(hangupMessage.contactIdentity ?? "?") -> \(error.localizedDescription)"
             )
         }
     }
@@ -137,17 +160,17 @@ public final class VoIPCallSender {
         do {
             msg.jsonData = try ringingMessage.encodeAsJson()
             msg.toIdentity = ringingMessage.contactIdentity
-            msg.fromIdentity = myIdentityStore.identity
-            
+            msg.fromIdentity = myIdentity.rawValue
+
             DDLogNotice(
-                "VoipCallService: [cid=\(ringingMessage.callID.callID)]: Call ringing message enqueued to \(ringingMessage.contactIdentity ?? "?")"
+                "VoipCallService: [cid=\(ringingMessage.callID)]: Call ringing message enqueued to \(ringingMessage.contactIdentity ?? "?")"
             )
 
             messageSender.sendMessage(abstractMessage: msg, isPersistent: false)
         }
         catch {
             DDLogError(
-                "VoipCallService: [cid=\(ringingMessage.callID.callID)]: Can't send call ringing message to \(ringingMessage.contactIdentity ?? "?") -> \(error.localizedDescription)"
+                "VoipCallService: [cid=\(ringingMessage.callID)]: Can't send call ringing message to \(ringingMessage.contactIdentity ?? "?") -> \(error.localizedDescription)"
             )
         }
     }

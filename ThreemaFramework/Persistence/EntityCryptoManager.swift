@@ -1,8 +1,8 @@
 import Foundation
 import RemoteSecretProtocol
 
-public final class EntityCryptoManager {
-    public static let shared = EntityCryptoManager()
+final class EntityCryptoManager {
+    static let shared = EntityCryptoManager()
 
     private let remoteSecretQueue =
         DispatchQueue(label: "ch.threema.EntityCryptoManager.remoteSecretQueue")
@@ -104,7 +104,7 @@ public final class EntityCryptoManager {
     
     // MARK: Bool
 
-    public func encrypt(_ bool: Bool) -> Data {
+    func encrypt(_ bool: Bool) -> Data {
         unwrapRemoteSecret().encrypt(bool)
     }
     

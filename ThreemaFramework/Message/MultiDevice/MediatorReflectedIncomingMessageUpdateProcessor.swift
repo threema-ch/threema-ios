@@ -3,7 +3,7 @@ import PromiseKit
 import ThreemaEssentials
 import ThreemaProtocols
 
-class MediatorReflectedIncomingMessageUpdateProcessor {
+final class MediatorReflectedIncomingMessageUpdateProcessor {
 
     private let frameworkInjector: FrameworkInjectorProtocol
     private let messageProcessorDelegate: MessageProcessorDelegate

@@ -8,6 +8,7 @@ use crate::utils::debug::debug_slice_length;
 
 /// An error occurred while reading bytes.
 #[derive(Clone, Debug, thiserror::Error)]
+#[cfg_attr(test, derive(PartialEq))]
 pub enum ByteReaderError {
     /// Provided relative offset would move the reader offset out of bounds.
     #[error(
@@ -473,7 +474,7 @@ impl ByteReaderContainer<Vec<u8>> {
 impl<'buffer> ByteReader for ByteReaderContainer<buffer_type> {
     type Buffer = buffer_type;
     type RunAtReader<'run_at> = ByteReaderContainer<run_at_writer_type>;
-    type RunReader<'run> = ByteReaderContainer<run_writer_type>;
+    type RunReader<'run> = Self;
 
     #[inline]
     fn offset(&self) -> usize {

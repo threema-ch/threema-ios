@@ -27,6 +27,7 @@ typedef NS_ENUM(NSInteger, UserInterfacePreference) {
 
 extern NSString * const kFeatureDistributionListsEnabled;
 extern NSString * const kPreferenceInterfaceStyleKey;
+extern NSString * const kPreferenceAllowScreenshotKey;
 
 @protocol UserSettingsProtocol <NSObject>
 
@@ -52,12 +53,13 @@ extern NSString * const kPreferenceInterfaceStyleKey;
 @property (nonatomic, readwrite) BOOL enableVideoCall;
 @property (nonatomic, readwrite) enum ThreemaVideoCallQualitySetting threemaVideoCallQualitySetting;
 @property (nonatomic, readwrite) BOOL enableThreemaGroupCalls;
-@property (nonatomic, strong) NSOrderedSet *blacklist;
-@property (nonatomic, strong) NSArray *syncExclusionList;
+@property (nonatomic, strong) NSOrderedSet<NSString *> *blacklist;
+@property (nonatomic, strong) NSArray <NSString *> *syncExclusionList;
 @property (nonatomic, readwrite) enum WallpaperType wallpaperType;
 @property (nonatomic, strong) NSData *wallpaper;
 @property (nonatomic, readwrite) BOOL autoSaveMedia;
 @property (nonatomic, readwrite) BOOL allowOutgoingDonations;
+@property (nonatomic, readwrite) BOOL allowScreenshot;
 
 @property (nonatomic, readwrite) BOOL inAppSounds;
 @property (nonatomic, readwrite) BOOL inAppVibrate;
@@ -146,6 +148,7 @@ typedef NS_ENUM(NSInteger, AcceptPrivacyPolicyVariant) {
 @property (nonatomic, readwrite) BOOL partialReactionSupportAlertShown;
 
 @property (nonatomic, readwrite) BOOL distributionListsEnabled;
+@property (nonatomic, readwrite) BOOL backups2Enabled;
 
 + (UserSettings*)sharedUserSettings;
 - (instancetype) __unavailable init;

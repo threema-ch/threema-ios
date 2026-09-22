@@ -1,22 +1,21 @@
 //! Implement chunked encryption of XChaCha20Poly1305 and XSalsa20Poly1305.
 //!
 //! The provided API should be mainly used for large chunks of data, e.g. blobs or backups.
-use libthreema_macros::concat_fixed_bytes;
-use zeroize::Zeroizing;
-
-use crate::crypto::{
+use libthreema_dependencies::crypto::{
     chacha20,
     cipher::{KeyIvInit as _, StreamCipher as _, StreamCipherSeek as _},
     poly1305, salsa20,
     subtle::ConstantTimeEq as _,
 };
+use libthreema_macros::concat_fixed_bytes;
+use zeroize::Zeroizing;
 
 /// Invalid Tag (aka Message Authentication Code or MAC).
 #[derive(thiserror::Error, Debug)]
 #[error("Invalid tag")]
 pub struct InvalidTag;
 
-pub(super) struct ChunkedXChaCha20Poly1305Cipher {
+struct ChunkedXChaCha20Poly1305Cipher {
     cipher: chacha20::XChaCha20,
     mac: poly1305::ChunkedPoly1305,
     associated_data_length: u64,
@@ -29,7 +28,7 @@ impl ChunkedXChaCha20Poly1305Cipher {
         nonce: &[u8; chacha20::NONCE_LENGTH],
         associated_data: &[u8],
     ) -> Self {
-        use crate::crypto::poly1305::ChunkedPoly1305XChaCha20 as _;
+        use libthreema_dependencies::crypto::poly1305::ChunkedPoly1305XChaCha20 as _;
 
         let mut cipher = chacha20::XChaCha20::new(key.into(), nonce.into());
 
@@ -63,7 +62,7 @@ impl ChunkedXChaCha20Poly1305Cipher {
 
     #[inline]
     fn finalize(mut self) -> poly1305::Tag {
-        use crate::crypto::poly1305::ChunkedPoly1305XChaCha20 as _;
+        use libthreema_dependencies::crypto::poly1305::ChunkedPoly1305XChaCha20 as _;
 
         // Add `padding2`, then the associated data length and the ciphertext length as u64 (little-endian).
         //
@@ -206,7 +205,7 @@ impl ChunkedXSalsa20Poly1305Cipher {
     /// Finalize and compute the resulting tag of the previously encrypted chunks.
     #[inline]
     fn finalize(self) -> poly1305::Tag {
-        use crate::crypto::poly1305::ChunkedPoly1305XSalsa20 as _;
+        use libthreema_dependencies::crypto::poly1305::ChunkedPoly1305XSalsa20 as _;
 
         self.mac.finalize_unpadded()
     }
@@ -302,12 +301,14 @@ mod tests {
     use super::*;
 
     mod xchacha20poly1305 {
-        use data_encoding::HEXLOWER;
+        use libthreema_dependencies::{
+            crypto::{aead::AeadInPlace as _, chacha20, cipher::KeyInit as _},
+            data_encoding::HEXLOWER_PERMISSIVE,
+        };
         use rstest::rstest;
         use rstest_reuse::{apply, template};
 
         use super::{ChunkedXChaCha20Poly1305Decryptor, ChunkedXChaCha20Poly1305Encryptor};
-        use crate::crypto::{aead::AeadInPlace as _, chacha20, cipher::KeyInit as _};
 
         struct TestCase {
             plaintext: Vec<u8>,
@@ -414,7 +415,7 @@ mod tests {
         #[test]
         fn xchacha20poly1305_encryption_rfc() {
             TestCase {
-                plaintext: HEXLOWER
+                plaintext: HEXLOWER_PERMISSIVE
                     .decode(
                         b"4c616469657320616e642047656e746c656d656e206f662074686520636c6173\
                           73206f66202739393a204966204920636f756c64206f6666657220796f75206f\
@@ -422,20 +423,20 @@ mod tests {
                           637265656e20776f756c642062652069742e",
                     )
                     .expect("plaintext should be hex encoded"),
-                associated_data: HEXLOWER
+                associated_data: HEXLOWER_PERMISSIVE
                     .decode(b"50515253c0c1c2c3c4c5c6c7")
                     .expect("associated data should be hex encoded"),
-                nonce: HEXLOWER
+                nonce: HEXLOWER_PERMISSIVE
                     .decode(b"404142434445464748494a4b4c4d4e4f5051525354555657")
                     .expect("nonce should be hex encoded")
                     .try_into()
                     .expect("nonce should have valid length"),
-                key: HEXLOWER
+                key: HEXLOWER_PERMISSIVE
                     .decode(b"808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9f")
                     .expect("key should be hex encoded")
                     .try_into()
                     .expect("key should have valid length"),
-                reference_ciphertext: HEXLOWER
+                reference_ciphertext: HEXLOWER_PERMISSIVE
                     .decode(
                         b"bd6d179d3e83d43b9576579493c0e939572a1700252bfaccbed2902c21396cbb\
                           731c7f1b0b4aa6440bf3a82f4eda7e39ae64c6708c54c216cb96b72e1213b452\
@@ -444,7 +445,7 @@ mod tests {
                     )
                     .expect("reference ciphertext should be hex encoded"),
 
-                reference_tag: HEXLOWER
+                reference_tag: HEXLOWER_PERMISSIVE
                     .decode(b"c0875924c1c7987947deafd8780acf49")
                     .expect("tag should be hex encoded")
                     .try_into()
@@ -499,12 +500,14 @@ mod tests {
     }
 
     mod xsalsa20poly1305 {
-        use data_encoding::HEXLOWER;
+        use libthreema_dependencies::{
+            crypto::{aead::AeadInPlace as _, cipher::KeyInit as _, salsa20},
+            data_encoding::HEXLOWER_PERMISSIVE,
+        };
         use rstest::rstest;
         use rstest_reuse::{apply, template};
 
         use super::{ChunkedXSalsa20Poly1305Decryptor, ChunkedXSalsa20Poly1305Encryptor};
-        use crate::crypto::{aead::AeadInPlace as _, cipher::KeyInit as _, salsa20};
         struct TestCase {
             plaintext: Vec<u8>,
             key: [u8; salsa20::KEY_LENGTH],
@@ -603,15 +606,15 @@ mod tests {
         #[test]
         fn xsalsa20poly1305_encryption_rooterberg() {
             TestCase {
-                plaintext: HEXLOWER
+                plaintext: HEXLOWER_PERMISSIVE
                     .decode(b"2021222324252627")
                     .expect("plaintext should be hex encoded"),
                 key: [0; salsa20::KEY_LENGTH],
                 nonce: [0; salsa20::NONCE_LENGTH],
-                reference_ciphertext: HEXLOWER
+                reference_ciphertext: HEXLOWER_PERMISSIVE
                     .decode(b"e61f99dcdaa0e80b")
                     .expect("ciphertext should be hex encoded"),
-                reference_tag: HEXLOWER
+                reference_tag: HEXLOWER_PERMISSIVE
                     .decode(b"f9ad226979fb26db0379ec522f3e0903")
                     .expect("reference tag should be hex encoded")
                     .try_into()

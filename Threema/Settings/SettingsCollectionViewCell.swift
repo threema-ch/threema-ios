@@ -1,6 +1,6 @@
 import Foundation
 
-class SettingsCollectionViewCell: UICollectionViewListCell, Reusable {
+final class SettingsCollectionViewCell: UICollectionViewListCell, Reusable {
     
     // MARK: - Properties
     

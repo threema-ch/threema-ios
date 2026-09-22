@@ -3,7 +3,7 @@ import Foundation
 import SwiftProtobuf
 import ThreemaProtocols
 
-@objc public final class GroupReactionMessage: AbstractGroupMessage {
+public final class GroupReactionMessage: AbstractGroupMessage {
     public var decoded: CspE2e_Reaction?
     
     override public func type() -> UInt8 {

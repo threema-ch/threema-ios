@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import ThreemaMacros
 
 @Observable
 @MainActor
@@ -21,6 +22,9 @@ final class LoadingViewModel {
         /// Error occurred, may allow retry
         case error(Error)
         
+        /// App access is locked
+        case locked
+        
         static func == (lhs: State, rhs: State) -> Bool {
             switch (lhs, rhs) {
             case (.initializing, .initializing):
@@ -28,27 +32,45 @@ final class LoadingViewModel {
             case let (.loading(lhsMsg), .loading(rhsMsg)):
                 lhsMsg == rhsMsg
             case let (.error(lhsErr), .error(rhsErr)):
-                lhsErr.localizedDescription == rhsErr.localizedDescription
+                lhsErr == rhsErr
             default:
                 false
             }
         }
     }
     
+    // MARK: - Localized Strings
+    
+    @ObservationIgnored lazy var retryButtonTitle = #localize("retry")
+    
+    @ObservationIgnored lazy var removeButtonTitle: String = #localize("my_profile_delete_info_button")
+    
+    @ObservationIgnored lazy var removeConfirmationTitle = String.localizedStringWithFormat(
+        #localize("loading_view_remove_confirmation_title"),
+        TargetManager.localizedAppName
+    )
+    @ObservationIgnored lazy var removeConfirmationRemoveButtonTitle = #localize("my_profile_delete_info_button")
+    @ObservationIgnored lazy var removeConfirmationCancelButtonTitle = #localize("cancel")
+    
+    // MARK: - Confirmation state
+    
+    var showRemoveConfirmation = false
+    
     // MARK: - Error
     
     struct Error: Swift.Error, Equatable {
+        let title: String?
         let message: String
-        let isRetryable: Bool
+        let onRetry: (@Sendable () -> Void)?
+        let onRemove: (@Sendable () -> Void)?
         
         static func == (lhs: Error, rhs: Error) -> Bool {
-            lhs.message == rhs.message && lhs.isRetryable == rhs.isRetryable
+            lhs.title == rhs.title &&
+                lhs.message == rhs.message &&
+                ((lhs.onRetry == nil && rhs.onRetry == nil) || (lhs.onRetry != nil && rhs.onRetry != nil)) &&
+                ((lhs.onRemove == nil && rhs.onRemove == nil) || (lhs.onRemove != nil && rhs.onRemove != nil))
         }
     }
-    
-    // MARK: - Callbacks
-    
-    var onRetry: (() -> Void)?
     
     // MARK: - State Updates
     
@@ -60,12 +82,17 @@ final class LoadingViewModel {
         state = .loading(message: message)
     }
     
-    func setError(message: String, isRetryable: Bool = true) {
-        state = .error(Error(message: message, isRetryable: isRetryable))
+    func setError(
+        title: String? = nil,
+        message: String,
+        onRetry: (@Sendable () -> Void)? = nil,
+        onRemove: (@Sendable () -> Void)? = nil
+    ) {
+        state = .error(Error(title: title, message: message, onRetry: onRetry, onRemove: onRemove))
     }
     
-    func retry() {
-        onRetry?()
+    func setLocked() {
+        state = .locked
     }
 }
 
@@ -77,7 +104,7 @@ extension LoadingViewModel {
         switch state {
         case .initializing, .loading:
             true
-        case .error:
+        case .error, .locked:
             false
         }
     }

@@ -152,6 +152,62 @@ extension EntityFetcher {
         return date
     }
     
+    /// Date of the oldest content message in a conversation if there is any
+    ///
+    /// The persistence entry type _content_ is defined by Threema Protocols. For full detail see these specifications.
+    /// They are more or less all message that don't render as "status" messages in the chat view (e.g. ~ normal
+    /// messages & 1:1 calls)
+    ///
+    /// - Parameter conversationEntity: Conversation to query
+    /// - Returns: Date of oldest content message if there is any oldest message with a date
+    public func dateOfOldestContentMessage(in conversationEntity: ConversationEntity) -> Date? {
+        
+        let sortDescriptor = NSSortDescriptor(key: "date", ascending: true)
+        
+        let excludeFetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "SystemMessage")
+        excludeFetchRequest.predicate = .and(
+            messageConversationPredicate(conversation: conversationEntity),
+            noContentSystemMessagesPredicate()
+        )
+        excludeFetchRequest.sortDescriptors = [sortDescriptor]
+        
+        let excludedMessages = managedObjectContext.performAndWait {
+            do {
+                return try excludeFetchRequest.execute() as? [NSManagedObject]
+            }
+            catch {
+                DDLogError("[EntityFetcher] Failed to fetch entities: \(error)")
+                return nil
+            }
+        }
+        
+        let fetchRequestPredicate: NSPredicate
+        if let excludedMessages, !excludedMessages.isEmpty {
+            let fetchRequestExcludePredicate = NSPredicate(format: "NOT (SELF IN %@)", NSArray(array: excludedMessages))
+            fetchRequestPredicate = .and(
+                messageConversationPredicate(conversation: conversationEntity),
+                fetchRequestExcludePredicate
+            )
+        }
+        else {
+            fetchRequestPredicate = messageConversationPredicate(conversation: conversationEntity)
+        }
+        
+        let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "Message")
+        fetchRequest.predicate = fetchRequestPredicate
+        fetchRequest.fetchLimit = 1
+        fetchRequest.sortDescriptors = [sortDescriptor]
+        
+        return managedObjectContext.performAndWait {
+            if let results = try? fetchRequest.execute() as? [BaseMessageEntity], let message = results.first {
+                message.date
+            }
+            else {
+                nil
+            }
+        }
+    }
+    
     // MARK: - Search
     
     /// Fetches the object IDs of conversations matching the passed parameters
@@ -340,6 +396,56 @@ extension EntityFetcher {
             entityName: "Message",
             predicate: NSCompoundPredicate(andPredicateWithSubpredicates: [conversationsPredicate, contactPredicate])
         )
+    }
+    
+    /// Number of non system messages in a conversation
+    ///
+    /// Note: 1:1 and group call messages are also system messages
+    ///
+    /// - Parameter conversationEntity: Conversation to check
+    /// - Returns: Number of non-system conversations in a chat
+    public func nonSystemMessagesCount(in conversationEntity: ConversationEntity) -> Int {
+        let conversationsPredicate = messageConversationPredicate(conversation: conversationEntity)
+
+        let allMessagesCount = countEntities(entityName: "Message", predicate: conversationsPredicate)
+        let systemMessagesCount = countEntities(entityName: "SystemMessage", predicate: conversationsPredicate)
+        
+        return allMessagesCount - systemMessagesCount
+    }
+    
+    /// Number of outgoing content messages in a conversation
+    ///
+    /// The persistence entry type _content_ is defined by Threema Protocols. For full detail see these specifications.
+    /// They are more or less all message that don't render as "status" messages in the chat view (e.g. ~ normal
+    /// messages & 1:1 calls)
+    ///
+    /// - Parameter conversationEntity: Conversation to check
+    /// - Returns: Number of outgoing content messages
+    public func outgoingContentMessagesCount(in conversationEntity: ConversationEntity) -> Int {
+        
+        let conversationsPredicate = messageConversationPredicate(conversation: conversationEntity)
+        let outgoingMessagesPredicate = messageIsOwnPredicate(isOwn: true)
+        
+        let allOutgoingMessagesCount = countEntities(
+            entityName: "Message",
+            predicate: NSCompoundPredicate(
+                andPredicateWithSubpredicates: [
+                    conversationsPredicate,
+                    outgoingMessagesPredicate
+                ]
+            )
+        )
+        
+        let outgoingNoContentSystemMessagesCount = countEntities(
+            entityName: "SystemMessage",
+            predicate: .and(
+                conversationsPredicate,
+                outgoingMessagesPredicate,
+                noContentSystemMessagesPredicate()
+            )
+        )
+        
+        return allOutgoingMessagesCount - outgoingNoContentSystemMessagesCount
     }
     
     public func mediaMessageCount(for conversationEntity: ConversationEntity) -> Int {
@@ -540,5 +646,13 @@ extension EntityFetcher {
     
     func messageSenderPredicate(contactEntity: ContactEntity) -> NSPredicate {
         NSPredicate(format: "sender == %@", contactEntity)
+    }
+    
+    func noContentSystemMessagesPredicate() -> NSPredicate {
+        let excludedRawSystemMessageTypes = Set(SystemMessageEntity.SystemMessageEntityType.allCases)
+            .subtracting(SystemMessageEntity.SystemMessageEntityType.contentTypes)
+            .map(\.rawValue)
+        
+        return NSPredicate(format: "type IN %@", excludedRawSystemMessageTypes)
     }
 }

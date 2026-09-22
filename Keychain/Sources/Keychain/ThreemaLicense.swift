@@ -1,7 +1,6 @@
 import Foundation
 
-@objc
-public final class ThreemaLicense: NSObject {
+public struct ThreemaLicense {
     public let user: String
     public let password: String
     public let deviceID: String?

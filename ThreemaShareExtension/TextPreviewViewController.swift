@@ -2,7 +2,7 @@ import Foundation
 import ThreemaFramework
 import UIKit
 
-class TextPreviewViewController: UIViewController, UITextViewDelegate {
+final class TextPreviewViewController: UIViewController, UITextViewDelegate {
     var previewText: String?
     var selectedText: NSRange?
     var selectedConversations: [ConversationEntity]?
@@ -205,7 +205,7 @@ class TextPreviewViewController: UIViewController, UITextViewDelegate {
         previewText = textPreviewView.text
     }
     
-    @objc func updateLayoutForKeyboard(notification: NSNotification) {
+    @objc private func updateLayoutForKeyboard(notification: NSNotification) {
         _ = bottomLayoutConstraint?.constant
         if let userInfo = notification.userInfo {
             let endFrame = (userInfo[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue

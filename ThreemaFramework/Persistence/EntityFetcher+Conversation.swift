@@ -8,7 +8,7 @@ extension EntityFetcher {
     
     /// Fetches all persisted `ConversationEntity`
     /// - Returns: Optional array of `ConversationEntity`
-    @objc public func conversationEntities() -> [ConversationEntity]? {
+    public func conversationEntities() -> [ConversationEntity]? {
         fetchEntities(entityName: "Conversation")
     }
     
@@ -121,7 +121,7 @@ extension EntityFetcher {
     ///
     /// - Note: Both `typing` and `lastTypingStart` are transient properties and therefore cannot be filtered
     ///   by the SQLite store. We fetch all conversations and filter in-memory to guarantee correct results.
-    @objc public func typingConversationEntities(timeoutDate: Date) -> [ConversationEntity] {
+    public func typingConversationEntities(timeoutDate: Date) -> [ConversationEntity] {
         let all: [ConversationEntity] = fetchEntities(entityName: "Conversation") ?? []
         return all.filter {
             $0.typing.boolValue && ($0.lastTypingStart.map { $0 < timeoutDate } ?? false)
@@ -206,9 +206,11 @@ extension EntityFetcher {
     }
     
     /// Fetches a group `ConversationEntity` for a given `GroupIdentity`
-    /// - Parameter groupIdentity: The identity of the group
+    /// - Parameters:
+    ///   - groupIdentity: The identity of the group
+    ///   - myIdentity: User identity
     /// - Returns: Group-`ConversationEntity` if it exists
-    public func conversationEntity(for groupIdentity: GroupIdentity, myIdentity: String?) -> ConversationEntity? {
+    public func conversationEntity(for groupIdentity: GroupIdentity, myIdentity: String) -> ConversationEntity? {
         fetchEntity(
             entityName: "Conversation",
             predicate: .conversationGroup(
@@ -242,6 +244,57 @@ extension EntityFetcher {
             entityName: "Conversation",
             predicate: .conversationHasMember(member)
         )
+    }
+    
+    public func isInNotLeftGroup(contact: ContactEntity) -> Bool {
+        let groupConversations = fetchEntities(
+            entityName: "Conversation",
+            predicate: .and(
+                .conversationHasMember(contact),
+                .conversationIsGroup
+            )
+        )
+        
+        guard let groupConversations else {
+            return false
+        }
+        
+        // In the best case this returns for the first group as it is active
+        // On average it returns as soon as a not left group was found
+        // In the worst case it iterates through all left groups of a contact
+        // In the future we might want to optimize this with a `SUBQUERY` as used in `allSolicitedContactIdentities`
+        for groupConversation in groupConversations {
+            guard let gc = groupConversation as? ConversationEntity else {
+                continue
+            }
+            
+            let (groupID, creatorID) = managedObjectContext.performAndWait {
+                (gc.groupID, gc.contact?.identity)
+            }
+            
+            guard let groupID else {
+                DDLogError("All conversations should be group conversations")
+                assertionFailure()
+                continue
+            }
+            
+            let activeCount = countEntities(
+                entityName: "Group",
+                predicate: .and(
+                    .groupWith(
+                        creator: creatorID,
+                        id: groupID
+                    ),
+                    .groupIsActive
+                )
+            )
+            
+            if activeCount > 0 {
+                return true
+            }
+        }
+        
+        return false
     }
     
     @objc public func filteredGroupConversationEntities(

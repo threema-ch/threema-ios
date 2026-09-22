@@ -36,6 +36,10 @@ pub(crate) enum HttpsEndpointError {
     #[error("Challenge expired")]
     ChallengeExpired,
 
+    /// Authentication challenge was invalid.
+    #[error("Invalid challenge")]
+    InvalidChallenge,
+
     /// Authentication challenge response was invalid.
     #[error("Invalid challenge response")]
     InvalidChallengeResponse,

@@ -71,28 +71,13 @@ class URLHandlerTests: XCTestCase {
     }
 
     func testAddContactWithOwnIdentity() async {
-        let expectedSenderIdentity = "ECHOECHO"
-        let expectedFromName = "Echo Echo"
-
-        // Create contact for mocking
-        let entityManager = testDatabase.entityManager
-        testDatabase.preparer.createContact(
-            publicKey: Data([1]),
-            identity: expectedSenderIdentity,
-            nickname: expectedFromName
-        )
-        let contact = entityManager.entityFetcher.contactEntity(for: expectedSenderIdentity)
-        let contactStoreMock = ContactStoreMock(
-            callOnCompletion: true,
-            contact,
-            errorHandler: NSError(domain: "", code: 0, userInfo: nil)
-        )
+        let contactStoreMock = ContactStoreMock(callOnCompletion: true)
         let businessInjector = BusinessInjectorMock(
             contactStore: contactStoreMock,
             entityManager: testDatabase.entityManager
         )
 
-        let url = URL(string: "threema://add?id=ECHOECHO")!
+        let url = URL(string: "threema://add?id=\(businessInjector.profileStore.profile.myIdentity.rawValue)")!
         URLHandler(businessInjector: businessInjector)
             .handle(url)
         
@@ -103,7 +88,9 @@ class URLHandlerTests: XCTestCase {
                     message: "[URLHandler] Failed to handle URL: Can't add own identity. Aborting add identity handling."
                 )
         )
-        XCTAssertFalse(contactStoreMock.addContactCalls.contains(expectedSenderIdentity))
+        XCTAssertFalse(
+            contactStoreMock.addContactCalls.contains(businessInjector.profileStore.profile.myIdentity.rawValue)
+        )
     }
 
     func testAddContactWithInvalidIdentity() async {
@@ -174,5 +161,80 @@ class URLHandlerTests: XCTestCase {
                     message: "[URLHandler] Failed to handle URL: No license for private app. Aborting license handling."
                 )
         )
+    }
+
+    // MARK: - threema.id/compose
+
+    private let unknownThreemaDotIDHostMessage =
+        "[URLHandler] Failed to handle URL: Unknown host (threema.id). Aborting URL handling."
+
+    func testComposeThreemaDotIDLinkWithIdentityAddsContact() async throws {
+        let expectedSenderIdentity = "ABCDEFGH"
+        let expectedFromName = "ABCD EFGH"
+
+        // Create contact for mocking
+        let entityManager = testDatabase.entityManager
+        testDatabase.preparer.createContact(
+            publicKey: Data([1]),
+            identity: expectedSenderIdentity,
+            nickname: expectedFromName
+        )
+        let contact = entityManager.entityFetcher.contactEntity(for: expectedSenderIdentity)
+        let contactStoreMock = ContactStoreMock(callOnCompletion: true, contact)
+        let businessInjector = BusinessInjectorMock(
+            contactStore: contactStoreMock,
+            entityManager: testDatabase.entityManager
+        )
+
+        // `hideAppChooser` makes the flow deterministic (no dependency on other installed Threema apps)
+        let url = URL(string: "https://threema.id/compose?id=ABCDEFGH&text=Hello")!
+        URLHandler(businessInjector: businessInjector).handle(url, hideAppChooser: true)
+
+        XCTAssertTrue(contactStoreMock.addContactCalls.contains(expectedSenderIdentity))
+        XCTAssertFalse(ddLoggerMock.exists(message: unknownThreemaDotIDHostMessage))
+    }
+
+    func testComposeThreemaDotIDLinkWithoutIdentityIsHandled() async throws {
+        let contactStoreMock = ContactStoreMock(callOnCompletion: true)
+        let businessInjector = BusinessInjectorMock(
+            contactStore: contactStoreMock,
+            entityManager: testDatabase.entityManager
+        )
+
+        let url = URL(string: "https://threema.id/compose?text=Hello")!
+        URLHandler(businessInjector: businessInjector).handle(url, hideAppChooser: true)
+
+        DDLog.sharedInstance.flushLog()
+        // The reported bug: a plain compose link must no longer be dropped as an unknown host …
+        XCTAssertFalse(ddLoggerMock.exists(message: unknownThreemaDotIDHostMessage))
+        // … and without an `id` query there is no contact to add.
+        XCTAssertTrue(contactStoreMock.addContactCalls.isEmpty)
+    }
+
+    func testComposeThreemaDotIDLinkPathIsCaseInsensitive() async throws {
+        let contactStoreMock = ContactStoreMock(callOnCompletion: true)
+        let businessInjector = BusinessInjectorMock(
+            contactStore: contactStoreMock,
+            entityManager: testDatabase.entityManager
+        )
+
+        let url = URL(string: "https://threema.id/Compose?text=Hello")!
+        URLHandler(businessInjector: businessInjector)
+            .handle(url, hideAppChooser: true)
+
+        DDLog.sharedInstance.flushLog()
+        XCTAssertFalse(ddLoggerMock.exists(message: unknownThreemaDotIDHostMessage))
+    }
+
+    func testUnknownThreemaDotIDPathIsRejected() async {
+        let businessInjector = BusinessInjectorMock(
+            entityManager: testDatabase.entityManager
+        )
+
+        let url = URL(string: "https://threema.id/unknown")!
+        URLHandler(businessInjector: businessInjector).handle(url, hideAppChooser: true)
+
+        DDLog.sharedInstance.flushLog()
+        XCTAssertTrue(ddLoggerMock.exists(message: unknownThreemaDotIDHostMessage))
     }
 }

@@ -275,7 +275,7 @@ final class MessagePermissionTests: XCTestCase {
 
     func testCanSendToNoteGroup() throws {
         let groupID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
-        let groupCreatorIdentity = myIdentityStoreMock.identity
+        let groupCreatorIdentity = myIdentityStoreMock.identity!
 
         var group: Group!
 

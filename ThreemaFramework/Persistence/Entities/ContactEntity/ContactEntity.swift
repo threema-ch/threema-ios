@@ -62,6 +62,7 @@ public final class ContactEntity: ThreemaManagedObject {
         }
     }
     
+    // TODO: (IOS-6024) Make createdAt not nilable, because is required in the data backup
     @EncryptedField
     @objc public dynamic var createdAt: Date? {
         get {
@@ -93,7 +94,7 @@ public final class ContactEntity: ThreemaManagedObject {
     }
     
     @NSManaged public private(set) var firstName: String?
-    
+
     /// Set or Get the forward security state of this contact. Note that these states are only maintained for contacts
     /// with a DH session of version 1.0.
     /// TODO(ANDR-2452): Remove the forward security state when most of clients support 1.1 anyway
@@ -407,7 +408,7 @@ public final class ContactEntity: ThreemaManagedObject {
     init(
         context: NSManagedObjectContext,
         cnContactID: String? = nil,
-        createdAt: Date? = nil,
+        createdAt: Date = .now,
         csi: String? = nil,
         department: String? = nil,
         featureMask: Int,
@@ -446,12 +447,7 @@ public final class ContactEntity: ThreemaManagedObject {
         super.init(entity: entity, insertInto: context)
         
         setCNContactID(cnContactID)
-        if let createdAt {
-            setCreatedAt(createdAt)
-        }
-        else {
-            setCreatedAt(.now)
-        }
+        setCreatedAt(createdAt)
         self.csi = csi
         self.department = department
         setFeatureMask(NSNumber(value: featureMask))

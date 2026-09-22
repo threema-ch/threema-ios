@@ -72,7 +72,6 @@
 #define kAppClosedByUserBackgroundTask @"ThreemaAppClosedByUserBackgroundTask"
 #define kAppVoIPBackgroundTask @"ThreemaVoIPBackgroundTask"
 #define kAppVoIPIncomCallBackgroundTask @"ThreemaVoIPIncomCallBackgroundTask"
-#define kAppWCBackgroundTask @"ThreemaWCBackgroundTask"
 #define kAppSendingBackgroundTask @"ThreemaSendingBackgroundTask"
 #define kAppAckBackgroundTask @"ThreemaAckBackgroundTask"
 #define kAppPushReplyBackgroundTask @"ThreemaPushReplyBackgroundTask"

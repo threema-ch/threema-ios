@@ -1,6 +1,6 @@
 import Foundation
 
-public final class SettingsBundleHelper: NSObject {
+public enum SettingsBundleHelper {
     fileprivate enum Keys {
         case safeMode
         case disableSentry
@@ -15,15 +15,15 @@ public final class SettingsBundleHelper: NSObject {
         }
     }
     
-    @objc public static var safeMode: Bool {
+    public static var safeMode: Bool {
         UserDefaults.standard.bool(forKey: Keys.safeMode.string)
     }
     
-    @objc public static var disableSentry: Bool {
+    public static var disableSentry: Bool {
         UserDefaults.standard.bool(forKey: Keys.disableSentry.string)
     }
     
-    @objc public static func resetSafeMode() {
+    public static func resetSafeMode() {
         UserDefaults.standard.set(false, forKey: Keys.safeMode.string)
     }
 }

@@ -7,7 +7,6 @@
 #import "IntroQuestionView.h"
 #import "LicenseStore.h"
 #import "MDMSetup.h"
-#import "NibUtil.h"
 
 #define COUNTRY_ROW_HEIGHT 44.0
 
@@ -436,7 +435,7 @@
     [self hideKeyboard];
     
     if (_questionView == nil) {
-        _questionView = (IntroQuestionView *)[NibUtil loadViewFromNibWithName:@"IntroQuestionView"];
+        _questionView = (IntroQuestionView *)[[(NSBundle *)[NSBundle mainBundle] loadNibNamed:@"IntroQuestionView" owner:nil options:nil] firstObject];
         if (TargetManagerObjC.isBusinessApp) {
             _questionView.questionLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"id_link_no_input_work"], TargetManagerObjC.localizedAppName, TargetManagerObjC.appName];
         } else {
@@ -594,7 +593,7 @@
     } else {
         return;
     }
-    _titleLabel.accessibilityLabel = [BundleUtil localizedStringForKey:@"Done"];
+    _titleLabel.accessibilityLabel = [BundleUtil localizedStringForKey:@"done"];
     
     
     CGFloat diff = CGRectGetMinY(keyboardRectConverted) - CGRectGetMaxY(responderView.frame) - 32.0;

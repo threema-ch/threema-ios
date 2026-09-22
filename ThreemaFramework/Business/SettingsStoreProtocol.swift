@@ -1,7 +1,7 @@
 import Foundation
 import ThreemaProtocols
 
-public protocol SettingsStoreProtocol {
+public protocol SettingsStoreProtocol: AnyObject {
 
     // Appearance
     var displayOrderFirstName: Bool { get set }
@@ -21,7 +21,8 @@ public protocol SettingsStoreProtocol {
     var sendTypingIndicator: Bool { get set }
     var choosePOI: Bool { get set }
     var hidePrivateChats: Bool { get set }
-    
+    var allowScreenshot: Bool { get set }
+
     // Notifications
     var inAppSounds: Bool { get set }
     var inAppVibrate: Bool { get set }

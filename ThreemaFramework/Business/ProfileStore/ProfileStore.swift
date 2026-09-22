@@ -1,0 +1,408 @@
+import CocoaLumberjackSwift
+import Foundation
+import PromiseKit
+import ThreemaEssentials
+import ThreemaProtocols
+
+public protocol ProfileStoreProtocol {
+    var profile: ProfileStore.Profile { get }
+    func save(_ profile: ProfileStore.Profile)
+    func syncAndSave(workAvailabilityStatus: WorkAvailabilityStatus) async throws
+    func save(
+        syncUserProfile: D2dSync_UserProfile,
+        profileImage: Data?,
+        isLinkMobileNoPending: Bool,
+        isLinkEmailPending: Bool
+    )
+}
+
+public final class ProfileStore: NSObject, ProfileStoreProtocol {
+
+    public struct Profile {
+        public init(
+            myIdentity: ThreemaIdentity,
+            nickname: String? = nil,
+            profileImage: Data? = nil,
+            sendProfilePicture: SendProfilePicture,
+            profilePictureContactList: [String],
+            mobilePhoneNo: String? = nil,
+            isLinkMobileNoPending: Bool,
+            email: String? = nil,
+            isLinkEmailPending: Bool,
+            workAvailabilityStatus: WorkAvailabilityStatus? = nil
+        ) {
+            self.myIdentity = myIdentity
+            self.nickname = nickname
+            self.profileImage = profileImage
+            self.sendProfilePicture = sendProfilePicture
+            self.profilePictureContactList = profilePictureContactList
+            self.mobilePhoneNo = mobilePhoneNo
+            self.isLinkMobileNoPending = isLinkMobileNoPending
+            self.email = email
+            self.isLinkEmailPending = isLinkEmailPending
+            self.workAvailabilityStatus = workAvailabilityStatus
+        }
+
+        public var myIdentity: ThreemaIdentity
+        public var nickname: String?
+        public var profileImage: Data?
+        public var sendProfilePicture: SendProfilePicture
+        public var profilePictureContactList: [String]
+        public var mobilePhoneNo: String?
+        public var isLinkMobileNoPending: Bool
+        public var email: String?
+        public var isLinkEmailPending: Bool
+        public var workAvailabilityStatus: WorkAvailabilityStatus?
+    }
+    
+    private let serverConnector: any ServerConnectorProtocol
+    private let myIdentity: ThreemaIdentity
+    private let myIdentityStore: any MyIdentityStoreProtocol
+    private let contactStore: any ContactStoreProtocol
+    private let userSettings: any UserSettingsProtocol
+    private let taskManager: (any TaskManagerProtocol)?
+    private let workAvailabilityStatusManager: (any WorkAvailabilityStatusManagerProtocol)?
+    private let workPropertiesUpdateManager: WorkPropertiesUpdateManager?
+
+    init(
+        serverConnector: any ServerConnectorProtocol,
+        myIdentity: ThreemaIdentity,
+        myIdentityStore: any MyIdentityStoreProtocol,
+        contactStore: any ContactStoreProtocol,
+        userSettings: any UserSettingsProtocol,
+        taskManager: (any TaskManagerProtocol)?,
+        workAvailabilityStatusManager: (any WorkAvailabilityStatusManagerProtocol)?,
+        workPropertiesUpdateManager: WorkPropertiesUpdateManager?
+    ) {
+        self.serverConnector = serverConnector
+        self.myIdentity = myIdentity
+        self.myIdentityStore = myIdentityStore
+        self.contactStore = contactStore
+        self.userSettings = userSettings
+        self.taskManager = taskManager
+        self.workAvailabilityStatusManager = workAvailabilityStatusManager
+        self.workPropertiesUpdateManager = workPropertiesUpdateManager
+    }
+
+    public convenience init(myIdentity: ThreemaIdentity) {
+        self.init(
+            serverConnector: ServerConnector.shared(),
+            myIdentity: myIdentity,
+            myIdentityStore: MyIdentityStore.shared(),
+            contactStore: ContactStore.shared(),
+            userSettings: UserSettings.shared(),
+            taskManager: TaskManager(),
+            workAvailabilityStatusManager: WorkAvailabilityStatusManager(defaults: AppGroup.userDefaults()),
+            workPropertiesUpdateManager: WorkPropertiesUpdateManager(
+                clientInfo: ThreemaUtility.appInfo.asClientInfo(),
+                licenseStore: LicenseStore.shared(),
+                serverInfoProvider: ServerInfoProviderFactory.makeServerInfoProvider(),
+                appFlavorService: AppFlavorService(),
+                myIdentityStore: MyIdentityStore.shared(),
+                httpClient: HTTPClient()
+            )
+        )
+    }
+    
+    override public convenience init() {
+        self.init(myIdentity: ThreemaIdentity(MyIdentityStore.shared().identity))
+    }
+
+    public var profile: Profile {
+        let profileImage: Data? = myIdentityStore.profilePicture?["ProfilePicture"] as? Data
+
+        return Profile(
+            myIdentity: myIdentity,
+            nickname: myIdentityStore.pushFromName,
+            profileImage: profileImage,
+            sendProfilePicture: userSettings.sendProfilePicture,
+            profilePictureContactList: userSettings.profilePictureContactList as? [String] ?? [String](),
+            mobilePhoneNo: myIdentityStore.linkedMobileNo,
+            isLinkMobileNoPending: myIdentityStore.linkMobileNoPending,
+            email: myIdentityStore.linkedEmail,
+            isLinkEmailPending: myIdentityStore.linkEmailPending,
+            workAvailabilityStatus: workAvailabilityStatusManager?.ownStatus()
+        )
+    }
+
+    /// Sync changes of user profile and save if multi device activated otherwise just save
+    /// - Parameter profile: User profile data
+    public func syncAndSave(_ profile: Profile) -> Promise<Void> {
+        Promise { seal in
+            guard userSettings.enableMultiDevice,
+                  let taskManager else {
+                save(profile)
+                seal.fulfill_()
+                return
+            }
+            
+            var syncUserProfile = D2dSync_UserProfile()
+
+            if myIdentityStore.profilePicture?["ProfilePicture"] as? Data != profile.profileImage {
+                if profile.profileImage != nil {
+                    syncUserProfile.profilePicture.updated = Common_Image()
+                }
+                else {
+                    syncUserProfile.profilePicture.removed = Common_Unit()
+                }
+            }
+
+            let actualProfilePictureContactList = userSettings.profilePictureContactList as? [String] ?? [String]()
+
+            if userSettings.sendProfilePicture != profile.sendProfilePicture
+                || actualProfilePictureContactList != profile.profilePictureContactList {
+                syncUserProfile.profilePictureShareWith.policy = profilePictureShareWithPolicy(
+                    for: profile.sendProfilePicture,
+                    identities: profile.profilePictureContactList
+                )
+            }
+
+            if myIdentityStore.pushFromName ?? "" != profile.nickname {
+                syncUserProfile.nickname = profile.nickname ?? ""
+            }
+
+            // TODO: (IOS-3874) Test if we should set `syncUserProfile.identityLinks.links` to an empty array so it is explicitly set when linked mobile number & linked email are removed or pending.
+            
+            if !profile.isLinkMobileNoPending {
+                var link = D2dSync_UserProfile.IdentityLinks.IdentityLink()
+                link.phoneNumber = profile.mobilePhoneNo ?? ""
+                syncUserProfile.identityLinks.links.append(link)
+            }
+
+            if !profile.isLinkEmailPending {
+                var link = D2dSync_UserProfile.IdentityLinks.IdentityLink()
+                link.email = profile.email ?? ""
+                syncUserProfile.identityLinks.links.append(link)
+            }
+            
+            if let workAvailabilityStatus = profile.workAvailabilityStatus,
+               let category = D2dSync_WorkAvailabilityStatusCategory(
+                   rawValue: workAvailabilityStatus.category
+                       .rawValue
+               ) {
+                var status = D2dSync_WorkAvailabilityStatus()
+                status.category = category
+                status.description_p = workAvailabilityStatus.text ?? ""
+                syncUserProfile.workAvailabilityStatus = status
+            }
+
+            let task = TaskDefinitionProfileSync(
+                syncUserProfile: syncUserProfile,
+                profileImage: profile.profileImage,
+                linkMobileNoPending: profile.isLinkMobileNoPending,
+                linkEmailPending: profile.isLinkEmailPending
+            )
+
+            taskManager.add(taskDefinition: task) { _, error in
+                if let error {
+                    DDLogError("[ProfileStore] Failed to add profile sync task: \(error)")
+                    seal.reject(error)
+                    return
+                }
+                seal.fulfill_()
+            }
+        }
+    }
+
+    public func syncAndSave(workAvailabilityStatus: WorkAvailabilityStatus) async throws {
+        guard let workPropertiesUpdateManager else {
+            DDLogError("[ProfileStore] Cannot sync and save work availability status: no WorkPropertiesUpdateManager.")
+            return
+        }
+        
+        // Sync
+        try await workPropertiesUpdateManager.updateWorkProperties(workAvailabilityStatus: workAvailabilityStatus)
+            
+        // Reflect to MD
+        try await syncAndSave(
+            Profile(
+                myIdentity: myIdentity,
+                nickname: myIdentityStore.pushFromName,
+                profileImage: myIdentityStore.profilePicture?["ProfilePicture"] as? Data,
+                sendProfilePicture: userSettings.sendProfilePicture,
+                profilePictureContactList: userSettings.profilePictureContactList as? [String] ?? [String](),
+                mobilePhoneNo: myIdentityStore.linkedMobileNo,
+                isLinkMobileNoPending: myIdentityStore.linkMobileNoPending,
+                email: myIdentityStore.linkedEmail,
+                isLinkEmailPending: myIdentityStore.linkEmailPending,
+                workAvailabilityStatus: workAvailabilityStatus
+            )
+        ).async()
+    }
+
+    /// Sync and save email to link if multi device activated otherwise only save
+    /// - Parameters:
+    /// - email: Email address to link
+    /// - completionHandler: Successfully if is error nil
+    @objc func syncAndSave(email: String?, completionHandler: @escaping (Error?) -> Void) {
+        syncAndSave(
+            Profile(
+                myIdentity: myIdentity,
+                nickname: myIdentityStore.pushFromName,
+                profileImage: myIdentityStore.profilePicture?["ProfilePicture"] as? Data,
+                sendProfilePicture: userSettings.sendProfilePicture,
+                profilePictureContactList: userSettings.profilePictureContactList as? [String] ?? [String](),
+                mobilePhoneNo: myIdentityStore.linkedMobileNo,
+                isLinkMobileNoPending: myIdentityStore.linkMobileNoPending,
+                email: email,
+                isLinkEmailPending: myIdentityStore.linkEmailPending,
+                workAvailabilityStatus: workAvailabilityStatusManager?.ownStatus()
+            )
+        )
+        .done {
+            completionHandler(nil)
+        }
+        .catch { error in
+            completionHandler(error)
+        }
+    }
+
+    /// Sync and save mobile number to link if multi device activated otherwise only save
+    /// - Parameters:
+    /// - mobileNo: Mobile number to link
+    /// - completionHandler: Successfully if is error nil
+    @objc func syncAndSave(mobileNo: String?, completionHandler: @escaping (Error?) -> Void) {
+        syncAndSave(
+            Profile(
+                myIdentity: myIdentity,
+                nickname: myIdentityStore.pushFromName,
+                profileImage: myIdentityStore.profilePicture?["ProfilePicture"] as? Data,
+                sendProfilePicture: userSettings.sendProfilePicture,
+                profilePictureContactList: userSettings.profilePictureContactList as? [String] ?? [String](),
+                mobilePhoneNo: mobileNo,
+                isLinkMobileNoPending: myIdentityStore.linkMobileNoPending,
+                email: myIdentityStore.linkedEmail,
+                isLinkEmailPending: myIdentityStore.linkEmailPending,
+                workAvailabilityStatus: workAvailabilityStatusManager?.ownStatus()
+            )
+        )
+        .done {
+            completionHandler(nil)
+        }
+        .catch { error in
+            completionHandler(error)
+        }
+    }
+
+    public func save(_ profile: Profile) {
+        myIdentityStore.pushFromName = profile.nickname
+        myIdentityStore.linkedEmail = profile.email
+        myIdentityStore.linkedMobileNo = profile.mobilePhoneNo
+        
+        myIdentityStore.linkEmailPending = profile.isLinkEmailPending
+        myIdentityStore.linkMobileNoPending = profile.isLinkMobileNoPending
+        
+        let profileImage = profile.profileImage
+        if profileImage == nil {
+            if myIdentityStore.profilePicture != nil {
+                myIdentityStore.profilePicture = nil
+                contactStore.removeProfilePictureFlagForAllContacts()
+            }
+        }
+        else {
+            var profilePicture = myIdentityStore.profilePicture
+
+            if profilePicture == nil {
+                profilePicture = [:]
+            }
+            
+            if profileImage != profilePicture!["ProfilePicture"] as? Data {
+                profilePicture?.setValue(profileImage, forKey: "ProfilePicture")
+                profilePicture?.removeObject(forKey: "LastUpload")
+                myIdentityStore.profilePicture = profilePicture
+                contactStore.removeProfilePictureFlagForAllContacts()
+            }
+        }
+
+        userSettings.sendProfilePicture = profile.sendProfilePicture
+        userSettings.profilePictureContactList = profile.profilePictureContactList
+        
+        workAvailabilityStatusManager?.setOwnStatus(profile.workAvailabilityStatus)
+    }
+
+    /// Save only changed form synced profile
+    /// - Parameters:
+    ///   - syncUserProfile: Delta updates of user profile
+    ///   - profileImage: Image of user profile
+    ///   - isLinkMobileNoPending: Not synced by MD
+    ///   - isLinkEmailPending: Not synced by MD
+    public func save(
+        syncUserProfile: D2dSync_UserProfile,
+        profileImage: Data?,
+        isLinkMobileNoPending: Bool,
+        isLinkEmailPending: Bool
+    ) {
+        if syncUserProfile.hasProfilePicture {
+            switch syncUserProfile.profilePicture.image {
+            case .removed:
+                if myIdentityStore.profilePicture != nil {
+                    myIdentityStore.profilePicture = nil
+                    contactStore.removeProfilePictureFlagForAllContacts()
+                }
+            case .updated:
+                if let image = profileImage {
+                    var profilePicture = myIdentityStore.profilePicture
+                    if profilePicture == nil {
+                        profilePicture = [:]
+                    }
+
+                    profilePicture?.setValue(image, forKey: "ProfilePicture")
+                    profilePicture?.removeObject(forKey: "LastUpload")
+                    myIdentityStore.profilePicture = profilePicture
+                    contactStore.removeProfilePictureFlagForAllContacts()
+                }
+            case .none:
+                break
+            }
+        }
+
+        if syncUserProfile.hasProfilePictureShareWith {
+            switch syncUserProfile.profilePictureShareWith.policy {
+            case .nobody:
+                userSettings.sendProfilePicture = SendProfilePictureNone
+            case let .allowList(contacts):
+                userSettings.sendProfilePicture = SendProfilePictureContacts
+                userSettings.profilePictureContactList = contacts.identities
+            case .everyone:
+                userSettings.sendProfilePicture = SendProfilePictureAll
+            case .none:
+                break
+            }
+        }
+
+        if syncUserProfile.hasNickname {
+            myIdentityStore.pushFromName = syncUserProfile.nicknameNullable
+        }
+
+        if syncUserProfile.hasIdentityLinks {
+            myIdentityStore.linkedMobileNo = syncUserProfile.identityLinks.links
+                .first(where: { $0.phoneNumberNullable != nil })?.phoneNumberNullable
+            myIdentityStore.linkedEmail = syncUserProfile.identityLinks.links
+                .first(where: { $0.emailNullable != nil })?.emailNullable
+        }
+
+        myIdentityStore.linkMobileNoPending = isLinkMobileNoPending
+        myIdentityStore.linkEmailPending = isLinkEmailPending
+        
+        workAvailabilityStatusManager?
+            .setOwnStatus(WorkAvailabilityStatus(d2dStatus: syncUserProfile.workAvailabilityStatus))
+    }
+
+    private func profilePictureShareWithPolicy(
+        for sendProfilePicture: SendProfilePicture,
+        identities: [String]
+    ) -> D2dSync_UserProfile.ProfilePictureShareWith.OneOf_Policy {
+        switch sendProfilePicture {
+        case SendProfilePictureNone:
+            return .nobody(Common_Unit())
+        case SendProfilePictureContacts:
+            var allowList = Common_Identities()
+            allowList.identities = identities
+            return .allowList(allowList)
+        case SendProfilePictureAll:
+            return .everyone(Common_Unit())
+        default:
+            return .nobody(Common_Unit())
+        }
+    }
+}

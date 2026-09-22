@@ -19,7 +19,7 @@ public struct XMarkCancelButton: View {
             Button(role: .cancel) {
                 action()
             } label: {
-                Label(#localize("Done"), systemImage: "xmark.circle.fill")
+                Label(#localize("done"), systemImage: "xmark.circle.fill")
                     .symbolRenderingMode(.hierarchical)
                     .foregroundColor(.secondary)
             }
@@ -41,7 +41,7 @@ public struct DoneButton: View {
             }
         }
         else {
-            Button(#localize("Done")) {
+            Button(#localize("done")) {
                 action()
             }
             .bold()

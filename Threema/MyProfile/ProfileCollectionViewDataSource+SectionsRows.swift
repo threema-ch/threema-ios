@@ -204,7 +204,7 @@ extension ProfileCollectionViewDataSource {
             case .workAvailabilityStatus:
                 .workAvailabilityStatus
                 
-            case .backups:
+            case .backups, .threemaSafe:
                 .backups
 
             case .revocationPassword:

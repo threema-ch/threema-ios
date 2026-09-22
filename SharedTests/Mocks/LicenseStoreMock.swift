@@ -11,8 +11,14 @@ public final class LicenseStoreMock: NSObject, LicenseStoreProtocol {
     public var errorMessage: String?
     public var error: Error?
     
-    public var licenseUsername: String?
-    public var licensePassword: String?
+    public var licenseUsername: String? {
+        didSet { licenseUsernameSetCount += 1 }
+    }
+
+    public var licensePassword: String? {
+        didSet { licensePasswordSetCount += 1 }
+    }
+
     public var licenseDeviceID = ""
     public var onPremConfigURL: String?
     
@@ -26,6 +32,10 @@ public final class LicenseStoreMock: NSObject, LicenseStoreProtocol {
     
     // MARK: - Call Tracking
     
+    /// How often the license credentials were set, sets to `nil` included
+    public private(set) var licenseUsernameSetCount = 0
+    public private(set) var licensePasswordSetCount = 0
+
     public var performLicenseCheckCalled = false
     public var performUpdateWorkInfoCalled = false
     public var performUpdateWorkInfoForceCalled = false

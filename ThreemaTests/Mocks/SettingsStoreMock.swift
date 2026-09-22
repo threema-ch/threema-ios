@@ -36,6 +36,10 @@ final class SettingsStoreMock: SettingsStoreProtocol, SettingsStoreInternalProto
     var choosePOI = true
     
     var hidePrivateChats = true
+
+    var allowScreenshot = true
+
+    var allowKeyboardDataCollection = true
     
     var enableMasterDnd = false
     

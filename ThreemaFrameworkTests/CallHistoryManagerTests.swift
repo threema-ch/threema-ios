@@ -16,10 +16,6 @@ final class CallHistoryManagerTests: XCTestCase {
         databaseBackgroundCnx = testDatabase.backgroundContext
     }
 
-    override func tearDownWithError() throws {
-        // Put teardown code here. This method is called after the invocation of each test method in the class.
-    }
-
     func testInsertAndRead() async throws {
         
         // Setup mocks
@@ -40,10 +36,10 @@ final class CallHistoryManagerTests: XCTestCase {
         
         let manager = CallHistoryManager(identity: "ECHOECHO", businessInjector: businessInjectorMock)
         
-        var callIDs = [UInt32]()
+        var callIDs = [VoIPCallID]()
         
         for _ in 0..<10 {
-            let callID = UInt32.random(in: UInt32.min..<UInt32.max)
+            let callID = VoIPCallID.generate()
             let date = Date()
             callIDs.append(callID)
             
@@ -56,7 +52,7 @@ final class CallHistoryManagerTests: XCTestCase {
         }
         
         for _ in 0..<10 {
-            let callID = UInt32.random(in: UInt32.min..<UInt32.max)
+            let callID = VoIPCallID.generate()
             let isMissedCall = await manager.isMissedCall(from: "ECHOECHO", callID: callID)
             XCTAssertEqual(!callIDs.contains(callID), isMissedCall)
         }
@@ -82,11 +78,11 @@ final class CallHistoryManagerTests: XCTestCase {
         
         let manager = CallHistoryManager(identity: "ECHOECHO", businessInjector: businessInjectorMock)
         
-        var callIDs = [UInt32]()
-        var deletedCallIDs = [UInt32]()
+        var callIDs = [VoIPCallID]()
+        var deletedCallIDs = [VoIPCallID]()
         
         for i in 0..<10 {
-            let callID = UInt32(i)
+            let callID = VoIPCallID(callID: UInt32(i))
             let date = Date()
             callIDs.append(callID)
             
@@ -94,7 +90,7 @@ final class CallHistoryManagerTests: XCTestCase {
         }
         
         for i in 11..<20 {
-            let callID = UInt32(i)
+            let callID = VoIPCallID(callID: UInt32(i))
             let date = Calendar.current.date(byAdding: .day, value: -(14 + i), to: Date())!
             deletedCallIDs.append(callID)
             
@@ -111,7 +107,7 @@ final class CallHistoryManagerTests: XCTestCase {
             XCTAssertTrue(isMissedCall)
         }
         
-        let callID = UInt32(21)
+        let callID = VoIPCallID(callID: UInt32(21))
         let isMissedCall = await manager.isMissedCall(from: "ECHOECHO", callID: callID)
         XCTAssertTrue(isMissedCall)
     }

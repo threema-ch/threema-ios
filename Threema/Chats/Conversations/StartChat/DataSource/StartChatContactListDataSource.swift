@@ -144,7 +144,7 @@ final class StartChatContactListDataSource: UITableViewDiffableDataSource<
     }
 
     override func sectionIndexTitles(for tableView: UITableView) -> [String]? {
-        isSearching ? sectionTitles : nil
+        sectionTitles
     }
 
     override func tableView(_ tableView: UITableView, sectionForSectionIndexTitle title: String, at index: Int) -> Int {

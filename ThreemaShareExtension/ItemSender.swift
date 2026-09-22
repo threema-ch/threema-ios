@@ -12,7 +12,7 @@ protocol SenderItemDelegate: AnyObject {
     func setFinished()
 }
 
-class ItemSender: NSObject {
+final class ItemSender: NSObject {
 
     private lazy var persistenceManager = PersistenceManager(
         appGroupID: AppGroup.groupID(),

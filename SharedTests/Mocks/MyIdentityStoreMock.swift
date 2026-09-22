@@ -3,6 +3,22 @@ import ThreemaFramework
 import ThreemaMacros
 
 final class MyIdentityStoreMock: NSObject, MyIdentityStoreProtocol {
+
+    // MARK: - Call Tracking
+
+    /// How often the profile properties were set, sets to `nil` included
+    private(set) var pushFromNameSetCount = 0
+    private(set) var firstNameSetCount = 0
+    private(set) var lastNameSetCount = 0
+    private(set) var csiSetCount = 0
+    private(set) var jobTitleSetCount = 0
+    private(set) var departmentSetCount = 0
+    private(set) var categorySetCount = 0
+    private(set) var createIDEmailSetCount = 0
+    private(set) var createIDPhoneSetCount = 0
+
+    // MARK: - MyIdentityStoreProtocol
+
     var linkMobileNoVerificationID: String?
     
     var linkMobileNoStartDate: Date?
@@ -17,21 +33,33 @@ final class MyIdentityStoreMock: NSObject, MyIdentityStoreProtocol {
     
     var directoryCategories: NSMutableDictionary?
     
-    var department: String?
-    
-    var jobTitle: String?
+    var department: String? {
+        didSet { departmentSetCount += 1 }
+    }
 
-    var csi: String?
+    var jobTitle: String? {
+        didSet { jobTitleSetCount += 1 }
+    }
 
-    var category: String?
-    
+    var csi: String? {
+        didSet { csiSetCount += 1 }
+    }
+
+    var category: String? {
+        didSet { categorySetCount += 1 }
+    }
+
     var licenseLogoLightURL: String?
-    
+
     var licenseLogoDarkURL: String?
 
-    var firstName: String?
+    var firstName: String? {
+        didSet { firstNameSetCount += 1 }
+    }
 
-    var lastName: String?
+    var lastName: String? {
+        didSet { lastNameSetCount += 1 }
+    }
 
     var isDefaultProfilePicture: Bool
     
@@ -47,18 +75,24 @@ final class MyIdentityStoreMock: NSObject, MyIdentityStoreProtocol {
         return "\(identity) (\(#localize("me")))"
     }
 
-    var pushFromName: String?
+    var pushFromName: String? {
+        didSet { pushFromNameSetCount += 1 }
+    }
 
     var linkEmailPending = false
 
-    var createIDEmail: String?
-   
+    var createIDEmail: String? {
+        didSet { createIDEmailSetCount += 1 }
+    }
+
     var linkedEmail: String?
 
     var linkMobileNoPending = false
 
-    var createIDPhone: String?
-    
+    var createIDPhone: String? {
+        didSet { createIDPhoneSetCount += 1 }
+    }
+
     var linkedMobileNo: String?
 
     var profilePicture: NSMutableDictionary?
@@ -95,7 +129,7 @@ final class MyIdentityStoreMock: NSObject, MyIdentityStoreProtocol {
         self.init(identity: "TESTERID", secretKey: Data(base64Encoded: "WAXm465d3CNnP1pf84RF0mYRgV/Umqwe/8Hun9ntTdQ=")!)
     }
 
-    var identity: String
+    var identity: String!
 
     var isValidIdentity: Bool {
         false
@@ -121,5 +155,14 @@ final class MyIdentityStoreMock: NSObject, MyIdentityStoreProtocol {
     
     func sendUpdateWorkInfoStatus() -> Bool {
         false
+    }
+
+    func restore(
+        fromBackup myIdentity: String,
+        withSecretKey mySecretKey: Data,
+        onCompletion: @escaping () -> Void,
+        onError: @escaping (any Error) -> Void
+    ) {
+        onCompletion()
     }
 }

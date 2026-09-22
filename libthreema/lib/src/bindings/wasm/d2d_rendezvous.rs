@@ -111,7 +111,7 @@ impl RendezvousProtocol {
     ///
     /// Returns an error if `ak` is not exactly 32 bytes.
     #[wasm_bindgen(js_name = newAsRid)]
-    pub fn new_as_rid(is_nominator: bool, ak: &[u8], pids: &[u32]) -> Result<RendezvousProtocol, Error> {
+    pub fn new_as_rid(is_nominator: bool, ak: &[u8], pids: &[u32]) -> Result<Self, Error> {
         let ak: [u8; 32] = ak.try_into().map_err(|_| Error::new("AK must be 32 bytes"))?;
         Ok(Self {
             inner: d2d_rendezvous::RendezvousProtocol::new_as_rid(
@@ -135,7 +135,7 @@ impl RendezvousProtocol {
     ///
     /// Returns an error if `ak` is not exactly 32 bytes.
     #[wasm_bindgen(js_name = newAsRrd)]
-    pub fn new_as_rrd(is_nominator: bool, ak: &[u8], pids: &[u32]) -> Result<RendezvousProtocol, Error> {
+    pub fn new_as_rrd(is_nominator: bool, ak: &[u8], pids: &[u32]) -> Result<Self, Error> {
         let ak: [u8; 32] = ak.try_into().map_err(|_| Error::new("AK must be 32 bytes"))?;
         let (inner, initial_outgoing_frames) = d2d_rendezvous::RendezvousProtocol::new_as_rrd(
             is_nominator,

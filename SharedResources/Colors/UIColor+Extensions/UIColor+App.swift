@@ -27,7 +27,7 @@ extension UIColor {
         }
     }
     
-    @objc public static var secondary = UIColor { _ in
+    public static var secondary = UIColor { _ in
         switch TargetManager.current {
         case .threema, .green:
             UIColor(resource: .secondaryPrivate)
@@ -40,7 +40,7 @@ extension UIColor {
         }
     }
     
-    @objc public static let backgroundCircleButton = UIColor { _ in
+    public static let backgroundCircleButton = UIColor { _ in
         switch TargetManager.current {
         case .threema, .green:
             .circleButtonPrivate
@@ -66,7 +66,7 @@ extension UIColor {
         }
     }
     
-    @objc public static var primaryColorWork = UIColor { _ in
+    public static var primaryColorWork = UIColor { _ in
         UIColor(resource: .accentColorWork)
     }
 

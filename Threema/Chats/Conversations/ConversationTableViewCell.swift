@@ -205,10 +205,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
             }
             
             DDLogInfo("[GroupCall] Group Call Join Button tapped")
-            GlobalGroupCallManagerSingleton.shared.startGroupCall(
-                in: group,
-                intent: .join
-            )
+            CallProvider.shared.startGroupCall(in: group, intent: .join)
         }
         
         var buttonConfig = UIButton.Configuration.borderedProminent()

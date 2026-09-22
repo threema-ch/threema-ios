@@ -1,4 +1,4 @@
-public protocol Factory {
+protocol Factory {
     associatedtype T
     
     func make() -> T

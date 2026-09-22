@@ -66,7 +66,8 @@ public final class GlobalGroupCallManagerSingleton: NSObject {
             groupCallParticipantInfoFetcher: GroupCallParticipantInfoFetcher.shared,
             groupCallSessionHelper: GroupCallSessionHelper.shared,
             groupCallBundleUtil: GroupCallBundleUtil.shared,
-            isRunningForScreenshots: ProcessInfoHelper.isRunningForScreenshots
+            isRunningForScreenshots: ProcessInfoHelper.isRunningForScreenshots,
+            audioSessionManager: BusinessInjector.ui.audioSessionManager
         ),
         backgroundBusinessInjector: BusinessInjectorProtocol = BusinessInjector(forBackgroundProcess: true)
     ) {
@@ -108,20 +109,20 @@ public final class GlobalGroupCallManagerSingleton: NSObject {
     /// Cancel the periodic refresh task when the app enters background.
     /// This prevents stale in-flight peek requests from incorrectly removing
     /// active calls after iOS suspends and resumes the app.
-    @objc public func handleAppDidEnterBackground() async {
+    public func handleAppDidEnterBackground() async {
         await groupCallManager.cancelPeriodicRefresh()
     }
 
     /// Restart the periodic refresh task when the app enters foreground,
     /// so we get a fresh peek of all tracked calls.
-    @objc public func handleAppWillEnterForeground() async {
+    public func handleAppWillEnterForeground() async {
         await groupCallManager.startPeriodicCheckIfNeeded()
     }
 
     /// Load calls from DB
     ///
     /// If the manager is still doing the initial load we'll just wait for that
-    @objc public func loadCallsFromDB() async {
+    public func loadCallsFromDB() async {
         if let initialLoadTask {
             await initialLoadTask.value
         }
@@ -131,7 +132,7 @@ public final class GlobalGroupCallManagerSingleton: NSObject {
     }
     
     private func handleCallsFromDB() async {
-        DDLogNotice("[GroupCall] [DB] Start loading calls from database.")
+        DDLogNotice("[Call:GroupCall:Singleton] [DB] Start loading calls from database.")
         
         let entityManager = currentBusinessInjector.entityManager
         let groupManager = currentBusinessInjector.groupManager
@@ -142,7 +143,7 @@ public final class GlobalGroupCallManagerSingleton: NSObject {
         }
         
         guard let storedGroupCalls, !storedGroupCalls.isEmpty else {
-            DDLogNotice("[GroupCall] [DB] No stored calls found.")
+            DDLogNotice("[Call:GroupCall:Singleton] [DB] No stored calls found.")
             return
         }
 
@@ -150,16 +151,16 @@ public final class GlobalGroupCallManagerSingleton: NSObject {
         // If group calls are disabled, we delete all stored entities.
         guard currentBusinessInjector.settingsStore.enableThreemaGroupCalls,
               !MDMSetup().disableGroupCalls() else {
-            DDLogVerbose("[GroupCall] GroupCalls are not enabled. Deleting all stored entities.")
+            DDLogVerbose("[Call:GroupCall:Singleton] GroupCalls are not enabled. Deleting all stored entities.")
             deleteGroupCallEntities(storedGroupCalls)
             return
         }
         
         // These will be deleted due to having invalid state
         var invalidGroupCalls = [GroupCallEntity]()
-        // These will be handled
-        var proposedGroupCalls = [ProposedGroupCall]()
-        
+        // These will be handled if their SFU base URL can be validated
+        var storedGroupCallsToValidate = [(entity: GroupCallEntity, proposedGroupCall: ProposedGroupCall)]()
+
         await entityManager.perform {
             for groupCallEntity in storedGroupCalls {
                 guard let group = groupCallEntity.group,
@@ -204,21 +205,44 @@ public final class GlobalGroupCallManagerSingleton: NSObject {
                         startMessageReceiveDate: startMessageReceiveDate,
                         dependencies: self.dependencies
                     )
-                    DDLogNotice("[GroupCall] [DB] Loaded call with callID \(proposedGroupCall.hexCallID)")
-                    proposedGroupCalls.append(proposedGroupCall)
+                    DDLogNotice("[Call:GroupCall:Singleton] [DB] Loaded call with callID \(proposedGroupCall.hexCallID)")
+                    storedGroupCallsToValidate.append((groupCallEntity, proposedGroupCall))
                 }
                 catch {
                     invalidGroupCalls.append(groupCallEntity)
                     
-                    let message = "[GroupCall] Could not get create ProposedGroupCall for call from DB."
+                    let message = "[Call:GroupCall:Singleton] Could not get create ProposedGroupCall for call from DB."
                     DDLogError("\(message)")
                     assertionFailure(message)
                 }
             }
         }
         
+        // A call might have been stored before we were able to fetch an SFU token, see `handleMessage(…)`. Thus we
+        // validate the SFU base URL before the call is handled.
+        var proposedGroupCalls = [ProposedGroupCall]()
+
+        for storedGroupCall in storedGroupCallsToValidate {
+            switch await validateSFUBaseURL(storedGroupCall.proposedGroupCall.sfuBaseURL) {
+            case .valid:
+                proposedGroupCalls.append(storedGroupCall.proposedGroupCall)
+
+            case .invalid:
+                DDLogError(
+                    "[Call:GroupCall:Singleton] [DB] Stored call \(storedGroupCall.proposedGroupCall.hexCallID) has an SFU-URL that is not allowed. Delete it."
+                )
+                invalidGroupCalls.append(storedGroupCall.entity)
+
+            case .undetermined:
+                // We keep the call stored and try again the next time calls are loaded from the database
+                DDLogWarn(
+                    "[Call:GroupCall:Singleton] [DB] Could not validate SFU-URL of stored call \(storedGroupCall.proposedGroupCall.hexCallID) yet. Skip it for now."
+                )
+            }
+        }
+
         DDLogNotice(
-            "[GroupCall] [DB] We have loaded \(storedGroupCalls.count) items from the database, of which \(proposedGroupCalls.count) will be handled and \(invalidGroupCalls.count) will be deleted."
+            "[Call:GroupCall:Singleton] [DB] We have loaded \(storedGroupCalls.count) items from the database, of which \(proposedGroupCalls.count) will be handled and \(invalidGroupCalls.count) will be deleted."
         )
         
         // Delete invalid
@@ -256,24 +280,35 @@ public final class GlobalGroupCallManagerSingleton: NSObject {
             if !MDMSetup().disableGroupCalls() {
                 postGroupCallStartSystemMessage(in: groupConversationObjectID, by: senderIdentity)
             }
-            DDLogVerbose("[GroupCall] GroupCalls are not enabled. Skip.")
+            DDLogVerbose("[Call:GroupCall:Singleton] GroupCalls are not enabled. Skip.")
             return
         }
         
         guard let convRawMessage = rawMessage as? CspE2e_GroupCallStart else {
-            let msg = "[GroupCall] Incorrect message type passed into \(#function)"
+            let msg = "[Call:GroupCall:Singleton] Incorrect message type passed into \(#function)"
             assertionFailure(msg)
             DDLogError("\(msg)")
             return
         }
         
-        guard let sfuBaseURL = URL(string: convRawMessage.sfuBaseURL), await validateSFUBaseURL(sfuBaseURL) else {
-            DDLogError("[GroupCall] Received message with invalid SFU-URL String: \(convRawMessage.sfuBaseURL)")
+        guard let sfuBaseURL = URL(string: convRawMessage.sfuBaseURL) else {
+            DDLogError(
+                "[Call:GroupCall:Singleton] Received message with invalid SFU-URL String: \(convRawMessage.sfuBaseURL)"
+            )
             return
         }
-        
+
+        let sfuBaseURLValidationResult = await validateSFUBaseURL(sfuBaseURL)
+
+        guard sfuBaseURLValidationResult != .invalid else {
+            DDLogError(
+                "[Call:GroupCall:Singleton] Received message with SFU-URL that is not allowed: \(convRawMessage.sfuBaseURL)"
+            )
+            return
+        }
+
         guard let groupModel = await groupCallManager.getGroupModel(for: groupConversationObjectID) else {
-            DDLogError("[GroupCall] Could not get group model for group.")
+            DDLogError("[Call:GroupCall:Singleton] Could not get group model for group.")
             return
         }
         
@@ -290,7 +325,7 @@ public final class GlobalGroupCallManagerSingleton: NSObject {
             )
         }
         catch {
-            let message = "[GroupCall] Could not get create ProposedGroupCall for incoming message."
+            let message = "[Call:GroupCall:Singleton] Could not get create ProposedGroupCall for incoming message."
             DDLogError("\(message)")
             assertionFailure(message)
             return
@@ -301,11 +336,21 @@ public final class GlobalGroupCallManagerSingleton: NSObject {
             groupIdentity: groupModel.groupIdentity
         )
         
+        // We persist the call before it is validated: validating needs an SFU token and thus a working connection. If
+        // we dropped the message here it would be lost forever, even though the call might still be running. Stored
+        // calls are validated again before they are handled, see `handleCallsFromDB()`.
         await saveGroupCallStartMessage(
             for: wrappedMessage,
             with: receiveDate
         )
-        
+
+        guard sfuBaseURLValidationResult == .valid else {
+            DDLogWarn(
+                "[Call:GroupCall:Singleton] Could not validate SFU-URL of call \(proposedGroupCall.hexCallID) yet. The call was stored and will be handled as soon as an SFU token is available."
+            )
+            return
+        }
+
         let senderThreemaID: GroupCallCreatorOrigin = .remote(ThreemaIdentity(senderIdentity))
         await groupCallManager.handleNewCallMessage(
             for: proposedGroupCall,
@@ -318,21 +363,21 @@ public final class GlobalGroupCallManagerSingleton: NSObject {
     public func startGroupCall(
         in group: Group,
         intent: GroupCallUserIntent
-    ) {
+    ) throws {
         guard currentBusinessInjector.settingsStore.enableThreemaGroupCalls else {
-            DDLogVerbose("[GroupCall] GroupCalls are not enabled. Skip.")
-            return
+            DDLogVerbose("[Call:GroupCall:Singleton] GroupCalls are not enabled. Skip.")
+            throw GroupCallStartError.disabled
         }
         
         guard !NavigationBarPromptHandler.isCallActiveInBackground else {
-            DDLogInfo("[GroupCall] Call exists in background.")
+            DDLogInfo("[Call:GroupCall:Singleton] Call exists in background.")
             uiDelegate?.showAlert(for: GroupCallError.alreadyInCall)
-            return
+            throw GroupCallError.alreadyInCall
         }
         
         guard group.hasAtLeastOneMemberSupporting(.groupCallSupport) else {
             NotificationPresenterWrapper.shared.present(type: .groupCallStartError)
-            return
+            throw GroupCallStartError.noOneSupports
         }
                 
         Task(priority: .userInitiated) {
@@ -350,12 +395,14 @@ public final class GlobalGroupCallManagerSingleton: NSObject {
                 showGroupCallViewController()
             }
             catch let error as GroupCallError {
-                DDLogError("[GroupCall] Caught error, showing alert: \(error.localizedDescription).")
+                DDLogError("[Call:GroupCall:Singleton] Caught error, showing alert: \(error.localizedDescription).")
                 uiDelegate?.showAlert(for: error)
+                throw error
             }
             catch {
-                DDLogError("[GroupCall] Caught error: \(error.localizedDescription).")
+                DDLogError("[Call:GroupCall:Singleton] Caught error: \(error.localizedDescription).")
                 uiDelegate?.showAlert(for: GroupCallError.creationError)
+                throw error
             }
         }
     }
@@ -363,14 +410,16 @@ public final class GlobalGroupCallManagerSingleton: NSObject {
     public func showGroupCallViewController() {
         Task {
             guard let uiDelegate else {
-                DDLogError("[GroupCall] Delegate is nil, cannot show group call.")
+                DDLogError("[Call:GroupCall:Singleton] Delegate is nil, cannot show group call.")
                 return
             }
             guard let viewController = await groupCallManager.viewControllerForCurrentlyJoinedGroupCall() else {
-                DDLogError("[GroupCall] Getting view controller failed, cannot show group call.")
+                DDLogError("[Call:GroupCall:Singleton] Getting view controller failed, cannot show group call.")
                 return
             }
-            uiDelegate.showViewController(viewController)
+            await MainActor.run {
+                uiDelegate.showViewController(viewController)
+            }
         }
     }
     
@@ -410,7 +459,7 @@ public final class GlobalGroupCallManagerSingleton: NSObject {
         with receiveDate: Date = Date.now
     ) async {
         guard currentBusinessInjector.settingsStore.enableThreemaGroupCalls else {
-            DDLogVerbose("[GroupCall] GroupCalls are not enabled. Skip.")
+            DDLogVerbose("[Call:GroupCall:Singleton] GroupCalls are not enabled. Skip.")
             return
         }
         let addedObjectID: NSManagedObjectID? = await currentBusinessInjector.entityManager.performSave {
@@ -420,7 +469,7 @@ public final class GlobalGroupCallManagerSingleton: NSObject {
                     for: wrappedMessage.groupIdentity,
                     myIdentity: self.currentBusinessInjector.myIdentityStore.identity
                 ) else {
-                DDLogError("[GroupCall] Could not find group entity for group call message.")
+                DDLogError("[Call:GroupCall:Singleton] Could not find group entity for group call message.")
                 return nil
             }
 
@@ -434,7 +483,7 @@ public final class GlobalGroupCallManagerSingleton: NSObject {
             groupCallEntity.sfuBaseURL = wrappedMessage.startMessage.sfuBaseURL
             groupCallEntity.startMessageReceiveDate = receiveDate
             
-            DDLogNotice("[GroupCall] [DB] Saved group call to database.")
+            DDLogNotice("[Call:GroupCall:Singleton] [DB] Saved group call to database.")
             
             return groupCallEntity.objectID
         }
@@ -443,7 +492,7 @@ public final class GlobalGroupCallManagerSingleton: NSObject {
             // Mark entity as dirty
             currentBusinessInjector.entityManager.perform {
                 guard let addedObjectID else {
-                    DDLogError("[GroupCall] Could not mark added group call as dirty.")
+                    DDLogError("[Call:GroupCall:Singleton] Could not mark added group call as dirty.")
                     return
                 }
                 
@@ -459,17 +508,35 @@ public final class GlobalGroupCallManagerSingleton: NSObject {
         }
     }
     
-    private func validateSFUBaseURL(_ url: URL) async -> Bool {
+    private enum SFUBaseURLValidationResult {
+        /// The URL is allowed by the current SFU token
+        case valid
+        /// The URL is not allowed and thus the call must never be handled
+        case invalid
+        /// We were not able to fetch an SFU token, thus we do not know yet whether the URL is allowed
+        case undetermined
+    }
+
+    private func validateSFUBaseURL(_ url: URL) async -> SFUBaseURLValidationResult {
         do {
             let token = try await httpHelper.sfuCredentials()
             // When receiving the SFU information, ensure the _SFU Base URL_ uses the scheme
             // `https` and the included hostname ends with one of the
             // _Allowed SFU Hostname Suffixes_.
-            return token.isValidSFUBaseURL(url)
+            guard token.isValidSFUBaseURL(url) else {
+                DDLogError("[Call:GroupCall:Singleton] Invalid baseURL: \(url.absoluteString)")
+                return .invalid
+            }
+
+            return .valid
         }
         catch {
-            DDLogError("[GroupCall] Invalid baseURL: \(url.absoluteString)")
-            return false
+            // Without an SFU token we cannot tell whether the URL is allowed. This regularly happens when we have no
+            // connection, e.g. when processing queued messages right after a launch.
+            DDLogWarn(
+                "[Call:GroupCall:Singleton] Could not fetch SFU credentials to validate \(url.absoluteString): \(error)"
+            )
+            return .undetermined
         }
     }
 }
@@ -626,7 +693,7 @@ extension GlobalGroupCallManagerSingleton: GroupCallManagerDatabaseDelegateProto
         }
         
         guard let storedGroupCalls, !storedGroupCalls.isEmpty else {
-            DDLogNotice("[GroupCall] [DB] No stored calls found.")
+            DDLogNotice("[Call:GroupCall:Singleton] [DB] No stored calls found.")
             return
         }
         
@@ -685,7 +752,7 @@ extension GlobalGroupCallManagerSingleton: GroupCallManagerDatabaseDelegateProto
                 self.currentBusinessInjector.entityManager.entityDestroyer
                     .delete(groupCallEntity: groupCallEntity)
             }
-            DDLogNotice("[GroupCall] [DB] Deleted \(groupCallEntities.count)")
+            DDLogNotice("[Call:GroupCall:Singleton] [DB] Deleted \(groupCallEntities.count)")
         }
     }
 }
@@ -695,15 +762,28 @@ extension GlobalGroupCallManagerSingleton: GroupCallManagerDatabaseDelegateProto
 extension GlobalGroupCallManagerSingleton: GroupCallManagerSingletonDelegate {
     public func showGroupCallViewController(viewController: GroupCallViewController) {
         guard let uiDelegate else {
-            DDLogError("[GroupCall] Could not show GroupCallViewController, uiDelegate is nil.")
+            DDLogError("[Call:GroupCall:Singleton] Could not show GroupCallViewController, uiDelegate is nil.")
             return
         }
-        
-        uiDelegate.showViewController(viewController)
+
+        DispatchQueue.main.async {
+            uiDelegate.showViewController(viewController)
+        }
     }
     
     public func updateGroupCallButtonsAndBanners(groupCallBannerButtonUpdate: GroupCalls.GroupCallBannerButtonUpdate) {
         globalGroupCallObserver.stateContinuation.yield(groupCallBannerButtonUpdate)
+    }
+
+    public func localUserLeftGroupCall(in groupIdentity: GroupIdentity) {
+        DispatchQueue.main.async { [weak self] in
+            guard let uiDelegate = self?.uiDelegate else {
+                DDLogError("[Call:GroupCall:Singleton] Could not report the left group call, uiDelegate is nil.")
+                return
+            }
+
+            uiDelegate.localUserLeftGroupCall(in: groupIdentity)
+        }
     }
     
     public func sendStartCallMessage(_ wrappedMessage: WrappedGroupCallStartMessage) async throws {
@@ -724,7 +804,7 @@ extension GlobalGroupCallManagerSingleton: GroupCallManagerSingletonDelegate {
         senderThreemaID: ThreemaIdentity
     ) {
         guard let uiDelegate else {
-            DDLogError("[GroupCall] Could not show GroupCallViewController, uiDelegate is nil.")
+            DDLogError("[Call:GroupCall:Singleton] Could not show GroupCallViewController, uiDelegate is nil.")
             return
         }
         
@@ -769,7 +849,9 @@ extension GlobalGroupCallManagerSingleton: GroupCallManagerSingletonDelegate {
     }
     
     public func showGroupCallFullAlert(maxParticipants: Int?, onOK: @escaping () -> Void) {
-        uiDelegate?.showGroupCallFullAlert(maxParticipants: maxParticipants, onOK: onOK)
+        DispatchQueue.main.async { [uiDelegate] in
+            uiDelegate?.showGroupCallFullAlert(maxParticipants: maxParticipants, onOK: onOK)
+        }
     }
 }
 
@@ -787,8 +869,10 @@ extension GlobalGroupCallManagerSingleton {
                 localID: currentBusinessInjector.myIdentityStore.identity,
                 participantThreemaIdentities: group.members.map(\.identity)
             )
-            
-            uiDelegate?.showViewController(groupCallViewControllerForScreenshots)
+
+            await MainActor.run {
+                uiDelegate?.showViewController(groupCallViewControllerForScreenshots)
+            }
         }
     }
 }

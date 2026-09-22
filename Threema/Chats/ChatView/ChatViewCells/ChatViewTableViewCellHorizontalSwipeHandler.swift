@@ -85,7 +85,7 @@ final class ChatViewTableViewCellHorizontalSwipeHandler: NSObject {
     
     // MARK: Action Functions
     
-    @objc func swiped(_ gestureRecognizer: UIPanGestureRecognizer) {
+    @objc private func swiped(_ gestureRecognizer: UIPanGestureRecognizer) {
         
         guard !(cell?.isEditing ?? false) else {
             return

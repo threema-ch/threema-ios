@@ -13,7 +13,7 @@ final class CallIDService {
                 callKitUUIDs[callID.callID] = callUUID
                 isNew = true
 
-                DDLogNotice("VoIPCallService [cid=\(callID.callID)] -> callUUID=\(callUUID)")
+                DDLogNotice("VoIPCallService [cid=\(callID)] -> callUUID=\(callUUID)")
             }
             return (callKitUUIDs[callID.callID]!, isNew)
         }

@@ -285,7 +285,7 @@ final class ChatViewTextMessageTableViewCell: ChatViewBaseTableViewCell, Measura
 
     // MARK: - Action Functions
     
-    @objc func quoteViewTapped() {
+    @objc private func quoteViewTapped() {
         guard let quotedMessageID = textMessageAndNeighbors?.message.quotedMessageID else {
             return
         }
@@ -348,7 +348,7 @@ extension ChatViewTextMessageTableViewCell: ChatViewMessageActions {
         
         // Copy
         let copyHandler = {
-            UIPasteboard.general.string = message.text
+            UIPasteboard.general.set(string: message.text, sensitiveContent: .messageContent)
             NotificationPresenterWrapper.shared.present(type: .copySuccess)
         }
 

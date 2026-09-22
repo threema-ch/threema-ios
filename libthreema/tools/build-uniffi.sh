@@ -28,7 +28,7 @@ cd "$(dirname "$0")/.."
 [[ -d ./build/uniffi ]] && rm -r ./build/uniffi/
 
 if [[ -z ${_no_container+x} ]] ; then
-    source ./.devcontainer/env.sh
+    source ./.devcontainer/env.sh -q
 fi
 
 # Ensure consistent target dir, even if `build.target-dir` config option is set for Cargo

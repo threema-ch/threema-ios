@@ -1,3 +1,5 @@
+import AudioSessionManager
+import AudioSessionManagerRTC
 import CocoaLumberjackSwift
 import Foundation
 import Keychain
@@ -31,8 +33,6 @@ public final class BusinessInjector: NSObject, FrameworkInjectorProtocol {
     required init(entityManager: EntityManager, persistenceManager: PersistenceManager) {
         self.runsInBackground = entityManager.hasBackgroundChildContext
         self.entityManager = entityManager
-
-        self.dirtyObjectManagerObjC = persistenceManager.dirtyObjectManager
 
         if entityManager.hasBackgroundChildContext {
             self.backgroundEntityManager = entityManager
@@ -95,10 +95,24 @@ public final class BusinessInjector: NSObject, FrameworkInjectorProtocol {
         self.init(entityManager: persistenceManager.entityManager, persistenceManager: persistenceManager)
     }
     
+    // MARK: - Audio session
+
+    /// The single owner of the process-wide audio session.
+    ///
+    /// Exposed as a `public static` so callers can obtain the audio session manager without forcing
+    /// the full `BusinessInjector.ui` singleton to initialize. Constructing `BusinessInjector.ui`
+    /// reads `RemoteSecretProvider.remoteSecretManager`, which fatalErrors when the provider has not
+    /// been set yet. That happens on a cold VoIP-push launch, before the launch sequence runs.
+    public static let sharedAudioSessionManager = AudioSessionManagerFactory.make()
+
     // MARK: BusinessInjectorProtocol
 
     public let runsInBackground: Bool
-    
+
+    public var audioSessionManager: any AudioSessionManagerProtocol {
+        Self.sharedAudioSessionManager
+    }
+
     public private(set) lazy var profileStore: any ProfileStoreProtocol = ThreemaFramework
         .ProfileStore(myIdentity: ThreemaIdentity(self.myIdentityStore.identity))
 
@@ -121,9 +135,6 @@ public final class BusinessInjector: NSObject, FrameworkInjectorProtocol {
         entityManager: entityManager,
         taskManager: taskManager
     )
-
-    @available(*, deprecated, message: "Only use from Objective-C")
-    @objc public let dirtyObjectManagerObjC: DirtyObjectManager
 
     @objc public let entityManager: EntityManager
 
@@ -165,16 +176,6 @@ public final class BusinessInjector: NSObject, FrameworkInjectorProtocol {
         entityManager: entityManager
     )
 
-    @available(*, deprecated, message: "Only use from Objective-C", renamed: "messageSender")
-    @objc public private(set) lazy var messageSenderObjC = MessageSender(
-        serverConnector: serverConnector,
-        myIdentityStore: myIdentityStore,
-        userSettings: userSettings,
-        groupManager: groupManager,
-        taskManager: taskManager,
-        entityManager: entityManager
-    )
-
     public private(set) lazy var multiDeviceManager: MultiDeviceManagerProtocol =
         MultiDeviceManager(
             serverConnector: serverConnector,
@@ -189,12 +190,6 @@ public final class BusinessInjector: NSObject, FrameworkInjectorProtocol {
     @objc public private(set) var myIdentityStore: MyIdentityStoreProtocol = MyIdentityStore.shared()
 
     public lazy var unreadMessages: UnreadMessagesProtocol = UnreadMessages(
-        entityManager: entityManager,
-        taskManager: taskManager
-    )
-    
-    @available(*, deprecated, message: "Only use from Objective-C", renamed: "unreadMessages")
-    @objc public private(set) lazy var unreadMessagesObjC = UnreadMessages(
         entityManager: entityManager,
         taskManager: taskManager
     )
@@ -338,7 +333,7 @@ public final class BusinessInjector: NSObject, FrameworkInjectorProtocol {
         return messageProcessorInstance!
     }
     
-    @objc var fsmp: ForwardSecurityMessageProcessor {
+    var fsmp: ForwardSecurityMessageProcessor {
         if fsmpInstance == nil {
             fsmpInstance = ForwardSecurityMessageProcessor(
                 dhSessionStore: dhSessionStore,

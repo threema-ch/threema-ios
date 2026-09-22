@@ -22,7 +22,8 @@ public struct SFUToken: Sendable {
     
     fileprivate let expirationDate: Date
     
-    fileprivate let expirationOffset = 5
+    /// **Protocol Step: Group Call Refresh Steps** 3.: The token is refreshed if it would expire in the next 30s
+    fileprivate let expirationOffset = 30
     
     // MARK: - Lifecycle
     

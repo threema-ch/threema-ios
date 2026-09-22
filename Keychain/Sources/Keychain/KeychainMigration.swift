@@ -11,6 +11,27 @@ enum KeychainMigration {
         case serviceMissing
     }
 
+    /// Keys of the app passcode lock Keychain items (see `KKPasscodeLock`)
+    ///
+    /// `KKKeychain` prefixes them with the app name, so an account of such an item ends with one of these keys.
+    private static let passcodeLockKeys = [
+        "passcode",
+        "passcode_on",
+        "erase_data_on",
+        "grace_period",
+        "touch_id_on",
+    ]
+
+    /// Whether the Keychain item belongs to the app passcode lock
+    /// - Parameter account: `kSecAttrAccount` attribute of the item
+    private static func isPasscodeLockItem(account: String?) -> Bool {
+        guard let account else {
+            return false
+        }
+
+        return passcodeLockKeys.contains { account.hasSuffix($0) }
+    }
+
     /// Delete all (incompatible) Keychain items expect "Threema identity 1" and all Passcode items.
     static func migrateToDowngrade() throws {
         guard let items = try KeychainMigration.allItems(of: kSecClassGenericPassword) else {
@@ -22,10 +43,9 @@ enum KeychainMigration {
                 continue
             }
 
-            guard (item[kSecAttrAccount] as? String)?.suffix("passcode_on".count) != "passcode_on",
-                  (item[kSecAttrAccount] as? String)?.suffix("erase_data_on".count) != "erase_data_on",
-                  (item[kSecAttrAccount] as? String)?.suffix("grace_period".count) != "grace_period",
-                  (item[kSecAttrAccount] as? String)?.suffix("touch_id_on".count) != "touch_id_on" else {
+            // All of them have to be kept. Deleting only the passcode itself would leave the app locked, but with
+            // nothing to unlock it with.
+            guard !isPasscodeLockItem(account: item[kSecAttrAccount] as? String) else {
                 continue
             }
 

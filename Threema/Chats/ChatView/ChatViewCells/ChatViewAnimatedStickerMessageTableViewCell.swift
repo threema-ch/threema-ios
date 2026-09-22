@@ -283,7 +283,7 @@ extension ChatViewAnimatedStickerMessageTableViewCell: ChatViewMessageActions {
                 NotificationPresenterWrapper.shared.present(type: .copyError)
                 return
             }
-            UIPasteboard.general.setData(data, forPasteboardType: uti)
+            UIPasteboard.general.set(data: data, forPasteboardType: uti, sensitiveContent: .messageContent)
             NotificationPresenterWrapper.shared.present(type: .copySuccess)
         }
         

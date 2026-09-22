@@ -589,7 +589,7 @@ public final class ChatTextView: UITextView {
         }
     }
 
-    @objc func updateLayoutForKeyboard(notification: NSNotification) {
+    @objc private func updateLayoutForKeyboard(notification: NSNotification) {
         isEditing = false
         chatTextViewDelegate?.didEndEditing()
     }

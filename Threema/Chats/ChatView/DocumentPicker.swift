@@ -139,7 +139,7 @@ final class DocumentPicker: NSObject {
                         message = #localize("error_message_generic")
                     }
 
-                    UIAlertTemplate.showAlert(
+                    UIAlertTemplate.showOKAlert(
                         owner: presenter,
                         title: title,
                         message: message,
@@ -154,7 +154,7 @@ final class DocumentPicker: NSObject {
                     let title = #localize("error_sending_failed")
                     let message = error.localizedDescription
 
-                    UIAlertTemplate.showAlert(
+                    UIAlertTemplate.showOKAlert(
                         owner: presenter,
                         title: title,
                         message: message,
@@ -166,7 +166,7 @@ final class DocumentPicker: NSObject {
                     let title = #localize("error_sending_failed")
                     let message = error.localizedDescription
 
-                    UIAlertTemplate.showAlert(
+                    UIAlertTemplate.showOKAlert(
                         owner: presenter,
                         title: title,
                         message: message,

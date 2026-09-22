@@ -1,6 +1,6 @@
 import ThreemaMacros
 
-@objc public enum CallState: Int, RawRepresentable, Equatable {
+@objc public enum CallState: Int, RawRepresentable, Equatable, CustomStringConvertible {
     case idle
     case sendOffer
     case receivedOffer
@@ -14,20 +14,15 @@ import ThreemaMacros
     case ended
     case remoteEnded
     case rejected
-    case rejectedBusy
     case rejectedTimeout
-    case rejectedDisabled
-    case rejectedOffHours
     case rejectedUnknown
     case microphoneDisabled
         
     var active: Bool {
         self != .idle
     }
-        
-    /// Return the string of the current state for the debug log
-    /// - Returns: String of the current state
-    func description() -> String {
+    
+    public var description: String {
         switch self {
         case .idle: "IDLE"
         case .sendOffer: "SENDOFFER"
@@ -42,10 +37,7 @@ import ThreemaMacros
         case .ended: "ENDED"
         case .remoteEnded: "REMOTEENDED"
         case .rejected: "REJECTED"
-        case .rejectedBusy: "REJECTEDBUSY"
         case .rejectedTimeout: "REJECTEDTIMEOUT"
-        case .rejectedDisabled: "REJECTEDDISABLED"
-        case .rejectedOffHours: "REJECTEDOFFHOURS"
         case .rejectedUnknown: "REJECTEDUNKNOWN"
         case .microphoneDisabled: "MICROPHONEDISABLED"
         }
@@ -71,13 +63,7 @@ import ThreemaMacros
         case .ended: #localize("call_end")
         case .remoteEnded: #localize("call_end")
         case .rejected: #localize("call_rejected")
-        case .rejectedBusy: #localize("call_rejected_busy")
         case .rejectedTimeout: #localize("call_rejected_timeout")
-        case .rejectedDisabled: String.localizedStringWithFormat(
-                #localize("call_rejected_disabled"),
-                TargetManager.localizedAppName
-            )
-        case .rejectedOffHours: #localize("call_rejected")
         case .rejectedUnknown: #localize("call_rejected")
         case .microphoneDisabled: #localize("call_mic_access")
         }

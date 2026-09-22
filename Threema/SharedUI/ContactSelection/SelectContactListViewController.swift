@@ -54,7 +54,7 @@ final class SelectContactListViewController: ThemedViewController {
         controller.obscuresBackgroundDuringPresentation = false
         controller.hidesNavigationBarDuringPresentation = false
         controller.searchBar.placeholder = #localize("contact_list_search_bar_placeholder")
-        controller.searchBar.setValue(#localize("Done"), forKey: "cancelButtonText")
+        controller.searchBar.setValue(#localize("done"), forKey: "cancelButtonText")
         return controller
     }()
 
@@ -140,7 +140,7 @@ final class SelectContactListViewController: ThemedViewController {
         else {
             let title =
                 if contactSelectionMode.isEdit {
-                    #localize("Done")
+                    #localize("done")
                 }
                 else {
                     selectedContacts.isEmpty ? #localize("skip") : #localize("next")
@@ -300,12 +300,12 @@ final class SelectContactListViewController: ThemedViewController {
 
     // MARK: - Notification
 
-    @objc func contentSizeCategoryDidChange() {
+    @objc private func contentSizeCategoryDidChange() {
         carouselView.invalidateLayout()
         tableViewController.updateSelection()
     }
 
-    @objc func handleOrientationChange() {
+    @objc private func handleOrientationChange() {
         carouselView.invalidateLayout()
     }
 }

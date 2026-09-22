@@ -4,7 +4,7 @@ import MBProgressHUD
 import ThreemaMacros
 import UIKit
 
-open class MediaPreviewViewController: UIViewController, UIGestureRecognizerDelegate {
+public final class MediaPreviewViewController: UIViewController, UIGestureRecognizerDelegate {
     private let debugColors = false
     private let buttonSize: CGFloat = 24.0
     
@@ -40,7 +40,7 @@ open class MediaPreviewViewController: UIViewController, UIGestureRecognizerDele
     
     var completion: (([Any], Bool, [String?]) -> Void)?
     public var optionsEnabled = true
-    @objc public var disableAdd = false
+    public var disableAdd = false
     public var memoryConstrained = false
     public var conversationDescription: NSAttributedString?
     
@@ -53,7 +53,7 @@ open class MediaPreviewViewController: UIViewController, UIGestureRecognizerDele
     var selection: IndexPath?
     weak var itemDelegate: MediaPreviewURLDataProcessor?
 
-    override open func viewDidLoad() {
+    override public func viewDidLoad() {
         super.viewDidLoad()
         
         setupCollectionViews()
@@ -82,7 +82,7 @@ open class MediaPreviewViewController: UIViewController, UIGestureRecognizerDele
         updateTitleLabel()
     }
     
-    override open func viewDidAppear(_ animated: Bool) {
+    override public func viewDidAppear(_ animated: Bool) {
         view.accessibilityElements = [
             navigationItem,
             largeCollectionViewContainerView!,
@@ -94,7 +94,7 @@ open class MediaPreviewViewController: UIViewController, UIGestureRecognizerDele
         smallCollectionView.flashScrollIndicators()
     }
     
-    override open func viewWillAppear(_ animated: Bool) {
+    override public func viewWillAppear(_ animated: Bool) {
         largeCollectionView.collectionViewLayout.invalidateLayout()
         if !errorList.isEmpty {
             showError(errorList: errorList)
@@ -112,7 +112,7 @@ open class MediaPreviewViewController: UIViewController, UIGestureRecognizerDele
         }
     }
     
-    override open func viewDidDisappear(_ animated: Bool) {
+    override public func viewDidDisappear(_ animated: Bool) {
         for item in mediaData {
             item.freeMemory()
         }
@@ -353,7 +353,7 @@ open class MediaPreviewViewController: UIViewController, UIGestureRecognizerDele
         true
     }
     
-    @objc func dismissKeyboard() {
+    @objc private func dismissKeyboard() {
         textField.resignFirstResponder()
     }
     
@@ -426,7 +426,7 @@ open class MediaPreviewViewController: UIViewController, UIGestureRecognizerDele
             message = #localize("one_media_item_could_not_be_processed")
         }
         
-        UIAlertTemplate.showAlert(owner: self, title: title, message: message, actionOk: { [weak self] _ in
+        UIAlertTemplate.showOKAlert(owner: self, title: title, message: message, actionOk: { [weak self] _ in
             guard let strongSelf = self else {
                 return
             }
@@ -466,10 +466,10 @@ open class MediaPreviewViewController: UIViewController, UIGestureRecognizerDele
             size
         )
         
-        UIAlertTemplate.showAlert(owner: self, title: title, message: message)
+        UIAlertTemplate.showOKAlert(owner: self, title: title, message: message)
     }
     
-    @objc func sendButtonPressed(_ sender: Any) {
+    @objc private func sendButtonPressed(_ sender: Any) {
         guard itemDelegate != nil else {
             fatalError("ItemDelegate must be set")
         }
@@ -560,7 +560,7 @@ open class MediaPreviewViewController: UIViewController, UIGestureRecognizerDele
         }
     }
     
-    override open func willRotate(to toInterfaceOrientation: UIInterfaceOrientation, duration: TimeInterval) {
+    override public func willRotate(to toInterfaceOrientation: UIInterfaceOrientation, duration: TimeInterval) {
         selection = getCurrentlyVisibleItem()
         DispatchQueue.main.asyncAfter(deadline: .now() + duration / 2) {
             self.largeCollectionView.collectionViewLayout.invalidateLayout()
@@ -628,7 +628,7 @@ open class MediaPreviewViewController: UIViewController, UIGestureRecognizerDele
         itemDelegate!.returnAction(mediaData: mediaData)
     }
     
-    @objc func backButtonPressed() {
+    @objc private func backButtonPressed() {
         NotificationCenter.default.post(name: NSNotification.Name(rawValue: kMediaPreviewPauseVideo), object: nil)
         if backIsCancel {
             dismiss(animated: true, completion: nil)
@@ -717,7 +717,7 @@ open class MediaPreviewViewController: UIViewController, UIGestureRecognizerDele
         }
     }
     
-    @objc func updateLayoutForKeyboard(notification: NSNotification) {
+    @objc private func updateLayoutForKeyboard(notification: NSNotification) {
         _ = bottomLayoutConstraint?.constant
         if let userInfo = notification.userInfo {
             let endFrame = (userInfo[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue
@@ -778,7 +778,7 @@ open class MediaPreviewViewController: UIViewController, UIGestureRecognizerDele
         }
     }
     
-    override open func didReceiveMemoryWarning() {
+    override public func didReceiveMemoryWarning() {
         guard let currentItem = getCurrentlyVisibleItem() else {
             return
         }

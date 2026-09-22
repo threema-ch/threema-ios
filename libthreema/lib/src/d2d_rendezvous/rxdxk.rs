@@ -1,12 +1,12 @@
 //! Shared encryption/decryption utilities for RIDAK/RRDAK and RIDTK/RRDTK.
+use libthreema_dependencies::crypto::{
+    aead::{self, AeadInPlace as _},
+    chacha20,
+    cipher::KeyInit as _,
+};
 use libthreema_macros::concat_fixed_bytes;
 
 use super::RendezvousProtocolError;
-use crate::crypto::{
-    aead::{AeadInPlace as _, Buffer},
-    chacha20::{self, ChaCha20Poly1305},
-    cipher::KeyInit as _,
-};
 
 #[inline]
 fn prepare_nonce(pid: u32, sequence_number: u32) -> [u8; 12] {
@@ -32,18 +32,18 @@ pub(super) struct Base {
 /// Common encryption scheme.
 pub(super) struct Encrypt {
     base: Base,
-    cipher: ChaCha20Poly1305,
+    cipher: chacha20::ChaCha20Poly1305,
 }
 
 /// Common decryption scheme.
 pub(super) struct Decrypt {
     base: Base,
-    cipher: ChaCha20Poly1305,
+    cipher: chacha20::ChaCha20Poly1305,
 }
 
 impl Encrypt {
     pub(super) fn new(pid: u32, sequence_number: u32, key: chacha20::Key) -> Self {
-        let cipher = ChaCha20Poly1305::new(&key);
+        let cipher = chacha20::ChaCha20Poly1305::new(&key);
         Self {
             base: Base { pid, sequence_number },
             cipher,
@@ -51,11 +51,11 @@ impl Encrypt {
     }
 
     #[expect(clippy::needless_pass_by_value, reason = "Prevent key re-use")]
-    pub(super) fn new_from(current: Encrypt, key: chacha20::Key) -> Self {
+    pub(super) fn new_from(current: Self, key: chacha20::Key) -> Self {
         Self::new(current.base.pid, current.base.sequence_number, key)
     }
 
-    pub(super) fn encrypt(&mut self, data: &mut dyn Buffer) -> Result<(), RendezvousProtocolError> {
+    pub(super) fn encrypt(&mut self, data: &mut dyn aead::Buffer) -> Result<(), RendezvousProtocolError> {
         // Prepare the nonce
         let nonce = prepare_nonce(self.base.pid, self.base.sequence_number);
 
@@ -73,7 +73,7 @@ impl Encrypt {
 
 impl Decrypt {
     pub(super) fn new(pid: u32, sequence_number: u32, key: chacha20::Key) -> Self {
-        let cipher = ChaCha20Poly1305::new(&key);
+        let cipher = chacha20::ChaCha20Poly1305::new(&key);
         Self {
             base: Base { pid, sequence_number },
             cipher,
@@ -81,11 +81,11 @@ impl Decrypt {
     }
 
     #[expect(clippy::needless_pass_by_value, reason = "Prevent key re-use")]
-    pub(super) fn new_from(current: Decrypt, key: chacha20::Key) -> Self {
+    pub(super) fn new_from(current: Self, key: chacha20::Key) -> Self {
         Self::new(current.base.pid, current.base.sequence_number, key)
     }
 
-    pub(super) fn decrypt(&mut self, data: &mut dyn Buffer) -> Result<(), RendezvousProtocolError> {
+    pub(super) fn decrypt(&mut self, data: &mut dyn aead::Buffer) -> Result<(), RendezvousProtocolError> {
         // Prepare the nonce
         let nonce = prepare_nonce(self.base.pid, self.base.sequence_number);
 

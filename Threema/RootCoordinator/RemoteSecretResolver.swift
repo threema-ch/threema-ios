@@ -6,6 +6,37 @@ import RemoteSecretProtocol
 import ThreemaEssentials
 import ThreemaFramework
 
+// MARK: - RemoteSecretConfiguration
+
+/// The four states the remote secret can be in when onboarding starts, derived from whether RS credentials
+/// are in the keychain and whether MDM still enables RS.
+struct RemoteSecretConfiguration {
+    enum SetupState {
+        case availableAndEnabled
+        case availableAndDisabled
+        case notAvailableAndEnabled
+        case notAvailableAndDisabled
+    }
+
+    let isRemoteSecretAvailable: Bool
+    let isRemoteSecretEnabled: Bool
+
+    var state: SetupState {
+        if isRemoteSecretAvailable, isRemoteSecretEnabled {
+            .availableAndEnabled
+        }
+        else if isRemoteSecretAvailable, isRemoteSecretEnabled == false {
+            .availableAndDisabled
+        }
+        else if isRemoteSecretAvailable == false, isRemoteSecretEnabled {
+            .notAvailableAndEnabled
+        }
+        else {
+            .notAvailableAndDisabled
+        }
+    }
+}
+
 // MARK: - RemoteSecretResolverResult
 
 enum RemoteSecretResolverResult {
@@ -74,19 +105,26 @@ final class RemoteSecretResolver: RemoteSecretResolving {
     // MARK: - Errors
 
     enum ResolverError: Error {
+        case blocked
+        case timeout
+        case mismatch
         case missingInfo
         case noIdentityFound
+        case noLicenseFound
         case unableToStoreLicense
         case unableToStoreIdentity
         case unableToGetWorkServerURL
+        case appSetupStateUnavailable
+        case invalidFlow
     }
 
     // MARK: - Properties
 
     private let appLaunchManager: any AppLaunchManagerProtocol
-    private let licenseStore: LicenseStore
+    private let licenseStore: any LicenseStoreProtocol
     private let myIdentityStore: MyIdentityStore
-    private let mdmSetup: MDMSetup
+    private let isRemoteSecretEnabledByMDM: @MainActor () -> Bool
+
     private let flavorService: AppFlavorService
     private let hasPreexistingData: Bool
 
@@ -100,16 +138,16 @@ final class RemoteSecretResolver: RemoteSecretResolving {
 
     init(
         appLaunchManager: any AppLaunchManagerProtocol,
-        licenseStore: LicenseStore,
+        licenseStore: any LicenseStoreProtocol,
         myIdentityStore: MyIdentityStore,
-        mdmSetup: MDMSetup,
+        isRemoteSecretEnabledByMDM: @escaping @MainActor () -> Bool,
         flavorService: AppFlavorService,
         hasPreexistingData: Bool
     ) {
         self.appLaunchManager = appLaunchManager
         self.licenseStore = licenseStore
         self.myIdentityStore = myIdentityStore
-        self.mdmSetup = mdmSetup
+        self.isRemoteSecretEnabledByMDM = isRemoteSecretEnabledByMDM
         self.flavorService = flavorService
         self.hasPreexistingData = hasPreexistingData
     }
@@ -124,8 +162,8 @@ final class RemoteSecretResolver: RemoteSecretResolving {
             return try await makeReady()
         }
 
-        let isRemoteSecretAvailable = try KeychainManager.loadRemoteSecret() != nil
-        let isRemoteSecretEnabled = mdmSetup.enableRemoteSecret()
+        let isRemoteSecretAvailable = try RemoteSecretProvider.isRemoteSecretInKeychain()
+        let isRemoteSecretEnabled = isRemoteSecretEnabledByMDM()
 
         let configuration = RemoteSecretConfiguration(
             isRemoteSecretAvailable: isRemoteSecretAvailable,
@@ -205,10 +243,32 @@ final class RemoteSecretResolver: RemoteSecretResolving {
             return .encryptedDataDetected
         }
 
-        // Delete possibly stale keychain items from a previous installation on the same device.
-        try KeychainManager.deleteAllThisDeviceOnlyItems()
+        // Delete all data in keychain if the app was not setup before. Data might still be in the
+        // keychain if we deleted the app on the home screen on the same device before.
+        //
+        // Only act on an authoritative `.notSetup`: an undetermined read reports `.notSetup` as well, and
+        // deleting keychain material on a guess cannot be undone. Continuing without deciding is not an option
+        // either: a new RS would be created while stale this-device-only items stay behind, which is the exact
+        // state this deletion exists to prevent. So abort the resolution instead.
+        //
+        // By construction this cannot happen: onboarding is only entered once the launch sequence resolved the
+        // state authoritatively, and that resolution persists it, so later reads answer from the stored value.
+        // The assertion catches a violated invariant during development, while a release build fails
+        // recoverably (every caller surfaces this error) rather than crashing on a transient keychain read.
+        let (appSetupState, stateUnavailable) = AppSetup.resolveState()
+        if let stateUnavailable {
+            DDLogError(
+                "[RemoteSecretResolver] App setup state unavailable (\(stateUnavailable)); aborting RS resolution"
+            )
+            assertionFailure("App setup state unavailable during RS resolution: \(stateUnavailable)")
+            throw ResolverError.appSetupStateUnavailable
+        }
 
-        let remoteSecretManager = try await remoteSecretManagerCreator.initialize()
+        if appSetupState == .notSetup {
+            try KeychainManager.deleteAllThisDeviceOnlyItems()
+        }
+
+        let remoteSecretManager = try await initializeRemoteSecretManager()
         let keychainManager = KeychainManager(remoteSecretManager: remoteSecretManager)
         try syncKeychain(with: keychainManager)
 
@@ -216,10 +276,19 @@ final class RemoteSecretResolver: RemoteSecretResolving {
     }
     
     private func makeReady() async throws -> RemoteSecretResolverResult {
-        let remoteSecretManager = try await remoteSecretManagerCreator.initialize()
-        let keychainManager = KeychainManager(remoteSecretManager: remoteSecretManager)
+        let remoteSecretManager = try await initializeRemoteSecretManager()
         
+        let keychainManager = KeychainManager(remoteSecretManager: remoteSecretManager)
+        try syncKeychain(with: keychainManager)
+
         return .ready(remoteSecretManager: remoteSecretManager, keychainManager: keychainManager)
+    }
+    
+    private func workServerURL() async throws -> String {
+        guard let url = try await ServerInfoProviderFactory.makeServerInfoProvider().workServerURL() else {
+            throw ResolverError.unableToGetWorkServerURL
+        }
+        return url
     }
 
     // MARK: - RemoteSecret Creation
@@ -244,12 +313,33 @@ final class RemoteSecretResolver: RemoteSecretResolving {
             clientKey: clientKey
         )
     }
-
-    private func workServerURL() async throws -> String {
-        guard let url = try await ServerInfoProviderFactory.makeServerInfoProvider().workServerURL() else {
-            throw ResolverError.unableToGetWorkServerURL
+    
+    // MARK: - RemoteSecret Initialization
+    
+    private func initializeRemoteSecretManager() async throws -> RemoteSecretManagerProtocol {
+        do {
+            return try await remoteSecretManagerCreator.initialize {
+                do {
+                    return try await self.workServerURL()
+                }
+                catch {
+                    DDLogError("Failed to get work server url: \(error)")
+                    return nil
+                }
+            }
         }
-        return url
+        catch RemoteSecretManagerError.blocked {
+            throw ResolverError.blocked
+        }
+        catch RemoteSecretManagerError.timeout {
+            throw ResolverError.timeout
+        }
+        catch RemoteSecretManagerError.mismatch {
+            throw ResolverError.mismatch
+        }
+        catch {
+            throw error
+        }
     }
 
     // MARK: - Load Identity From Keychain
@@ -267,18 +357,26 @@ final class RemoteSecretResolver: RemoteSecretResolving {
     // MARK: - Keychain Sync
 
     /// Syncs identity and license between the in-memory stores and the keychain.
-    /// Duplicated from SetupApp.handleKeychain.
     private func syncKeychain(with keychainManager: KeychainManagerProtocol) throws {
         if flavorService.isBusinessApp {
-            if let license = try keychainManager.loadLicense() {
+            // If we have a license and it is valid, we store it in the keychain.
+            // If not we try to load the one stored in keychain.
+            if licenseStore.isValid() || ProcessInfoHelper.isRunningForScreenshots {
+                try storeLicense(using: keychainManager)
+            }
+            else if let license = try keychainManager.loadLicense() {
                 updateLicenseStore(with: license)
             }
             else {
-                try storeLicense(using: keychainManager)
+                DDLogError("[RemoteSecretResolver] No license, neither in LicenseStore nor in keychain")
+                assertionFailure("This should not happen")
+                throw ResolverError.noLicenseFound
             }
         }
 
-        if myIdentityStore.identity != nil {
+        // If we have a (new) identity and it is valid, we store it in the keychain.
+        // If not we try to load the one stored in keychain
+        if myIdentityStore.isValidIdentity {
             try storeIdentity(using: keychainManager)
         }
         else if let identity = try keychainManager.loadIdentity() {

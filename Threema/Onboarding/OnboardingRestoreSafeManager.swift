@@ -7,7 +7,6 @@ import ThreemaFramework
 // MARK: - OnboardingRestoreSafeManagerDelegate
 
 protocol OnboardingRestoreSafeManagerDelegate: AnyObject {
-    func didCompleteRestoreSafe()
     func didFail(with error: Error)
 }
 
@@ -44,10 +43,29 @@ struct SafeRestorePreparation {
     let activateSafeAnyway: Bool
 }
 
+// MARK: - SafeRestoring
+
+/// The two phases of a Safe restore, split so the caller can resolve the remote secret in between.
+@MainActor
+protocol SafeRestoring {
+    /// Phase 1: downloads the backup and restores the identity store. No remote secret is needed yet.
+    ///
+    /// - Returns: A `SafeRestorePreparation` to be passed to `performRestore(preparation:remoteSecretManager:)`.
+    func prepareRestore(with info: OnboardingRestoreSafeInformation) async throws -> SafeRestorePreparation
+
+    /// Phase 2: runs migrations, restores Safe data, and activates Safe.
+    ///
+    /// Requires the remote secret to have been resolved externally and passed in.
+    func performRestore(
+        preparation: SafeRestorePreparation,
+        remoteSecretManager: any RemoteSecretManagerProtocol
+    ) async throws
+}
+
 // MARK: - OnboardingRestoreSafeManager
 
 @MainActor
-final class OnboardingRestoreSafeManager {
+final class OnboardingRestoreSafeManager: SafeRestoring {
     let mdm: BootstrapMDMSetupProtocol
     let flavorService: AppFlavorService
     let licenseStore: () -> LicenseStore
@@ -70,9 +88,6 @@ final class OnboardingRestoreSafeManager {
     
     // MARK: - Phase 1: Prepare
 
-    /// Downloads the Safe backup and restores the identity store. No RS needed yet.
-    ///
-    /// - Returns: A `SafeRestorePreparation` to be passed to `performRestore(preparation:remoteSecretManager:)`.
     func prepareRestore(with info: OnboardingRestoreSafeInformation) async throws -> SafeRestorePreparation {
         DDLogNotice("[ThreemaSafe Restore] Restore started")
 
@@ -130,10 +145,6 @@ final class OnboardingRestoreSafeManager {
     
     // MARK: - Phase 2: Perform
 
-    /// Runs migrations, restores Safe data, and activates Safe.
-    ///
-    /// Requires RS to have been resolved externally (by the coordinator) and passed in.
-    /// In the legacy flow this is called from `startRestore(with:)` after resolving RS internally.
     func performRestore(
         preparation: SafeRestorePreparation,
         remoteSecretManager: any RemoteSecretManagerProtocol
@@ -201,58 +212,5 @@ final class OnboardingRestoreSafeManager {
         }
 
         DDLogNotice("[ThreemaSafe Restore] Restoring ThreemaSafe done")
-    }
-
-    // MARK: - Legacy: single-shot (non-coordinator flow)
-
-    /// Legacy entry point used by `RestoreSafeViewController` in the non-coordinator flow.
-    /// Calls `prepareRestore` + resolves RS internally + calls `performRestore`, then
-    /// notifies `delegate` on completion or failure.
-    func startRestore(with info: OnboardingRestoreSafeInformation) {
-        Task(priority: .userInitiated) { [weak self] in
-            guard let self else {
-                return
-            }
-
-            do {
-                let preparation = try await prepareRestore(with: info)
-
-                let resolver = RemoteSecretResolver(
-                    appLaunchManager: AppLaunchManagerAdapter(),
-                    licenseStore: licenseStore(),
-                    myIdentityStore: myIdentityStore(),
-                    mdmSetup: mdm.mdmSetup,
-                    flavorService: AppFlavorService(),
-                    hasPreexistingData: info.restoreIdentityOnly
-                )
-
-                let remoteSecretManager: any RemoteSecretManagerProtocol
-                do {
-                    guard case let .ready(resolvedRemoteSecretManager, _) = try await resolver.resolve() else {
-                        throw SafeError.restoreError(.remoteSecretError)
-                    }
-                    remoteSecretManager = resolvedRemoteSecretManager
-                }
-                catch {
-                    DDLogError(
-                        "[ThreemaSafe Restore] Failed to setup remote secret with error: \(error)"
-                    )
-                    throw SafeError.restoreError(.remoteSecretError)
-                }
-
-                RemoteSecretProvider.setRemoteSecretManager(remoteSecretManager)
-
-                try await performRestore(
-                    preparation: preparation,
-                    remoteSecretManager: remoteSecretManager
-                )
-
-                delegate?.didCompleteRestoreSafe()
-            }
-            catch {
-                DDLogError("[ThreemaSafe Restore] Error: \(error)")
-                delegate?.didFail(with: error)
-            }
-        }
     }
 }

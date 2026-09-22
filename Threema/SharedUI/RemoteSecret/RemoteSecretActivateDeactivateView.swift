@@ -70,10 +70,17 @@ struct RemoteSecretActivateDeactivateView: View {
             .multilineTextAlignment(.center)
             .padding(24)
             .ignoresSafeArea(.all, edges: [.horizontal])
+            .onDisappear {
+                viewModel.onDisappear()
+            }
         }
     }
 }
 
 #Preview {
-    RemoteSecretActivateDeactivateView(viewModel: RemoteSecretActivateDeactivateViewModel(type: .activate))
+    let viewModel = RemoteSecretActivateDeactivateViewModel(type: .activate) {
+        // no-op
+    }
+    
+    RemoteSecretActivateDeactivateView(viewModel: viewModel)
 }

@@ -277,7 +277,7 @@ open class DKAssetGroupDetailVC: UIViewController, UICollectionViewDelegate, UIC
             let selectedAsset = (collectionView.cellForItem(at: indexPath) as? DKAssetGroupDetailBaseCell)?.asset, self.imagePickerController.allowMultipleTypes == false && firstSelectedAsset.isVideo != selectedAsset.isVideo {
 
             /***** BEGIN THREEMA MODIFICATION: add gesture recognizer *********/
-            UIAlertTemplate.showAlert(owner: self.imagePickerController, title: DKImageLocalizedStringWithKey("selectPhotosOrVideos"), message: DKImageLocalizedStringWithKey("selectPhotosOrVideosError"))
+            UIAlertTemplate.showOKAlert(owner: self.imagePickerController, title: DKImageLocalizedStringWithKey("selectPhotosOrVideos"), message: DKImageLocalizedStringWithKey("selectPhotosOrVideosError"))
             /***** END THREEMA MODIFICATION: add gesture recognizer *********/
 
             return false

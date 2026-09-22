@@ -101,7 +101,7 @@ open class DKImagePickerControllerDefaultUIDelegate: NSObject, DKImagePickerCont
 	
 	open func imagePickerControllerDidReachMaxLimit(_ imagePickerController: DKImagePickerController) {
         /***** BEGIN THREEMA MODIFICATION: add gesture recognizer *********/
-        UIAlertTemplate.showAlert(
+        UIAlertTemplate.showOKAlert(
             owner: imagePickerController,
             title: DKImageLocalizedStringWithKey("maxLimitReached"),
             message: String.localizedStringWithFormat(

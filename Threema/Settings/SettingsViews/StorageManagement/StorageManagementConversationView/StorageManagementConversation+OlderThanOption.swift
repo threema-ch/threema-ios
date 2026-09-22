@@ -15,7 +15,7 @@ extension StorageManagementConversationView {
             [.oneYear, .sixMonths, .threeMonths, .oneMonth, .oneWeek]
         }
 
-        public var id: Self { self }
+        var id: Self { self }
         
         case oneYear
         case sixMonths

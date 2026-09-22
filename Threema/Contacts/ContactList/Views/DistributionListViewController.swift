@@ -53,7 +53,7 @@ final class DistributionListViewController: ContactListBaseViewController {
             return
         }
         
-        itemsDelegate?.didSelect(.distributionList(objectID: objectID))
+        itemsDelegate?.didSelect(.distributionList(objectID))
     }
     
     override func tableView(
@@ -69,7 +69,7 @@ final class DistributionListViewController: ContactListBaseViewController {
         trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath
     ) -> UISwipeActionsConfiguration? {
 
-        let action = DeleteActionFactory { [weak self] in
+        let action = DeleteActionFactory(title: #localize("delete")) { [weak self] in
             let em = BusinessInjector.ui.entityManager
             guard
                 let self,

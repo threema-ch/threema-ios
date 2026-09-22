@@ -76,7 +76,7 @@ struct MediatorReflectedGroupSyncProcessorTests {
             groupSync.delete = expectedDelete
         }
 
-        let (_, groupEntity, conversationEntity) = try testDatabase.preparer.createGroup(
+        let (_, groupEntity, conversationEntity) = testDatabase.preparer.createGroup(
             groupID: expectedGroupIdentity.id,
             groupCreatorIdentity: expectedGroupIdentity.creator.rawValue,
             members: ["MEMBER01"],
@@ -162,7 +162,7 @@ struct MediatorReflectedGroupSyncProcessorTests {
             groupSync.delete = expectedDelete
         }
 
-        let (_, groupEntity, conversationEntity) = try testDatabase.preparer.createGroup(
+        let (_, groupEntity, conversationEntity) = testDatabase.preparer.createGroup(
             groupID: expectedGroupIdentity.id,
             groupCreatorIdentity: expectedGroupIdentity.creator.rawValue,
             members: ["MEMBER01"]

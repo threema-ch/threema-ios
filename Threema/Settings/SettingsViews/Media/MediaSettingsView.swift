@@ -51,7 +51,7 @@ struct MediaSettingsView: View {
             }
             updateFooter()
         }
-        .navigationBarTitle(#localize("settings_media_title"), displayMode: .inline)
+        .navigationBarTitle(#localize("media"), displayMode: .inline)
         .tint(.accentColor)
     }
 

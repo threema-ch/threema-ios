@@ -18,7 +18,7 @@ import Foundation
 
 /// Swift method for logging Notice Log level
 @inlinable
-public func DDLogNotice(
+package func DDLogNotice(
     _ message: @autoclosure () -> String,
     level: DDLogLevel = DDDefaultLogLevel,
     context: Int = 0,
@@ -30,7 +30,7 @@ public func DDLogNotice(
     ddlog: DDLog = .sharedInstance
 ) {
     _DDLogMessage(
-        message(),
+        "\(message())",
         level: level,
         flag: DDLogFlag(rawValue: DDLogFlag.RawValue(1 << 5)),
         context: context,

@@ -77,6 +77,21 @@ static NSDictionary *_mdmCacheSetup;
 
 @interface MDMSetup ()
 @property (nonatomic, strong) NSSet *personalInfoKeys;
+
+/// Collaborators, resolving to the shared instances unless they were injected
+@property (nonatomic, readonly, nonnull) id<UserSettingsProtocol> userSettings;
+@property (nonatomic, readonly, nonnull) id<LicenseStoreProtocol> licenseStore;
+@property (nonatomic, readonly, nonnull) id<MyIdentityStoreProtocol> myIdentityStore;
+
+// Test-only initializer. Declared here (framework-internal) only so this file compiles; it is NOT part
+// of any public header, so the app can't call it. Test targets declare a matching `MDMSetup (Testing)`
+// category in their bridging header, which dispatches to this implementation.
+- (nonnull instancetype)initForTestWithAppSetupStateRawValue:(NSInteger)appSetupStateRawValue
+                                              isBusinessApp:(BOOL)businessApp
+                                                   isOnPrem:(BOOL)onPrem
+                                               userSettings:(nonnull id<UserSettingsProtocol>)userSettings
+                                               licenseStore:(nonnull id<LicenseStoreProtocol>)licenseStore
+                                            myIdentityStore:(nonnull id<MyIdentityStoreProtocol>)myIdentityStore;
 @end
 
 @implementation MDMSetup {
@@ -88,6 +103,25 @@ static NSDictionary *_mdmCacheSetup;
 
     BOOL isSetup;
     dispatch_queue_t queue;
+
+    /// Injected collaborators, `nil` means use the shared instance
+    id<UserSettingsProtocol> _injectedUserSettings;
+    id<LicenseStoreProtocol> _injectedLicenseStore;
+    id<MyIdentityStoreProtocol> _injectedMyIdentityStore;
+}
+
+// We use injected instances during testing
+
+- (id<UserSettingsProtocol>)userSettings {
+    return _injectedUserSettings ?: [UserSettings sharedUserSettings];
+}
+
+- (id<LicenseStoreProtocol>)licenseStore {
+    return _injectedLicenseStore ?: [LicenseStore sharedLicenseStore];
+}
+
+- (id<MyIdentityStoreProtocol>)myIdentityStore {
+    return _injectedMyIdentityStore ?: [MyIdentityStore sharedMyIdentityStore];
 }
 
 - (MDMSetup*)init {
@@ -102,10 +136,12 @@ static NSDictionary *_mdmCacheSetup;
         isBusinessApp = TargetManagerObjC.isBusinessApp;
         isOnPrem = TargetManagerObjC.isOnPrem;
 
+        // Resolve eagerly: an MDMSetup created once app setup is complete needs its BusinessInjector for the
+        // multi-device sync of MDM parameters. Creating one before the Remote Secret is initialized fails here
+        // by design, surfacing any too-early MDM access instead of hiding it behind a lazy retry.
         if (!isSetup) {
             NSError *error;
             _businessInjector = [[AppLaunchManager shared] businessForBackgroundProcess:YES error:&error];
-
             if (error) {
                 DDLogError(@"Error while getting BusinessInjector: %@", error.description);
             }
@@ -118,12 +154,12 @@ static NSDictionary *_mdmCacheSetup;
     return self;
 }
 
-#if DEBUG
-- (MDMSetup*)initWithAppSetupStateRawValue:(NSInteger)appSetupStateRawValue isBusinessApp:(BOOL)businessApp {
-    return [[MDMSetup alloc] initWithAppSetupStateRawValue:appSetupStateRawValue isBusinessApp:businessApp isOnPrem:NO];
-}
-
-- (MDMSetup*)initWithAppSetupStateRawValue:(NSInteger)appSetupStateRawValue isBusinessApp:(BOOL)businessApp isOnPrem:(BOOL)onPrem {
+- (nonnull instancetype)initForTestWithAppSetupStateRawValue:(NSInteger)appSetupStateRawValue
+                                        isBusinessApp:(BOOL)businessApp
+                                             isOnPrem:(BOOL)onPrem
+                                         userSettings:(nonnull id<UserSettingsProtocol>)userSettings
+                                         licenseStore:(nonnull id<LicenseStoreProtocol>)licenseStore
+                                      myIdentityStore:(nonnull id<MyIdentityStoreProtocol>)myIdentityStore {
     self = [super init];
     if (self) {
         AppSetupState state = [self appSetupStateFromRawValue:appSetupStateRawValue];
@@ -131,13 +167,16 @@ static NSDictionary *_mdmCacheSetup;
         isBusinessApp = businessApp;
         isOnPrem = onPrem;
 
+        _injectedUserSettings = userSettings;
+        _injectedLicenseStore = licenseStore;
+        _injectedMyIdentityStore = myIdentityStore;
+
         queue = dispatch_queue_create("ch.threema.MdmConfiguration", NULL);
 
         _personalInfoKeys = [MDMSetup defaultPersonalInfoKeys];
     }
     return self;
 }
-#endif
 
 - (AppSetupState)appSetupStateFromRawValue:(NSInteger)rawValue {
     switch (rawValue) {
@@ -413,7 +452,7 @@ static NSDictionary *_mdmCacheSetup;
 
     [self loadLicenseInfo];
     
-    UserSettings *userSettings = [UserSettings sharedUserSettings];
+    id<UserSettingsProtocol> userSettings = self.userSettings;
 
     NSNumber *blockUnknown = [self getMdmConfigurationBoolForKey:MDM_KEY_BLOCK_UNKNOWN];
     if ([blockUnknown isKindOfClass:[NSNumber class]]) {
@@ -463,7 +502,11 @@ static NSDictionary *_mdmCacheSetup;
     if ([self existsMdmKey:MDM_KEY_DISABLE_VIDEO_CALLS]) {
         userSettings.enableVideoCall= ![self disableVideoCalls];
     }
-            
+
+    if ([self existsMdmKey:MDM_KEY_DISABLE_SCREENSHOTS]) {
+        userSettings.allowScreenshot = ![self disableScreenshots];
+    }
+
     if ([self existsMdmKey:MDM_KEY_DISABLE_SEND_PROFILE_PICTURE]) {
         if ([self disableSendProfilePicture]) {
             [userSettings setSendProfilePicture:SendProfilePictureNone];
@@ -495,19 +538,21 @@ static NSDictionary *_mdmCacheSetup;
         return;
     }
     
+    id<LicenseStoreProtocol> licenseStore = self.licenseStore;
+
     NSString *licenseUsername = [self getMdmConfigurationValueForKey:MDM_KEY_LICENSE_USERNAME];
     if ([licenseUsername isKindOfClass:[NSString class]] && licenseUsername.length > 0) {
-        [LicenseStore sharedLicenseStore].licenseUsername = licenseUsername;
+        licenseStore.licenseUsername = licenseUsername;
     }
-    
+
     NSString *licensePassword = [self getMdmConfigurationValueForKey:MDM_KEY_LICENSE_PASSWORD];
     if ([licensePassword isKindOfClass:[NSString class]] && licensePassword.length > 0) {
-        [LicenseStore sharedLicenseStore].licensePassword = licensePassword;
+        licenseStore.licensePassword = licensePassword;
     }
-    
+
     NSString *onPremConfigUrl = [self onPremConfigUrl];
-    if (onPremConfigUrl != nil && [[LicenseStore sharedLicenseStore] validCustomOnPremConfigUrlWithPredefinedUrl:onPremConfigUrl]) {
-        [LicenseStore sharedLicenseStore].onPremConfigUrl = onPremConfigUrl;
+    if (onPremConfigUrl != nil && [licenseStore validCustomOnPremConfigUrlWithPredefinedUrl:onPremConfigUrl]) {
+        licenseStore.onPremConfigUrl = onPremConfigUrl;
     }
 }
 
@@ -518,7 +563,7 @@ static NSDictionary *_mdmCacheSetup;
         return;
     }
     
-    MyIdentityStore *identityStore = [MyIdentityStore sharedMyIdentityStore];
+    id<MyIdentityStoreProtocol> identityStore = self.myIdentityStore;
 
     NSString *nickname = [self getMdmConfigurationValueForKey:MDM_KEY_NICKNAME];
     if ([nickname isKindOfClass:[NSString class]] && nickname.length > 0 && nickname.length < 32) {
@@ -527,7 +572,7 @@ static NSDictionary *_mdmCacheSetup;
     
     NSNumber *contactSync = [self getMdmConfigurationBoolForKey:MDM_KEY_CONTACT_SYNC];
     if ([contactSync isKindOfClass:[NSNumber class]]) {
-        [UserSettings sharedUserSettings].syncContacts = contactSync.boolValue;
+        self.userSettings.syncContacts = contactSync.boolValue;
     }
     
     NSString *email = [self getMdmConfigurationValueForKey:MDM_KEY_LINKED_EMAIL];
@@ -646,14 +691,17 @@ static NSDictionary *_mdmCacheSetup;
         return;
     }
     
+    // Not routed through `self.myIdentityStore`: `restoreFromBackup:withPassword:` is not part of
+    // `MyIdentityStoreProtocol`
     MyIdentityStore *identityStore = [MyIdentityStore sharedMyIdentityStore];
-    
+    id<LicenseStoreProtocol> licenseStore = self.licenseStore;
+
     [identityStore restoreFromBackup:_idBackup withPassword:_idBackupPassword onCompletion:^{
         ServerAPIConnector *apiConnector = [[ServerAPIConnector alloc] init];
         /* Obtain server group from server */
         [apiConnector updateMyIdentityStore:identityStore onCompletion:^{
 
-            [[LicenseStore sharedLicenseStore] performUpdateWorkInfo];
+            [licenseStore performUpdateWorkInfo];
             
             onCompletion();
         } onError:^(NSError *error) {
@@ -750,7 +798,7 @@ static NSDictionary *_mdmCacheSetup;
     [self loadIDCreationValues];
     [self loadRenewableValues];
 
-    [[LicenseStore sharedLicenseStore] performUpdateWorkInfoForce:sendForce];
+    [self.licenseStore performUpdateWorkInfoForce:sendForce];
 
     [self sync];
     [self syncSettingCalls];

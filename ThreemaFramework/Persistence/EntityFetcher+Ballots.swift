@@ -64,7 +64,7 @@ extension EntityFetcher {
     
     public func openBallotEntitiesCount(for conversationEntity: ConversationEntity) -> Int {
         let conversationPredicate = ballotConversationEntityPredicate(conversationEntity: conversationEntity)
-        let openPredicate = ballotStateOpenPredicate()
+        let openPredicate = ballotStatePredicate(state: .open)
         
         return countEntities(
             entityName: "Ballot",
@@ -76,7 +76,34 @@ extension EntityFetcher {
         let predicate = ballotChoicePredicate(ballotID: ballotID, choiceID: choiceID)
         return fetchEntity(entityName: "BallotChoice", predicate: predicate)
     }
-    
+
+    public func ballotEntities() -> [BallotEntity] {
+        fetchEntities(entityName: "Ballot") ?? []
+    }
+
+    /// Fetches `BallotEntity` objects that belong to a contact or group conversation, i.e. excluding distribution
+    /// lists and orphaned ballots (those without a conversation).
+    ///
+    /// Results are ordered by the unique `id` attribute to provide a stable, reproducible sequence across calls, which
+    /// is required for correct, non-overlapping pagination/batching.
+    ///
+    /// - Parameters:
+    ///   - offset: The number of initial entities to skip. Defaults to `0`.
+    ///   - limit: The maximum number of entities to return. Pass `nil` (the default) for no limit.
+    /// - Returns: Matching `BallotEntity` objects, or `nil` if the fetch fails.
+    public func ballotEntitiesInContactOrGroupConversations(
+        offset: Int = 0,
+        limit: Int? = nil
+    ) -> [BallotEntity] {
+        fetchEntities(
+            entityName: "Ballot",
+            predicate: .ballotInContactOrGroupConversation,
+            sortDescriptors: [NSSortDescriptor(key: "id", ascending: true)],
+            offset: offset,
+            limit: limit ?? 0 // 0 means no limit
+        ) ?? []
+    }
+
     // MARK: - Predicates
     
     func ballotConversationEntityPredicate(conversationEntity: ConversationEntity) -> NSPredicate {
@@ -90,11 +117,7 @@ extension EntityFetcher {
     func ballotStatePredicate(state: BallotEntity.BallotState) -> NSPredicate {
         NSPredicate(format: "state == %d", state.rawValue)
     }
-    
-    func ballotStateOpenPredicate() -> NSPredicate {
-        ballotStatePredicate(state: .open)
-    }
-    
+
     func ballotChoicePredicate(ballotID: Data, choiceID: NSNumber) -> NSPredicate {
         NSPredicate(format: "ballot.id == %@ AND id == %@", ballotID as CVarArg, choiceID)
     }

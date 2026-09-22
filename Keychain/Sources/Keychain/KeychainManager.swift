@@ -47,7 +47,7 @@ public final class KeychainManager: NSObject, KeychainManagerProtocol {
     // MARK: - Locking Check
     
     /// Is Keychain locked for first unlock accesses?
-    @objc public static var isKeychainLocked: Bool {
+    public static var isKeychainLocked: Bool {
         do {
             _ = try KeychainProvider().load(.identity())
             return false
@@ -75,7 +75,7 @@ public final class KeychainManager: NSObject, KeychainManagerProtocol {
         return (authenticationToken, identityHash)
     }
     
-    @objc public static func hasRemoteSecretInStore() -> Bool {
+    public static func hasRemoteSecretInStore() -> Bool {
         do {
             return try KeychainProvider().load(.remoteSecret()) != nil
         }
@@ -95,7 +95,7 @@ public final class KeychainManager: NSObject, KeychainManagerProtocol {
         )
     }
     
-    @objc public static func deleteRemoteSecret() throws {
+    public static func deleteRemoteSecret() throws {
         try KeychainProvider().delete(.remoteSecret())
     }
     
@@ -111,33 +111,6 @@ public final class KeychainManager: NSObject, KeychainManagerProtocol {
     }
 
     // MARK: - Identity
-
-    @available(swift, obsoleted: 1.0, renamed: "loadIdentity()", message: "Only use from Objective-C")
-    @objc public func loadIdentity(
-        identity: UnsafeMutablePointer<NSString?>,
-        clientKey: UnsafeMutablePointer<NSData?>,
-        publicKey: UnsafeMutablePointer<NSData?>,
-        serverGroup: UnsafeMutablePointer<NSString?>
-    ) -> Int32 {
-        do {
-            guard let myIdentity = try loadIdentity() else {
-                return errSecNotAvailable
-            }
-
-            identity.pointee = myIdentity.$identity as NSString
-            clientKey.pointee = myIdentity.$clientKey as NSData
-            publicKey.pointee = myIdentity.$publicKey as NSData
-            serverGroup.pointee = myIdentity.$serverGroup as NSString
-
-            return errSecSuccess
-        }
-        catch let KeychainProviderError.loadFailed(osStatus: osStatus) {
-            return osStatus
-        }
-        catch {
-            return errSecNotAvailable
-        }
-    }
 
     public func loadIdentity() throws -> MyIdentity? {
         guard let result = try keychainProvider.load(.identity()),
@@ -180,7 +153,7 @@ public final class KeychainManager: NSObject, KeychainManagerProtocol {
         )
     }
 
-    @objc public func deleteIdentity() throws {
+    public func deleteIdentity() throws {
         try keychainProvider.delete(.identity())
     }
     
@@ -206,20 +179,6 @@ public final class KeychainManager: NSObject, KeychainManagerProtocol {
 
     // MARK: - Identity Backup
 
-    @available(swift, obsoleted: 1.0, renamed: "loadIdentityBackup()", message: "Only use from Objective-C")
-    @objc public static func loadIdentityBackup(data: UnsafeMutablePointer<NSString?>) -> Int32 {
-        do {
-            data.pointee = try loadIdentityBackup() as NSString
-            return errSecSuccess
-        }
-        catch let KeychainProviderError.loadFailed(osStatus: osStatus) {
-            return osStatus
-        }
-        catch {
-            return errSecNotAvailable
-        }
-    }
-
     public static func loadIdentityBackup() throws -> String {
         guard let result = try KeychainProvider().load(.identityBackup()),
               let identityBackupData = result.password
@@ -234,7 +193,7 @@ public final class KeychainManager: NSObject, KeychainManagerProtocol {
         return identityBackup
     }
 
-    @objc public static func storeIdentityBackup(_ data: String) throws {
+    public static func storeIdentityBackup(_ data: String) throws {
         let item = KeychainItem.identityBackup()
         
         guard let identityData = data.data(using: .ascii) else {
@@ -248,7 +207,7 @@ public final class KeychainManager: NSObject, KeychainManagerProtocol {
         )
     }
 
-    @objc public static func deleteIdentityBackup() throws {
+    public static func deleteIdentityBackup() throws {
         try KeychainProvider().delete(.identityBackup())
     }
 
@@ -306,7 +265,7 @@ public final class KeychainManager: NSObject, KeychainManagerProtocol {
         )
     }
     
-    @objc public static func deleteMultiDeviceGroupKey() throws {
+    public static func deleteMultiDeviceGroupKey() throws {
         try KeychainProvider().delete(.multiDeviceGroupKey())
     }
 
@@ -389,21 +348,40 @@ public final class KeychainManager: NSObject, KeychainManagerProtocol {
         return server
     }
 
-    @available(swift, obsoleted: 1.0, renamed: "loadLicense()", message: "Only use from Objective-C")
-    @objc public func loadLicense(
-        user: UnsafeMutablePointer<NSString?>,
-        password: UnsafeMutablePointer<NSString?>,
-        deviceID: UnsafeMutablePointer<NSString?>,
-        onPremServer: UnsafeMutablePointer<NSString?>
-    ) throws {
-        if let result = try loadLicense() {
-            user.pointee = result.user as NSString
-            password.pointee = result.password as NSString
-            deviceID.pointee = result.deviceID as? NSString
-            if let server = result.onPremServer {
-                onPremServer.pointee = server as NSString
-            }
+    /// Loads the license if it is stored unencrypted
+    ///
+    /// Use this before the app is set up, where no remote secret manager exists: a remote secret is
+    /// tied to a Threema ID. A license stored while remote secret was enabled is encrypted and cannot
+    /// be decrypted without it, so this returns `nil` as long as there is a remote secret in the
+    /// keychain. Without one, ``storeLicense(_:)`` stores all values unencrypted.
+    /// - Returns: The stored license, or `nil` if there is none or it is encrypted
+    public static func loadUnencryptedLicense() throws -> ThreemaLicense? {
+        try loadUnencryptedLicense(keychainProvider: KeychainProvider())
+    }
+
+    static func loadUnencryptedLicense(keychainProvider: KeychainProviding) throws -> ThreemaLicense? {
+        guard try keychainProvider.load(.remoteSecret()) == nil else {
+            return nil
         }
+
+        guard let result = try keychainProvider.load(.license()),
+              let user = result.account,
+              let passwordData = result.password,
+              let password = String(data: passwordData, encoding: .utf8)
+        else {
+            return nil
+        }
+
+        let deviceID = result.generic.flatMap {
+            String(data: $0, encoding: .utf8)
+        }
+
+        return ThreemaLicense(
+            user: user,
+            password: password,
+            deviceID: deviceID,
+            onPremServer: result.service
+        )
     }
 
     public func loadLicense() throws -> ThreemaLicense? {
@@ -424,7 +402,7 @@ public final class KeychainManager: NSObject, KeychainManagerProtocol {
         )
     }
 
-    @objc public func storeLicense(_ license: ThreemaLicense) throws {
+    public func storeLicense(_ license: ThreemaLicense) throws {
         let storingUser = remoteSecretManager.encryptToBase64StringIfNeeded(license.user)
         let storingPassword = remoteSecretManager.encryptStringIfNeeded(license.password)
         let storingGeneric = remoteSecretManager.encryptStringIfNeeded(license.deviceID)
@@ -508,6 +486,34 @@ public final class KeychainManager: NSObject, KeychainManagerProtocol {
         try keychainProvider.delete(.threemaSafeServer())
     }
 
+    // MARK: - Data Backup Recovery Key
+
+    public func loadDataBackupRecoveryKey() throws -> Data? {
+        guard let result = try keychainProvider.load(.dataBackupRecoveryKey()),
+              let key = result.password else {
+            return nil
+        }
+
+        let loadingKey = remoteSecretManager.decryptDataIfNeeded(key)
+
+        return loadingKey
+    }
+
+    public func storeDataBackupRecoveryKey(_ key: Data) throws {
+        let storingKey = remoteSecretManager.encryptDataIfNeeded(key)
+
+        let keychainItem = KeychainItem.dataBackupRecoveryKey()
+        try keychainProvider.store(
+            keychainItem,
+            account: keychainItem.label,
+            password: storingKey
+        )
+    }
+
+    public func deleteDataBackupRecoveryKey() throws {
+        try keychainProvider.delete(.dataBackupRecoveryKey())
+    }
+
     // MARK: - Migrate Keychain
 
     public func migrateToDowngrade() throws {
@@ -524,7 +530,7 @@ public final class KeychainManager: NSObject, KeychainManagerProtocol {
     
     // MARK: - Deletion
     
-    @objc public static func deleteAllItems() throws {
+    public static func deleteAllItems() throws {
         let keychainProvider = KeychainProvider()
         for item in KeychainItem.allCases {
             try keychainProvider.delete(item)

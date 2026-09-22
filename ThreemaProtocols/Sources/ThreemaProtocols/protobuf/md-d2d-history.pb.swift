@@ -106,13 +106,13 @@ import SwiftProtobuf
 // incompatible with the version of SwiftProtobuf to which you are linking.
 // Please ensure that you are building against the same version of the API
 // that was used to generate this file.
-fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAPIVersionCheck {
+fileprivate nonisolated struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAPIVersionCheck {
   struct _2: SwiftProtobuf.ProtobufAPIVersion_2 {}
   typealias Version = _2
 }
 
 /// Media type to transfer
-public enum D2dHistory_MediaType: SwiftProtobuf.Enum, Swift.CaseIterable {
+public nonisolated enum D2dHistory_MediaType: SwiftProtobuf.Enum, Swift.CaseIterable {
   public typealias RawValue = Int
 
   /// All media should be transferred
@@ -146,7 +146,7 @@ public enum D2dHistory_MediaType: SwiftProtobuf.Enum, Swift.CaseIterable {
 
 /// Root message envelope for messages from the destination device (DD) to the
 /// source device (SD).
-public struct D2dHistory_DdToSd: Sendable {
+public nonisolated struct D2dHistory_DdToSd: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -173,7 +173,7 @@ public struct D2dHistory_DdToSd: Sendable {
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
   /// The enveloped message
-  public enum OneOf_Content: Equatable, Sendable {
+  public nonisolated enum OneOf_Content: Equatable, Sendable {
     case getSummary(D2dHistory_GetSummary)
     case beginTransfer(D2dHistory_BeginTransfer)
 
@@ -184,7 +184,7 @@ public struct D2dHistory_DdToSd: Sendable {
 
 /// Root message envelope for messages from the source device (SD) to the
 /// destination device (DD).
-public struct D2dHistory_SdToDd: Sendable {
+public nonisolated struct D2dHistory_SdToDd: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -219,7 +219,7 @@ public struct D2dHistory_SdToDd: Sendable {
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
   /// The enveloped message
-  public enum OneOf_Content: Equatable, Sendable {
+  public nonisolated enum OneOf_Content: Equatable, Sendable {
     case summary(D2dHistory_Summary)
     case blobData(Common_BlobData)
     case data(D2dHistory_Data)
@@ -248,7 +248,7 @@ public struct D2dHistory_SdToDd: Sendable {
 ///    message with the same `id` back to DD. For outgoing messages, the
 ///    timespan refers to the time the message was created. For incoming
 ///    messages, the timespan refers to the time the message was received.
-public struct D2dHistory_GetSummary: Sendable {
+public nonisolated struct D2dHistory_GetSummary: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -287,7 +287,7 @@ public struct D2dHistory_GetSummary: Sendable {
 ///    properties (timespan, media types, etc.) which will trigger another
 ///    `GetSummary` message. When the user commits to the currently selected
 ///    properties, it sends a `BeginTransfer` message.
-public struct D2dHistory_Summary: Sendable {
+public nonisolated struct D2dHistory_Summary: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -329,7 +329,7 @@ public struct D2dHistory_Summary: Sendable {
 /// 6. If there are remaining messages, restart these steps from the beginning.
 /// 7. Wait until all buffered data on the connection has been written. Then,
 ///    close the connection.
-public struct D2dHistory_BeginTransfer: Sendable {
+public nonisolated struct D2dHistory_BeginTransfer: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -360,7 +360,7 @@ public struct D2dHistory_BeginTransfer: Sendable {
 /// 3. Log a warning for each remaining Blob in `blobs` and discard them.
 /// 4. If `remaining` is `0`, close the connection and consider the
 ///    conversation history transfer successfully completed.
-public struct D2dHistory_Data: Sendable {
+public nonisolated struct D2dHistory_Data: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -377,7 +377,7 @@ public struct D2dHistory_Data: Sendable {
 }
 
 /// Contains a past incoming or outgoing message.
-public struct D2dHistory_PastMessage: Sendable {
+public nonisolated struct D2dHistory_PastMessage: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -402,7 +402,7 @@ public struct D2dHistory_PastMessage: Sendable {
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
-  public enum OneOf_Message: Equatable, Sendable {
+  public nonisolated enum OneOf_Message: Equatable, Sendable {
     case incoming(D2dHistory_PastIncomingMessage)
     case outgoing(D2dHistory_PastOutgoingMessage)
 
@@ -412,7 +412,7 @@ public struct D2dHistory_PastMessage: Sendable {
 }
 
 /// A reaction to a message
-public struct D2dHistory_Reaction: Sendable {
+public nonisolated struct D2dHistory_Reaction: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -425,7 +425,7 @@ public struct D2dHistory_Reaction: Sendable {
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
   /// The reaction type.
-  public enum TypeEnum: SwiftProtobuf.Enum, Swift.CaseIterable {
+  public nonisolated enum TypeEnum: SwiftProtobuf.Enum, Swift.CaseIterable {
     public typealias RawValue = Int
 
     /// Message explicitly acknowledged
@@ -467,7 +467,7 @@ public struct D2dHistory_Reaction: Sendable {
 }
 
 /// A past outgoing message
-public struct D2dHistory_PastOutgoingMessage: Sendable {
+public nonisolated struct D2dHistory_PastOutgoingMessage: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -516,7 +516,7 @@ public struct D2dHistory_PastOutgoingMessage: Sendable {
 }
 
 /// A past incoming message
-public struct D2dHistory_PastIncomingMessage: Sendable {
+public nonisolated struct D2dHistory_PastIncomingMessage: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -566,13 +566,13 @@ public struct D2dHistory_PastIncomingMessage: Sendable {
 
 // MARK: - Code below here is support for the SwiftProtobuf runtime.
 
-fileprivate let _protobuf_package = "d2d_history"
+fileprivate nonisolated let _protobuf_package = "d2d_history"
 
-extension D2dHistory_MediaType: SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2dHistory_MediaType: SwiftProtobuf._ProtoNameProviding {
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0ALL\0")
 }
 
-extension D2dHistory_DdToSd: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2dHistory_DdToSd: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".DdToSd"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}get_summary\0\u{3}begin_transfer\0")
 
@@ -639,7 +639,7 @@ extension D2dHistory_DdToSd: SwiftProtobuf.Message, SwiftProtobuf._MessageImplem
   }
 }
 
-extension D2dHistory_SdToDd: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2dHistory_SdToDd: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".SdToDd"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}summary\0\u{3}blob_data\0\u{1}data\0")
 
@@ -723,7 +723,7 @@ extension D2dHistory_SdToDd: SwiftProtobuf.Message, SwiftProtobuf._MessageImplem
   }
 }
 
-extension D2dHistory_GetSummary: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2dHistory_GetSummary: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".GetSummary"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}id\0\u{1}timespan\0\u{1}media\0")
 
@@ -767,7 +767,7 @@ extension D2dHistory_GetSummary: SwiftProtobuf.Message, SwiftProtobuf._MessageIm
   }
 }
 
-extension D2dHistory_Summary: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2dHistory_Summary: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".Summary"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}id\0\u{1}messages\0\u{1}size\0")
 
@@ -807,7 +807,7 @@ extension D2dHistory_Summary: SwiftProtobuf.Message, SwiftProtobuf._MessageImple
   }
 }
 
-extension D2dHistory_BeginTransfer: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2dHistory_BeginTransfer: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".BeginTransfer"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}id\0")
 
@@ -837,7 +837,7 @@ extension D2dHistory_BeginTransfer: SwiftProtobuf.Message, SwiftProtobuf._Messag
   }
 }
 
-extension D2dHistory_Data: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2dHistory_Data: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".Data"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}messages\0\u{1}remaining\0")
 
@@ -872,7 +872,7 @@ extension D2dHistory_Data: SwiftProtobuf.Message, SwiftProtobuf._MessageImplemen
   }
 }
 
-extension D2dHistory_PastMessage: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2dHistory_PastMessage: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".PastMessage"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}incoming\0\u{1}outgoing\0")
 
@@ -939,7 +939,7 @@ extension D2dHistory_PastMessage: SwiftProtobuf.Message, SwiftProtobuf._MessageI
   }
 }
 
-extension D2dHistory_Reaction: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2dHistory_Reaction: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".Reaction"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}at\0\u{1}type\0")
 
@@ -974,11 +974,11 @@ extension D2dHistory_Reaction: SwiftProtobuf.Message, SwiftProtobuf._MessageImpl
   }
 }
 
-extension D2dHistory_Reaction.TypeEnum: SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2dHistory_Reaction.TypeEnum: SwiftProtobuf._ProtoNameProviding {
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0ACKNOWLEDGE\0\u{1}DECLINE\0")
 }
 
-extension D2dHistory_PastOutgoingMessage: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2dHistory_PastOutgoingMessage: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".PastOutgoingMessage"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}message\0\u{3}sent_at\0\u{3}read_at\0\u{3}last_reaction_at\0")
 
@@ -1027,7 +1027,7 @@ extension D2dHistory_PastOutgoingMessage: SwiftProtobuf.Message, SwiftProtobuf._
   }
 }
 
-extension D2dHistory_PastIncomingMessage: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+nonisolated extension D2dHistory_PastIncomingMessage: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".PastIncomingMessage"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}message\0\u{3}received_at\0\u{3}read_at\0\u{3}last_reaction_at\0")
 

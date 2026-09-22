@@ -40,7 +40,7 @@ public final class WorkDataThreemaMDMFetcher: WorkDataThreemaMDMFetcherProtocol 
         }
         guard licenseStore.licenseUsername != nil,
               licenseStore.licensePassword != nil else {
-            let error = ThreemaError.threemaError("Missing credentials (user name or password)")!
+            let error = ThreemaError.threemaError("Missing credentials (user name or password)")
             DDLogError("[WorkDataFetcher]: Work API fetch failed: \(error)")
             throw error
         }

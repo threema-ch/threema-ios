@@ -59,18 +59,17 @@ final class LoadingCoordinator: Coordinator {
     }
     
     func showError(
+        title: String? = nil,
         message: String,
-        isRetryable: Bool = true,
-        onRetry: (() -> Void)? = nil
+        onRetry: (@Sendable () -> Void)? = nil,
+        onRemove: (@Sendable () -> Void)? = nil
     ) {
         presentingNavigationViewController.popToRootViewController(animated: false)
-        viewModel.onRetry = onRetry
-        viewModel.setError(message: message, isRetryable: isRetryable)
+        viewModel.setError(title: title, message: message, onRetry: onRetry, onRemove: onRemove)
     }
     
-    // MARK: - Status Bar
-    
-    func configureStatusBar() {
-        loadingViewController.overrideUserInterfaceStyle = .dark
+    func showLocked() {
+        presentingNavigationViewController.popToRootViewController(animated: false)
+        viewModel.setLocked()
     }
 }

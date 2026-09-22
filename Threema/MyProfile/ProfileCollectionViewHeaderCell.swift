@@ -41,7 +41,7 @@ final class ProfileCollectionViewHeaderCell: UICollectionViewListCell, Reusable 
             return
         }
         
-        coordinator.show(.shareID(sourceView: action.popOverSourceView() ?? quickActionsView))
+        coordinator.shareID(from: action.popOverSourceView() ?? quickActionsView)
     }
 
     // MARK: - Subviews

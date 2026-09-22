@@ -6,7 +6,7 @@ pub(crate) mod base64 {
     pub(crate) mod fixed_length {
         use core::fmt;
 
-        use data_encoding::BASE64;
+        use libthreema_dependencies::data_encoding::BASE64;
         use serde::{
             Deserializer, Serialize as _, Serializer,
             de::{Error, Visitor},
@@ -54,7 +54,7 @@ pub(crate) mod base64 {
     pub(crate) mod variable_length {
         use core::fmt;
 
-        use data_encoding::BASE64;
+        use libthreema_dependencies::data_encoding::BASE64;
         use serde::{
             Deserializer, Serialize as _, Serializer,
             de::{Error, Visitor},
@@ -102,11 +102,7 @@ pub(crate) mod string {
 
     /// Deserialize [`String`] by [`core::str::FromStr`].
     pub(crate) mod from_str {
-        use core::{
-            fmt::{self},
-            marker::PhantomData,
-            str::FromStr,
-        };
+        use core::{fmt, marker::PhantomData, str::FromStr};
 
         use serde::{
             Deserializer,

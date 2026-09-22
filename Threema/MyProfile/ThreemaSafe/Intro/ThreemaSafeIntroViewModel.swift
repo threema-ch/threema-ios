@@ -13,7 +13,7 @@ final class ThreemaSafeIntroViewModel {
     var shouldDismiss = false
 
     var title: String {
-        .localizedStringWithFormat(#localize("safe_intro_title"), appFlavor.localizedAppName)
+        .localizedStringWithFormat(#localize("threema_safe_flavored"), appFlavor.localizedAppName)
     }
 
     var description: String {

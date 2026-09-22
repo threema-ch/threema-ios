@@ -1,4 +1,4 @@
-public protocol DelegateFactory {
+protocol DelegateFactory {
     associatedtype T
     associatedtype Delegate
 

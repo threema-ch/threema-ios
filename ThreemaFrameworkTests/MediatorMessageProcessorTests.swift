@@ -231,7 +231,7 @@ extension MediatorMessageProcessorTests: MessageProcessorDelegate {
     
     func processVoIPCall(
         _ message: NSObject,
-        identity: String?,
+        identity: String,
         onCompletion: @escaping ((any MessageProcessorDelegate)?) -> Void,
         onError: @escaping (any Error, (any MessageProcessorDelegate)?) -> Void
     ) {

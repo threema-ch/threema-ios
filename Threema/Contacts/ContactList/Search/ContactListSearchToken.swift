@@ -7,18 +7,18 @@ protocol ContactListTokenProtocol: Equatable, Sendable {
 }
 
 extension ContactListTokenProtocol {
-    public var searchToken: UISearchToken {
+    var searchToken: UISearchToken {
         let token = UISearchToken(icon: icon, text: title)
         token.representedObject = self
         return token
     }
 }
 
-public enum ContactListSearchToken: ContactListTokenProtocol, Identifiable, Hashable {
+enum ContactListSearchToken: ContactListTokenProtocol, Identifiable, Hashable {
     
-    public struct DirectoryTokenInfo: Identifiable, Equatable, Hashable, Sendable {
-        public let id: String
-        public let title: String
+    struct DirectoryTokenInfo: Identifiable, Equatable, Hashable, Sendable {
+        let id: String
+        let title: String
     }
     
     case contacts
@@ -28,7 +28,7 @@ public enum ContactListSearchToken: ContactListTokenProtocol, Identifiable, Hash
     case directoryFilterToken(info: DirectoryTokenInfo)
     
     // Tokens available for the current build flavor
-    public static var availableTokens: [ContactListSearchToken] {
+    static var availableTokens: [ContactListSearchToken] {
         switch TargetManager.current {
         case .threema, .green:
             if ThreemaEnvironment.distributionListsActive {
@@ -66,11 +66,11 @@ public enum ContactListSearchToken: ContactListTokenProtocol, Identifiable, Hash
         }
     }
     
-    public var id: String {
+    var id: String {
         title
     }
     
-    public var title: String {
+    var title: String {
         switch self {
         case .contacts:
             #localize("contact_list_search_token_title_contacts")
@@ -88,7 +88,7 @@ public enum ContactListSearchToken: ContactListTokenProtocol, Identifiable, Hash
         }
     }
     
-    public var icon: UIImage? {
+    var icon: UIImage? {
         switch self {
         case .contacts:
             UIImage(systemName: "person")
@@ -103,7 +103,7 @@ public enum ContactListSearchToken: ContactListTokenProtocol, Identifiable, Hash
         }
     }
     
-    public var contentConfiguration: UIListContentConfiguration {
+    var contentConfiguration: UIListContentConfiguration {
         var content = UIListContentConfiguration.cell()
         content.text = title
         content.image = icon

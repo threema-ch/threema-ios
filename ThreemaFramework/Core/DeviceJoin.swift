@@ -799,8 +799,8 @@ extension SettingsStoreProtocol {
             $0.typingIndicatorPolicy = sendTypingIndicator ? .sendTypingIndicator : .dontSendTypingIndicator
             $0.o2OCallPolicy = enableThreemaCall ? .allowO2OCall : .denyO2OCall
             $0.o2OCallConnectionPolicy = alwaysRelayCalls ? .requireRelayedConnection : .allowDirectConnection
-            // Screenshot policy doesn't exist
-            // Keyboard collection policy doesn't exist
+            $0.screenshotPolicy = allowScreenshot ? .allowScreenshot : .denyScreenshot
+            $0.keyboardDataCollectionPolicy = .denyDataCollection // `keyboardDataCollectionPolicy` will be removed
             $0.blockedIdentities.identities = Array(blacklist)
             $0.excludeFromSyncIdentities.identities = syncExclusionList
         }

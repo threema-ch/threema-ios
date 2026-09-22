@@ -602,8 +602,8 @@ final class BlobManagerTests: XCTestCase {
             creator: ThreemaIdentity(myIdentityStoreMock.identity)
         )
 
-        let (group, conversationEntity) = try databasePreparer.save {
-            let (_, groupEntity, conversationEntity) = try databasePreparer.createGroup(
+        let (group, conversationEntity) = databasePreparer.save {
+            let (_, groupEntity, conversationEntity) = databasePreparer.createGroup(
                 groupID: expectedGroupIdentity.id,
                 groupCreatorIdentity: expectedGroupIdentity.creator.rawValue,
                 members: [],

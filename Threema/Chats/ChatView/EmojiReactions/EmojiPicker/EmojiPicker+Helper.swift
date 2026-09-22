@@ -11,13 +11,13 @@ extension EnvironmentValues {
 }
 
 extension EmojiPicker {
-    public static var sections: [EmojiCategory.Section] = EmojiCategory.Section.allCases
+    static var sections: [EmojiCategory.Section] = EmojiCategory.Section.allCases
     
-    public static var scrollSections: [EmojiCategory.Section] = EmojiCategory.Section.allCases.filter {
+    static var scrollSections: [EmojiCategory.Section] = EmojiCategory.Section.allCases.filter {
         $0 != .recent
     }
     
-    public static var sortedEmojisPerSection: [EmojiCategory.Section: [Emoji]] = EmojiPicker.sections
+    static var sortedEmojisPerSection: [EmojiCategory.Section: [Emoji]] = EmojiPicker.sections
         .reduce(into: [:]) { result, section in
             result[section] = section.sortedEmoji.filter { emoji in
                 emoji.isAvailable

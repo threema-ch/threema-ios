@@ -120,7 +120,8 @@ final class ContactListContainerViewController: UIViewController {
     
     // MARK: - Updates
     
-    public func updateSelection(for destination: ContactListCoordinator.InternalDestination) {
+    /// Passing `nil` (no destination shown) falls back to the contacts list.
+    public func updateSelection(for destination: ContactListCoordinator.InternalDestination?) {
 
         // Don't switch the underlying tab when search is active.
         // The search results overlay hides the child VC anyway, and switching it
@@ -131,7 +132,7 @@ final class ContactListContainerViewController: UIViewController {
         }
 
         switch destination {
-        case .contact:
+        case .contact, nil:
             guard let index = viewControllers.firstIndex(where: {
                 $0 is ContactListViewController
             }) else {
@@ -147,7 +148,7 @@ final class ContactListContainerViewController: UIViewController {
             }
             switchToViewController(at: index)
 
-        case .group, .groupFromID:
+        case .group:
             guard let index = viewControllers.firstIndex(where: {
                 $0 is GroupListViewController
             }) else {

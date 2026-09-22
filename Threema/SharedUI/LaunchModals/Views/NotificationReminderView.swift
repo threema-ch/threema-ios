@@ -6,6 +6,8 @@ struct NotificationReminderView: View {
     
     @Environment(\.dismiss) var dismiss
     
+    let onDisappear: () -> Void
+    
     // MARK: - View
 
     var body: some View {
@@ -54,9 +56,7 @@ struct NotificationReminderView: View {
         .padding()
         .interactiveDismissDisabled()
         .onDisappear {
-            // TODO: (IOS-3251) Remove
-            LaunchModalManager.shared.isBeingDisplayed = false
-            LaunchModalManager.shared.checkLaunchModals()
+            onDisappear()
         }
     }
     
@@ -73,6 +73,8 @@ struct NotificationReminderView: View {
 
 struct NotificationReminderView_Previews: PreviewProvider {
     static var previews: some View {
-        NotificationReminderView()
+        NotificationReminderView {
+            // no-op
+        }
     }
 }

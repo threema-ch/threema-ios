@@ -60,7 +60,7 @@ extension EntityManager {
         return conversation
     }
 
-    @objc public func conversation(for identity: String, createIfNotExisting: Bool) -> ConversationEntity? {
+    public func conversation(for identity: String, createIfNotExisting: Bool) -> ConversationEntity? {
         conversation(for: identity, createIfNotExisting: createIfNotExisting, setLastUpdate: true)
     }
 
@@ -81,7 +81,7 @@ extension EntityManager {
         )
     }
 
-    func conversation(forMessage message: AbstractMessage, myIdentity: String?) -> ConversationEntity? {
+    func conversation(forMessage message: AbstractMessage, myIdentity: String) -> ConversationEntity? {
         if let groupMessage = message as? AbstractGroupMessage {
             groupConversation(forMessage: groupMessage, fetcher: entityFetcher, myIdentity: myIdentity)
         }
@@ -92,7 +92,9 @@ extension EntityManager {
 
     /// Looking for existing contact entity (sender) and conversation in current and in main DB context.
     ///
-    /// - Parameter abstractMessage: Get sender and conversation from DB for that message
+    /// - Parameters:
+    ///   - abstractMessage: Get sender and conversation from DB for that message
+    ///   - myIdentity: User identity
     /// - Returns: Conversation if is exists
     ///     Outgoing:
     ///         - Sender is nil because its me
@@ -100,11 +102,11 @@ extension EntityManager {
     ///     Incoming:
     ///         - Sender of the message
     ///         - Receiver is nil because its me
-    func existingConversationSenderReceiver(for abstractMessage: AbstractMessage, myIdentity: String?)
+    func existingConversationSenderReceiver(for abstractMessage: AbstractMessage, myIdentity: String)
         -> (conversation: ConversationEntity?, sender: ContactEntity?, receiver: ContactEntity?) {
 
         // Get DB objects Conversation and ContactEntity from particular entity fetcher
-        func conversationSenderReceiver(fetcher: EntityFetcher, myIdentity: String?)
+        func conversationSenderReceiver(fetcher: EntityFetcher, myIdentity: String)
             -> (conversation: ConversationEntity?, sender: ContactEntity?, receiver: ContactEntity?) {
             var sender: ContactEntity?
             var receiver: ContactEntity?
@@ -228,7 +230,7 @@ extension EntityManager {
         for abstractMessage: AbstractMessage,
         sender: UnsafeMutablePointer<ContactEntity?>,
         receiver: UnsafeMutablePointer<ContactEntity?>,
-        myIdentity: String?
+        myIdentity: String
     ) -> ConversationEntity? {
         let result = existingConversationSenderReceiver(for: abstractMessage, myIdentity: myIdentity)
         sender.pointee = result.sender
@@ -791,12 +793,13 @@ extension EntityManager {
 
     /// Set delivered and delivery date of incoming message.
     /// - Parameters:
-    /// - abstractMessage: Incoming message
-    /// - receivedAt: Receive date is reflected at or now if message was not reflected
+    ///   - abstractMessage: Incoming message
+    ///   - receivedAt: Receive date is reflected at or now if message was not reflected
+    ///   - myIdentity: User identity
     public func markMessageAsReceived(
         _ abstractMessage: AbstractMessage,
         receivedAt: Date = .now,
-        myIdentity: String?
+        myIdentity: String
     ) {
 
         performAndWaitSave {
@@ -841,7 +844,7 @@ extension EntityManager {
     private func groupConversation(
         forMessage message: AbstractGroupMessage,
         fetcher: EntityFetcher,
-        myIdentity: String?
+        myIdentity: String
     ) -> ConversationEntity? {
         let groupIdentity = GroupIdentity(id: message.groupID, creator: ThreemaIdentity(message.groupCreator))
         return fetcher.conversationEntity(for: groupIdentity, myIdentity: myIdentity)

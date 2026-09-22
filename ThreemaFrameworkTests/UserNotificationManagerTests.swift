@@ -1,9 +1,10 @@
+import FileUtility
 import FileUtilityTestHelper
 import RemoteSecretProtocolTestHelper
 import ThreemaEssentials
-
 import ThreemaProtocols
 import XCTest
+
 @testable import ThreemaFramework
 
 final class UserNotificationManagerTests: XCTestCase {
@@ -1999,7 +2000,7 @@ final class UserNotificationManagerTests: XCTestCase {
         groupManager: GroupManagerMock = GroupManagerMock(),
         entityManager: EntityManager? = nil,
         isWorkApp: Bool = false,
-        fileUtility: FileUtilityMock = FileUtilityMock()
+        fileUtility: any FileUtilityProtocol = FileUtilityMock()
     ) -> UserNotificationManager {
         let entityManager = entityManager ?? testDatabase.entityManager
 

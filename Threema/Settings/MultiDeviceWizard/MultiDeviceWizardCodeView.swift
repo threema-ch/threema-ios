@@ -102,7 +102,7 @@ private struct MultiDeviceWizardCodeBlockView: View {
             blocks = wizardVM.linkingCode
         }
         .onTapGesture {
-            UIPasteboard.general.string = blocks.joined(separator: "")
+            UIPasteboard.general.set(string: blocks.joined(separator: ""), sensitiveContent: .secretAllDevices)
             NotificationPresenterWrapper.shared.present(type: .copySuccess)
         }
     }

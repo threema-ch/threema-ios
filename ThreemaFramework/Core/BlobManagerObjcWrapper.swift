@@ -58,11 +58,4 @@ public final class BlobManagerObjCWrapper: NSObject {
             }
         }
     }
- 
-    /// Checks the non isolated state tracker if there are any active blob syncs. Might not return the correct value
-    /// since it is not handled in actor isolation.
-    /// - Returns: `True` if there are probably some active syncs.
-    @objc public func hasActiveSyncs() -> Bool {
-        BlobManager.shared.hasActiveSyncs()
-    }
 }

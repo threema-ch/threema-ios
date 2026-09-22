@@ -5,7 +5,7 @@ import CocoaLumberjackSwift
 /// - Note: In general this should probably be part of `MultiDeviceManager` and this layer should be removed. It is
 ///         implement as such to prevent a big change of `LinkedDevicesView` and `MultiDeviceManager`.
 @MainActor
-class LinkedDevicesViewModel: ObservableObject {
+final class LinkedDevicesViewModel: ObservableObject {
     enum State: Equatable {
         case refreshing
         case error

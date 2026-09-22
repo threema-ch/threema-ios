@@ -21,7 +21,7 @@ final class IdentityBackupStore: NSObject {
         return backupDecoded?.count == 50
     }
     
-    @objc static func loadIdentityBackup() -> String? {
+    static func loadIdentityBackup() -> String? {
         if let backup = loadIdentityBackupFromKeychain() {
             return backup
         }
@@ -39,7 +39,7 @@ final class IdentityBackupStore: NSObject {
         }
     }
     
-    @objc static func deleteIdentityBackup() throws {
+    static func deleteIdentityBackup() throws {
         do {
             try KeychainManager.deleteIdentityBackup()
             try deleteIdentityBackupFromFile()
@@ -50,7 +50,7 @@ final class IdentityBackupStore: NSObject {
         }
     }
     
-    @objc static func syncKeychainWithFile() {
+    static func syncKeychainWithFile() {
         // Check for an ID backup in the keychain and in a file within the app data container. If one of them is
         // missing, restore it (keychain takes priority). We need both the keychain entry and the file, as the
         // keychain entry survives app deletion/reinstallation, while the file survives device backup/restore

@@ -6,7 +6,7 @@ import ThreemaEssentials
 import ThreemaProtocols
 
 @available(*, deprecated, message: "Extend or port functionalities to `BlobManager` instead of using this class.")
-class ImageBlobDownloader {
+final class ImageBlobDownloader {
 
     private let frameworkInjector: FrameworkInjectorProtocol
 

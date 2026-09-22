@@ -183,11 +183,11 @@ public final class TaskManager: NSObject, TaskManagerProtocol {
         TaskManager.taskQueue?.removeAll()
     }
 
-    @objc public static func removeCurrentTask() {
+    public static func removeCurrentTask() {
         TaskManager.taskQueue?.removeCurrent()
     }
 
-    @objc public static func isEmpty() -> Bool {
+    public static func isEmpty() -> Bool {
         TaskManager.taskQueue?.list.isEmpty ?? true
     }
 

@@ -31,6 +31,16 @@ public protocol Coordinator: AnyObject {
     /// coordinator.start()
     /// ```
     func start()
+
+    /// Tears the coordinator down so its parent can discard it.
+    ///
+    /// Implementations must stop observing notifications, unbind routers, and
+    /// dismiss any presentation they own — then finish their children. A finished
+    /// coordinator must not be started again.
+    ///
+    /// The default implementation finishes all children and empties
+    /// `childCoordinators`.
+    func finish()
 }
 
 extension Coordinator {
@@ -40,5 +50,12 @@ extension Coordinator {
         childCoordinators.removeAll {
             $0 === child
         }
+    }
+
+    public func finish() {
+        for child in childCoordinators {
+            child.finish()
+        }
+        childCoordinators.removeAll()
     }
 }

@@ -55,7 +55,7 @@ public final class MessageForwardingViewController: ThemedViewController {
         controller.obscuresBackgroundDuringPresentation = false
         controller.searchResultsUpdater = self
         controller.searchBar.placeholder = #localize("contact_list_search_bar_placeholder")
-        controller.searchBar.setValue(#localize("Done"), forKey: "cancelButtonText")
+        controller.searchBar.setValue(#localize("done"), forKey: "cancelButtonText")
         controller.searchBar.autocapitalizationType = .none
         controller.searchBar.autocorrectionType = .no
         controller.searchBar.spellCheckingType = .no

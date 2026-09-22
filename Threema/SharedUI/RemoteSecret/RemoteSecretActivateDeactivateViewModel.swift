@@ -32,13 +32,16 @@ final class RemoteSecretActivateDeactivateViewModel: ObservableObject {
 
     @Published var type: ViewType
     
+    let onDisappear: () -> Void
+    
     lazy var createBackupButtonTitle = #localize("rs_view_create_backup_button_title")
     lazy var removeButtonTitle = #localize("rs_view_remove_data_button_title")
     lazy var notNowButtonTitle = #localize("rs_view_not_now_button_title")
 
     // MARK: - Lifecycle
     
-    init(type: ViewType) {
+    init(type: ViewType, onDisappear: @escaping () -> Void) {
         self.type = type
+        self.onDisappear = onDisappear
     }
 }

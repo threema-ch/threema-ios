@@ -1,6 +1,6 @@
 import Foundation
 
-public protocol ContactObjectID: Identifiable, Hashable { }
+protocol ContactObjectID: Identifiable, Hashable { }
 
 // MARK: - NSManagedObjectID + ContactObjectID
 

@@ -3,11 +3,6 @@ import Foundation
 
 public final class DebugLog: NSObject {
 
-    @available(swift, obsoleted: 1.0, renamed: "logAppVersion", message: "Only use from Objective-C")
-    @objc public static func logAppVersion() {
-        logAppVersion()
-    }
-
     public static func logAppVersion(
         file: StaticString = #file,
         function: StaticString = #function,
@@ -21,11 +16,6 @@ public final class DebugLog: NSObject {
         )
     }
 
-    @available(swift, obsoleted: 1.0, renamed: "logAppVersion", message: "Only use from Objective-C")
-    @objc public static func logAppConfiguration() {
-        logAppConfiguration()
-    }
-
     public static func logAppConfiguration(
         file: StaticString = #file,
         function: StaticString = #function,
@@ -34,10 +24,23 @@ public final class DebugLog: NSObject {
         logRemoteSecretConfiguration(file: file, function: function, line: line)
         logMultiDeviceConfiguration(file: file, function: function, line: line)
     }
-
+    
     @available(swift, obsoleted: 1.0, renamed: "logRemoteSecretConfiguration", message: "Only use from Objective-C")
-    @objc public static func logRemoteSecretConfiguration() {
-        logRemoteSecretConfiguration()
+    public static func logLocalIdentity() {
+        logLocalIdentity()
+    }
+    
+    public static func logLocalIdentity(
+        file: StaticString = #file,
+        function: StaticString = #function,
+        line: UInt = #line
+    ) {
+        DDLogNotice(
+            "[Config] Local Identity: \(MyIdentityStore.shared().identity ?? "Unknown")",
+            file: file,
+            function: function,
+            line: line
+        )
     }
 
     public static func logRemoteSecretConfiguration(

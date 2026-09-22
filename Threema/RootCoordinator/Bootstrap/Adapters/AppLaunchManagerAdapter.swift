@@ -1,6 +1,5 @@
 import CocoaLumberjackSwift
 import FileUtility
-import PushKit
 import ThreemaFramework
 import UIKit
 
@@ -13,6 +12,9 @@ protocol AppLaunchManagerProtocol: AnyObject {
     var isDatabaseEncrypted: Bool { get }
     var shouldDirectlyShowSetupWizard: Bool { get }
     var isBusinessApp: Bool { get }
+    
+    func runSetupForApplicationDelegateInitialization()
+    func runSetupForApplicationDidFinishLaunchingWithOptions()
     
     /// Runs the pre-launch setup required before any UI can be presented.
     /// This includes: BG task registration, PromiseKit config, crypto init,
@@ -31,6 +33,8 @@ final class AppLaunchManagerAdapter: AppLaunchManagerProtocol {
     private var manager: AppLaunchManager {
         AppLaunchManager.shared
     }
+
+    private var observers: [any NSObjectProtocol] = []
     
     var isAppSetupCompleted: Bool {
         manager.isAppSetupCompleted
@@ -52,13 +56,47 @@ final class AppLaunchManagerAdapter: AppLaunchManagerProtocol {
         TargetManager.isBusinessApp
     }
     
+    deinit {
+        for observer in observers {
+            NotificationCenter.default.removeObserver(observer)
+        }
+    }
+    
+    func runSetupForApplicationDelegateInitialization() {
+        AppLaunchManager.preLaunchSetup()
+    }
+    
+    func runSetupForApplicationDidFinishLaunchingWithOptions() {
+        ThreemaBGTaskManager.shared.registerTasks()
+
+        UIApplication.shared.registerForRemoteNotifications()
+
+        let categories = NotificationActionProvider().defaultCategories
+        UNUserNotificationCenter.current().setNotificationCategories(categories)
+
+        registerLifetimeObservers()
+    }
+
+    // MARK: - Lifetime Observers
+
+    private func registerLifetimeObservers() {
+        observers.append(NotificationCenter.default.addObserver(
+            forName: DatabaseContext.errorWhileProcessingManagedObject,
+            object: nil,
+            queue: .main,
+            using: { notification in
+                guard
+                    let userInfo = notification.userInfo as? [String: Any],
+                    let error = userInfo[DatabaseContext.errorKey] as? Error
+                else {
+                    return
+                }
+                ErrorHandler.abort(with: error)
+            }
+        ))
+    }
+    
     func runLaunchSetup(window: UIWindow) {
-        // Register background tasks
-        _ = ThreemaBGTaskManager.shared
-        
-        // Configure PromiseKit
-        PromiseKitConfiguration.configurePromiseKit()
-        
         // Initialize crypto
         _ = NaClCrypto.shared()
         
@@ -68,10 +106,6 @@ final class AppLaunchManagerAdapter: AppLaunchManagerProtocol {
         // Resolve theme
         Colors.resolveTheme()
         Colors.update(window: window)
-        
-        // Setup VoIP push registry
-        let pushRegistry = PKPushRegistry(queue: .main)
-        pushRegistry.desiredPushTypes = [.voIP]
 
         LogManager.clearLoggerOutput(for: .appLaunchFileLog)
         LogManager.addLogger(for: .appLaunchFileLog)

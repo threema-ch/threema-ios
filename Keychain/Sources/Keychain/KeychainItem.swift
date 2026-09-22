@@ -12,6 +12,7 @@ enum KeychainItem: CaseIterable {
     case license(_ version: KeychainVersion = .v1)
     case threemaSafeKey(_ version: KeychainVersion = .v1)
     case threemaSafeServer(_ version: KeychainVersion = .v1)
+    case dataBackupRecoveryKey(_ version: KeychainVersion = .v1)
 
     static let allCases: [KeychainItem] = [
         .remoteSecret(),
@@ -24,6 +25,7 @@ enum KeychainItem: CaseIterable {
         .license(),
         .threemaSafeKey(),
         .threemaSafeServer(),
+        .dataBackupRecoveryKey(),
     ]
     
     /// The label must be unique!
@@ -70,6 +72,8 @@ enum KeychainItem: CaseIterable {
             case .v0: "Threema Safe Server"
             case .v1: "Threema Safe Server v1"
             }
+        case .dataBackupRecoveryKey:
+            "Threema Data Backup Recovery Key v1"
         }
     }
 
@@ -91,7 +95,7 @@ enum KeychainItem: CaseIterable {
         case .remoteSecret,
              .identityBackup:
             false
-            
+
         case .identity,
              .deviceCookie,
              .multiDeviceGroupKey,
@@ -99,7 +103,8 @@ enum KeychainItem: CaseIterable {
              .forwardSecurityWrappingKey,
              .license,
              .threemaSafeKey,
-             .threemaSafeServer:
+             .threemaSafeServer,
+             .dataBackupRecoveryKey:
             true
         }
     }

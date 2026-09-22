@@ -52,7 +52,7 @@ public final class DatabaseContext: NSObject, DatabaseContextProtocol {
     public static let errorKey = "errorKey"
 
     // Notification after refresh dirty managed objects in database contexts
-    @objc public static let changedManagedObjects = Notification.Name("ThreemaDBRefreshedDirtyObjects")
+    public static let changedManagedObjects = Notification.Name("ThreemaDBRefreshedDirtyObjects")
     public static let refreshedObjectIDsKey = "refreshedObjectIDsKey"
 
     // Notification after deletion of old messages

@@ -138,7 +138,7 @@ extension StorageManagementConversationView {
             
             model.set(days)
             Task { await storageModel.load() }
-            NotificationManager().updateUnreadMessagesCount()
+            NotificationManager(businessInjector: BusinessInjector.ui).updateUnreadMessagesCount()
         }
     }
 }

@@ -23,6 +23,7 @@ final class ProcessCoordinatorTests {
         let myState: ProcessCoordinator.AccessState
         let myAppType: AppGroupType
         let newState: ProcessCoordinator.AccessState
+        var disconnectBy: ConnectionInitiator?
     }
 
     @Test("Test received state from my own app")
@@ -91,7 +92,8 @@ final class ProcessCoordinatorTests {
                 fromAppType: AppGroupTypeApp,
                 myState: .using,
                 myAppType: AppGroupTypeShareExtension,
-                newState: .using
+                newState: .willRelease,
+                disconnectBy: .shareExtension
             ),
             TestCaseAccessState(
                 receivedState: .using,
@@ -105,7 +107,8 @@ final class ProcessCoordinatorTests {
                 fromAppType: AppGroupTypeApp,
                 myState: .willRelease,
                 myAppType: AppGroupTypeShareExtension,
-                newState: .willRelease
+                newState: .willRelease,
+                disconnectBy: .shareExtension
             ),
 
             // 1.1.3 Received state `requested`
@@ -212,7 +215,8 @@ final class ProcessCoordinatorTests {
                 fromAppType: AppGroupTypeApp,
                 myState: .using,
                 myAppType: AppGroupTypeNotificationExtension,
-                newState: .willRelease
+                newState: .willRelease,
+                disconnectBy: .notificationExtension
             ),
             TestCaseAccessState(
                 receivedState: .using,
@@ -226,7 +230,8 @@ final class ProcessCoordinatorTests {
                 fromAppType: AppGroupTypeApp,
                 myState: .willRelease,
                 myAppType: AppGroupTypeNotificationExtension,
-                newState: .willRelease
+                newState: .willRelease,
+                disconnectBy: .notificationExtension
             ),
 
             // 1.2.3 Received state `requested`
@@ -333,7 +338,7 @@ final class ProcessCoordinatorTests {
                 fromAppType: AppGroupTypeShareExtension,
                 myState: .using,
                 myAppType: AppGroupTypeApp,
-                newState: .willRelease
+                newState: .using
             ),
             TestCaseAccessState(
                 receivedState: .using,
@@ -347,7 +352,8 @@ final class ProcessCoordinatorTests {
                 fromAppType: AppGroupTypeShareExtension,
                 myState: .willRelease,
                 myAppType: AppGroupTypeApp,
-                newState: .willRelease
+                newState: .willRelease,
+                disconnectBy: .app
             ),
 
             // 2.1.3 Received state `requested`
@@ -363,7 +369,8 @@ final class ProcessCoordinatorTests {
                 fromAppType: AppGroupTypeShareExtension,
                 myState: .using,
                 myAppType: AppGroupTypeApp,
-                newState: .willRelease
+                newState: .willRelease,
+                disconnectBy: .app
             ),
             TestCaseAccessState(
                 receivedState: .requested,
@@ -454,7 +461,8 @@ final class ProcessCoordinatorTests {
                 fromAppType: AppGroupTypeShareExtension,
                 myState: .using,
                 myAppType: AppGroupTypeNotificationExtension,
-                newState: .willRelease
+                newState: .willRelease,
+                disconnectBy: .notificationExtension
             ),
             TestCaseAccessState(
                 receivedState: .using,
@@ -468,7 +476,8 @@ final class ProcessCoordinatorTests {
                 fromAppType: AppGroupTypeShareExtension,
                 myState: .willRelease,
                 myAppType: AppGroupTypeNotificationExtension,
-                newState: .willRelease
+                newState: .willRelease,
+                disconnectBy: .notificationExtension
             ),
 
             // 2.2.3 Received state `requested`
@@ -589,7 +598,8 @@ final class ProcessCoordinatorTests {
                 fromAppType: AppGroupTypeNotificationExtension,
                 myState: .willRelease,
                 myAppType: AppGroupTypeApp,
-                newState: .willRelease
+                newState: .willRelease,
+                disconnectBy: .app
             ),
 
             // 3.1.3 Received state `requested`
@@ -696,7 +706,8 @@ final class ProcessCoordinatorTests {
                 fromAppType: AppGroupTypeNotificationExtension,
                 myState: .using,
                 myAppType: AppGroupTypeShareExtension,
-                newState: .using
+                newState: .willRelease,
+                disconnectBy: .shareExtension
             ),
             TestCaseAccessState(
                 receivedState: .using,
@@ -710,7 +721,8 @@ final class ProcessCoordinatorTests {
                 fromAppType: AppGroupTypeNotificationExtension,
                 myState: .willRelease,
                 myAppType: AppGroupTypeShareExtension,
-                newState: .willRelease
+                newState: .willRelease,
+                disconnectBy: .shareExtension
             ),
 
             // 3.2.3 Received state `requested`
@@ -775,15 +787,23 @@ final class ProcessCoordinatorTests {
         ]
     )
     func testReceivedAccessStates(_ testCase: TestCaseAccessState) throws {
+        let serverConnectorMock = ServerConnectorMock()
         let processCoordinator = ProcessCoordinator(
             myAppType: testCase.myAppType,
             state: testCase.myState,
-            serverConnector: ServerConnectorMock(),
+            serverConnector: serverConnectorMock,
             userSettings: UserSettingsMock()
         )
 
         let result = processCoordinator.testProcess(state: testCase.receivedState, from: testCase.fromAppType)
-        #expect(result == testCase.newState)
+        #expect(result == testCase.newState, "Test case: \(testCase)")
+
+        if let disconnectBy = testCase.disconnectBy {
+            #expect(serverConnectorMock.disconnectCalls.contains(disconnectBy), "Test case: \(testCase)")
+        }
+        else {
+            #expect(serverConnectorMock.disconnectCalls.isEmpty, "Test case: \(testCase)")
+        }
     }
 
     @Test func testAppRequestAccess() async throws {
@@ -805,7 +825,7 @@ final class ProcessCoordinatorTests {
         let userSettingsMock = UserSettingsMock()
         userSettingsMock.ipcSecretPrefix = BytesUtility.generateRandomBytes(length: 8)
 
-        var processCoordinator: ProcessCoordinator? = ProcessCoordinator(
+        let processCoordinator: ProcessCoordinator? = ProcessCoordinator(
             myAppType: AppGroupTypeNotificationExtension,
             state: .requested,
             serverConnector: ServerConnectorMock(),
@@ -848,8 +868,50 @@ final class ProcessCoordinatorTests {
 
         let state = await processCoordinator.requestAccess(pollingTimeout: 700)
 
-        let stateResult = try #require(state)
-        #expect(stateResult == .willRelease)
+        #expect(state == .willRelease)
         #expect(!ddLoggerMock.exists(message: "[Darwin] No answer to inquiry"))
+    }
+
+    /// As long as the Notification Extension announces `using`, the App must keep
+    /// waiting - even across the recursive `requestAccess` calls that `ServerConnector` performs
+    /// when it gets a `requested` result.
+    @Test func testAppDoesNotGrabResourceWhileNotificationExtensionUsing() async throws {
+        let userSettingsMock = UserSettingsMock()
+        userSettingsMock.ipcSecretPrefix = BytesUtility.generateRandomBytes(length: 8)
+
+        let processCoordinator = ProcessCoordinator(
+            myAppType: AppGroupTypeApp,
+            state: .requested,
+            serverConnector: ServerConnectorMock(),
+            userSettings: userSettingsMock
+        )
+
+        // The Notification Extension keeps announcing that it is using the resource for the whole
+        // duration of the (recursive) requests below.
+        @Sendable func postUsing(remaining: Int) {
+            guard remaining > 0 else {
+                return
+            }
+            DarwinNotificationCenter.shared.post(.notificationName(
+                appType: AppGroupTypeNotificationExtension,
+                secret: userSettingsMock.ipcSecretPrefix!.hexString,
+                state: .using
+            ))
+            DispatchQueue.global().asyncAfter(deadline: .now() + .milliseconds(20)) {
+                postUsing(remaining: remaining - 1)
+            }
+        }
+        postUsing(remaining: 150)
+
+        // Mirror `ServerConnector`'s behaviour: on `requested` it requests access again.
+        var state = await processCoordinator.requestAccess(pollingTimeout: 700)
+        #expect(state != .using)
+
+        var iterations = 0
+        while state == .requested, iterations < 4 {
+            state = await processCoordinator.requestAccess(pollingTimeout: 700)
+            #expect(state != .using)
+            iterations += 1
+        }
     }
 }

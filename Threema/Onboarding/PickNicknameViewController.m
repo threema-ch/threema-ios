@@ -5,8 +5,6 @@
 #import "IntroQuestionView.h"
 #import "MDMSetup.h"
 #import "LicenseStore.h"
-#import "NibUtil.h"
-
 @interface PickNicknameViewController () <UITextFieldDelegate, IntroQuestionDelegate>
 
 @property BOOL didShowNicknameAlert;
@@ -132,7 +130,7 @@
     [_nicknameTextfield resignFirstResponder];
     
     if (_nicknameQuestionView == nil) {
-        _nicknameQuestionView = (IntroQuestionView *)[NibUtil loadViewFromNibWithName:@"IntroQuestionView"];
+        _nicknameQuestionView = (IntroQuestionView *)[[(NSBundle *)[NSBundle mainBundle] loadNibNamed:@"IntroQuestionView" owner:nil options:nil] firstObject];
         _nicknameQuestionView.questionLabel.text =[NSString stringWithFormat:[BundleUtil localizedStringForKey:@"id_pick_nickname_question"], TargetManagerObjC.localizedAppName];
         _nicknameQuestionView.delegate = self;
         _nicknameQuestionView.frame = [self rect:_nicknameQuestionView.frame centerIn:self.view.frame round:YES];

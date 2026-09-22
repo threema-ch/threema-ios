@@ -193,7 +193,7 @@ final class MessageThumbnailTapView: UIView {
         )
     }
     
-    @objc func handleTap(_ sender: UITapGestureRecognizer) {
+    @objc private func handleTap(_ sender: UITapGestureRecognizer) {
         if sender.state == .ended {
             tapAction()
         }

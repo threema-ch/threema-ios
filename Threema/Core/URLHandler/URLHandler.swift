@@ -5,7 +5,7 @@ import ThreemaEssentials
 import ThreemaFramework
 import ThreemaMacros
 
-@objc public final class URLHandler: NSObject {
+final class URLHandler {
     
     private let businessInjector: any BusinessInjectorProtocol
     
@@ -15,8 +15,7 @@ import ThreemaMacros
         self.businessInjector = businessInjector
     }
     
-    @objc
-    override convenience init() {
+    convenience init() {
         self.init(businessInjector: BusinessInjector.ui)
     }
     
@@ -26,7 +25,7 @@ import ThreemaMacros
     /// - Parameters:
     ///   - url: URL to handle
     ///   - hideAppChooser: Boolean to hide the app chooser if there are other targets installed. Default is `false`
-    @objc public func handle(_ url: URL, hideAppChooser: Bool = false) {
+    func handle(_ url: URL, hideAppChooser: Bool = false) {
         switch URLHandlerMapping.map(url) {
         case let .threemaDotID(url, targetIdentity):
             handleThreemaDotIDURL(
@@ -67,9 +66,12 @@ import ThreemaMacros
         }
     }
     
-    /// Handle license before the setup and initialization of remote secret
+    /// Handle a license activation link outside of onboarding, without a business injector
+    ///
+    /// Used by ``RootCoordinator`` for links that arrive while the launch sequence runs, so before
+    /// the initialization of remote secret and the business injector.
     /// - Parameter url: URL to handle
-    @objc public static func handleLicenseBeforeSetup(_ url: URL) {
+    static func handleLicense(from url: URL) {
         guard url.host()?.lowercased() == "license" else {
             DDLogError(
                 "[URLHandler] Failed to handle URL: Not a license URL (\(url.host() ?? "unknown")). Aborting license handling."
@@ -124,7 +126,7 @@ import ThreemaMacros
 extension URLHandler {
     /// URLHandlerMapping
     private enum URLHandlerMapping {
-        case threemaDotID(url: URL, targetIdentity: ThreemaIdentity)
+        case threemaDotID(url: URL, targetIdentity: ThreemaIdentity?)
         case linkMobileNoCode(code: String)
         case restore(query: String)
         case compose(query: [String: String])
@@ -140,7 +142,7 @@ extension URLHandler {
         static func map(_ url: URL) -> URLHandlerMapping {
             switch url.scheme {
             case TargetManager.appURLScheme:
-                mapAppURLScheme(url)
+                mapAppURLSchemeFrom(url)
                 
             case "file":
                 .file(url: url)
@@ -156,7 +158,7 @@ extension URLHandler {
         /// Map the host of the App URL Scheme
         /// - Parameter url: URL
         /// - Returns: URLHandlerMapping
-        private static func mapAppURLScheme(_ url: URL) -> URLHandlerMapping {
+        private static func mapAppURLSchemeFrom(_ url: URL) -> URLHandlerMapping {
             switch url.host {
             case "link_mobileno":
                 guard let query = url.query(percentEncoded: true) else {
@@ -180,7 +182,7 @@ extension URLHandler {
                 let query = url.getQueries
                 
                 if let identity = query["id"]?.uppercased(),
-                   identity.count == kIdentityLen {
+                   identity.count == ThreemaIdentity.length {
                     return .addIdentity(targetIdentity: ThreemaIdentity(rawValue: identity), query: query)
                 }
                 
@@ -190,7 +192,7 @@ extension URLHandler {
                 let query = url.getQueries
                 
                 guard let identity = query["id"]?.uppercased(),
-                      identity.count == kIdentityLen else {
+                      identity.count == ThreemaIdentity.length else {
                     return .compose(query: query)
                 }
                 
@@ -214,17 +216,39 @@ extension URLHandler {
         private static func mapLink(_ url: URL) -> URLHandlerMapping {
             switch url.host()?.lowercased() {
             case "threema.id":
-                guard url.lastPathComponent.count == kIdentityLen else {
-                    return .unknown
+                if url.lastPathComponent.count == ThreemaIdentity.length {
+                    .threemaDotID(url: url, targetIdentity: ThreemaIdentity(rawValue: url.lastPathComponent))
                 }
-                return .threemaDotID(url: url, targetIdentity: ThreemaIdentity(rawValue: url.lastPathComponent))
+                else {
+                    mapComposeActionsFrom(url)
+                }
                 
             case "threema.ch", "threema.com":
-                return .threemaLink(url: url)
+                .threemaLink(url: url)
                 
             default:
+                .unknown
+            }
+        }
+        
+        private static func mapComposeActionsFrom(_ url: URL) -> URLHandlerMapping {
+            guard url.lastPathComponent.lowercased() == "compose" else {
                 return .unknown
             }
+
+            let query = url.getQueries
+
+            // Route through `.threemaDotID` so compose links present the same "Open in …" app
+            // chooser as `threema.id/<IDENTITY>` links. `handleThreemaDotIDURL` falls back to a plain
+            // compose when there is no target identity.
+            guard
+                let identity = query["id"]?.uppercased(),
+                identity.count == ThreemaIdentity.length
+            else {
+                return .threemaDotID(url: url, targetIdentity: nil)
+            }
+
+            return .threemaDotID(url: url, targetIdentity: ThreemaIdentity(rawValue: identity))
         }
     }
 }
@@ -318,27 +342,24 @@ extension URLHandler {
     ///   - targetIdentity: Targeted Identity
     private func handleAppChooser(url: URL, targetIdentity: ThreemaIdentity?) {
         let query = url.getQueries
-        let alertController = UIAlertController(
-            title: #localize("Open in ..."),
-            message: url.absoluteString,
-            preferredStyle: .alert
-        )
-        
-        alertController.addAction(UIAlertAction(title: TargetManager.appName, style: .default) { _ in
-            self.openURLInCurrentApp(targetIdentity: targetIdentity, query: query)
-        })
-        
-        for app in otherThreemaAppsInstalled {
-            alertController.addAction(UIAlertAction(title: app.key, style: .default) { _ in
-                self.openURLInOtherTargetApp(targetName: app.value, url: url, targetIdentity: targetIdentity)
+
+        Task { @MainActor in
+            let alertController = UIAlertController(
+                title: #localize("Open in ..."),
+                message: url.absoluteString,
+                preferredStyle: .alert
+            )
+
+            alertController.addAction(UIAlertAction(title: TargetManager.appName, style: .default) { _ in
+                self.openURLInCurrentApp(targetIdentity: targetIdentity, query: query)
             })
-        }
-        
-        Task { @MainActor [weak alertController] in
-            guard let alertController else {
-                return
+
+            for app in otherThreemaAppsInstalled {
+                alertController.addAction(UIAlertAction(title: app.key, style: .default) { _ in
+                    self.openURLInOtherTargetApp(targetAppURL: app.value, url: url, targetIdentity: targetIdentity)
+                })
             }
-            
+
             URLHandler.topViewController.present(alertController, animated: true)
         }
     }
@@ -360,30 +381,37 @@ extension URLHandler {
         }
     }
     
-    /// Construct and manage the novel URL for the other application target
+    /// Construct and open the URL for the other application target
     /// - Parameters:
-    ///   - targetName: The name of the provided Target
+    ///   - targetAppURL: URL of the other target (e.g. `threema://app`)
     ///   - url: The URL
     ///   - targetIdentity: The Targeted Identity
-    private func openURLInOtherTargetApp(targetName: String, url: URL, targetIdentity: ThreemaIdentity?) {
-        // remove the `app` from the URL
-        let index = targetName.index(targetName.endIndex, offsetBy: -3)
-        let preURLString = targetName[..<index]
-        
-        if let identity = targetIdentity {
-            guard let newURL = URL(string: "\(preURLString)\(identity.rawValue)?\(url.query ?? "")") else {
-                return
-            }
-            DDLogVerbose("Open in \(newURL.absoluteString) (\(url.absoluteString))")
-            UIApplication.shared.open(newURL)
+    private func openURLInOtherTargetApp(targetAppURL: String, url: URL, targetIdentity: ThreemaIdentity?) {
+        guard var components = URLComponents(string: targetAppURL) else {
+            DDLogError("[URLHandler] Failed to handle URL: \(targetAppURL) is not a valid URL")
+            return
+        }
+
+        var queryItems = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems ?? []
+
+        if let targetIdentity {
+            // Without any other parameter the identity is just added, otherwise a message is composed for it
+            components.host = queryItems.isEmpty ? "add" : "compose"
+            queryItems.insert(URLQueryItem(name: "id", value: targetIdentity.rawValue), at: 0)
         }
         else {
-            guard let newURL = URL(string: "\(preURLString)compose?\(url.query ?? "")") else {
-                return
-            }
-            DDLogVerbose("Open in \(newURL.absoluteString) (\(url.absoluteString))")
-            UIApplication.shared.open(newURL)
+            components.host = "compose"
         }
+
+        components.queryItems = queryItems.isEmpty ? nil : queryItems
+
+        guard let newURL = components.url else {
+            DDLogError("[URLHandler] Failed to handle URL: Unable to compose URL for \(targetAppURL)")
+            return
+        }
+
+        DDLogVerbose("Open in \(newURL.absoluteString) (\(url.absoluteString))")
+        UIApplication.shared.open(newURL)
     }
     
     /// Display the ShareController with the provided URL.
@@ -399,114 +427,96 @@ extension URLHandler {
     }
     
     /// Handle and verify the provided license.
+    ///
+    /// This is the path of an app that is already set up. While onboarding runs, license links are
+    /// handled by ``OnboardingCoordinator``, see ``RootCoordinator.handleLicenseURL(_:)``.
     /// - Parameter licenseStore: Store to handle license in
     /// - Parameter query: Query containing username, password, and server information if provided.
     private static func handleLicense(licenseStore: any LicenseStoreProtocol, query: [String: String]) {
         DDLogVerbose("[URLHandler] Handle license: \(query)")
-        
+
         guard TargetManager.isBusinessApp else {
             DDLogError("[URLHandler] Failed to handle URL: No license for private app. Aborting license handling.")
             return
         }
-        
+
         Task { @MainActor in
-            guard !licenseStore.isValid(),
-                  await !licenseStore.performLicenseCheck() else {
-                Task { @MainActor in
-                    UIAlertTemplate.showAlert(
-                        owner: topViewController,
-                        title: #localize("already_licensed"),
-                        message: nil,
-                        actionOk: nil
-                    )
-                }
+            guard !licenseStore.isValid() else {
+                UIAlertTemplate.showOKAlert(
+                    owner: topViewController,
+                    title: #localize("already_licensed"),
+                    message: nil,
+                    actionOk: nil
+                )
                 DDLogError("[URLHandler] Failed to handle URL: App is already licensed. Aborting license handling.")
                 return
             }
-            
-            let username = query["username"]
-            let password = query["password"]
-            let server = query["server"]
-            
-            // swiftformat:disable:next acronyms
-            let validServer = licenseStore.validCustomOnPremConfigUrl(withPredefinedUrl: server)
-            
+
             guard let mdmSetup = MDMSetup() else {
                 DDLogError("[URLHandler] Failed to handle URL: Missing MDM Setup. Aborting license handling.")
                 return
             }
-            
-            if !mdmSetup.existsMdmKey(MDM_KEY_LICENSE_USERNAME) {
-                licenseStore.licenseUsername = username
-            }
-            if !mdmSetup.existsMdmKey(MDM_KEY_LICENSE_PASSWORD) {
-                licenseStore.licensePassword = password
-            }
-            
-            if TargetManager.isOnPrem, validServer,
-               !mdmSetup.existsMdmKey(MDM_KEY_ONPREM_SERVER) {
-                licenseStore.onPremConfigURL = server
-            }
-            
-            if username == nil || password == nil || (server == nil && TargetManager.isOnPrem) || !validServer {
-                Task {
-                    NotificationCenter.default.post(
-                        name: Notification.Name(rawValue: kNotificationLicenseMissing),
-                        object: validServer ? nil : #localize("enter_license_invalid_url_link")
-                    )
-                }
-                DDLogError(
-                    "[URLHandler] Failed to handle URL: Username, password, server or all are missing. Aborting license handling."
-                )
-            }
-            else {
-                Task { @MainActor in
-                    guard SharedAppProvider.isPresentingEnterLicense,
-                          let currentVC = SharedAppProvider.window?.rootViewController,
-                          currentVC is SplashViewController else {
-                        performLicenseCheck(with: licenseStore)
-                        return
-                    }
-                    
-                    currentVC.dismiss(animated: true)
-                }
-            }
-        }
-    }
-    
-    /// Perform the license check using asynchronous/await programming.
-    /// - Parameter licenseStore: LicenseStore
-    private static func performLicenseCheck(with licenseStore: any LicenseStoreProtocol) {
-        Task { @MainActor in
-            guard await licenseStore.performLicenseCheck() else {
+
+            let applyResult = LicenseCredentials(query: query).apply(
+                to: licenseStore,
+                mdmSetup: mdmSetup,
+                isOnPrem: TargetManager.isOnPrem
+            )
+
+            guard applyResult == .complete else {
                 NotificationCenter.default.post(
                     name: Notification.Name(rawValue: kNotificationLicenseMissing),
-                    object: nil
+                    object: applyResult == .invalidServer
+                        ? #localize("enter_license_invalid_url_link")
+                        : nil
                 )
-                DDLogError("[URLHandler] Failed to handle URL: License is missing. Aborting perform license check.")
+                DDLogError(
+                    "[URLHandler] Failed to handle URL: License link is \(applyResult). Aborting license handling."
+                )
                 return
             }
-            
-            do {
-                try await WorkDataThreemaMDMFetcher(licenseStore: licenseStore).checkUpdateThreemaMDM()
-                
-                guard SharedAppProvider.isPresentingEnterLicense else {
-                    DDLogError(
-                        "[URLHandler] Failed to handle URL: License screen is not presented. Aborting perform license check."
-                    )
-                    return
-                }
-                
-                SharedAppProvider.window?.rootViewController?.dismiss(animated: true) {
-                    AppDelegate.setupConnection()
-                }
-            }
-            catch {
-                DDLogError("[URLHandler] Failed to handle URL: License is missing. Aborting perform license check.")
-                NotificationCenter.default.post(
-                    name: Notification.Name(rawValue: kNotificationLicenseMissing),
-                    object: nil
-                )
+
+            await performLicenseCheck(with: licenseStore)
+        }
+    }
+
+    /// Verify the credentials in the license store and, if the license entry screen is presented,
+    /// dismiss it and reconnect.
+    /// - Parameter licenseStore: LicenseStore
+    @MainActor
+    private static func performLicenseCheck(with licenseStore: any LicenseStoreProtocol) async {
+        guard await licenseStore.performLicenseCheck() else {
+            NotificationCenter.default.post(
+                name: Notification.Name(rawValue: kNotificationLicenseMissing),
+                object: nil
+            )
+            DDLogError("[URLHandler] Failed to handle URL: License is missing. Aborting perform license check.")
+            return
+        }
+
+        do {
+            try await WorkDataThreemaMDMFetcher(licenseStore: licenseStore).checkUpdateThreemaMDM()
+        }
+        catch {
+            DDLogError("[URLHandler] Failed to handle URL: Threema MDM fetch failed (\(error)).")
+            NotificationCenter.default.post(
+                name: Notification.Name(rawValue: kNotificationLicenseMissing),
+                object: nil
+            )
+            return
+        }
+
+        guard SharedAppProvider.isPresentingEnterLicense else {
+            // The app is licensed again and there is no license entry screen to dismiss
+            DDLogNotice("[URLHandler] License is valid and license screen is not presented.")
+            return
+        }
+
+        SharedAppProvider.window?.rootViewController?.dismiss(animated: true) {
+            Task { @MainActor in
+                // The app coordinator is gone if the app isn't set up (yet); the license
+                // credentials are stored, so the next launch connects with them.
+                SharedAppProvider.appCoordinator?.setupConnection()
             }
         }
     }
@@ -572,7 +582,7 @@ extension URLHandler {
 
 extension URLHandler {
     @MainActor
-    @objc func handle(item: UIApplicationShortcutItem) -> Bool {
+    func handle(item: UIApplicationShortcutItem) -> Bool {
         if item.type == "ch.threema.newmessage" {
             handleCompose(query: nil)
             return true
@@ -588,7 +598,7 @@ extension URLHandler {
             guard let tabBar = SharedAppProvider.tabBarController else {
                 return false
             }
-            if !DeviceCapabilitiesManager().supportsRecordingVideo {
+            if !DeviceCapabilitiesManager().hasVideoCaptureDevice {
                 DDLogVerbose("No Camera available.")
                 return false
             }
@@ -599,7 +609,7 @@ extension URLHandler {
             
             let model = QRCodeScannerViewModel(
                 mode: .identity,
-                audioSessionManager: AudioSessionManager(),
+                audioSessionManager: BusinessInjector.ui.audioSessionManager,
                 systemFeedbackManager: SystemFeedbackManager(
                     deviceCapabilitiesManager: DeviceCapabilitiesManager(),
                     settingsStore: BusinessInjector.ui.settingsStore

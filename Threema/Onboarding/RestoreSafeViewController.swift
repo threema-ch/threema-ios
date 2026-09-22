@@ -11,7 +11,6 @@ import UIKit
 // MARK: - RestoreSafeViewControllerDelegate
 
 @objc protocol RestoreSafeViewControllerDelegate {
-    func restoreSafeDone()
     func restoreSafeCancelled(showLocalDataInfo: Bool)
 
     @objc optional func restoreSafeViewController(
@@ -274,35 +273,10 @@ extension RestoreSafeViewController {
             return
         }
         
-        if SharedAppProvider.isSceneDelegateDevelopment {
-            delegate?.restoreSafeViewController?(
-                self,
-                didRequestRestoreWith: enteredIdentity,
-                password: enteredPassword
-            )
-            return
-        }
-        
-        LogManager.clearLoggerOutput(for: .safeRestoreFileLog)
-        LogManager.addLogger(for: .safeRestoreFileLog)
-
-        restoreSafeManager.startRestore(
-            with: OnboardingRestoreSafeInformation(
-                identity: enteredIdentity,
-                password: enteredPassword,
-                server: OnboardingRestoreSafeInformation.Server(
-                    user: restoreServerUsername,
-                    password: restoreServerPassword,
-                    url: restoreServer
-                ),
-                customServer: OnboardingRestoreSafeInformation.Server(
-                    user: restoreServerUsername,
-                    password: restoreServerPassword,
-                    url: restoreCustomServer
-                ),
-                restoreIdentityOnly: restoreIdentityOnly,
-                activateSafeAnyway: activateSafeAnyway
-            )
+        delegate?.restoreSafeViewController?(
+            self,
+            didRequestRestoreWith: enteredIdentity,
+            password: enteredPassword
         )
     }
     
@@ -339,31 +313,11 @@ extension RestoreSafeViewController {
     }
 }
 
-// MARK: - SetupAppDelegate
-
-extension RestoreSafeViewController: SetupAppDelegate {
-    func encryptedDataDetected() {
-        assertionFailure("Should not be reached")
-    }
-    
-    func mismatchCancelled() {
-        delegate?.restoreSafeCancelled(showLocalDataInfo: false)
-    }
-}
-
 // MARK: - OnboardingRestoreSafeManagerDelegate
 
 extension RestoreSafeViewController: OnboardingRestoreSafeManagerDelegate {
-    func didCompleteRestoreSafe() {
-        MBProgressHUD.hide(for: view, animated: true)
-        view.isUserInteractionEnabled = true
-        
-        delegate?.restoreSafeDone()
-        
-        LogManager.removeLogger(for: .safeRestoreFileLog)
-    }
-    
     func didFail(with error: any Error) {
+        DDLogError("[ThreemaSafe Restore] Error: \(error)")
         showAlert(for: error)
     }
 }

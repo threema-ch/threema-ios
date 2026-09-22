@@ -7,7 +7,7 @@ protocol ProgressViewDelegate {
     func progressViewDidCancel()
 }
 
-class ProgressViewController: UIViewController {
+final class ProgressViewController: UIViewController {
     
     var itemsToSend: NSMutableDictionary?
     var blurView: UIVisualEffectView?

@@ -1,6 +1,6 @@
 import Foundation
 
-class DeviceGroupDerivedKey: NSObject {
+final class DeviceGroupDerivedKey: NSObject {
 
     enum DeviceGroupKeyDeriverError: Error {
         case deriveKeyFailed

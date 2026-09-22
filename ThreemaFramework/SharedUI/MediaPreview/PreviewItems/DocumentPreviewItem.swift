@@ -5,7 +5,7 @@ import PromiseKit
 import QuickLook
 import ThreemaMacros
 
-class DocumentPreviewItem: MediaPreviewItem {
+final class DocumentPreviewItem: MediaPreviewItem {
     
     // MARK: Properties
     

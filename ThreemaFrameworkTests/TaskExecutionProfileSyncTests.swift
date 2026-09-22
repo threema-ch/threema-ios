@@ -1,7 +1,6 @@
 import Foundation
 import ThreemaEssentials
 import ThreemaProtocols
-
 import XCTest
 @testable import ThreemaFramework
 

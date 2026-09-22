@@ -16,10 +16,12 @@ use core::cell::RefCell;
 use std::{io, sync::Arc};
 
 use anyhow::bail;
-use clap::Parser;
-use data_encoding::HEXLOWER_PERMISSIVE;
+use clap::{ArgAction, Parser};
 use libthreema::{
-    cli::{FullIdentityConfig, FullIdentityConfigOptions},
+    cli::{
+        config::{FullIdentityConfig, FullIdentityConfigOptions},
+        provider::{InMemoryDb, InMemoryDbInitBuilder},
+    },
     common::ClientInfo,
     csp::{
         CspProtocol, CspProtocolContext, CspProtocolInstruction, CspStateUpdate,
@@ -42,9 +44,9 @@ use libthreema::{
         },
     },
     https::cli::https_client_builder,
-    model::provider::in_memory::{DefaultShortcutProvider, InMemoryDb, InMemoryDbInit, InMemoryDbSettings},
     utils::logging::init_stderr_logging,
 };
+use libthreema_dependencies::data_encoding::HEXLOWER_PERMISSIVE;
 use tokio::{
     io::{AsyncReadExt as _, AsyncWriteExt as _},
     net::TcpStream,
@@ -58,6 +60,11 @@ use tracing::{Level, debug, error, info, trace, warn};
 struct CspE2eReceiveCommand {
     #[command(flatten)]
     config: FullIdentityConfigOptions,
+
+    /// Turn on debugging information.
+    /// Use -v -vv to control log level.
+    #[arg(short, action = ArgAction::Count)]
+    verbose: u8,
 }
 
 enum IncomingPayloadForCspE2e {
@@ -70,7 +77,7 @@ enum OutgoingPayloadForCspE2e {
 impl From<OutgoingPayloadForCspE2e> for OutgoingPayload {
     fn from(payload: OutgoingPayloadForCspE2e) -> Self {
         match payload {
-            OutgoingPayloadForCspE2e::MessageAck(message_ack) => OutgoingPayload::MessageAck(message_ack),
+            OutgoingPayloadForCspE2e::MessageAck(message_ack) => Self::MessageAck(message_ack),
         }
     }
 }
@@ -525,34 +532,29 @@ impl CspE2eProtocolRunner {
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
+    // Parse arguments for command
+    let arguments = CspE2eReceiveCommand::parse();
+
     // Configure logging
-    init_stderr_logging(Level::TRACE);
+    let log_level = match arguments.verbose {
+        1 => Level::DEBUG,
+        2 => Level::TRACE,
+        _ => Level::INFO,
+    };
+    init_stderr_logging(log_level);
 
     // Create HTTP client
     let http_client = https_client_builder().build()?;
-
-    // Parse arguments for command
-    let arguments = CspE2eReceiveCommand::parse();
     let config = FullIdentityConfig::from_options(&http_client, arguments.config).await?;
 
     // Create CSP E2EE protocol context
-    let mut database = InMemoryDb::from(InMemoryDbInit {
-        user_identity: config.minimal.user_identity,
-        settings: InMemoryDbSettings {
-            block_unknown_identities: false,
-        },
-        contacts: vec![],
-        blocked_identities: vec![],
-    });
+    let mut database = InMemoryDb::from(InMemoryDbInitBuilder::default().build()?);
     let csp_e2e_context = CspE2eProtocolContextInit {
         client_info: ClientInfo::Libthreema,
         config: Arc::clone(&config.minimal.common.config),
-        csp_e2e: config.csp_e2e_context_init(Box::new(RefCell::new(database.csp_e2e_nonce_provider()))),
+        csp_e2e: config.csp_e2e_context(),
         d2x: config.d2x_context_init(Box::new(RefCell::new(database.d2d_nonce_provider()))),
-        shortcut: Box::new(DefaultShortcutProvider),
-        settings: Box::new(RefCell::new(database.settings_provider())),
-        contacts: Box::new(RefCell::new(database.contact_provider())),
-        conversations: Box::new(RefCell::new(database.message_provider())),
+        providers: database.csp_e2e_protocol_providers(),
     };
 
     // Create payload queues
@@ -578,7 +580,7 @@ async fn main() -> anyhow::Result<()> {
             .common
             .config
             .chat_server_address
-            .addresses(config.csp_server_group),
+            .addresses(&config.csp_server_group),
         config
             .csp_context_init()
             .try_into()

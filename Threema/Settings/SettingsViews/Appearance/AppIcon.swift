@@ -1,7 +1,7 @@
 import Foundation
 import ThreemaMacros
 
-public enum AppIcon: CaseIterable {
+enum AppIcon: CaseIterable {
     
     // Default Icon
     case `default`
@@ -17,12 +17,12 @@ public enum AppIcon: CaseIterable {
     case anniversary10
     
     // This is also the order in AppIconSettingsView
-    public static let defaultIcon: [AppIcon] = [.default]
-    public static let baseIcons: [AppIcon] = [.icon2025, .icon2019, .icon20132, .icon20131]
-    public static let specialIcons: [AppIcon] = [.anniversary10]
+    static let defaultIcon: [AppIcon] = [.default]
+    static let baseIcons: [AppIcon] = [.icon2025, .icon2019, .icon20132, .icon20131]
+    static let specialIcons: [AppIcon] = [.anniversary10]
     
     // These strings are defined in the xcconfig
-    public var iconName: String? {
+    var iconName: String? {
         switch self {
         case .default:
             nil
@@ -39,7 +39,7 @@ public enum AppIcon: CaseIterable {
         }
     }
         
-    public var displayTitle: String {
+    var displayTitle: String {
         switch self {
         case .default, .icon2025:
             #localize("app_icon_title_current")
@@ -54,7 +54,7 @@ public enum AppIcon: CaseIterable {
         }
     }
     
-    public var displayInfo: String {
+    var displayInfo: String {
         switch self {
         case .default, .icon2025:
             #localize("app_icon_description_fourth")
@@ -69,7 +69,7 @@ public enum AppIcon: CaseIterable {
         }
     }
     
-    public var preview: UIImage {
+    var preview: UIImage {
         // Starting with the iOS 18 SDK (Xcode 16) app icon assets cannot be accessed from the app. Thus we have to add
         // them twice, once as an image asset. Our convention is to suffix these images with `-image`.
         // Source: https://forums.developer.apple.com/forums/thread/757162?answerId=799284022#799284022

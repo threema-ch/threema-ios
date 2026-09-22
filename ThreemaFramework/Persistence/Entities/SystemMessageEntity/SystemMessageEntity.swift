@@ -7,7 +7,7 @@ public final class SystemMessageEntity: BaseMessageEntity {
 
     // MARK: Enums
 
-    @objc public enum SystemMessageEntityType: Int {
+    @objc public enum SystemMessageEntityType: Int, CaseIterable {
         case renameGroup = 1 // The admin has renamed the group
         case groupMemberLeave = 2 // Another member has left the group
         case groupMemberAdd = 3 // The admin has added a member to the group
@@ -61,6 +61,18 @@ public final class SystemMessageEntity: BaseMessageEntity {
 
             vote.rawValue,
             voteUpdated.rawValue,
+        ]
+        
+        /// System message that are _content_ message according to the Threema Protocols
+        static let contentTypes: [SystemMessageEntityType] = [
+            .callMissed,
+            .callRejected,
+            .callRejectedBusy,
+            .callRejectedTimeout,
+            .callEnded,
+            .callRejectedDisabled,
+            .callRejectedUnknown,
+            .callRejectedOffHours,
         ]
     }
 

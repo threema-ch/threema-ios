@@ -1,6 +1,6 @@
 import UIKit
 
-@objc protocol LegacyUIActionProvider: AnyObject {
+protocol LegacyUIActionProvider: AnyObject {
     func uiActions(in viewController: UIViewController) -> NSArray // of UIAction
 }
 

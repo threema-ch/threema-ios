@@ -7,7 +7,7 @@ final class GroupDetailsViewController: ThemedCodeModernGroupedTableViewControll
     // MARK: - Private properties
     
     // Mode to show view in
-    private let displayMode: GroupDetailsDisplayMode
+    private let displayMode: GroupDetails.DisplayMode
     private weak var delegate: DetailsDelegate?
     
     private lazy var headerView: DetailsHeaderView = {
@@ -42,18 +42,11 @@ final class GroupDetailsViewController: ThemedCodeModernGroupedTableViewControll
     private let group: Group
     
     // Display style of the chosen mode
-    private let displayStyle: DetailsDisplayStyle
+    private let displayStyle: Details.DisplayStyle
     
     private lazy var entityManager = BusinessInjector.ui.entityManager
     
     private var observers = [NSKeyValueObservation]()
-
-    // Backwards compatibility
-    
-    @available(swift, obsoleted: 1.0, message: "Only use from old Objective-C code to keep it working")
-    @objc var _group: Group {
-        group
-    }
     
     // MARK: - Lifecycle
     
@@ -64,10 +57,10 @@ final class GroupDetailsViewController: ThemedCodeModernGroupedTableViewControll
     ///   - displayStyle: Appearance of the group details
     ///   - delegate: Details delegate that is called on certain actions. This should be set when `displayMode` is
     /// `conversation`.
-    @objc init(
+    init(
         for group: Group,
-        displayMode: GroupDetailsDisplayMode = .default,
-        displayStyle: DetailsDisplayStyle = .default,
+        displayMode: GroupDetails.DisplayMode = .default,
+        displayStyle: Details.DisplayStyle = .default,
         delegate: DetailsDelegate? = nil
     ) {
         self.displayMode = displayMode

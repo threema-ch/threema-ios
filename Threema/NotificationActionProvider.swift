@@ -1,7 +1,7 @@
 import Foundation
 import ThreemaMacros
 
-final class NotificationActionProvider: NSObject {
+final class NotificationActionProvider {
     
     // MARK: - Identifiers
 
@@ -146,7 +146,7 @@ final class NotificationActionProvider: NSObject {
         }
     }
     
-    @objc lazy var defaultCategories: Set<UNNotificationCategory> = [
+    lazy var defaultCategories: Set<UNNotificationCategory> = [
         Category.callCategory.category,
         Category.singleCategory.category,
         Category.groupCategory.category,

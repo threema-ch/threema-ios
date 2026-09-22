@@ -5,11 +5,12 @@ use core::mem;
 use std::rc::Rc;
 
 use const_format::formatcp;
+use itertools::Itertools as _;
 use libthreema_macros::{DebugVariantNames, Name, VariantNames};
 use tracing::{debug, error, info};
 
 use crate::{
-    common::{Nonce, ThreemaId, task::TaskLoop},
+    common::{ThreemaId, task::TaskLoop},
     csp_e2e::{
         CspE2eProtocolContext, CspE2eProtocolError,
         contacts::codec::D2dContactEncoder as _,
@@ -22,11 +23,9 @@ use crate::{
             commit::{CommitTransactionInstruction, CommitTransactionResponse, CommitTransactionSubtask},
         },
     },
-    model::{
-        contact::ContactUpdate,
-        provider::{ContactProvider, ProviderError},
-    },
+    model::contact::{ContactProvider, ContactUpdate},
     protobuf,
+    provider::ProviderError,
     utils::debug::Name as _,
 };
 
@@ -89,16 +88,16 @@ impl State {
 
         // Non-MD: Update contacts and done
         if context.d2x.is_none() {
-            Self::update_contacts(&mut *context.contacts.borrow_mut(), state.contacts)?;
+            Self::update_contacts(&mut *context.providers.contacts.borrow_mut(), state.contacts)?;
             return Ok((Self::Done, UpdateContactsLoop::Done(())));
         }
 
         // MD: We need to create a transaction.
 
         // Precondition: All of the contacts must exist (hard error)
-        let contact_provider = Rc::clone(&context.contacts);
+        let contact_provider = Rc::clone(&context.providers.contacts);
         let precondition = Box::new(move || {
-            let n_existing = contact_provider.borrow().has_many(&identities)?;
+            let n_existing = contact_provider.borrow().count_existing(&identities)?;
             if n_existing == identities.len() {
                 Ok(PreconditionVerdict::Continue)
             } else {
@@ -169,10 +168,11 @@ impl State {
                     }),
                 )
             })
-            .collect::<Result<(Vec<ReflectPayload>, Vec<Nonce>), CspE2eProtocolError>>()?;
+            .map_ok(|(payload, nonce)| (payload, nonce.hash_with(context.csp_e2e.user_identity)))
+            .collect::<Result<_, _>>()?;
 
         // Reflect and commit the transaction
-        d2x_context.nonce_storage.borrow_mut().add_many(nonces)?;
+        d2x_context.nonce_provider.borrow_mut().add_many(nonces)?;
         let (transaction_state, commit_instruction) = CommitTransactionSubtask::new(reflect_messages);
         Ok((
             Self::ReflectAndCommitTransaction(ReflectAndCommitTransactionState {
@@ -193,7 +193,7 @@ impl State {
         state.transaction_task.poll()?;
 
         // Update contacts
-        Self::update_contacts(&mut *context.contacts.borrow_mut(), state.contacts)?;
+        Self::update_contacts(&mut *context.providers.contacts.borrow_mut(), state.contacts)?;
         Ok((Self::Done, UpdateContactsLoop::Done(())))
     }
 

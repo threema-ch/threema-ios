@@ -1,13 +1,14 @@
 //! Rendezvous Initiator/Responder Device Authentication Key (RIDAK/RRDAK) utilities.
+use libthreema_dependencies::crypto::{blake2b, chacha20, digest::FixedOutput as _};
+
 use super::{RendezvousAuthenticationKey, rxdxk};
-use crate::crypto::{blake2b::Blake2bMac256, chacha20, digest::FixedOutput as _};
 
 #[inline]
 fn derive_keys(ak: &RendezvousAuthenticationKey) -> (chacha20::Key, chacha20::Key) {
-    let ridak = Blake2bMac256::new_with_salt_and_personal(Some(&ak.0), b"rida", b"3ma-rendezvous")
+    let ridak = blake2b::Blake2bMac256::new_with_salt_and_personal(Some(&ak.0), b"rida", b"3ma-rendezvous")
         .expect("Blake2bMac256 failed")
         .finalize_fixed();
-    let rrdak = Blake2bMac256::new_with_salt_and_personal(Some(&ak.0), b"rrda", b"3ma-rendezvous")
+    let rrdak = blake2b::Blake2bMac256::new_with_salt_and_personal(Some(&ak.0), b"rrda", b"3ma-rendezvous")
         .expect("Blake2bMac256 failed")
         .finalize_fixed();
     (ridak, rrdak)

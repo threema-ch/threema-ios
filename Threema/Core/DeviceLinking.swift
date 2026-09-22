@@ -39,11 +39,6 @@ final class DeviceLinking: NSObject {
         )
     }
 
-    @objc
-    override convenience init() {
-        self.init(businessInjector: BusinessInjector.ui)
-    }
-
     deinit {
         self.businessInjector.serverConnector.unregisterConnectionStateDelegate(delegate: self)
     }

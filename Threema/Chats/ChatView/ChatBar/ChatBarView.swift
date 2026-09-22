@@ -718,7 +718,7 @@ final class ChatBarView: UIView {
     private func scanQRCode(sender chatTextView: ChatTextView) {
         let model = QRCodeScannerViewModel(
             mode: .plainText,
-            audioSessionManager: AudioSessionManager(),
+            audioSessionManager: BusinessInjector.ui.audioSessionManager,
             systemFeedbackManager: SystemFeedbackManager(
                 deviceCapabilitiesManager: DeviceCapabilitiesManager(),
                 settingsStore: BusinessInjector.ui.settingsStore
@@ -1254,11 +1254,11 @@ extension ChatBarView: ChatTextViewDelegate {
         editMenuFor textRange: UITextRange,
         suggestedActions: [UIMenuElement]
     ) -> UIMenu? {
-        guard DeviceCapabilitiesManager().supportsRecordingVideo else {
+        guard DeviceCapabilitiesManager().hasVideoCaptureDevice else {
             return UIMenu(children: suggestedActions)
         }
 
-        let scanAction = UIAction(title: #localize("scan_qr")) { [weak self] _ in
+        let scanAction = UIAction(title: #localize("scan_qr_code_sentence")) { [weak self] _ in
             self?.scanQRCode(sender: textView)
         }
 
@@ -1279,7 +1279,12 @@ extension ChatBarView {
             model = try VoiceMessageRecorderViewModel(
                 conversation: conversation,
                 draftAudioURL: draftAudioURL,
-                playSentMessageSound: playSentMessageSound
+                playSentMessageSound: playSentMessageSound,
+                onStartFailed: { [weak self] in
+                    // This can happen when the audio claim was refused
+                    self?.dismissVoiceMessageRecorderView()
+                },
+                audioSessionManager: BusinessInjector.ui.audioSessionManager
             )
         }
         catch {

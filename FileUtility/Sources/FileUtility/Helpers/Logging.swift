@@ -29,7 +29,7 @@ package func DDLogNotice(
     ddlog: DDLog = .sharedInstance
 ) {
     _DDLogMessage(
-        message(),
+        "\(message())",
         level: level,
         flag: DDLogFlag(rawValue: DDLogFlag.RawValue(1 << 5)),
         context: context,

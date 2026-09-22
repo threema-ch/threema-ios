@@ -68,7 +68,11 @@ final class IntentCreatorTests: XCTestCase {
             )
         }
         
-        let intentCreator = IntentCreator(userSettings: userSettingsMock, entityManager: entityManager)
+        let intentCreator = IntentCreator(
+            myIdentity: ThreemaIdentity("TESTERID"),
+            userSettings: userSettingsMock,
+            entityManager: entityManager
+        )
         let interaction = intentCreator.inSendMessageIntentInteraction(for: "TESTER01", direction: .incoming)
         let groupInteraction = intentCreator.inSendMessageIntentInteraction(
             for: groupID,
@@ -124,7 +128,11 @@ final class IntentCreatorTests: XCTestCase {
             )
         }
         
-        let intentCreator = IntentCreator(userSettings: userSettingsMock, entityManager: entityManager)
+        let intentCreator = IntentCreator(
+            myIdentity: ThreemaIdentity("TESTERID"),
+            userSettings: userSettingsMock,
+            entityManager: entityManager
+        )
         let interaction = intentCreator.inSendMessageIntentInteraction(for: "TESTER01", direction: .incoming)
         let groupInteraction = intentCreator.inSendMessageIntentInteraction(
             for: groupID,
@@ -184,7 +192,11 @@ final class IntentCreatorTests: XCTestCase {
             )
         }
         
-        let intentCreator = IntentCreator(userSettings: userSettingsMock, entityManager: entityManager)
+        let intentCreator = IntentCreator(
+            myIdentity: ThreemaIdentity("TESTERID"),
+            userSettings: userSettingsMock,
+            entityManager: entityManager
+        )
         let interaction = intentCreator.inSendMessageIntentInteraction(for: "TESTER01", direction: .incoming)
         let groupInteraction = intentCreator.inSendMessageIntentInteraction(
             for: groupID,
@@ -244,7 +256,11 @@ final class IntentCreatorTests: XCTestCase {
             )
         }
 
-        let intentCreator = IntentCreator(userSettings: userSettingsMock, entityManager: entityManager)
+        let intentCreator = IntentCreator(
+            myIdentity: ThreemaIdentity("TESTERID"),
+            userSettings: userSettingsMock,
+            entityManager: entityManager
+        )
         let interaction = intentCreator.inSendMessageIntentInteraction(for: "TESTER01", direction: .incoming)
         let groupInteraction = intentCreator.inSendMessageIntentInteraction(
             for: groupID,

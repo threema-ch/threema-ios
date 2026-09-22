@@ -53,24 +53,26 @@ final class WorkContactListViewController: ContactListBaseViewController {
             return
         }
         
-        itemsDelegate?.didSelect(.contact(objectID: objectID))
+        itemsDelegate?.didSelect(.contact(objectID))
     }
     
     override func tableView(
         _ tableView: UITableView,
         leadingSwipeActionsConfigurationForRowAt indexPath: IndexPath
     ) -> UISwipeActionsConfiguration? {
-        UISwipeActionsConfiguration(actions: rowActions(for: indexPath))
+        guard let contact = contact(for: indexPath) else {
+            return nil
+        }
+        let provider = ContactListSwipeActionProvider(businessInjector: businessInjector)
+        return UISwipeActionsConfiguration(actions: provider.makeLeadingSwipeActions(for: contact))
     }
     
     override func tableView(
         _ tableView: UITableView,
         trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath
     ) -> UISwipeActionsConfiguration? {
-        
-        let action = DeleteActionFactory(
-            title: #localize("delete_contact_button")
-        ) { [weak self] in
+        let provider = ContactListSwipeActionProvider(businessInjector: businessInjector)
+        return provider.makeTrailingDeleteConfiguration(title: #localize("delete")) { [weak self] in
             guard let self,
                   let contact = contact(for: indexPath),
                   let entity = BusinessInjector.ui.entityManager.entityFetcher
@@ -79,45 +81,14 @@ final class WorkContactListViewController: ContactListBaseViewController {
             else {
                 return
             }
-                
+            
             DeleteContactAction(for: entity).execute(in: cell, of: self) { didDelete in
                 if didDelete {
                     // TODO: (IOS-4515) Is a reload needed here?
                     tableView.reloadData()
                 }
             }
-        }.make()
-       
-        let swipeAction = UISwipeActionsConfiguration(actions: [action])
-        swipeAction.performsFirstActionWithFullSwipe = false
-        return swipeAction
-    }
-    
-    private func rowActions(for indexPath: IndexPath) -> [UIContextualAction] {
-        guard let contact = contact(for: indexPath) else {
-            return []
         }
-        var actions: [UIContextualAction] = []
-        
-        let messageAction = MessageActionFactory.make(for: contact)
-        actions.append(messageAction)
-
-        if UserSettings.shared()?.enableThreemaCall == true, contact.supportsCalls {
-            let callAction = UIContextualAction(
-                style: .normal,
-                title: #localize("call"),
-                handler: { _, _, handler in
-                    VoIPCallStateManager.shared.startCall(callee: contact.identity.rawValue)
-                    handler(true)
-                }
-            )
-            
-            callAction.image = ThreemaImageResource.bundleImage("threema.phone.fill").uiImage
-            callAction.backgroundColor = .systemGray
-            actions.append(callAction)
-        }
-
-        return actions
     }
     
     // MARK: - Helper

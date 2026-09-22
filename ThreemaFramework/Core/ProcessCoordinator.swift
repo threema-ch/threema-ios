@@ -46,6 +46,11 @@ final class ProcessCoordinator: NSObject {
     private var pollingStopped = false
     private let pollingInMilliseconds = 70
 
+    // Monotonic id of the currently running request cycle, guarded by `pollingQueue`.
+    // Async closures (`processIPCMessage`, `pollingRequested`) captured by a previous cycle
+    // compare against this to avoid acting on a newer cycle's polling primitives.
+    private var currentRequestEpoch = 0
+
     // Dispatch queue to sync member variables `pollingSemaphore` and `pollingStopped`,
     // note that the polling is running in his own background thread
     private let pollingQueue = DispatchQueue(
@@ -129,9 +134,15 @@ final class ProcessCoordinator: NSObject {
     }
 
     private func requestAccess(timeout: Int) -> AccessState {
-        pollingQueue.sync {
-            self.pollingSemaphore = DispatchSemaphore(value: 0)
+        // Each request cycle owns its own semaphore. This is stored in `pollingSemaphore` so
+        // `processIPCMessage` can signal it, but we wait on the local reference so a stale cycle
+        // can never unblock a torn wait.
+        let semaphore = DispatchSemaphore(value: 0)
+        let epoch: Int = pollingQueue.sync {
+            self.currentRequestEpoch += 1
+            self.pollingSemaphore = semaphore
             self.pollingStopped = false
+            return self.currentRequestEpoch
         }
 
         updateStateQueue.sync {
@@ -139,14 +150,18 @@ final class ProcessCoordinator: NSObject {
         }
 
         DispatchQueue.global(qos: .userInitiated).async {
-            self.pollingRequested()
+            self.pollingRequested(epoch: epoch)
         }
 
-        let result = pollingSemaphore?.wait(timeout: .now() + .milliseconds(timeout))
+        let result = semaphore.wait(timeout: .now() + .milliseconds(timeout))
 
         pollingQueue.sync {
-            self.pollingStopped = true
-            self.pollingSemaphore = nil
+            // Only tear down if we are still the active cycle, otherwise we would clobber a newer
+            // request that started while stale closures were still running.
+            if self.currentRequestEpoch == epoch {
+                self.pollingStopped = true
+                self.pollingSemaphore = nil
+            }
         }
 
         if result == .timedOut {
@@ -159,7 +174,11 @@ final class ProcessCoordinator: NSObject {
             }
         }
 
-        return state
+        // Read `state` on the same queue that writes it, so the returned value is never torn
+        // against a concurrent `update(newState:)`.
+        return updateStateQueue.sync {
+            state
+        }
     }
 
     // MARK: Private functions
@@ -173,7 +192,7 @@ final class ProcessCoordinator: NSObject {
             updateStateQueue.async {
                 if self.debugLastIncomingState != state {
                     self.debugLastIncomingState = state
-                    DDLogInfo(
+                    DDLogNotice(
                         "[Darwin] New incoming state: \(state) from: \(AppGroup.name(for: appType)) / actual state: \(self.state)"
                     )
                 }
@@ -211,11 +230,15 @@ final class ProcessCoordinator: NSObject {
         }
     }
 
-    private func pollingRequested() {
+    private func pollingRequested(epoch: Int) {
         func pollingRequestedRecursive() {
             updateStateQueue.sync {
                 guard self.state != .using else {
-                    self.pollingStopped = true
+                    self.pollingQueue.sync {
+                        if self.currentRequestEpoch == epoch {
+                            self.pollingStopped = true
+                        }
+                    }
                     return
                 }
 
@@ -225,14 +248,15 @@ final class ProcessCoordinator: NSObject {
 
         DispatchQueue.global(qos: .userInitiated)
             .asyncAfter(deadline: .now() + .milliseconds(pollingInMilliseconds)) {
+                // Stop if polling was stopped or a newer request cycle superseded this one.
                 let stopped = self.pollingQueue.sync {
-                    self.pollingStopped
+                    self.pollingStopped || self.currentRequestEpoch != epoch
                 }
 
                 if !stopped {
                     pollingRequestedRecursive()
 
-                    self.pollingRequested()
+                    self.pollingRequested(epoch: epoch)
                 }
             }
     }
@@ -244,7 +268,7 @@ final class ProcessCoordinator: NSObject {
     private func update(newState: AccessState, enforcePosting: Bool = false) {
         var doPost = false
         if state != newState {
-            DDLogInfo(
+            DDLogNotice(
                 "[Darwin] Set state from \(state) to \(newState)"
             )
             state = newState
@@ -259,7 +283,7 @@ final class ProcessCoordinator: NSObject {
 
             if self.debugPostNotificationName != name {
                 self.debugPostNotificationName = name
-                DDLogInfo("[Darwin] Post \(name)")
+                DDLogNotice("[Darwin] Post \(name)")
             }
 
             notificationCenter.post(name)
@@ -310,17 +334,15 @@ final class ProcessCoordinator: NSObject {
                 switch myAppType {
                 case AppGroupTypeApp:
                     if fromAppType == AppGroupTypeShareExtension {
+                        newState = .willRelease
+
                         // In this case the app and the share extension run at the same time.
                         // This can happen when a file message is shared within the app. Then the app
                         // must disconnect and reconnect with a 2 seconds delay.
-                        if serverConnector?.connectionState != .disconnected {
-                            serverConnector?.disconnect(initiator: .app, force: true)
-                            DispatchQueue.global().asyncAfter(deadline: .now() + 2) {
-                                self.serverConnector?.connect(initiator: .app)
-                            }
+                        serverConnector?.disconnect(initiator: .app, force: true)
+                        DispatchQueue.global().asyncAfter(deadline: .now() + 2) {
+                            self.serverConnector?.connect(initiator: .app)
                         }
-
-                        newState = .willRelease
                     }
                     else {
                         newState = .using
@@ -344,14 +366,28 @@ final class ProcessCoordinator: NSObject {
                     fatalError("Unknown my app type: \(myAppType)")
                 }
             case .using:
-                switch myAppType {
-                case AppGroupTypeApp: newState = fromAppType == AppGroupTypeShareExtension ? .willRelease : .using
-                case AppGroupTypeShareExtension: newState = .using
-                case AppGroupTypeNotificationExtension: newState = .willRelease
-                default:
-                    fatalError("Unknown my app type: \(myAppType)")
+                if myAppType == AppGroupTypeApp {
+                    newState = .using
                 }
-            case .willRelease: newState = .willRelease
+                else {
+                    newState = .willRelease
+
+                    DDLogWarn(
+                        "[Darwin] Disconnect me (notification- or share extension) immediately to resolve the `using` collision"
+                    )
+                    serverConnector?.disconnect(
+                        initiator: connectionInitiator(for: myAppType),
+                        force: true
+                    )
+                }
+            case .willRelease:
+                newState = .willRelease
+
+                DDLogWarn("[Darwin] Disconnect me immediately to prevent duplicate connection")
+                serverConnector?.disconnect(
+                    initiator: connectionInitiator(for: myAppType),
+                    force: true
+                )
             }
         case .willRelease:
             switch state {
@@ -363,6 +399,16 @@ final class ProcessCoordinator: NSObject {
         }
 
         return newState
+    }
+
+    private func connectionInitiator(for appGroupType: AppGroupType) -> ConnectionInitiator {
+        switch appGroupType {
+        case AppGroupTypeApp, AppGroupTypeNone: .app
+        case AppGroupTypeShareExtension: .shareExtension
+        case AppGroupTypeNotificationExtension: .notificationExtension
+        default:
+            fatalError("Unknown my app type: \(appGroupType)")
+        }
     }
 
     private var secretPrefix: String {

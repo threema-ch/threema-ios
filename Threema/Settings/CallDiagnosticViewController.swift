@@ -4,7 +4,7 @@ import ThreemaMacros
 import UIKit
 import WebRTC
 
-class CallDiagnosticViewController: UIViewController, RTCPeerConnectionDelegate {
+final class CallDiagnosticViewController: UIViewController, RTCPeerConnectionDelegate {
     
     @IBOutlet var descriptionLabel: UILabel!
     @IBOutlet var startButton: UIButton!
@@ -369,7 +369,7 @@ class CallDiagnosticViewController: UIViewController, RTCPeerConnectionDelegate 
     @IBAction func copyButtonTapped(_ sender: AnyObject) {
         UIPasteboard.general.string = diagnosticTextView.text
         
-        UIAlertTemplate.showAlert(
+        UIAlertTemplate.showOKAlert(
             owner: self,
             title: nil,
             message: #localize("webrtc_diagnostics.copy")

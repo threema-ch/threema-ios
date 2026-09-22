@@ -1,9 +1,12 @@
 /* (No Comment) */
-"advanced_settings_group_footer" = "Jangan aktifkan pengaturan ini kecuali instruksi secara eksplisit oleh tim dukungan. Anda mungkin tidak menerima pesan masuk saat pengaturan ini diaktifkan.";
+"advanced_settings_group_footer" = "Jangan aktifkan pengaturan ini kecuali secara jelas diarahkan untuk melakukannya oleh tim dukungan Threema. Anda mungkin tidak menerima pesan masuk saat pengaturan ini diaktifkan.";
 
 /* (No Comment) */
-"advanced_settings_group_title" = "Mematikan fitur";
+"advanced_settings_group_title" = "Pengaturan dukungan";
 
 /* (No Comment) */
-"safe_mode_switch" = "Dukungan Lanjutan";
+"safe_mode_switch" = "Mode Dukungan Tingkat Lanjut";
+
+/* (No Comment) */
+"sentry_deactivation_switch_title" = "Nonaktifkan Pelaporan kesalahan Anonim";
 

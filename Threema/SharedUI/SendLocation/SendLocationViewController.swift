@@ -382,7 +382,7 @@ extension SendLocationViewController: MKMapViewDelegate {
     
     /// Adds a Marker to the Map upon long-press Gesture
     /// - Parameter gesture: LongPressGesture
-    @objc func addMarkedPOI(gesture: UILongPressGestureRecognizer) {
+    @objc private func addMarkedPOI(gesture: UILongPressGestureRecognizer) {
         
         if gesture.state == .began {
             
@@ -590,12 +590,12 @@ extension SendLocationViewController: UISearchResultsUpdating, UISearchControlle
 extension SendLocationViewController {
     
     /// Dismisses View
-    @objc func cancelButtonAction() {
+    @objc private func cancelButtonAction() {
         dismiss(animated: true, completion: nil)
     }
     
     /// Sends selected Location
-    @objc func sendButtonAction() {
+    @objc private func sendButtonAction() {
         
         guard let indexPath = mapTableView.indexPathForSelectedRow,
               let poi = mapDataSource.itemIdentifier(for: indexPath) else {
@@ -705,7 +705,7 @@ extension SendLocationViewController {
     /// Shows alert that instructs how to drop pin
     private func showDropPinAlert() {
         
-        UIAlertTemplate.showAlert(
+        UIAlertTemplate.showOKAlert(
             owner: self,
             title: #localize("poi_dropped_pin_info_alert_title"),
             message: #localize("poi_dropped_pin_info_alert_message")

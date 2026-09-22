@@ -1,1 +1,22 @@
-// So fare no glue code is needed...
+// swiftformat:disable:all acronyms
+public typealias LibthreemaAcquaintanceLevel = AcquaintanceLevel
+public typealias LibthreemaActivityState = ActivityState
+public typealias LibthreemaContact = Contact
+public typealias LibthreemaContactNotificationTriggerPolicyOverride = ContactNotificationTriggerPolicyOverride
+public typealias LibthreemaContactUpdate = ContactUpdate
+public typealias LibthreemaConversationCategory = ConversationCategory
+public typealias LibthreemaConversationID = ConversationId
+public typealias LibthreemaConversationVisibility = ConversationVisibility
+public typealias LibthreemaDistributionListID = DistributionListId
+public typealias LibthreemaGroup = Group
+public typealias LibthreemaGroupIdentity = GroupIdentity
+public typealias LibthreemaMessageID = MessageId
+public typealias LibthreemaPoll = Poll
+public typealias LibthreemaPollChoiceID = PollChoiceId
+public typealias LibthreemaPollID = PollId
+public typealias LibthreemaReadReceiptPolicy = ReadReceiptPolicy
+public typealias LibthreemaSyncState = SyncState
+public typealias LibthreemaThreemaID = ThreemaId
+public typealias LibthreemaTypingIndicatorPolicy = TypingIndicatorPolicy
+public typealias LibthreemaVerificationLevel = VerificationLevel
+public typealias LibthreemaWorkVerificationLevel = WorkVerificationLevel

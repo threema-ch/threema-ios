@@ -13,7 +13,7 @@ extension ChevronBarButtonItem {
 /// Custom UIButton to replicate an UIBarButtonItem initialized with barButtonSystemItem and .close,
 /// but with an chevron.backward.circle.fill icon. This is based off of the BallotWithOpenCountButton.swift class.
 ///
-class ChevronBarButtonItem: UIButton {
+final class ChevronBarButtonItem: UIButton {
     
     // MARK: - Public interface
     

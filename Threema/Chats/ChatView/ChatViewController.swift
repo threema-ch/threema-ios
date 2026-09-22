@@ -54,7 +54,7 @@ final class ChatViewController: UIViewController {
         deprecated: 0.0,
         message: "Must not be used outside of ChatViewController, except in the PPAssetsActionHelperDelegate extension and in MainTabBarController."
     )
-    @objc let conversation: ConversationEntity
+    let conversation: ConversationEntity
     
     private let businessInjector: BusinessInjectorProtocol
     private let entityManager: EntityManager
@@ -287,6 +287,29 @@ final class ChatViewController: UIViewController {
         banner.translatesAutoresizingMaskIntoConstraints = false
         return banner
     }()
+    
+    // The hosting view controller needs to be retrained such that a confirmation dialog can be shown
+    private lazy var spamReportingBannerViewController: UIHostingController<ChatViewSpamReportingBanner> = {
+        let bannerView = ChatViewSpamReportingBanner(
+            displayName: conversation.contact?.displayName
+        ) { [weak self] action in
+            self?.reportSpam(with: action)
+        }
+        
+        return UIHostingController(rootView: bannerView)
+    }()
+    
+    private var spamReportingBannerView: UIView? {
+        let view = spamReportingBannerViewController.view
+        
+        // Needed to make the background to shine through and the corner radius to be correctly clipped
+        view?.backgroundColor = .clear
+        
+        // Is unhidden if potential spam is detected
+        view?.isHidden = true
+        
+        return view
+    }
     
     // MARK: Table view
     
@@ -642,6 +665,10 @@ final class ChatViewController: UIViewController {
         )
     }()
     
+    // MARK: - Spam detection
+    
+    private lazy var spamDetection: any SpamDetecting = SpamDetector(businessInjector: businessInjector)
+    
     // MARK: - Lifecycle
     
     /// Create a new chat view
@@ -722,13 +749,17 @@ final class ChatViewController: UIViewController {
             
             chatBarCoordinator.chatBarContainerView.addInteraction(interaction)
         }
+        
+        checkForSpam()
     }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        
+
         DDLogVerbose("\(#function)")
-        
+
+        hidesBottomBarWhenPushed = true
+
         chatBarCoordinator.updateSettings()
         
         // Send notification (e.g. for hiding toasts that apply to this conversation)
@@ -986,6 +1017,9 @@ final class ChatViewController: UIViewController {
         view.addSubview(bannerContainerView)
         
         // Add banners to container
+        if ThreemaEnvironment.enableSpamReporting, let spamReportingBannerView {
+            bannerContainerView.addBanner(spamReportingBannerView)
+        }
         bannerContainerView.addBanner(groupCallBannerView)
         if let workStatusBannerView {
             bannerContainerView.addBanner(workStatusBannerView)
@@ -1052,11 +1086,11 @@ final class ChatViewController: UIViewController {
     
     // MARK: - Public functions
     
-    @objc func isRecording() -> Bool {
+    func isRecording() -> Bool {
         chatBarCoordinator.chatBar.recordingState == .recording
     }
     
-    @objc func isPlayingAudioMessage() -> Bool {
+    func isPlayingAudioMessage() -> Bool {
         chatViewTableViewVoiceMessageCellDelegate.isMessageCurrentlyPlaying(nil) || chatBarCoordinator.chatBar
             .recordingState == .playing
     }
@@ -1199,11 +1233,11 @@ final class ChatViewController: UIViewController {
         chatBarCoordinator.endEditing()
     }
     
-    @objc func preferredContentSizeCategoryDidChange() {
+    @objc private func preferredContentSizeCategoryDidChange() {
         cellHeightCache.clear()
     }
 
-    @objc func wallpaperChanged() {
+    @objc private func wallpaperChanged() {
         let wallpaperStore = businessInjector.settingsStore.wallpaperStore
         // If we use the default item, we have to create the pattern and apply it as color
         if !wallpaperStore.hasCustomWallpaper(for: conversation.objectID),
@@ -1422,10 +1456,7 @@ extension ChatViewController {
         }
         
         chatViewTableViewVoiceMessageCellDelegate.pausePlaying()
-        GlobalGroupCallManagerSingleton.shared.startGroupCall(
-            in: group,
-            intent: .createOrJoin
-        )
+        CallProvider.shared.startGroupCall(in: group, intent: .createOrJoin)
     }
     
     /// Start 1:1 call
@@ -1439,7 +1470,7 @@ extension ChatViewController {
             return
         }
         // We assume that the contact supports calls
-        VoIPCallStateManager.shared.startCall(callee: contact.identity)
+        CallProvider.shared.startOutgoingCall(with: contact.identity)
     }
     
     @objc private func showBallots() {
@@ -1527,7 +1558,7 @@ extension ChatViewController {
                 NotificationPresenterWrapper.shared.present(type: .emojiPartialGroup)
             }
             else {
-                UIAlertTemplate.showAlert(owner: self, title: result.alertTitle, message: result.alertMessage)
+                UIAlertTemplate.showOKAlert(owner: self, title: result.alertTitle, message: result.alertMessage)
                 if result == .partialSupportRemoteGroup {
                     UserSettings.shared().partialReactionSupportAlertShown = true
                 }
@@ -2188,7 +2219,7 @@ extension ChatViewController: UITableViewDelegate {
         hideKeyboard()
     }
     
-    @objc func endMultiselect() {
+    @objc private func endMultiselect() {
         userInterfaceMode = .default
     }
     
@@ -2974,7 +3005,7 @@ extension ChatViewController: UIScrollViewDelegate {
         }
     }
 
-    @objc func updateContentInsetsForce() {
+    func updateContentInsetsForce() {
         updateContentInsets(force: true)
     }
 
@@ -3316,11 +3347,7 @@ extension ChatViewController: GroupCallBannerButtonViewDelegate {
             return
         }
         
-        Task {
-            GlobalGroupCallManagerSingleton.shared.startGroupCall(
-                in: group, intent: .join
-            )
-        }
+        CallProvider.shared.startGroupCall(in: group, intent: .join)
     }
 }
 
@@ -3357,4 +3384,100 @@ extension ChatViewController: VNDocumentCameraViewControllerDelegate {
 /// navigation, and clearing coordinator state.
 protocol ChatViewControllerConversationDeletedDelegate: AnyObject {
     func chatViewControllerConversationWasDeleted(_ chatViewController: ChatViewController)
+}
+
+// MARK: - Spam detection & reporting
+
+extension ChatViewController {
+    private func checkForSpam() {
+        guard ThreemaEnvironment.enableSpamReporting else {
+            return
+        }
+        
+        // When opening a 1:1 conversation on an application not built for the _OnPrem_
+        // flavour, run the following steps:
+        
+        guard conversation.isGroup == false else {
+            DDLogDebug("Only check for spam in 1:1 conversations")
+            return
+        }
+        
+        guard TargetManager.isOnPrem == false, TargetManager.isCustomOnPrem == false else {
+            return
+        }
+        
+        // Loaded on the main actor such that it can be safely used in another actor
+        let conversationObjectID = conversation.objectID
+        // Read on the main actor to avoid a main actor hop when accessing the isolated `spamDetection` property
+        // inside the detached task.
+        let spamDetection = spamDetection
+
+        // Run in a separate task to prevent blocking the loading of the chat view. The detection itself runs
+        // on the `SpamDetector` actor and thus off the main actor
+        Task.detached(priority: .utility) { [weak self] in
+            guard let self else {
+                return
+            }
+            
+            // 1. Let `spam-potential` be the result of running the _Spam Potential
+            //    Detection Steps_ for the current 1:1 conversation.
+            let isPotentialSpam = await spamDetection.isPotentialSpam(conversationObjectID: conversationObjectID)
+
+            await MainActor.run { [weak self] in
+                // 2. If `spam-potential` indicates that spam potential was detected, display a
+                //    method to report `contact` as a spam source.
+                self?.spamReportingBannerView?.isHidden = !isPotentialSpam
+                self?.updateContentInsets(force: true)
+            }
+        }
+    }
+    
+    @MainActor
+    private func reportSpam(with action: ChatViewSpamReportingBanner.ReportAction) {
+        guard ThreemaEnvironment.enableSpamReporting else {
+            return
+        }
+        
+        // The API call is fire-and-forget. Thus we immediately hide the view and don't need to show a progress
+        spamReportingBannerView?.isHidden = true
+        updateContentInsets(force: true) // Needed to update top content insets
+        
+        guard let sender = conversation.contact else {
+            DDLogError("Unable to report spam, because conversation has not contact")
+            return
+        }
+        
+        // Loaded on main actor to such that it can be safely used in another actor
+        let senderIdentity = sender.identity
+        let senderPublicNickname = sender.publicNickname
+        
+        // Send to server (fire-and-forget)
+        Task.detached(priority: .utility) {
+            do {
+                try await ServerAPIConnector().reportSpamForSender(
+                    with: senderIdentity,
+                    and: senderPublicNickname,
+                    store: MyIdentityStore.shared()
+                )
+            }
+            catch {
+                // Move into separate variable to prevent deprecation warning of `DDLogError`
+                let errorMessage = "Unable to report \(senderIdentity) (\(senderPublicNickname, default: "nil")) as spam: \(error)"
+                DDLogError("\(errorMessage)")
+            }
+        }
+        
+        if action == .reportBlockAndDelete {
+            // Block
+            self.businessInjector.settingsStore.blacklist.insert(sender.identity)
+            
+            // Delete
+            let deleteAction = DeleteContactAction(for: sender)
+            // This might ask for confirmation of the deletion and thus can be canceled
+            // Using `chatProfileView` instead of `spamReportingBannerView` because the latter is hidden
+            deleteAction.execute(in: chatProfileView, of: self) { [weak self] in
+                self?.willDeleteAllMessages()
+            }
+        }
+    }
 }

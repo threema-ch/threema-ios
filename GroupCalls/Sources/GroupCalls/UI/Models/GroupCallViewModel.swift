@@ -55,8 +55,8 @@ public final class GroupCallViewModel: Sendable {
     private(set) var ownVideoMuteState: OwnMuteState = GroupCallConfiguration.LocalInitialMuteState.video {
         didSet {
             toolBarDelegate?.updateToggleVideoButton()
-            
-            guard oldValue != ownAudioMuteState else {
+
+            guard oldValue != ownVideoMuteState else {
                 return
             }
             

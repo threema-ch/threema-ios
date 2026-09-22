@@ -97,7 +97,7 @@ extension Colors {
         tableView.separatorInsetReference = .fromAutomaticInsets
     }
     
-    @objc public class func colorForNavigationBackground() -> UIColor? {
+    public class func colorForNavigationBackground() -> UIColor? {
         // We do no longer show navigation bar colors when using glass, because they cover the title label.
         if #available(iOS 26.0, *) {
             return nil
@@ -113,7 +113,7 @@ extension Colors {
         return nil
     }
         
-    @objc public class func update(tabBar: UITabBar) {
+    public class func update(tabBar: UITabBar) {
         tabBar.isTranslucent = true
         tabBar.isOpaque = false
 
@@ -129,15 +129,16 @@ extension Colors {
         tabBar.scrollEdgeAppearance = tabBar.standardAppearance
     }
     
-    @objc public class func update(toolBar: UIToolbar) {
+    public class func update(toolBar: UIToolbar) {
         toolBar.barTintColor = Colors.backgroundToolbar
     }
     
-    @objc public class func update(window: UIWindow) {
+    public class func update(window: UIWindow) {
         let style = currentOverrideUserInterfaceStyle
-        if window.overrideUserInterfaceStyle != style {
-            window.overrideUserInterfaceStyle = style
+        guard window.overrideUserInterfaceStyle != style else {
+            return
         }
+        window.overrideUserInterfaceStyle = style
     }
 
     /// Anchors the interface-style override on the root view controller in addition to the window.
@@ -147,11 +148,12 @@ extension Colors {
     /// inherited there, so the bars briefly resolve the *system* appearance (e.g. black bars in light theme on a
     /// dark-mode device) until the transition ends. An override on the root view controller travels with the view
     /// controller hierarchy and keeps trait resolution correct during such transitions.
-    @objc public class func update(rootViewController: UIViewController) {
+    public class func update(rootViewController: UIViewController) {
         let style = currentOverrideUserInterfaceStyle
-        if rootViewController.overrideUserInterfaceStyle != style {
-            rootViewController.overrideUserInterfaceStyle = style
+        guard rootViewController.overrideUserInterfaceStyle != style else {
+            return
         }
+        rootViewController.overrideUserInterfaceStyle = style
     }
 
     private class var currentOverrideUserInterfaceStyle: UIUserInterfaceStyle {
@@ -186,9 +188,5 @@ extension Colors {
                 .setTitleTextAttributes([.foregroundColor: UIColor.primary], for: .normal)
         }
         searchBar.searchTextField.textColor = .label
-    }
-    
-    @objc public class func update(switchAppearance: UISwitch) {
-        switchAppearance.onTintColor = .primary
     }
 }

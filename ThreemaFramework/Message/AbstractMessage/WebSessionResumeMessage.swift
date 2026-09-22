@@ -1,7 +1,7 @@
 import Foundation
 import ThreemaProtocols
 
-@objc public final class WebSessionResumeMessage: AbstractMessage {
+public final class WebSessionResumeMessage: AbstractMessage {
     override public func type() -> UInt8 {
         UInt8(MSGTYPE_WORK_SYNC_DELTA)
     }

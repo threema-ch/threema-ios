@@ -96,7 +96,7 @@ final class MultiDeviceViewController: ThemedTableViewController {
                     )
                     DDLogError("\(msg)")
 
-                    UIAlertTemplate.showAlert(
+                    UIAlertTemplate.showOKAlert(
                         owner: self,
                         title: #localize("multi_device_linked_devices_failed_to_load_title"),
                         message: #localize(
@@ -116,7 +116,7 @@ final class MultiDeviceViewController: ThemedTableViewController {
     }
 
     func showAlertRemoveDeviceFailed() {
-        UIAlertTemplate.showAlert(
+        UIAlertTemplate.showOKAlert(
             owner: self,
             title: #localize("multi_device_linked_devices_failed_remove_title"),
             message: #localize("multi_device_linked_devices_failed_remove_message_2")

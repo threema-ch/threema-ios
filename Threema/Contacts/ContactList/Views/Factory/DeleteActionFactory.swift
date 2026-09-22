@@ -1,22 +1,20 @@
-import ThreemaMacros
-
-public struct DeleteActionFactory: Factory {
+struct DeleteActionFactory: Factory {
     
-    private let title: String
+    private let title: String?
     private let action: () -> Void
     
     init(
-        title: String = #localize("delete"),
+        title: String,
         action: @escaping () -> Void
     ) {
         self.title = title
         self.action = action
     }
     
-    public func make() -> UIContextualAction {
+    func make() -> UIContextualAction {
         let deleteAction = UIContextualAction(
             style: .destructive,
-            title: title
+            title: title,
         ) { _, _, handler in
             action()
             handler(true)

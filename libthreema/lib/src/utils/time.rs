@@ -39,8 +39,8 @@ enum DriftDirection {
 impl DriftDirection {
     fn apply(&self, delta: f64) -> f64 {
         match self {
-            DriftDirection::Ahead => delta,
-            DriftDirection::Behind =>
+            Self::Ahead => delta,
+            Self::Behind =>
             {
                 #[expect(clippy::float_arithmetic, reason = "Fine here")]
                 -delta

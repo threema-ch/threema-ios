@@ -1,11 +1,11 @@
 import SwiftUI
 
-public struct OnScrollModifier: ViewModifier {
-    public typealias DragAction = (DragGesture.Value) -> Void
+struct OnScrollModifier: ViewModifier {
+    typealias DragAction = (DragGesture.Value) -> Void
     var onScroll: DragAction?
     var onEndScroll: DragAction?
     
-    public func body(content: Content) -> some View {
+    func body(content: Content) -> some View {
         content.simultaneousGesture(
             DragGesture(minimumDistance: 0, coordinateSpace: .global)
                 .onChanged(onScroll ?? { _ in })
@@ -15,7 +15,7 @@ public struct OnScrollModifier: ViewModifier {
 }
 
 extension View {
-    public func onScroll(
+    func onScroll(
         _ onScroll: OnScrollModifier.DragAction? = nil,
         _ onEndScroll: OnScrollModifier.DragAction? = nil
     ) -> some View {

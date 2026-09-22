@@ -1,3 +1,5 @@
+import AudioSessionManager
+import AudioSessionManagerTestHelper
 import Foundation
 import Keychain
 import KeychainTestHelper
@@ -22,6 +24,11 @@ final class BusinessInjectorMock: BusinessInjectorProtocol {
     // MARK: BusinessInjectorProtocol
 
     var runsInBackground: Bool
+
+    /// The **real** manager over a mock driver, observing nothing — so arbitration is real and only the
+    /// session is not. `AudioSessionManager`'s initialisers are `package`, so this is how a test gets one
+    /// without `AudioSessionManagerFactory` and its real WebRTC driver.
+    var audioSessionManager: any AudioSessionManagerProtocol = AudioSessionManagerTestFactory.make()
     
     var remoteSecretManager: RemoteSecretManagerProtocol
 

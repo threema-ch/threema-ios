@@ -1,6 +1,6 @@
 import Foundation
 
-@objc public final class MessageMetadata: NSObject {
+public final class MessageMetadata: NSObject {
     @objc public let nickname: String?
     @objc public let messageID: Data?
     @objc public let createdAt: Date?

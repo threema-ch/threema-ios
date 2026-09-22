@@ -48,7 +48,7 @@ final class BackupsViewModel {
     }
 
     var safeActivationStatusLabel: String {
-        isActivated ? #localize("On") : #localize("Off")
+        isActivated ? #localize("on") : #localize("off")
     }
 
     @ObservationIgnored

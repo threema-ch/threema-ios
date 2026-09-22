@@ -2,7 +2,7 @@ import ChunkedDC
 import CocoaLumberjackSwift
 import Foundation
 
-@objc public final class WCSession: NSObject {
+final class WCSession: NSObject {
     
     var privateKey: Data?
     var webClientSession: WebClientSessionEntity?
@@ -17,7 +17,7 @@ import Foundation
     
     private(set) var webClientProcessQueue: DispatchQueue
     
-    public init(webClientSession: WebClientSessionEntity) {
+    init(webClientSession: WebClientSessionEntity) {
         self.webClientSession = webClientSession
         self.privateKey = webClientSession.privateKey
         var hash = webClientSession.initiatorPermanentPublicKeyHash
@@ -52,9 +52,9 @@ extension WCSession {
 }
 
 extension WCSession {
-    // MARK: public functions
-    
-    public func connect(authToken: Data?) {
+    // MARK: Functions
+
+    func connect(authToken: Data?) {
         let newConnection = WCConnection(delegate: self)
         if connection != nil {
             if connection!.context != nil {
@@ -69,11 +69,11 @@ extension WCSession {
         connection?.connect(authToken: authToken)
     }
     
-    public func sendMessage() { }
+    func sendMessage() { }
     
-    public func receive() { }
+    func receive() { }
     
-    public func stop(close: Bool, forget: Bool, sendDisconnect: Bool, reason: WCConnection.WCConnectionStopReason) {
+    func stop(close: Bool, forget: Bool, sendDisconnect: Bool, reason: WCConnection.WCConnectionStopReason) {
         connection?.close(close: close, forget: forget, sendDisconnect: sendDisconnect, reason: reason)
     }
     
@@ -121,35 +121,35 @@ extension WCSession {
 extension WCSession {
     // MARK: Requested lists
     
-    public func requestedConversations(contains conversationID: String) -> Bool {
+    func requestedConversations(contains conversationID: String) -> Bool {
         requestedConversations.contains(conversationID)
     }
     
-    public func addRequestedConversation(conversationID: String) {
+    func addRequestedConversation(conversationID: String) {
         if !requestedConversations(contains: conversationID) {
             requestedConversations.append(conversationID)
         }
     }
     
-    public func requestedThumbnails(contains messageID: Data) -> Bool {
+    func requestedThumbnails(contains messageID: Data) -> Bool {
         requestedThumbnails.contains(messageID)
     }
     
-    public func addRequestedThumbnail(messageID: Data) {
+    func addRequestedThumbnail(messageID: Data) {
         if !requestedThumbnails(contains: messageID) {
             requestedThumbnails.append(messageID)
         }
     }
     
-    public func lastLoadedMessageIndexes(contains messageID: Data) -> Int? {
+    func lastLoadedMessageIndexes(contains messageID: Data) -> Int? {
         lastLoadedMessageIndexes[messageID]
     }
     
-    public func addLastLoadedMessageIndex(messageID: Data, index: Int) {
+    func addLastLoadedMessageIndex(messageID: Data, index: Int) {
         lastLoadedMessageIndexes[messageID] = index
     }
     
-    public func clearAllRequestedLists() {
+    func clearAllRequestedLists() {
         requestedConversations.removeAll()
         requestedThumbnails.removeAll()
         lastLoadedMessageIndexes.removeAll()
@@ -159,7 +159,7 @@ extension WCSession {
 // MARK: - MessageCompleteDelegate
 
 extension WCSession: MessageCompleteDelegate {
-    public func messageComplete(message: Data) {
+    func messageComplete(message: Data) {
         do {
             let object = try message.unpack() as! [AnyHashable: Any?]
             

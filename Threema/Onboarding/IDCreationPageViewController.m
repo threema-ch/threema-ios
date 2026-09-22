@@ -1,5 +1,4 @@
 #import "IDCreationPageViewController.h"
-#import "AppDelegate.h"
 
 @interface IDCreationPageViewController ()
 

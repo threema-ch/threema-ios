@@ -73,12 +73,11 @@ final class SafeManager: NSObject, SafeManagerProtocol {
         self.init(safeConfigManager: configManager, safeStore: store, safeAPIService: safeAPIService)
     }
     
-    @objc convenience init(groupManager: GroupManager) {
+    convenience init(groupManager: GroupManager) {
         self.init(groupManager: groupManager as GroupManagerProtocol)
     }
     
-    // NSObject thereby not the whole SafeConfigManagerProtocol interface must be like @objc
-    @objc convenience init(
+    convenience init(
         safeConfigManagerAsObject safeConfigManager: NSObject,
         safeStore: SafeStore,
         safeAPIService: SafeApiService
@@ -123,9 +122,7 @@ final class SafeManager: NSObject, SafeManagerProtocol {
         ) { error in
             Task { @MainActor in
                 if let error = error as? NSError {
-                    if error.code == ThreemaProtocolError.safePasswordEmpty.rawValue,
-                       !LaunchModalManager.shared.isBeingDisplayed {
-                        LaunchModalManager.shared.isBeingDisplayed = false
+                    if error.code == ThreemaProtocolError.safePasswordEmpty.rawValue {
                         LaunchModalManager.shared.checkLaunchModals()
                     }
                     DDLogError("Failed to activate Threema Safe: \(error)")
@@ -134,7 +131,7 @@ final class SafeManager: NSObject, SafeManagerProtocol {
         }
     }
     
-    @objc func activate(
+    func activate(
         identity: String,
         safePassword: String?,
         customServer: String?,
@@ -257,7 +254,7 @@ final class SafeManager: NSObject, SafeManagerProtocol {
     
     // MARK: - Deactivation
     
-    @objc func deactivate() {
+    func deactivate() {
         if let observer = SafeManager.backupObserver {
             SafeManager.backupObserver = nil
             NotificationCenter.default.removeObserver(
@@ -549,7 +546,7 @@ final class SafeManager: NSObject, SafeManagerProtocol {
     }
 
     /// Apply Threema Safe server it has changed
-    @objc func applyServer(server: String?, user: String?, password: String?) {
+    func applyServer(server: String?, user: String?, password: String?) {
         if isActivated {
             let doApply: (String?, String?, URL) -> Void = { user, password, serverURL in
                 if let server {
@@ -896,7 +893,7 @@ final class SafeManager: NSObject, SafeManagerProtocol {
         }
     }
     
-    @objc func initTrigger() {
+    func initTrigger() {
         
         guard isActivated else {
             return
@@ -966,7 +963,7 @@ final class SafeManager: NSObject, SafeManagerProtocol {
                     guard let topViewController = SharedAppProvider.currentTopViewController else {
                         return
                     }
-                    UIAlertTemplate.showAlert(
+                    UIAlertTemplate.showOKAlert(
                         owner: topViewController,
                         title: String.localizedStringWithFormat(
                             #localize("safe_setup_backup_title"),
@@ -1039,7 +1036,7 @@ final class SafeManager: NSObject, SafeManagerProtocol {
     }
     
     /// Checks Threema Safe configuration for Threema Work and OnPrem
-    @objc func performThreemaSafeLaunchChecks() {
+    func performThreemaSafeLaunchChecks() {
         guard TargetManager.isBusinessApp,
               let mdm = MDMSetup() else {
             return

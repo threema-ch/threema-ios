@@ -1,41 +1,63 @@
 import Foundation
 import WebRTC
 
-@objc public final class VoIPCallAnswerMessage: NSObject {
+public final class VoIPCallAnswerMessage: NSObject {
     
-    public enum MessageAction: Int {
+    public enum MessageAction: Int, CustomStringConvertible {
         case reject
         case call
-        
-        /// Return the string of the current action for the debug log
-        /// - Returns: String of the current action
-        
-        public func description() -> String {
+                
+        public var description: String {
             switch self {
-            case .reject: "reject"
-            case .call: "accept"
+            case .reject:
+                "reject"
+            case .call:
+                "accept"
             }
         }
     }
     
-    public enum MessageRejectReason: Int {
-        case unknown
-        case busy
-        case timeout
-        case reject
-        case disabled
-        case offHours
+    public enum MessageRejectReason: Int, CustomStringConvertible {
+        case unknown = 0
+       
+        @available(*, deprecated, message: "No longer used with 1:1 calls MD support.")
+        case busy = 1
+       
+        case timeout = 2
+        case reject = 3
+       
+        @available(*, deprecated, message: "No longer used with 1:1 calls MD support.")
+        case disabled = 4
+       
+        @available(*, deprecated, message: "No longer used with 1:1 calls MD support.")
+        case offHours = 5
         
-        /// Return the string of the current reject reason for the debug log
-        /// - Returns: String of the current reject reason
-        public func description() -> String {
+        public init(rawValue: Int) {
+            switch rawValue {
+            case 1, 3, 4, 5:
+                // We also return `.reject` for the deprecated values.
+                self = .reject
+            case 2:
+                self = .timeout
+            default:
+                self = .unknown
+            }
+        }
+        
+        public var description: String {
             switch self {
-            case .unknown: "unknown"
-            case .busy: "busy"
-            case .timeout: "timeout"
-            case .reject: "reject"
-            case .disabled: "disabled"
-            case .offHours: "offHours"
+            case .unknown:
+                "unknown"
+            case .busy:
+                "busy"
+            case .timeout:
+                "timeout"
+            case .reject:
+                "reject"
+            case .disabled:
+                "disabled"
+            case .offHours:
+                "offHours"
             }
         }
     }
@@ -50,6 +72,9 @@ import WebRTC
     public let isVideoAvailable: Bool
     public let isUserInteraction: Bool
     
+    public let receivedAsReflected: Bool?
+    public let isOutgoing: Bool
+
     public init(
         action: MessageAction,
         answer: RTCSessionDescription?,
@@ -58,6 +83,8 @@ import WebRTC
         isVideoAvailable: Bool,
         isUserInteraction: Bool,
         callID: VoIPCallID,
+        receivedAsReflected: Bool? = nil,
+        isOutgoing: Bool,
         completion: (() -> Void)?
     ) {
         self.action = action
@@ -68,6 +95,9 @@ import WebRTC
         self.isVideoAvailable = isVideoAvailable
         self.isUserInteraction = isUserInteraction
         self.callID = callID
+        self.receivedAsReflected = receivedAsReflected
+        self.isOutgoing = isOutgoing
+       
         super.init()
     }
     
@@ -75,11 +105,12 @@ import WebRTC
         switch action {
         case .reject:
             guard let rejectReason else {
-                return ".reject.description()/unkown"
+                return "\(MessageAction.reject.description)/\(MessageRejectReason.unknown.description)"
             }
-            return "\(MessageAction.reject.description())/\(rejectReason.description())"
+            return "\(MessageAction.reject.description)/\(rejectReason.description)"
+            
         case .call:
-            return MessageAction.call.description()
+            return MessageAction.call.description
         }
     }
 }
@@ -99,13 +130,19 @@ extension VoIPCallAnswerMessage: VoIPCallMessageProtocol {
         case generateJson(error: Error)
     }
 
-    public static func decodeAsObject<T>(_ dictionary: [AnyHashable: Any]) -> T where T: VoIPCallMessageProtocol {
+    public static func decodeAsObject<T>(
+        _ dictionary: [AnyHashable: Any],
+        receivedAsReflected: Bool,
+        isOutgoing: Bool
+    ) -> T where T: VoIPCallMessageProtocol {
         let tmpAction: MessageAction = VoIPCallAnswerMessage
             .MessageAction(rawValue: dictionary[VoIPCallAnswerMessage.kActionKey] as! Int)!
+        
         var tmpRejectReason: VoIPCallAnswerMessage.MessageRejectReason?
-        if let rejectReasonValue = dictionary[VoIPCallAnswerMessage.kRejectReasonKey] {
-            tmpRejectReason = VoIPCallAnswerMessage.MessageRejectReason(rawValue: rejectReasonValue as! Int)
+        if let rejectReasonValue = dictionary[VoIPCallAnswerMessage.kRejectReasonKey] as? Int {
+            tmpRejectReason = VoIPCallAnswerMessage.MessageRejectReason(rawValue: rejectReasonValue)
         }
+        
         var tmpAnswer: RTCSessionDescription?
         if let answerKey = dictionary[VoIPCallAnswerMessage.kAnswerKey] {
             tmpAnswer = RTCSessionDescription.description(from: answerKey as! [AnyHashable: Any])
@@ -115,6 +152,7 @@ extension VoIPCallAnswerMessage: VoIPCallMessageProtocol {
         var isVideoAvailable = false
         if let features = dictionary[kFeaturesKey] as? [String: Any?] {
             tmpFeatures = features
+            
             if features.keys.contains(kFeaturesVideoKey) {
                 isVideoAvailable = true
             }
@@ -130,6 +168,8 @@ extension VoIPCallAnswerMessage: VoIPCallMessageProtocol {
             isVideoAvailable: isVideoAvailable,
             isUserInteraction: false,
             callID: callID,
+            receivedAsReflected: receivedAsReflected,
+            isOutgoing: isOutgoing,
             completion: nil
         ) as! T
     }

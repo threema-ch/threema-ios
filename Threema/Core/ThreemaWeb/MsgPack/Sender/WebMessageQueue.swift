@@ -6,20 +6,20 @@ protocol WebMessageQueueDelegate: AnyObject {
     func connectionStatus() -> WCConnectionState?
 }
 
-final class WebMessageQueue: NSObject {
+final class WebMessageQueue {
     weak var delegate: WebMessageQueueDelegate?
     /// `Any` must only be `Data` or `Bool`
     var queue: [[String: Any]]
     var dispatchQueue: DispatchQueue
     
-    override public init() {
+    init() {
         self.queue = [[String: Any]]()
         self.dispatchQueue = DispatchQueue(label: "ch.threema.webClientResponseQueue", attributes: [])
     }
 }
 
 extension WebMessageQueue {
-    // MARK: public functions
+    // MARK: Functions
     
     func enqueue(data: Data?, blackListed: Bool, _ disconnectMessage: Bool = false) {
         dispatchQueue.async {
@@ -77,7 +77,7 @@ extension WebMessageQueue {
         }
     }
     
-    @objc func flush() {
+    func flush() {
         dispatchQueue.async {
             self.queue.removeAll()
         }

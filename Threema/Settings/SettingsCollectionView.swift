@@ -45,6 +45,10 @@ final class SettingsCollectionView: UICollectionView, UICollectionViewDelegate {
                   let dataSource = dataSource as? SettingsCollectionViewDataSource,
                   let row = SettingsCollectionViewDataSource.Row.row(for: destination),
                   let index = dataSource.indexPathForItem(row) else {
+                // Nothing is shown anymore: clear a stale highlight.
+                indexPathsForSelectedItems?.forEach {
+                    deselectItem(at: $0, animated: false)
+                }
                 return
             }
 

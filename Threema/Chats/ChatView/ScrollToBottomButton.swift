@@ -2,7 +2,7 @@ import Combine
 import Foundation
 
 @available(iOS 26.0, *)
-class ScrollToBottomButton: UIButton {
+final class ScrollToBottomButton: UIButton {
    
     typealias Config = ChatViewConfiguration.ScrollToBottomButton
 

@@ -1,6 +1,6 @@
 import ThreemaMacros
 
-public struct MessageActionFactory: Factory {
+struct MessageActionFactory: Factory {
     
     private static let showConversationNotificationName =
         NSNotification.Name(rawValue: kNotificationShowConversation)
@@ -11,7 +11,7 @@ public struct MessageActionFactory: Factory {
         self.action = action
     }
     
-    public func make() -> UIContextualAction {
+    func make() -> UIContextualAction {
         let messageAction = UIContextualAction(
             style: .normal,
             title: #localize("message")
@@ -28,7 +28,7 @@ public struct MessageActionFactory: Factory {
 }
 
 extension MessageActionFactory {
-    public static func make(for contact: Contact) -> UIContextualAction {
+    static func make(for contact: Contact) -> UIContextualAction {
         MessageActionFactory {
             NotificationCenter.default.post(
                 name: showConversationNotificationName,
@@ -41,7 +41,7 @@ extension MessageActionFactory {
         }.make()
     }
     
-    public static func make(for conversationEntity: ConversationEntity) -> UIContextualAction {
+    static func make(for conversationEntity: ConversationEntity) -> UIContextualAction {
         MessageActionFactory {
             NotificationCenter.default.post(
                 name: showConversationNotificationName,

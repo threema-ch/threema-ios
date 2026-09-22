@@ -10,11 +10,13 @@ public final class IntentCreator {
         case couldNotCreateIntent
         case createIntentFailed(message: String)
     }
-    
+
+    private let myIdentity: ThreemaIdentity
     private let userSettings: UserSettingsProtocol
     private let entityManager: EntityManager
     
-    public init(userSettings: UserSettingsProtocol, entityManager: EntityManager) {
+    public init(myIdentity: ThreemaIdentity, userSettings: UserSettingsProtocol, entityManager: EntityManager) {
+        self.myIdentity = myIdentity
         self.userSettings = userSettings
         self.entityManager = entityManager
     }
@@ -152,7 +154,7 @@ public final class IntentCreator {
             
             let groupIdentity = GroupIdentity(id: groupID, creator: ThreemaIdentity(creatorID))
             if let conversation = self.entityManager.entityFetcher.conversationEntity(
-                for: groupIdentity, myIdentity: MyIdentityStore.shared().identity
+                for: groupIdentity, myIdentity: self.myIdentity.rawValue
             ) {
                 isPrivate = isPrivate || conversation.conversationCategory == .private
                 groupConversation = conversation

@@ -1,12 +1,12 @@
 import Foundation
 import ThreemaMacros
 
-/// This class provides the list of available shortcut items.
+/// Provides list of available shortcut items
 ///
-/// To add a new shortcut item, add a new case to the `ActionType` enum.
-/// Then add the new case to the `items(for:)` method.
-///
-final class UIApplicationShortcutItemProvider: NSObject {
+/// To add a new shortcut item:
+/// 1. Add a new case to the `ActionType` enum
+/// 2. Add the new case to the `items(for:)` method
+enum UIApplicationShortcutItemProvider {
     
     enum ActionType {
         case newMessage
@@ -20,7 +20,7 @@ final class UIApplicationShortcutItemProvider: NSObject {
             case .myID:
                 #localize("application_shortcut_item_my_id")
             case .scanQrCode:
-                #localize("application_shortcut_item_scan_qr_code")
+                #localize("scan_qr_code_sentence")
             }
         }
       
@@ -60,7 +60,7 @@ final class UIApplicationShortcutItemProvider: NSObject {
     ///
     /// - Parameter mdm: used for dynamic shortcut items
     /// - Returns: an array of shortcut items
-    @objc static func items(for mdm: MDMSetup) -> [UIApplicationShortcutItem] {
+    static func items(for mdm: MDMSetup) -> [UIApplicationShortcutItem] {
         var items: [ActionType] = [.newMessage, .myID]
 
         if !mdm.disableAddContact() {

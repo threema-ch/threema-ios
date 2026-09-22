@@ -6,6 +6,7 @@ import ThreemaFramework
 protocol WCSessionManagerProtocol {
     var isRunningWCSession: Bool { get }
     func connectAllRunningSessions()
+    func stopAndForgetAllSessions()
 }
 
 // MARK: - WCSessionManagerAdapter
@@ -22,5 +23,9 @@ final class WCSessionManagerAdapter: WCSessionManagerProtocol {
     
     func connectAllRunningSessions() {
         manager.connectAllRunningSessions()
+    }
+
+    func stopAndForgetAllSessions() {
+        manager.stopAndForgetAllSessions()
     }
 }

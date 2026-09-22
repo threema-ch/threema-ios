@@ -1,6 +1,6 @@
 import Foundation
 
-@objc public final class QuoteUtil: NSObject {
+public final class QuoteUtil: NSObject {
     
     // MARK: - Regex
     
@@ -67,7 +67,7 @@ import Foundation
 
 // MARK: - Helpers
 
-@objc public final class QuoteParseV2Result: NSObject {
+public final class QuoteParseV2Result: NSObject {
     @objc public let messageID: Data
     @objc public let remainingBody: String
 

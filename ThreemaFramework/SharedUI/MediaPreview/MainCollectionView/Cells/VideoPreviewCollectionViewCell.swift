@@ -1,3 +1,4 @@
+import AudioSessionManager
 import CocoaLumberjackSwift
 import ThreemaMacros
 
@@ -12,11 +13,15 @@ final class VideoImageCell: ScreenWidthSizedCell, UIGestureRecognizerDelegate {
     var player: AVPlayer?
     var isPlaying = false
     var currentVideo: AVPlayerLayer?
-    
-    @objc func playerDidFinishPlaying(note: NSNotification) {
+
+    /// Held while this cell's video is playing.
+    private var audioSessionClaim: AudioSessionClaim?
+
+    @objc private func playerDidFinishPlaying(note: NSNotification) {
         player?.seek(to: .zero)
         playButton.isHidden = false
         isPlaying = false
+        releaseAudioSessionClaim()
     }
     
     required init?(coder: NSCoder) {
@@ -34,6 +39,60 @@ final class VideoImageCell: ScreenWidthSizedCell, UIGestureRecognizerDelegate {
         showLoadingScreen()
         if let video = currentVideo {
             video.removeFromSuperlayer()
+        }
+        releaseAudioSessionClaim()
+    }
+
+    deinit {
+        guard let claim = audioSessionClaim else {
+            return
+        }
+
+        // Copied into a local: the `Task` outlives this cell.
+        let manager = audioSessionManager
+        Task {
+            await manager.release(claim)
+        }
+    }
+
+    // MARK: - Audio session claim
+
+    // Used like this, because we cannot inject the businesInjector
+    private var audioSessionManager: any AudioSessionManagerProtocol {
+        BusinessInjector.ui.audioSessionManager
+    }
+
+    private func acquireAudioSessionClaim() {
+        guard audioSessionClaim == nil else {
+            return
+        }
+
+        Task { @MainActor [weak self] in
+            let claim = try? await self?.audioSessionManager.acquire(.mediaPlayback)
+
+            guard let self, let claim else {
+                return
+            }
+
+            // Playback may already have stopped during the acquire.
+            guard isPlaying else {
+                await audioSessionManager.release(claim)
+                return
+            }
+
+            audioSessionClaim = claim
+        }
+    }
+
+    private func releaseAudioSessionClaim() {
+        guard let claim = audioSessionClaim else {
+            return
+        }
+        audioSessionClaim = nil
+
+        let manager = audioSessionManager
+        Task {
+            await manager.release(claim)
         }
     }
     
@@ -91,13 +150,7 @@ final class VideoImageCell: ScreenWidthSizedCell, UIGestureRecognizerDelegate {
         
         videoBackgroundView.layer.addSublayer(playerLayer)
         currentVideo = playerLayer
-        do {
-            try AVAudioSession.sharedInstance().setCategory(.playback, mode: .moviePlayback)
-        }
-        catch {
-            DDLogError("Could not create AudioSession for .moviePlayback")
-        }
-        
+
         // Clean up previously added views and gesture recognizers
         for subview in videoBackgroundView.subviews {
             subview.removeFromSuperview()
@@ -141,19 +194,21 @@ final class VideoImageCell: ScreenWidthSizedCell, UIGestureRecognizerDelegate {
         DispatchQueue.main.async {
             self.isPlaying = true
             self.playButton.isHidden = true
+            self.acquireAudioSessionClaim()
             self.player?.play()
         }
     }
     
-    @objc func pauseVideo() {
+    @objc private func pauseVideo() {
         DispatchQueue.main.async {
             self.player?.pause()
             self.isPlaying = false
             self.playButton.isHidden = false
+            self.releaseAudioSessionClaim()
         }
     }
     
-    @objc func handleTap(_ gesture: UITapGestureRecognizer) {
+    @objc private func handleTap(_ gesture: UITapGestureRecognizer) {
         DispatchQueue.main.async {
             NotificationCenter.default.addObserver(
                 self,

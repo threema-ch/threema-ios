@@ -1,5 +1,6 @@
 import CocoaLumberjackSwift
 import Foundation
+import libthreemaSwift
 import ThreemaProtocols
 
 extension PushSetting {
@@ -54,6 +55,41 @@ extension PushSetting {
                 }
             case .none:
                 break
+            }
+        }
+    }
+
+    mutating func update(with contact: LibthreemaContact) {
+        update(with: contact.notificationTriggerPolicyOverride)
+    }
+
+    mutating func update(with contact: LibthreemaContactUpdate) {
+        switch contact.notificationTriggerPolicyOverride {
+        case .remove:
+            update(with: nil)
+        case .unchanged:
+            break
+        case let .update(policy):
+            update(with: policy)
+        }
+    }
+
+    private mutating func update(with policy: ContactNotificationTriggerPolicyOverride?) {
+        guard let policy else {
+            updatePeriodOffTillDate(nil)
+            type = .on
+            return
+        }
+
+        switch policy.policy {
+        case .never:
+            if let expiresAt = policy.expiresAt {
+                type = .offPeriod
+                updatePeriodOffTillDate(expiresAt.date)
+            }
+            else {
+                type = .off
+                updatePeriodOffTillDate(nil)
             }
         }
     }

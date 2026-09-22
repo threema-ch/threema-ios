@@ -32,8 +32,8 @@ struct RemoteSecretBlockView: View {
                 ThreemaButton(
                     title: viewModel.deleteButtonTitle,
                     role: .destructive,
-                    style: .borderless,
-                    size: .small
+                    style: .bordered,
+                    size: .fullWidth
                 ) {
                     viewModel.deleteButtonTapped()
                 }
@@ -62,7 +62,6 @@ struct RemoteSecretBlockView: View {
             if viewModel.showCancelButton {
                 ThreemaButton(
                     title: viewModel.cancelButtonTitle,
-                    role: .destructive,
                     style: .borderless,
                     size: .small
                 ) {

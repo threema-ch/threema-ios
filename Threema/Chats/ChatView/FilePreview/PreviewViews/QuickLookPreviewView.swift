@@ -62,6 +62,8 @@ struct ThreemaQLPreviewControllerWrapper: UIViewControllerRepresentable {
             target: context.coordinator,
             selector: #selector(Coordinator.didTapDone)
         )
+        // Used by the close button shown if sharing is disabled by MDM
+        previewController.onClose = dismiss
 
         let navController = UINavigationController(rootViewController: previewController)
         return navController

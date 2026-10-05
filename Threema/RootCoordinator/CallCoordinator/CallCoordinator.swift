@@ -156,6 +156,8 @@ final class CallCoordinator {
         appActivationSubscription = nil
         callWindow?.isHidden = true
         callWindow?.resignKey()
+        // Must happen before releasing the window, see `UIWindow.removeSecure()`
+        callWindow?.removeSecure()
         callWindow = nil
         onActivityChange?(.none)
         onFinished?()

@@ -22,6 +22,11 @@ import ThreemaMacros
         self != .idle
     }
     
+    /// Does not keep the app running in the background, unlike an answered call
+    var isUnansweredIncoming: Bool {
+        self == .receivedOffer || self == .incomingRinging
+    }
+
     public var description: String {
         switch self {
         case .idle: "IDLE"

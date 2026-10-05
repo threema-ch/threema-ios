@@ -24,7 +24,7 @@ actor RTCAudioSessionDriver: ExternallyActivatedDriver {
     // MARK: - AudioSessionDriverProtocol
 
     func apply(_ profile: AudioSessionProfile) async throws {
-        DDLogVerbose(
+        DDLogNotice(
             "[RTCAudioSessionDriver] Applying \(profile.category.rawValue)/\(profile.mode.rawValue)"
                 + " output=\(profile.output) options=\(profile.options.rawValue)"
                 + " default-to-speaker=\(profile.options.contains(.defaultToSpeaker))"
@@ -54,7 +54,7 @@ actor RTCAudioSessionDriver: ExternallyActivatedDriver {
                 profile.prefersNoInterruptionsFromSystemAlerts
             )
 
-            DDLogVerbose(
+            DDLogNotice(
                 "[RTCAudioSessionDriver] Alert-interruption preference asked=\(profile.prefersNoInterruptionsFromSystemAlerts) got=\(session.session.prefersNoInterruptionsFromSystemAlerts)"
             )
         }
@@ -125,7 +125,7 @@ actor RTCAudioSessionDriver: ExternallyActivatedDriver {
 
     /// Stop WebRTC's audio processing, and hand the session back if this driver took it.
     func deactivate() async throws {
-        DDLogVerbose("[RTCAudioSessionDriver] Disabling audio.")
+        DDLogNotice("[RTCAudioSessionDriver] Disabling audio.")
         session.isAudioEnabled = false
 
         guard didActivateSession else {
@@ -154,7 +154,7 @@ actor RTCAudioSessionDriver: ExternallyActivatedDriver {
             return
         }
 
-        DDLogVerbose("[RTCAudioSessionDriver] Requesting CallKit reactivation after interruption.")
+        DDLogNotice("[RTCAudioSessionDriver] Requesting CallKit reactivation after interruption.")
         await recovery.requestAudioSessionReactivation()
     }
 
@@ -168,7 +168,7 @@ actor RTCAudioSessionDriver: ExternallyActivatedDriver {
     /// Note:`nonisolated` since hopping onto the actor would let `provider(_:didActivate:)` return before WebRTC had
     /// observed the activation. `RTCSession` has its own lock, so we are good
     nonisolated func sessionDidActivate(_ session: AVAudioSession) {
-        DDLogVerbose("[RTCAudioSessionDriver] CallKit activated the session.")
+        DDLogNotice("[RTCAudioSessionDriver] CallKit activated the session.")
 
         // The order matters: WebRTC has to observe the activation before anything else touches the session.
         self.session.audioSessionDidActivate(session)
@@ -178,7 +178,7 @@ actor RTCAudioSessionDriver: ExternallyActivatedDriver {
     /// Forward `provider(_:didDeactivate:)`.
     /// Note:`nonisolated` for the reasons on `sessionDidActivate(_:)`.
     nonisolated func sessionDidDeactivate(_ session: AVAudioSession) {
-        DDLogVerbose("[RTCAudioSessionDriver] CallKit deactivated the session.")
+        DDLogNotice("[RTCAudioSessionDriver] CallKit deactivated the session.")
 
         self.session.isAudioEnabled = false
         self.session.audioSessionDidDeactivate(session)

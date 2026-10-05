@@ -277,6 +277,47 @@ final class VoIPCallStateManager: NSObject {
         }
     }
 
+    func ringingCallHungUpFromBackground(
+        with callID: VoIPCallID,
+        callPartnerIdentity: String,
+        callPartnerName: String?,
+        completion: @escaping (@escaping () -> Void) -> Void
+    ) {
+        // Not on `callServiceQueue`, the PushKit callback must report without blocking. Any state, not only
+        // ringing: the call might have been answered since the extension checked, it must end anyway.
+        let isCurrentCall = callService?.callID.callID == callID.callID
+
+        // Every VoIP push must report a call. Re-report the current one, cancel it for any other call.
+        guard isCurrentCall else {
+            DDLogNotice(
+                "[Call:1to1:StateManager] [cid=\(callID)]: Hangup for a call that is not the current one, reporting and cancelling"
+            )
+            callKitManager.startAndCancelCall(from: TargetManager.appName) {
+                completion { }
+            }
+            return
+        }
+
+        callKitManager.reportIncomingCall(
+            with: callID,
+            callPartnerIdentity: callPartnerIdentity,
+            callPartnerName: callPartnerName,
+            ringtoneSound: "default",
+            fromPush: true
+        ) { _ in
+            completion {
+                // Already acknowledged by the extension
+                let hangup = VoIPCallHangupMessage(
+                    contactIdentity: callPartnerIdentity,
+                    callID: callID,
+                    duration: nil,
+                    isOutgoing: false
+                )
+                self.incomingCallHangup(hangup: hangup)
+            }
+        }
+    }
+
     /// Start and cancel call (for deprecated/invalid VoIP pushes) over CallKit, because for any VoIP received,
     /// `CXProvider.reportNewIncomingCall` must be called
     func startAndCancelCall(from localizedName: String, completion: @escaping () -> Void) {

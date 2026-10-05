@@ -25,7 +25,8 @@ final class DocumentPreviewCell: ScreenWidthSizedCell, QLPreviewControllerDelega
     
     var item: DocumentPreviewItem?
     
-    var parent: UIViewController?
+    /// Weak, as the parent owns the collection view holding this cell
+    weak var parent: UIViewController?
     
     var frameView: UIView?
     
@@ -164,6 +165,15 @@ final class DocumentPreviewCell: ScreenWidthSizedCell, QLPreviewControllerDelega
         DispatchQueue.main.async {
             view.isUserInteractionEnabled = true
             self.isUserInteractionEnabled = true
+
+            // Runs again on every cell reuse, add the recognizer only once to avoid presenting multiple times
+            let hasTapRecognizer = view.gestureRecognizers?.contains { recognizer in
+                recognizer is UITapGestureRecognizer && recognizer.delegate === self
+            } ?? false
+            guard !hasTapRecognizer else {
+                return
+            }
+
             let tap = UITapGestureRecognizer(target: self, action: #selector(DocumentPreviewCell.tappedThumbnail(_:)))
             tap.cancelsTouchesInView = false
             tap.numberOfTapsRequired = 1

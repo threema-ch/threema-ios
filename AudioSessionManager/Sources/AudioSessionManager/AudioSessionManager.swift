@@ -226,7 +226,7 @@ public actor AudioSessionManager: AudioSessionManagerProtocol {
             return
         }
         
-        DDLogInfo(
+        DDLogNotice(
             "[AudioSessionManager] Updating route for \(claim.kind): \(registration.profile.output) -> \(output)"
         )
 
@@ -245,7 +245,7 @@ public actor AudioSessionManager: AudioSessionManagerProtocol {
             return
         }
 
-        DDLogInfo("[AudioSessionManager] Releasing route for \(claim.kind)")
+        DDLogNotice("[AudioSessionManager] Releasing route for \(claim.kind)")
         eventContinuations.removeValue(forKey: claim.id)?.finish()
 
         // Only this claim's own hook.
@@ -403,7 +403,7 @@ public actor AudioSessionManager: AudioSessionManagerProtocol {
         }
 
         if Self.routeChangeReasonsWorthReasserting.contains(reason) {
-            DDLogVerbose(
+            DDLogNotice(
                 "[AudioSessionManager] Re-asserting \(winner.profile.output) after route change: \(reason)"
             )
             forceReapply = true
@@ -435,7 +435,7 @@ public actor AudioSessionManager: AudioSessionManagerProtocol {
         // be a lie.
         applied = nil
 
-        DDLogVerbose("[AudioSession] Interruption began")
+        DDLogNotice("[AudioSession] Interruption began")
         emit(.interrupted)
     }
 
@@ -451,7 +451,7 @@ public actor AudioSessionManager: AudioSessionManagerProtocol {
         }
 
         isInterrupted = false
-        DDLogVerbose("[AudioSession] Interruption ended, shouldResume=\(shouldResume)")
+        DDLogNotice("[AudioSession] Interruption ended, shouldResume=\(shouldResume)")
 
         let claimsChanged = claimsChangedWhileInterrupted
         claimsChangedWhileInterrupted = false
@@ -460,7 +460,7 @@ public actor AudioSessionManager: AudioSessionManagerProtocol {
             await recoverWinner()
         }
         else if claimsChanged {
-            DDLogVerbose("[AudioSession] Not resuming, but the claims changed while interrupted")
+            DDLogNotice("[AudioSession] Not resuming, but the claims changed while interrupted")
             await reconcile()
         }
 
@@ -646,7 +646,7 @@ public actor AudioSessionManager: AudioSessionManagerProtocol {
 
         let chosen: AudioSessionOutput = onSpeaker ? .speaker : .system
 
-        DDLogVerbose(
+        DDLogNotice(
             "[AudioSessionManager] Adopting \(chosen) chosen outside the manager (was \(appliedOutput))"
         )
 

@@ -25,6 +25,7 @@
 #define kEchoRequestInterval 60
 #define kEchoRequestMDInterval 15
 #define kEchoRequestTimeout 10
+#define kNetworkChangeEchoRequestTimeout 2
 #define kErrorDisplayInterval 30
 #define kConnectionIdleTimeout 120 // min 30, max 600
 #define kConnectionIdleMDTimeout 30 // min 30, max 600

@@ -18,7 +18,7 @@ actor AVAudioSessionDriver: AudioSessionDriverProtocol {
     // MARK: - Internal functions
     
     func apply(_ profile: AudioSessionProfile) async throws {
-        DDLogVerbose(
+        DDLogNotice(
             "[AVAudioSessionDriver] Applying \(profile.category.rawValue)/\(profile.mode.rawValue) output=\(profile.output)"
         )
 
@@ -78,7 +78,7 @@ actor AVAudioSessionDriver: AudioSessionDriverProtocol {
     }
 
     func deactivate() async throws {
-        DDLogVerbose("[AVAudioSessionDriver] Deactivating.")
+        DDLogNotice("[AVAudioSessionDriver] Deactivating.")
         do {
             try session.setActive(false, options: .notifyOthersOnDeactivation)
         }
@@ -89,7 +89,7 @@ actor AVAudioSessionDriver: AudioSessionDriverProtocol {
     }
     
     func recoverFromInterruption(restoring profile: AudioSessionProfile) async throws {
-        DDLogVerbose("[AVAudioSessionDriver] Recovering from interruption.")
+        DDLogNotice("[AVAudioSessionDriver] Recovering from interruption.")
         
         do {
             try await apply(profile)

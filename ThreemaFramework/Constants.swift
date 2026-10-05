@@ -47,6 +47,7 @@ public enum Constants {
     public static let notificationExtensionCallerName = "NotificationExtensionCallerName"
     public static let notificationExtensionRingtoneSoundName = "NotificationExtensionRingtoneSoundName"
     public static let notificationExtensionCallID = "NotificationExtensionCallID"
+    public static let notificationExtensionHangup = "NotificationExtensionHangup"
 }
 
 extension String {

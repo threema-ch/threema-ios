@@ -86,9 +86,18 @@ final class BackgroundTaskManager {
             }
             else if internalKey.hasPrefix(kAppVoIPBackgroundTask) ||
                 internalKey.hasPrefix(kAppVoIPIncomCallBackgroundTask) {
-                // Do not disconnect if we are still in an active call
-                if !VoIPCallStateManager.shared.currentCallState().active {
-                    ServerConnector.shared().disconnect(initiator: .threemaCall)
+                let callState = VoIPCallStateManager.shared.currentCallState()
+
+                // Keep the connection for an active call, but not for a ringing one: we get suspended anyway, and
+                // only when disconnected does the server push the hangup
+                if !callState.active || callState.isUnansweredIncoming {
+                    if callState.active {
+                        DDLogNotice(
+                            "[Call] Background time is up while an incoming call is ringing (\(callState)), releasing the server connection"
+                        )
+                    }
+                    // Wait, ending the last background task can suspend us before an async disconnect ran
+                    ServerConnector.shared().disconnectWait(initiator: .threemaCall)
                 }
             }
         }
@@ -115,8 +124,9 @@ final class BackgroundTaskManager {
 
         ServerConnector.shared().disconnect(initiator: .app)
 
-        // Hand over to the extensions. Not before, without IPC this flag also gates incoming message processing
-        if !UserSettings.shared().ipcCommunicationEnabled {
+        // Hand over to the extensions. Not before, without IPC this flag also gates incoming message processing.
+        // Not during a call, its messages (e.g. hangup) would be dropped.
+        if !UserSettings.shared().ipcCommunicationEnabled, !VoIPCallStateManager.shared.currentCallState().active {
             AppGroup.setActive(false, for: AppGroupTypeApp)
         }
     }

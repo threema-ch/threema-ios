@@ -12,6 +12,14 @@ protocol VoIPCallReporting: AnyObject {
         completion: @escaping (@escaping () -> Void) -> Void
     )
 
+    /// Hangup of the ringing call, forwarded by the Notification Extension. Hands back the task that ends it.
+    func ringingCallHungUpFromBackground(
+        with callID: VoIPCallID,
+        callPartnerIdentity: String,
+        callPartnerName: String?,
+        completion: @escaping (@escaping () -> Void) -> Void
+    )
+
     /// Report and immediately cancel a call. Needed for any VoIP push we cannot interpret, because
     /// `CXProvider.reportNewIncomingCall` must be called for *every* VoIP push.
     func startAndCancelCall(from localizedName: String, completion: @escaping () -> Void)
@@ -67,6 +75,29 @@ final class VoIPPushHandler {
     ///   - completion: PushKit completion handler, called once the call is reported
     func report(dictionaryPayload rawPayload: [AnyHashable: Any], completion: @escaping () -> Void) {
         markAppActive()
+
+        if let dictionaryPayload = rawPayload as? [String: String],
+           let identity = dictionaryPayload[Constants.notificationExtensionHangup],
+           let callIDString = dictionaryPayload[Constants.notificationExtensionCallID],
+           let callIDRawValue = UInt32(callIDString) {
+            let callID = VoIPCallID(callID: callIDRawValue)
+            DDLogNotice(
+                "[Call:1to1:VoIPPushHandler] [cid=\(callID)] Hangup of the ringing call reported from push kit notification"
+            )
+
+            callReporter().ringingCallHungUpFromBackground(
+                with: callID,
+                callPartnerIdentity: identity,
+                callPartnerName: dictionaryPayload[Constants.notificationExtensionCallerName]
+            ) { [weak self] task in
+                MainActor.assumeIsolated {
+                    self?.runWhenBusinessReady(task)
+                }
+
+                completion()
+            }
+            return
+        }
 
         guard
             let dictionaryPayload = rawPayload as? [String: String],

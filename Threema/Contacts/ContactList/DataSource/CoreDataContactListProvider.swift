@@ -22,8 +22,11 @@ class CoreDataContactListProvider<Entity: NSObject, BusinessEntity: NSObject>: N
     
     init(
         entityFetcher: EntityFetcher = BusinessInjector.ui.entityManager.entityFetcher,
-        fetchedResultsController makeFetchedResultsController: @escaping ()
-            -> NSFetchedResultsController<NSFetchRequestResult>,
+        userSettings: UserSettings = UserSettings.shared(),
+        settingsStore: any SettingsStoreProtocol = BusinessInjector.ui.settingsStore,
+        fetchedResultsController makeFetchedResultsController: @escaping () -> NSFetchedResultsController<
+            NSFetchRequestResult
+        >,
         entityResolver: @escaping (Entity) -> BusinessEntity?
     ) {
         self.entityFetcher = entityFetcher
@@ -35,8 +38,7 @@ class CoreDataContactListProvider<Entity: NSObject, BusinessEntity: NSObject>: N
         fetchedResultsController.delegate = self
         try? fetchedResultsController.performFetch()
 
-        BusinessInjector.ui
-            .settingsStore
+        settingsStore
             .blacklist
             .publisher
             .sink(receiveValue: { [weak self] _ in
@@ -47,11 +49,15 @@ class CoreDataContactListProvider<Entity: NSObject, BusinessEntity: NSObject>: N
             })
             .store(in: &subscriptions)
 
-        let userSettings: UserSettings = UserSettings.shared()
         Publishers.Merge(
             userSettings.publisher(for: \.hideStaleContacts).dropFirst().map { _ in () },
             userSettings.publisher(for: \.sortOrderFirstName).dropFirst().map { _ in () }
         )
+        // KVO delivers on the thread of the setter while holding the subscription's lock. `UserSettings` is also
+        // written off main (e.g. MDM applied by the work data fetch), and the snapshot ends up in a synchronous
+        // `UITableViewDiffableDataSource.apply(_:)`, which waits for main. With the main thread writing the same
+        // setting at that time (e.g. MDM applied after the license check) both threads deadlock.
+        .receive(on: DispatchQueue.main)
         .sink { [weak self] in
             self?.recreateFetchedResultsController()
         }

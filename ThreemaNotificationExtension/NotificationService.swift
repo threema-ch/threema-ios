@@ -575,6 +575,15 @@ final class NotificationService: UNNotificationServiceExtension {
         }
     }
 
+    private func reportRingingCallHangup(for payload: [String: String]) {
+        DDLogNotice("[Push] Hangup for the ringing call, waking the app to end it")
+        CXProvider.reportNewIncomingVoIPPushPayload(payload) { error in
+            if let error {
+                DDLogError("[Push] Hangup for the ringing call could not be reported: \(error)")
+            }
+        }
+    }
+
     private func logMemoryUsage() {
         let memoryTotal = ByteCountFormatter.string(
             fromByteCount: Int64(DeviceUtility.getTotalMemory()),
@@ -990,6 +999,23 @@ extension NotificationService: MessageProcessorDelegate {
             )
             
         case let message as VoIPCallHangupMessage:
+            // The suspended app is ringing for this call: wake it, it ends the call and records the missed call
+            if let identity = message.contactIdentity,
+               RingingCallRecord.isRinging(message.callID),
+               ThreemaEnvironment.supportsCallKit() {
+                let displayName = backgroundBusinessInjector.entityManager.entityFetcher.contactEntity(for: identity)?
+                    .displayName ?? identity
+
+                reportRingingCallHangup(for: [
+                    Constants.notificationExtensionHangup: identity,
+                    Constants.notificationExtensionCallerName: displayName,
+                    Constants.notificationExtensionCallID: String(message.callID.callID),
+                ])
+
+                onCompletion(self)
+                return
+            }
+
             CallSystemMessageHelper
                 .maybeAddMissedCallNotificationToConversation(
                     with: message,

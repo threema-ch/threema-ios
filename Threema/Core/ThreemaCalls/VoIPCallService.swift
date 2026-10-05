@@ -314,6 +314,13 @@ final class VoIPCallService {
                 "[Call:1to1:VoIPCallService] [cid=\(callID)]: State changed from \(oldValue) to  \(state)"
             )
             
+            if state.isUnansweredIncoming {
+                RingingCallRecord.setRinging(callID)
+            }
+            else if oldValue.isUnansweredIncoming {
+                RingingCallRecord.clear(callID)
+            }
+
             invalidateTimers(state: state)
             callViewController?.voIPCallStatusChanged(state: state, oldState: oldValue)
             handleLocalNotification()

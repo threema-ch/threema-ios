@@ -64,6 +64,30 @@ struct VoIPPushHandlerTests {
     }
 
     @Test
+    func forwardsHangupOfRingingCall() throws {
+        let spy = VoIPCallReportingSpy()
+        let handler = makeHandler(spy: spy)
+
+        var completionCalled = false
+        handler.report(dictionaryPayload: Self.hangupPayload) {
+            completionCalled = true
+        }
+
+        #expect(completionCalled)
+        #expect(spy.reportedCalls.isEmpty)
+        #expect(spy.cancelledCalls.isEmpty)
+
+        let hungUp = try #require(spy.hungUpCalls.first)
+        #expect(hungUp.callID.callID == 42)
+        #expect(hungUp.callPartnerIdentity == "ECHOECHO")
+        #expect(hungUp.callPartnerName == "Test Contact")
+
+        #expect(spy.followUpRunCount == 0)
+        handler.businessDidBecomeReady()
+        #expect(spy.followUpRunCount == 1)
+    }
+
+    @Test
     func reportsAndCancelsCallForPayloadWithNonStringValues() {
         let spy = VoIPCallReportingSpy()
         let handler = makeHandler(spy: spy)
@@ -171,6 +195,12 @@ struct VoIPPushHandlerTests {
         Constants.notificationExtensionCallID: "42",
     ]
 
+    private static let hangupPayload: [String: String] = [
+        Constants.notificationExtensionHangup: "ECHOECHO",
+        Constants.notificationExtensionCallerName: "Test Contact",
+        Constants.notificationExtensionCallID: "42",
+    ]
+
     private func makeHandler(
         spy: VoIPCallReportingSpy,
         bringUp: BringUpSpy? = nil,
@@ -199,7 +229,14 @@ private final class VoIPCallReportingSpy: VoIPCallReporting {
         let fromPush: Bool
     }
 
+    struct HungUpCall {
+        let callID: VoIPCallID
+        let callPartnerIdentity: String
+        let callPartnerName: String?
+    }
+
     private(set) var reportedCalls: [ReportedCall] = []
+    private(set) var hungUpCalls: [HungUpCall] = []
     private(set) var cancelledCalls: [String] = []
 
     /// How often the follow-up work handed back to the handler actually ran
@@ -221,6 +258,21 @@ private final class VoIPCallReportingSpy: VoIPCallReporting {
                 ringtoneSound: ringtoneSound,
                 fromPush: fromPush
             )
+        )
+
+        completion { [weak self] in
+            self?.followUpRunCount += 1
+        }
+    }
+
+    func ringingCallHungUpFromBackground(
+        with callID: VoIPCallID,
+        callPartnerIdentity: String,
+        callPartnerName: String?,
+        completion: @escaping (@escaping () -> Void) -> Void
+    ) {
+        hungUpCalls.append(
+            HungUpCall(callID: callID, callPartnerIdentity: callPartnerIdentity, callPartnerName: callPartnerName)
         )
 
         completion { [weak self] in

@@ -5,6 +5,28 @@ private final class DisableShareUINavigationItem: UINavigationItem {
     override func setRightBarButtonItems(_ items: [UIBarButtonItem]?, animated: Bool) {
         // forbidden to add anything to right
     }
+
+    // Block the title menu (dropdown next to the title), it offers share and export actions
+
+    override var style: UINavigationItem.ItemStyle {
+        get { super.style }
+        set { super.style = .navigator }
+    }
+
+    override var titleMenuProvider: (([UIMenuElement]) -> UIMenu?)? {
+        get { super.titleMenuProvider }
+        set { super.titleMenuProvider = nil }
+    }
+
+    override var documentProperties: UIDocumentProperties? {
+        get { super.documentProperties }
+        set { super.documentProperties = nil }
+    }
+
+    /// Sets our own right bar button items (e.g. close button), bypassing the block above
+    func setAllowedRightBarButtonItems(_ items: [UIBarButtonItem]?) {
+        super.setRightBarButtonItems(items, animated: false)
+    }
 }
 
 public final class ThreemaQLPreviewController: QLPreviewController {
@@ -36,10 +58,33 @@ public final class ThreemaQLPreviewController: QLPreviewController {
         
     var observations: [NSKeyValueObservation] = []
     
+    /// Registered only once, as `viewWillAppear` runs on every appearance (e.g. after a call screen was dismissed)
+    private var toolbarObservation: NSKeyValueObservation?
+
+    /// Observations for the child view controller QuickLook currently shows (e.g. zip file browser)
+    private var childObservations: [NSKeyValueObservation] = []
+
     var mdmSetup = MDMSetup()
 
     var disableShareButton = false
     
+    /// Called by our close button (see `showsOwnNavigationItemContent`). If `nil`, the controller dismisses itself.
+    public var onClose: (() -> Void)?
+
+    private lazy var disableShareCloseButton = UIBarButtonItem.closeButton(
+        target: self,
+        selector: #selector(closeButtonTapped)
+    )
+
+    /// Since iOS 27 QuickLook leaves the share-disabled navigation item empty, without a way to close the preview.
+    /// Thus we add the title and a close button ourselves.
+    private var showsOwnNavigationItemContent: Bool {
+        if #available(iOS 27.0, *) {
+            return disableShareButton
+        }
+        return false
+    }
+
     override public func viewDidLoad() {
         super.viewDidLoad()
         
@@ -47,6 +92,15 @@ public final class ThreemaQLPreviewController: QLPreviewController {
         
         if disableShareButton {
             navigationItem.setRightBarButton(UIBarButtonItem(), animated: false)
+        }
+
+        if showsOwnNavigationItemContent {
+            // Keeps the title in sync when the user changes to a different preview item
+            observations.append(
+                observe(\.currentPreviewItemIndex) { [weak self] _, _ in
+                    self?.updateDisableShareNavigationItem()
+                }
+            )
         }
     }
     
@@ -58,6 +112,55 @@ public final class ThreemaQLPreviewController: QLPreviewController {
 
         if disableShareButton {
             navigationController?.delegate = self
+        }
+
+        updateDisableShareNavigationItem()
+    }
+
+    override public func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        // QuickLook may set its title only once the preview item is loaded
+        updateDisableShareNavigationItem()
+    }
+
+    private func updateDisableShareNavigationItem() {
+        guard showsOwnNavigationItemContent else {
+            return
+        }
+
+        disableShareNavigationItem.title = currentItemTitle
+
+        if disableShareNavigationItem.rightBarButtonItems?.first !== disableShareCloseButton {
+            disableShareNavigationItem.setAllowedRightBarButtonItems([disableShareCloseButton])
+        }
+    }
+
+    /// QuickLook's own title, otherwise the title or file name of the current item
+    private var currentItemTitle: String? {
+        if let quickLookTitle = super.navigationItem.title, !quickLookTitle.isEmpty {
+            return quickLookTitle
+        }
+        guard let item = currentPreviewItem else {
+            return nil
+        }
+        if let title = item.previewItemTitle ?? nil, !title.isEmpty {
+            return title
+        }
+        return item.previewItemURL?.lastPathComponent
+    }
+
+    @objc private func closeButtonTapped() {
+        if let onClose {
+            onClose()
+            return
+        }
+
+        delegate?.previewControllerWillDismiss?(self)
+        dismiss(animated: true) { [weak self] in
+            guard let self else {
+                return
+            }
+            delegate?.previewControllerDidDismiss?(self)
         }
     }
         
@@ -73,8 +176,11 @@ public final class ThreemaQLPreviewController: QLPreviewController {
             navigationToolbar.isHidden = true
             /// Fires whenever QuickLook changes the toolbar visibility. Keeps it hidden
             /// for the lifetime of this controller.
-            let observation = navigationToolbar.observe(\.isHidden, changeHandler: observeNavigationToolbarHidden)
-            observations.append(observation)
+            if toolbarObservation == nil {
+                toolbarObservation = navigationToolbar.observe(\.isHidden) { [weak self] toolbar, change in
+                    self?.observeNavigationToolbarHidden(changed: toolbar, change: change)
+                }
+            }
         }
         
         // Since iOS 26, the share item has moved to the bottom toolbar. Since we cannot observe its visibility directly
@@ -114,38 +220,33 @@ extension ThreemaQLPreviewController: UINavigationControllerDelegate {
             return
         }
         
-        /// Fires when the navigation bar is shown or hidden (e.g. user taps the file).
-        /// QuickLook re-adds its buttons when the bar reappears, so we strip immediately
-        /// and once more after a short delay to catch any late additions.
-        observations.append(
+        // Replaces the previous child's observations, they are set up again if the user navigates back to it
+        childObservations = [
+            /// Fires when the navigation bar is shown or hidden (e.g. user taps the file).
+            /// QuickLook re-adds its buttons when the bar reappears, so we strip immediately
+            /// and once more after a short delay to catch any late additions.
             navigationController.navigationBar.observe(\.isHidden) { [weak self, weak viewController] _, _ in
                 self?.stripButtonsImmediatelyAndDelayed(from: viewController)
-            }
-        )
+            },
 
-        /// Fires when the user changes to a different preview item. QuickLook re-adds
-        /// its buttons for each new item, so we strip immediately and after a short delay.
-        observations.append(
+            /// Fires when the user changes to a different preview item. QuickLook re-adds
+            /// its buttons for each new item, so we strip immediately and after a short delay.
             qlPreviewViewController.observe(\.currentPreviewItemIndex) { [weak self, weak viewController] _, _ in
                 self?.stripButtonsImmediatelyAndDelayed(from: viewController)
-            }
-        )
+            },
 
-        /// Fires when the navigation bar resizes (e.g. on device rotation).
-        /// QuickLook may re-add buttons after a layout change.
-        observations.append(
+            /// Fires when the navigation bar resizes (e.g. on device rotation).
+            /// QuickLook may re-add buttons after a layout change.
             navigationController.navigationBar.observe(\.bounds) { [weak self, weak viewController] _, _ in
                 self?.stripButtons(from: viewController)
-            }
-        )
+            },
 
-        /// Fires when the child view controller's view resizes (e.g. on device rotation).
-        /// Ensures buttons are stripped after any layout pass on the child VC.
-        observations.append(
+            /// Fires when the child view controller's view resizes (e.g. on device rotation).
+            /// Ensures buttons are stripped after any layout pass on the child VC.
             viewController.view.observe(\.bounds) { [weak self, weak viewController] _, _ in
                 self?.stripButtons(from: viewController)
-            }
-        )
+            },
+        ]
     }
     
     /// Resets the preview to the first item after the child VC finishes appearing,

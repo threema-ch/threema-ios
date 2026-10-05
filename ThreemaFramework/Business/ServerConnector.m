@@ -1203,6 +1203,10 @@ struct pktExtension {
 }
 
 - (void)sendEchoRequest {
+    [self sendEchoRequestWithTimeout:kEchoRequestTimeout];
+}
+
+- (void)sendEchoRequestWithTimeout:(NSTimeInterval)timeout {
     if ([serverConnectorConnectionState connectionState] != ConnectionStateLoggedIn)
         return;
     
@@ -1213,7 +1217,7 @@ struct pktExtension {
     [self sendPayloadWithType:PLTYPE_ECHO_REQUEST data:[NSData dataWithBytes:&lastSentEchoSeq length:sizeof(lastSentEchoSeq)]];
     
     id<SocketProtocol> curSocket = socket;
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, kEchoRequestTimeout * NSEC_PER_SEC), dispatch_get_main_queue(), ^(void){
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(timeout * NSEC_PER_SEC)), dispatch_get_main_queue(), ^(void){
         if (curSocket == socket && lastRcvdEchoSeq < lastSentEchoSeq) {
             DDLogInfo(@"No reply to echo payload; disconnecting");
             [socket disconnect];
@@ -1418,7 +1422,23 @@ struct pktExtension {
 
 - (void)networkStatusDidChange:(NSNotification *)notice
 {
-    if ([reachabilityWrapper didLastConnectionTypeChange] && ([reachabilityWrapper isReachabilityUnavailable] || [serverConnectorConnectionState connectionState] == ConnectionStateDisconnected || [serverConnectorConnectionState connectionState] == ConnectionStateDisconnecting)) {
+    if (![reachabilityWrapper didLastConnectionTypeChange]) {
+        return;
+    }
+
+    ConnectionState state = [serverConnectorConnectionState connectionState];
+    if (state == ConnectionStateLoggedIn && ![reachabilityWrapper isReachabilityUnavailable]) {
+        // The connection may still use the previous network, check it now instead of waiting for the next echo.
+        // Slow connections get more time (`lastRtt` is -1 if unknown), at most the regular timeout.
+        NSTimeInterval timeout = MIN(MAX(kNetworkChangeEchoRequestTimeout, self.lastRtt * 4), kEchoRequestTimeout);
+        DDLogNotice(@"Network type changed - checking connection (timeout %.1f s)", timeout);
+        dispatch_async(socketQueue, ^{
+            [self sendEchoRequestWithTimeout:timeout];
+        });
+        return;
+    }
+
+    if ([reachabilityWrapper isReachabilityUnavailable] || state == ConnectionStateDisconnected || state == ConnectionStateDisconnecting) {
         if ([AppGroup getCurrentType] != AppGroupTypeNotificationExtension) {
             DDLogNotice(@"Internet status is or was unavailable - forcing reconnect");
             [self reconnect];
@@ -1822,6 +1842,10 @@ struct pktExtension {
         else if (![AppGroup amIActive]) {
                 [AppGroup setMeActive];
         }
+    }
+    else if (state == ConnectionStateDisconnected && isAppInBackground && [AppGroup getCurrentType] == AppGroupTypeApp && connectionInitiators.count == 0) {
+        // Hand over to the extensions, e.g. after a call ended in the background
+        [AppGroup setActive:NO forType:AppGroupTypeApp];
     }
 
     dispatch_sync(queueConnectionStateDelegate, ^{

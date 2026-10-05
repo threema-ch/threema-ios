@@ -277,6 +277,8 @@ final class PasscodeCoordinator: NSObject, Coordinator {
         let wasLocked = passcodeWindow != nil
 
         passcodeWindow?.isHidden = true
+        // Must happen before releasing the window, see `UIWindow.removeSecure()`
+        passcodeWindow?.removeSecure()
         passcodeWindow = nil
         setAppLocked(false)
         delegate?.passcodeCoordinatorDidAuthenticate(

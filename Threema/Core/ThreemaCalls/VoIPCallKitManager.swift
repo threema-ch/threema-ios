@@ -645,8 +645,12 @@ extension VoIPCallKitManager: CXProviderDelegate {
             ) {
                 ServerConnector.shared().connectWait(initiator: .threemaCall)
 
-                let isDeclineWhileRinging = VoIPCallStateManager.shared.currentCallState() == .incomingRinging
-                    || isDeclineOfReportedCall
+                // The reported call only counts as long as no call is running: when answered before the offer was
+                // processed, the offer reports the call again after the answer cleared it
+                let currentState = VoIPCallStateManager.shared.currentCallState()
+                let isDeclineWhileRinging = currentState == .receivedOffer ||
+                    currentState == .incomingRinging ||
+                    (currentState == .idle && isDeclineOfReportedCall)
 
                 let userAction =
                     if isDeclineWhileRinging {

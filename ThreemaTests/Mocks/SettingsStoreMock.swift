@@ -1,3 +1,4 @@
+import Combine
 import Foundation
 import ThreemaProtocols
 @testable import ThreemaFramework
@@ -21,7 +22,7 @@ final class SettingsStoreMock: SettingsStoreProtocol, SettingsStoreInternalProto
 
     var syncContacts = true
     
-    var blacklist = Set<String>()
+    @Published var blacklist = Set<String>()
     
     var syncExclusionList = [String]()
     

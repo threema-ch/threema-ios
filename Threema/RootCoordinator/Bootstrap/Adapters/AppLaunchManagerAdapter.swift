@@ -11,6 +11,7 @@ protocol AppLaunchManagerProtocol: AnyObject {
     var hasPreexistingDatabaseFile: Bool { get }
     var isDatabaseEncrypted: Bool { get }
     var shouldDirectlyShowSetupWizard: Bool { get }
+    var isAppMigrationRequired: Bool { get }
     var isBusinessApp: Bool { get }
     
     func runSetupForApplicationDelegateInitialization()
@@ -50,6 +51,10 @@ final class AppLaunchManagerAdapter: AppLaunchManagerProtocol {
     
     var shouldDirectlyShowSetupWizard: Bool {
         AppSetup.shouldDirectlyShowSetupWizard
+    }
+    
+    var isAppMigrationRequired: Bool {
+        manager.isAppMigrationRequired
     }
     
     var isBusinessApp: Bool {

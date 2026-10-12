@@ -253,6 +253,7 @@ final class AppLaunchSequenceManager {
             case let .ready(remoteSecretManager, keychainManager):
                 remoteSecretFailureCount = 0
                 return await continueAfterRemoteSecret(
+                    resolver: resolver,
                     remoteSecretManager: remoteSecretManager,
                     keychainManager: keychainManager
                 )
@@ -324,6 +325,7 @@ final class AppLaunchSequenceManager {
                 remoteSecretManager: remoteSecretManager
             )
             return await continueAfterRemoteSecret(
+                resolver: resolver,
                 remoteSecretManager: remoteSecretManager,
                 keychainManager: keychainManager
             )
@@ -336,6 +338,7 @@ final class AppLaunchSequenceManager {
     // MARK: - Private
 
     private func continueAfterRemoteSecret(
+        resolver: any RemoteSecretResolving,
         remoteSecretManager: any RemoteSecretManagerProtocol,
         keychainManager: any KeychainManagerProtocol
     ) async -> LaunchResult {
@@ -347,6 +350,9 @@ final class AppLaunchSequenceManager {
             let businessInjector = BusinessInjector(remoteSecretManager: remoteSecretManager)
             
             try await SetupApp.runAppMigrationIfNeeded(businessInjector: businessInjector)
+            
+            // TODO: (IOS-6555) Validate if this is the correct point for the sync
+            try resolver.syncKeychain(with: keychainManager)
 
             let passcodeLock = KKPasscodeLockAdapter()
             

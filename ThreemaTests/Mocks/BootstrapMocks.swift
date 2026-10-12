@@ -14,6 +14,7 @@ final class AppLaunchManagerMock: AppLaunchManagerProtocol {
     var hasPreexistingDatabaseFile = false
     var isDatabaseEncrypted = false
     var shouldDirectlyShowSetupWizard = false
+    var isAppMigrationRequired = false
     var isBusinessApp = false
 
     private(set) var runPostOnboardingSetupCallCount = 0
@@ -221,6 +222,10 @@ final class RemoteSecretResolvingMock: RemoteSecretResolving {
         keychainManager: any KeychainManagerProtocol
     ) {
         throw RemoteSecretResolver.ResolverError.missingInfo
+    }
+    
+    func syncKeychain(with keychainManager: any KeychainManagerProtocol) throws {
+        throw RemoteSecretResolver.ResolverError.invalidFlow
     }
 }
 

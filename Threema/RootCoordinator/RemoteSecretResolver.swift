@@ -70,6 +70,13 @@ protocol RemoteSecretResolving: AnyObject {
         remoteSecretManager: any RemoteSecretManagerProtocol,
         keychainManager: any KeychainManagerProtocol
     )
+    
+    /// Sync identity and license between the in-memory stores and the keychain
+    ///
+    /// - Warning: This might be removed with IOS-6555
+    ///
+    /// - Parameter keychainManager: Keychain manager to use for syncing
+    func syncKeychain(with keychainManager: KeychainManagerProtocol) throws
 }
 
 // MARK: - RemoteSecretResolver
@@ -356,8 +363,9 @@ final class RemoteSecretResolver: RemoteSecretResolving {
 
     // MARK: - Keychain Sync
 
-    /// Syncs identity and license between the in-memory stores and the keychain.
-    private func syncKeychain(with keychainManager: KeychainManagerProtocol) throws {
+    // TODO: (IOS-6555) Check if we can make this private again or move it to another place
+    /// Sync identity and license between the in-memory stores and the keychain.
+    func syncKeychain(with keychainManager: KeychainManagerProtocol) throws {
         if flavorService.isBusinessApp {
             // If we have a license and it is valid, we store it in the keychain.
             // If not we try to load the one stored in keychain.
@@ -369,8 +377,16 @@ final class RemoteSecretResolver: RemoteSecretResolving {
             }
             else {
                 DDLogError("[RemoteSecretResolver] No license, neither in LicenseStore nor in keychain")
-                assertionFailure("This should not happen")
-                throw ResolverError.noLicenseFound
+
+                // This can happen if the user upgraded form a version before the license migration to Keychain in 7.0
+                // (actually 6.9, but that was never publicly released).
+                // As an immediate workaround we don't throw an error if an app migration is still pending. In the
+                // longterm we need to change the time when the sync is called (IOS-6555)
+                // TODO: (IOS-6555) Remove if after improving calling order
+                if appLaunchManager.isAppMigrationRequired == false {
+                    assertionFailure("This should normally not happen")
+                    throw ResolverError.noLicenseFound
+                }
             }
         }
 

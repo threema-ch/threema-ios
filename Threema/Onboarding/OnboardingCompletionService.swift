@@ -110,7 +110,7 @@ final class OnboardingCompletionService {
     /// Links a phone number to the identity.
     /// - Parameter phoneNumber: The phone number to link (will be normalized), or nil to skip
     /// - Returns: True if linking was performed, false if skipped
-    /// - Throws: Error if linking fails
+    /// - Throws: Error if linking fails, except on (Custom-) OnPrem where server errors are logged and ignored
     @discardableResult
     func linkPhoneNumber(_ phoneNumber: String?) async throws -> Bool {
         guard let phoneNumber, !phoneNumber.isEmpty else {
@@ -129,7 +129,17 @@ final class OnboardingCompletionService {
             return false
         }
         
-        return try await bootstrapServerAPI.linkMobileNo(normalizedNumber)
+        do {
+            return try await bootstrapServerAPI.linkMobileNo(normalizedNumber)
+        }
+        catch {
+            // OnPrem servers may not support phone linking, this must not block finishing the onboarding
+            guard TargetManager.isOnPrem else {
+                throw error
+            }
+            DDLogError("Linking phone number failed on (Custom-) OnPrem, continuing onboarding: \(error)")
+            return false
+        }
     }
     
     /// Enables Threema Safe with the provided configuration.

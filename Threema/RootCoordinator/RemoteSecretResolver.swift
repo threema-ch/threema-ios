@@ -73,10 +73,17 @@ protocol RemoteSecretResolving: AnyObject {
     
     /// Sync identity and license between the in-memory stores and the keychain
     ///
-    /// - Warning: This might be removed with IOS-6555
+    /// - Warning: This might be removed with IOS-6584
     ///
     /// - Parameter keychainManager: Keychain manager to use for syncing
     func syncKeychain(with keychainManager: KeychainManagerProtocol) throws
+    
+    /// Sync identity between the in-memory stores and the keychain
+    ///
+    /// - Warning: This might be removed with IOS-6584
+    ///
+    /// - Parameter keychainManager: Keychain manager to use for syncing
+    func syncIdentity(with keychainManager: KeychainManagerProtocol) throws
 }
 
 // MARK: - RemoteSecretResolver
@@ -203,7 +210,6 @@ final class RemoteSecretResolver: RemoteSecretResolving {
         keychainManager: any KeychainManagerProtocol
     ) {
         let keychainManager = KeychainManager(remoteSecretManager: remoteSecretManager)
-        try syncKeychain(with: keychainManager)
         return (remoteSecretManager, keychainManager)
     }
 
@@ -286,7 +292,6 @@ final class RemoteSecretResolver: RemoteSecretResolving {
         let remoteSecretManager = try await initializeRemoteSecretManager()
         
         let keychainManager = KeychainManager(remoteSecretManager: remoteSecretManager)
-        try syncKeychain(with: keychainManager)
 
         return .ready(remoteSecretManager: remoteSecretManager, keychainManager: keychainManager)
     }
@@ -363,33 +368,15 @@ final class RemoteSecretResolver: RemoteSecretResolving {
 
     // MARK: - Keychain Sync
 
-    // TODO: (IOS-6555) Check if we can make this private again or move it to another place
+    // TODO: (IOS-6584) Check if we can make this private again or move it to another place
     /// Sync identity and license between the in-memory stores and the keychain.
     func syncKeychain(with keychainManager: KeychainManagerProtocol) throws {
-        if flavorService.isBusinessApp {
-            // If we have a license and it is valid, we store it in the keychain.
-            // If not we try to load the one stored in keychain.
-            if licenseStore.isValid() || ProcessInfoHelper.isRunningForScreenshots {
-                try storeLicense(using: keychainManager)
-            }
-            else if let license = try keychainManager.loadLicense() {
-                updateLicenseStore(with: license)
-            }
-            else {
-                DDLogError("[RemoteSecretResolver] No license, neither in LicenseStore nor in keychain")
-
-                // This can happen if the user upgraded form a version before the license migration to Keychain in 7.0
-                // (actually 6.9, but that was never publicly released).
-                // As an immediate workaround we don't throw an error if an app migration is still pending. In the
-                // longterm we need to change the time when the sync is called (IOS-6555)
-                // TODO: (IOS-6555) Remove if after improving calling order
-                if appLaunchManager.isAppMigrationRequired == false {
-                    assertionFailure("This should normally not happen")
-                    throw ResolverError.noLicenseFound
-                }
-            }
-        }
-
+        // TODO: (IOS-6584) Check if we can change the order here
+        try syncLicense(with: keychainManager)
+        try syncIdentity(with: keychainManager)
+    }
+    
+    func syncIdentity(with keychainManager: KeychainManagerProtocol) throws {
         // If we have a (new) identity and it is valid, we store it in the keychain.
         // If not we try to load the one stored in keychain
         if myIdentityStore.isValidIdentity {
@@ -402,6 +389,34 @@ final class RemoteSecretResolver: RemoteSecretResolving {
             assertionFailure("No identity in store or keychain")
             DDLogError("[RemoteSecretResolver] No identity, neither in myIdentityStore nor in keychain")
             throw ResolverError.noIdentityFound
+        }
+    }
+    
+    private func syncLicense(with keychainManager: KeychainManagerProtocol) throws {
+        guard flavorService.isBusinessApp else {
+            return
+        }
+        
+        // If we have a license and it is valid, we store it in the keychain.
+        // If not we try to load the one stored in keychain.
+        if licenseStore.isValid() || ProcessInfoHelper.isRunningForScreenshots {
+            try storeLicense(using: keychainManager)
+        }
+        else if let license = try keychainManager.loadLicense() {
+            updateLicenseStore(with: license)
+        }
+        else {
+            DDLogError("[RemoteSecretResolver] No license, neither in LicenseStore nor in keychain")
+            
+            // This can happen if the user upgraded form a version before the license migration to Keychain in 7.0
+            // (actually 6.9, but that was never publicly released).
+            // As an immediate workaround we don't throw an error if an app migration is still pending. In the
+            // longterm we need to change the time when the sync is called (IOS-6584)
+            // TODO: (IOS-6584) Remove if after improving calling order during onboarding
+            if appLaunchManager.isAppMigrationRequired == false {
+                assertionFailure("This should normally not happen")
+                throw ResolverError.noLicenseFound
+            }
         }
     }
 

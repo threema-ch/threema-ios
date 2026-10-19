@@ -429,6 +429,7 @@ final class OnboardingCoordinator: Coordinator {
         let (remoteSecretManager, keychainManager) = try resolver.continueAfterFetch(
             remoteSecretManager: fetchedRSManager
         )
+        try resolver.syncKeychain(with: keychainManager)
         return (remoteSecretManager, keychainManager)
     }
 

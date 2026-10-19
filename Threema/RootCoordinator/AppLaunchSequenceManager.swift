@@ -345,13 +345,18 @@ final class AppLaunchSequenceManager {
         RemoteSecretProvider.setRemoteSecretManager(remoteSecretManager)
 
         do {
+            // The identity is used for certain app migrations, thus we ensure it is synced. On the other hand, the
+            // license might be migrated (e.g. the migration to Keychain in 7.0 (actually 6.9, but that was never
+            // publicly released)), thus we only sync it after the migrations
+            try resolver.syncIdentity(with: keychainManager)
+            
             try await SetupApp.runDatabaseMigrationIfNeeded(remoteSecretManager: remoteSecretManager)
             
             let businessInjector = BusinessInjector(remoteSecretManager: remoteSecretManager)
             
             try await SetupApp.runAppMigrationIfNeeded(businessInjector: businessInjector)
             
-            // TODO: (IOS-6555) Validate if this is the correct point for the sync
+            // Sync license and to ensure everything runs flawless we sync the identity one more time
             try resolver.syncKeychain(with: keychainManager)
 
             let passcodeLock = KKPasscodeLockAdapter()

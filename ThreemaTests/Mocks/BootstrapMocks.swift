@@ -227,6 +227,10 @@ final class RemoteSecretResolvingMock: RemoteSecretResolving {
     func syncKeychain(with keychainManager: any KeychainManagerProtocol) throws {
         throw RemoteSecretResolver.ResolverError.invalidFlow
     }
+    
+    func syncIdentity(with keychainManager: any KeychainManagerProtocol) throws {
+        throw RemoteSecretResolver.ResolverError.invalidFlow
+    }
 }
 
 // MARK: - OnboardingCompletingMock

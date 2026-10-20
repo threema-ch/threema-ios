@@ -25,7 +25,7 @@ impl ChunkedXChaCha20Poly1305Cipher {
     #[inline]
     fn new(
         key: &[u8; chacha20::KEY_LENGTH],
-        nonce: &[u8; chacha20::NONCE_LENGTH],
+        nonce: &[u8; chacha20::EXTENDED_NONCE_LENGTH],
         associated_data: &[u8],
     ) -> Self {
         use libthreema_dependencies::crypto::poly1305::ChunkedPoly1305XChaCha20 as _;
@@ -88,7 +88,7 @@ impl ChunkedXChaCha20Poly1305Encryptor {
     #[must_use]
     pub fn new(
         key: &[u8; chacha20::KEY_LENGTH],
-        nonce: &[u8; chacha20::NONCE_LENGTH],
+        nonce: &[u8; chacha20::EXTENDED_NONCE_LENGTH],
         associated_data: &[u8],
     ) -> Self {
         Self(ChunkedXChaCha20Poly1305Cipher::new(key, nonce, associated_data))
@@ -134,7 +134,7 @@ impl ChunkedXChaCha20Poly1305Decryptor {
     #[must_use]
     pub fn new(
         key: &[u8; chacha20::KEY_LENGTH],
-        nonce: &[u8; chacha20::NONCE_LENGTH],
+        nonce: &[u8; chacha20::EXTENDED_NONCE_LENGTH],
         associated_data: &[u8],
     ) -> Self {
         Self(ChunkedXChaCha20Poly1305Cipher::new(key, nonce, associated_data))
@@ -189,7 +189,7 @@ struct ChunkedXSalsa20Poly1305Cipher {
 }
 impl ChunkedXSalsa20Poly1305Cipher {
     #[inline]
-    fn new(key: &[u8; salsa20::KEY_LENGTH], nonce: &[u8; salsa20::NONCE_LENGTH]) -> Self {
+    fn new(key: &[u8; salsa20::KEY_LENGTH], nonce: &[u8; salsa20::EXTENDED_NONCE_LENGTH]) -> Self {
         let mut cipher = salsa20::XSalsa20::new(key.into(), nonce.into());
 
         // Derive Poly1305 key from the first 32 bytes of the keystream.
@@ -219,7 +219,7 @@ impl ChunkedXSalsa20Poly1305Encryptor {
     /// Create a new chunked XSalsa20 encryptor for the given `key` and `nonce`.
     #[inline]
     #[must_use]
-    pub fn new(key: &[u8; salsa20::KEY_LENGTH], nonce: &[u8; salsa20::NONCE_LENGTH]) -> Self {
+    pub fn new(key: &[u8; salsa20::KEY_LENGTH], nonce: &[u8; salsa20::EXTENDED_NONCE_LENGTH]) -> Self {
         Self(ChunkedXSalsa20Poly1305Cipher::new(key, nonce))
     }
 
@@ -256,7 +256,7 @@ impl ChunkedXSalsa20Poly1305Decryptor {
     /// Create a new chunked XSalsa20 decryptor for the given `key` and `nonce`.
     #[inline]
     #[must_use]
-    pub fn new(key: &[u8; salsa20::KEY_LENGTH], nonce: &[u8; salsa20::NONCE_LENGTH]) -> Self {
+    pub fn new(key: &[u8; salsa20::KEY_LENGTH], nonce: &[u8; salsa20::EXTENDED_NONCE_LENGTH]) -> Self {
         Self(ChunkedXSalsa20Poly1305Cipher::new(key, nonce))
     }
 
@@ -314,7 +314,7 @@ mod tests {
             plaintext: Vec<u8>,
             associated_data: Vec<u8>,
             key: [u8; chacha20::KEY_LENGTH],
-            nonce: [u8; chacha20::NONCE_LENGTH],
+            nonce: [u8; chacha20::EXTENDED_NONCE_LENGTH],
             reference_ciphertext: Vec<u8>,
             reference_tag: [u8; chacha20::TAG_LENGTH],
         }
@@ -324,7 +324,7 @@ mod tests {
                 let plaintext = vec![0; plaintext_length];
                 let associated_data = vec![0; associated_data_length];
                 let key = [0xee_u8; chacha20::KEY_LENGTH];
-                let nonce = [0xaa_u8; chacha20::NONCE_LENGTH];
+                let nonce = [0xaa_u8; chacha20::EXTENDED_NONCE_LENGTH];
 
                 let (reference_ciphertext, reference_tag): (_, [u8; chacha20::TAG_LENGTH]) = {
                     let mut buffer = plaintext.clone();
@@ -511,7 +511,7 @@ mod tests {
         struct TestCase {
             plaintext: Vec<u8>,
             key: [u8; salsa20::KEY_LENGTH],
-            nonce: [u8; salsa20::NONCE_LENGTH],
+            nonce: [u8; salsa20::EXTENDED_NONCE_LENGTH],
             reference_ciphertext: Vec<u8>,
             reference_tag: [u8; salsa20::TAG_LENGTH],
         }
@@ -520,7 +520,7 @@ mod tests {
             fn new(plaintext_length: usize) -> Self {
                 let plaintext = vec![0; plaintext_length];
                 let key = [0xee_u8; salsa20::KEY_LENGTH];
-                let nonce = [0xaa_u8; salsa20::NONCE_LENGTH];
+                let nonce = [0xaa_u8; salsa20::EXTENDED_NONCE_LENGTH];
 
                 let (reference_ciphertext, reference_tag): (_, [u8; salsa20::TAG_LENGTH]) = {
                     let mut buffer = plaintext.clone();
@@ -610,7 +610,7 @@ mod tests {
                     .decode(b"2021222324252627")
                     .expect("plaintext should be hex encoded"),
                 key: [0; salsa20::KEY_LENGTH],
-                nonce: [0; salsa20::NONCE_LENGTH],
+                nonce: [0; salsa20::EXTENDED_NONCE_LENGTH],
                 reference_ciphertext: HEXLOWER_PERMISSIVE
                     .decode(b"e61f99dcdaa0e80b")
                     .expect("ciphertext should be hex encoded"),

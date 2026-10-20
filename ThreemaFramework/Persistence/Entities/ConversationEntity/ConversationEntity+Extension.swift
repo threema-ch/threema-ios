@@ -9,6 +9,17 @@ extension ConversationEntity {
     @objc(ConversationVisibility) public enum Visibility: Int {
         case `default`, archived, pinned
     }
+    
+    public enum SpamReportingState: Int {
+        /// Default state
+        case open = 0
+        
+        /// User selected not spam
+        case notSpam
+        
+        /// Conversation was reported as spam
+        case reported
+    }
 
     @objc public var isGroup: Bool {
         groupID != nil

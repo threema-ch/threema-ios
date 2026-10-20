@@ -2,7 +2,6 @@
 use core::mem;
 use std::collections::{HashMap, HashSet, hash_map::Entry};
 
-use const_format::formatcp;
 use libthreema_macros::{DebugVariantNames, Name, VariantNames};
 use tracing::{debug, error, info, warn};
 
@@ -240,10 +239,10 @@ impl State {
     ) -> Result<(Self, ContactsLookupLoop), CspE2eProtocolError> {
         // Ensure the caller provided the response
         let Some(response) = state.response else {
-            return Err(CspE2eProtocolError::InvalidState(formatcp!(
+            return Err(CspE2eProtocolError::ContractViolation(format!(
                 "{} result was not provided for '{}' state",
                 ContactsLookupResponse::NAME,
-                State::REQUEST_IDENTITIES,
+                Self::REQUEST_IDENTITIES,
             )));
         };
 
@@ -365,17 +364,17 @@ impl ContactsLookupSubtask {
     ) -> Result<ContactsLookupLoop, CspE2eProtocolError> {
         let result = match mem::replace(
             &mut self.state,
-            State::Error(CspE2eProtocolError::InvalidState(formatcp!(
+            State::Error(CspE2eProtocolError::ContractViolation(format!(
                 "{} in a transitional state",
-                ContactsLookupSubtask::NAME
+                Self::NAME
             ))),
         ) {
             State::Error(error) => Err(error),
             State::Init(state) => State::poll_init(context, state),
             State::RequestIdentities(state) => State::poll_request(context, state),
-            State::Done => Err(CspE2eProtocolError::InvalidState(formatcp!(
+            State::Done => Err(CspE2eProtocolError::ContractViolation(format!(
                 "{} already done",
-                ContactsLookupSubtask::NAME
+                Self::NAME
             ))),
         };
         match result {
@@ -395,7 +394,7 @@ impl ContactsLookupSubtask {
     #[tracing::instrument(skip_all, fields(?self))]
     pub(crate) fn response(&mut self, response: ContactsLookupResponse) -> Result<(), CspE2eProtocolError> {
         let State::RequestIdentities(state) = &mut self.state else {
-            return Err(CspE2eProtocolError::InvalidState(formatcp!(
+            return Err(CspE2eProtocolError::ContractViolation(format!(
                 "Must be in '{}' state",
                 State::REQUEST_IDENTITIES
             )));

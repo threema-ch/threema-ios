@@ -1,4 +1,5 @@
-/build
-/node_modules
-**/target
+/.var/
+/build/
+/node_modules/
+**/target/
 rustc-ice-*

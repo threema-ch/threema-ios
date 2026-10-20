@@ -11,7 +11,7 @@ struct PollProviderTests {
     // MARK: - getMany(batchIndex:) tests
 
     @Test func `GetMany returns an empty array when the database is empty`() async throws {
-        let pollsInDB = entityManager.entityFetcher.ballotEntitiesInContactOrGroupConversations()
+        let pollsInDB = try entityManager.entityFetcher.ballotEntitiesInContactOrGroupConversations()
         #expect(pollsInDB.isEmpty)
 
         let sut = makeSUT()
@@ -63,7 +63,7 @@ struct PollProviderTests {
         let poll = try #require(polls.first)
 
         // `summaryVotesBallot` has choices ["Yes", "No"] with 3 and 1 votes respectively
-        #expect(poll.votes == .summary([0: 3, 1: 1]))
+        #expect(poll.votes == .summary(PollVotesSummary(summary: [0: 3, 1: 1], userChoices: Set())))
     }
 
     @Test func `GetMany maps a poll with detailed votes`() async throws {
@@ -192,7 +192,7 @@ struct PollProviderTests {
 
         let invalidBatchIndex = UInt64(Int.max / batchSize) + 1
 
-        let error = ProviderError.InvalidParameter("Invalid Parameter batchIndex too large for batchSize \(batchSize)")
+        let error = ProviderError.ConversionError("Invalid Parameter batchIndex too large for batchSize \(batchSize)")
 
         #expect(throws: error) {
             _ = try sut.getMany(batchIndex: invalidBatchIndex)
@@ -234,7 +234,7 @@ struct PollProviderTests {
 
         try sut.add(polls: [])
 
-        #expect(entityManager.entityFetcher.ballotEntitiesInContactOrGroupConversations().isEmpty)
+        #expect(try entityManager.entityFetcher.ballotEntitiesInContactOrGroupConversations().isEmpty)
     }
 
     @Test func `Add persists a poll in a contact conversation`() async throws {
@@ -510,7 +510,7 @@ struct PollProviderTests {
         #expect(selectedChoiceIDs(for: PollProviderTests.firstVoter, in: ballot).isEmpty)
     }
 
-    @Test func `Add skips voter validation for summary votes`() async throws {
+    @Test func `Add skips voter validation for summary votes with user choices`() async throws {
         addContactConversation()
 
         let pollID: LibthreemaPollID = 1
@@ -522,7 +522,7 @@ struct PollProviderTests {
                 PollChoice(id: 0, description: "Yes"),
                 PollChoice(id: 1, description: "No"),
             ],
-            votes: .summary([0: 3, 1: 1])
+            votes: .summary(PollVotesSummary(summary: [0: 3, 1: 1], userChoices: [1]))
         )
 
         let sut = makeSUT()
@@ -535,6 +535,23 @@ struct PollProviderTests {
         #expect(ballot.displayMode?.intValue == Int(PollDisplayMode.summary.rawValue))
 
         #expect(totalVotes(in: ballot) == [0: 3, 1: 1])
+
+        // Test user choices in Core Data objects and if converted into LibthreemaPoll
+        let choicesWithResult = try #require(ballot.choices?.filter({ $0.result != nil }))
+        let userChoices = Set(
+            choicesWithResult.filter(
+                { $0.result!.contains(where: { $0.participantID == PollProviderTests.userIdentity }) }
+            ).map(\.id.uint32Value)
+        )
+        #expect(userChoices.count == 1)
+        #expect(userChoices.first == 1)
+
+        let resultPoll = try LibthreemaPoll(
+            ballotEntity: ballot,
+            entityManager: entityManager,
+            userIdentity: ThreemaIdentity(PollProviderTests.userIdentity)
+        )
+        #expect(resultPoll.votes == .summary(PollVotesSummary(summary: [0: 3, 1: 1], userChoices: [1])))
 
         // The conversation has no contact created for any voter, confirming validation was skipped
         #expect(entityManager.entityFetcher.contactEntity(for: PollProviderTests.secondVoter) == nil)
@@ -552,7 +569,7 @@ struct PollProviderTests {
                 PollChoice(id: 0, description: "Yes"),
                 PollChoice(id: 1, description: "No"),
             ],
-            votes: .summary([0: 5, 1: 2])
+            votes: .summary(PollVotesSummary(summary: [0: 5, 1: 2], userChoices: []))
         )
 
         let sut = makeSUT()
@@ -576,7 +593,7 @@ struct PollProviderTests {
                 PollChoice(id: 0, description: "Yes"),
                 PollChoice(id: 1, description: "No"),
             ],
-            votes: .summary([0: 5, 1: 2, 99: 7])
+            votes: .summary(PollVotesSummary(summary: [0: 5, 1: 2, 99: 7], userChoices: []))
         )
 
         let sut = makeSUT()
@@ -605,7 +622,7 @@ struct PollProviderTests {
 
         #expect(entityManager.entityFetcher.ballotEntity(for: firstID.littleEndianData) != nil)
         #expect(entityManager.entityFetcher.ballotEntity(for: secondID.littleEndianData) != nil)
-        #expect(entityManager.entityFetcher.ballotEntitiesInContactOrGroupConversations().count == 2)
+        #expect(try entityManager.entityFetcher.ballotEntitiesInContactOrGroupConversations().count == 2)
     }
 
     @Test func `Add throws when the contact conversation does not exist`() async throws {
@@ -615,12 +632,12 @@ struct PollProviderTests {
 
         let sut = makeSUT()
 
-        let expectedError = ProviderError.InvalidParameter("No conversation for contact \(PollProviderTests.firstVoter)")
+        let expectedError = ProviderError.ConversionError("No conversation for contact \(PollProviderTests.firstVoter)")
         #expect(throws: expectedError) {
             try sut.add(polls: [poll])
         }
 
-        #expect(entityManager.entityFetcher.ballotEntitiesInContactOrGroupConversations().isEmpty)
+        #expect(try entityManager.entityFetcher.ballotEntitiesInContactOrGroupConversations().isEmpty)
     }
 
     @Test func `Add throws when the group conversation does not exist`() async throws {
@@ -634,12 +651,12 @@ struct PollProviderTests {
 
         let sut = makeSUT()
 
-        let expectedError = ProviderError.InvalidParameter("No conversation for group \(groupIdentity)")
+        let expectedError = ProviderError.ConversionError("No conversation for group \(groupIdentity)")
         #expect(throws: expectedError) {
             try sut.add(polls: [poll])
         }
 
-        #expect(entityManager.entityFetcher.ballotEntitiesInContactOrGroupConversations().isEmpty)
+        #expect(try entityManager.entityFetcher.ballotEntitiesInContactOrGroupConversations().isEmpty)
     }
 
     @Test func `Add throws when the conversation is a distribution list`() async throws {
@@ -649,12 +666,12 @@ struct PollProviderTests {
 
         let sut = makeSUT()
 
-        let expectedError = ProviderError.InvalidParameter("Polls in distribution lists are not supported")
+        let expectedError = ProviderError.ConversionError("Polls in distribution lists are not supported")
         #expect(throws: expectedError) {
             try sut.add(polls: [poll])
         }
 
-        #expect(entityManager.entityFetcher.ballotEntitiesInContactOrGroupConversations().isEmpty)
+        #expect(try entityManager.entityFetcher.ballotEntitiesInContactOrGroupConversations().isEmpty)
     }
 
     @Test func `Add throws when a poll with the same id already exists`() async throws {
@@ -668,13 +685,13 @@ struct PollProviderTests {
 
         let sut = makeSUT()
 
-        let expectedError = ProviderError.InvalidState("A poll with id \(pollID) already exists")
+        let expectedError = ProviderError.ContractViolation("A poll with id \(pollID) already exists")
         #expect(throws: expectedError) {
             try sut.add(polls: [poll])
         }
 
         // The pre-existing ballot is untouched and no new one is added
-        #expect(entityManager.entityFetcher.ballotEntitiesInContactOrGroupConversations().count == 1)
+        #expect(try entityManager.entityFetcher.ballotEntitiesInContactOrGroupConversations().count == 1)
     }
 
     @Test func `Add throws when the same poll id appears twice within one batch`() async throws {
@@ -687,13 +704,13 @@ struct PollProviderTests {
 
         let sut = makeSUT()
 
-        let expectedError = ProviderError.InvalidState("A poll with id \(pollID) already exists")
+        let expectedError = ProviderError.ContractViolation("A poll with id \(pollID) already exists")
         #expect(throws: expectedError) {
             try sut.add(polls: [firstPoll, secondPoll])
         }
 
         // The whole batch is rolled back, so nothing is persisted
-        #expect(entityManager.entityFetcher.ballotEntitiesInContactOrGroupConversations().isEmpty)
+        #expect(try entityManager.entityFetcher.ballotEntitiesInContactOrGroupConversations().isEmpty)
     }
 
     @Test func `Add throws when a voter is not a known contact`() async throws {
@@ -711,13 +728,15 @@ struct PollProviderTests {
 
         let sut = makeSUT()
 
-        let expectedError = ProviderError.InvalidState("Voter \(PollProviderTests.secondVoter) is not a known contact")
+        let expectedError = ProviderError.ContractViolation(
+            "Voter \(PollProviderTests.secondVoter) is not a known contact"
+        )
         #expect(throws: expectedError) {
             try sut.add(polls: [poll])
         }
 
         // The poll is rejected and nothing is persisted
-        #expect(entityManager.entityFetcher.ballotEntitiesInContactOrGroupConversations().isEmpty)
+        #expect(try entityManager.entityFetcher.ballotEntitiesInContactOrGroupConversations().isEmpty)
     }
 
     @Test func `Add throws and rolls back all polls when one poll fails`() async throws {
@@ -729,7 +748,7 @@ struct PollProviderTests {
 
         let sut = makeSUT()
 
-        let expectedError = ProviderError.InvalidParameter(
+        let expectedError = ProviderError.ConversionError(
             "No conversation for contact \(PollProviderTests.secondVoter)"
         )
         #expect(throws: expectedError) {
@@ -737,7 +756,7 @@ struct PollProviderTests {
         }
 
         // The valid poll is rolled back too: the batch is all-or-nothing
-        #expect(entityManager.entityFetcher.ballotEntitiesInContactOrGroupConversations().isEmpty)
+        #expect(try entityManager.entityFetcher.ballotEntitiesInContactOrGroupConversations().isEmpty)
     }
 
     // MARK: - Private methods

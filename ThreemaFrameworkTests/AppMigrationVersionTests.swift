@@ -19,6 +19,6 @@ final class AppMigrationVersionTests: XCTestCase {
     }
 
     func testLatestVersion() throws {
-        XCTAssertEqual(AppMigrationVersion.latestVersion, .v7_4)
+        XCTAssertEqual(AppMigrationVersion.latestVersion, .v7_5)
     }
 }

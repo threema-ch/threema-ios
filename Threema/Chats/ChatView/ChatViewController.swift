@@ -290,10 +290,20 @@ final class ChatViewController: UIViewController {
     
     // The hosting view controller needs to be retrained such that a confirmation dialog can be shown
     private lazy var spamReportingBannerViewController: UIHostingController<ChatViewSpamReportingBanner> = {
+        let conversationType: ChatViewSpamReportingBanner.ConversationType =
+            if conversation.isGroup {
+                .group(displayName: conversation.displayName)
+            }
+            else {
+                .oneToOne(displayName: conversation.contact?.displayName)
+            }
+        
         let bannerView = ChatViewSpamReportingBanner(
-            displayName: conversation.contact?.displayName
+            conversationType: conversationType
         ) { [weak self] action in
             self?.reportSpam(with: action)
+        } notSpamAction: { [weak self] in
+            self?.markAsNotSpam()
         }
         
         return UIHostingController(rootView: bannerView)
@@ -427,7 +437,7 @@ final class ChatViewController: UIViewController {
                 guard let self else {
                     return
                 }
-                
+            
                 self.scrollToBottomButtonAction()
             }
         }
@@ -508,18 +518,21 @@ final class ChatViewController: UIViewController {
     }
     
     private lazy var bottomComposeConstraint = view.keyboardLayoutGuide.topAnchor
-
+    
     /// Bottom constraint of the chat bar. Swapped between `safeAreaLayoutGuide.bottomAnchor` (keyboard hidden)
     /// and `keyboardLayoutGuide.topAnchor` (keyboard visible). We can't pin to `keyboardLayoutGuide.topAnchor`
     /// permanently because the guide reports a stale y-coordinate when the device orientation changes while
     /// the app is backgrounded, leaving the chat bar floating above the bottom of the view on return.
     private var chatBarBottomConstraint: NSLayoutConstraint!
-
+    
     /// True while a `viewWillTransition` (a screen rotation) is in flight. During this window we
     /// avoid swapping `chatBarBottomConstraint`, because iOS fires `keyboardWillHide`+`keyboardWillShow`
     /// in quick succession on rotation with the keyboard up, without this guard the chat bar would
     /// briefly snap to the safe area bottom and back.
     private var isInViewTransition = false
+
+    /// True while `saveDraftIfChatWasLeft()` waits to decide whether a voice draft must be saved
+    private var isVoiceDraftSaveScheduled = false
 
     private lazy var defaultScrollToBottomButtonConstraints: [NSLayoutConstraint] =
         if #available(iOS 26.0, *) {
@@ -667,7 +680,22 @@ final class ChatViewController: UIViewController {
     
     // MARK: - Spam detection
     
-    private lazy var spamDetection: any SpamDetecting = SpamDetector(businessInjector: businessInjector)
+    private lazy var spamDetection: (any SpamDetecting)? = {
+        if conversation.isGroup {
+            guard ThreemaEnvironment.enableGroupSpamReporting else {
+                return nil
+            }
+            
+            return GroupSpamDetector(businessInjector: businessInjector)
+        }
+        else {
+            guard ThreemaEnvironment.enableSpamReporting else {
+                return nil
+            }
+            
+            return SpamDetector(businessInjector: businessInjector)
+        }
+    }()
     
     // MARK: - Lifecycle
     
@@ -750,16 +778,23 @@ final class ChatViewController: UIViewController {
             chatBarCoordinator.chatBarContainerView.addInteraction(interaction)
         }
         
+        // From iOS 27 onwards the top edge effect extends below pinned section headers and uses the hard style while a
+        // header is pinned. There is no public way to exclude the headers, so we at least use the
+        // soft style, which fades out instead of covering the header with a solid band.
+        if #available(iOS 27.0, *) {
+            tableView.topEdgeEffect.style = .soft
+        }
+        
         checkForSpam()
     }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-
+        
         DDLogVerbose("\(#function)")
-
+        
         hidesBottomBarWhenPushed = true
-
+        
         chatBarCoordinator.updateSettings()
         
         // Send notification (e.g. for hiding toasts that apply to this conversation)
@@ -823,29 +858,23 @@ final class ChatViewController: UIViewController {
         super.viewDidDisappear(animated)
         
         DDLogVerbose("\(#function)")
-
+        
         guard
             !conversation.willBeDeleted,
             conversation.managedObjectContext != nil
         else {
             return
         }
-
+        
         chatViewTableViewVoiceMessageCellDelegate.pausePlaying()
         
         saveCurrentScrollPosition()
-
+        
         if shouldMarkMessagesAsRead {
             unreadMessagesSnapshot.resetState()
         }
         
-        chatBarCoordinator.saveDraft()
-        
-        if isRecording() {
-            DispatchQueue.main.async {
-                UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
-            }
-        }
+        saveDraftIfChatWasLeft()
     }
     
     override func didMove(toParent parent: UIViewController?) {
@@ -860,11 +889,11 @@ final class ChatViewController: UIViewController {
     
     deinit {
         DDLogVerbose("\(#function)")
-
+        
         observerConversation?.invalidate()
-
+        
         NotificationCenter.default.removeObserver(self)
-
+        
         DispatchQueue.global().async {
             /// Clean up temporary files that might be leftover from playing voice messages
             FileUtility.shared.cleanTemporaryDirectory()
@@ -874,13 +903,13 @@ final class ChatViewController: UIViewController {
     // MARK: - Configuration
     
     private func addObservers() {
-
+        
         // Observe `Conversation.willBeDeleted` to close this view
         observerConversation = conversation.observe(\.willBeDeleted) { [weak self] conversation, _ in
             guard conversation.willBeDeleted else {
                 return
             }
-
+            
             // `prepareForDeletion` is invoked inside NSManagedObjectContext.save().
             // Never drive UIKit navigation synchronously from there, and the deleting
             // context is not guaranteed to be the main-queue context.
@@ -888,7 +917,7 @@ final class ChatViewController: UIViewController {
                 self?.closeBecauseConversationWasDeleted()
             }
         }
-
+        
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(applicationDidEnterBackground),
@@ -909,7 +938,7 @@ final class ChatViewController: UIViewController {
             name: UIResponder.keyboardWillShowNotification,
             object: nil
         )
-
+        
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(keyboardWillChange(_:)),
@@ -923,7 +952,7 @@ final class ChatViewController: UIViewController {
             name: UIContentSizeCategory.didChangeNotification,
             object: nil
         )
-
+        
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(wallpaperChanged),
@@ -958,7 +987,7 @@ final class ChatViewController: UIViewController {
                 guard let self else {
                     return false
                 }
-
+                
                 return businessInjector.runInBackgroundAndWait { [weak self] backgroundBusinessInjector in
                     backgroundBusinessInjector.entityManager.performAndWait { [backgroundBusinessInjector] in
                         let entityFetcher =
@@ -1017,7 +1046,7 @@ final class ChatViewController: UIViewController {
         view.addSubview(bannerContainerView)
         
         // Add banners to container
-        if ThreemaEnvironment.enableSpamReporting, let spamReportingBannerView {
+        if ThreemaEnvironment.enableSpamReporting || ThreemaEnvironment.enableGroupSpamReporting, let spamReportingBannerView {
             bannerContainerView.addBanner(spamReportingBannerView)
         }
         bannerContainerView.addBanner(groupCallBannerView)
@@ -1193,6 +1222,57 @@ final class ChatViewController: UIViewController {
         }
     }
     
+    /// Saves the draft, unless the chat only disappeared for a view transition.
+    ///
+    /// A split view collapse or expand (rotating an iPhone Plus/Pro Max, resizing on iPad) moves this chat into
+    /// another navigation controller: it disappears and appears again although the user never left it. Saving a voice
+    /// draft stops the recorder, so during such a transition we wait for it to end and only save if the chat did not
+    /// come back on screen. In every other case (leaving the chat, pushing the profile) the draft is saved right away,
+    /// so this controller is not kept alive after it was popped.
+    private func saveDraftIfChatWasLeft() {
+        guard chatBarCoordinator.isRecording, isInViewTransition else {
+            let wasRecording = isRecording()
+            chatBarCoordinator.saveDraft()
+            if wasRecording {
+                DispatchQueue.main.async {
+                    UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
+                }
+            }
+            return
+        }
+
+        guard !isVoiceDraftSaveScheduled else {
+            return
+        }
+        isVoiceDraftSaveScheduled = true
+
+        let deadline = Date.now.addingTimeInterval(ChatViewConfiguration.VoiceDraft.transitionTimeout)
+
+        // `self` is captured strongly: if the transition ends with the chat off screen, the draft must still be saved.
+        // During a split view collapse or expand the navigation router keeps this controller alive anyway.
+        func checkWhenSettled() {
+            DispatchQueue.main.asyncAfter(deadline: .now() + ChatViewConfiguration.VoiceDraft.checkInterval) {
+                if self.isInViewTransition, Date.now < deadline {
+                    return checkWhenSettled()
+                }
+
+                self.isVoiceDraftSaveScheduled = false
+
+                // Back on screen (rotated or resized)
+                guard self.viewIfLoaded?.window == nil else {
+                    return
+                }
+
+                let wasRecording = self.isRecording()
+                self.chatBarCoordinator.saveDraft()
+                if wasRecording {
+                    UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
+                }
+            }
+        }
+        checkWhenSettled()
+    }
+
     // MARK: - Notifications
     
     @objc private func applicationDidEnterBackground() {
@@ -3390,27 +3470,26 @@ protocol ChatViewControllerConversationDeletedDelegate: AnyObject {
 
 extension ChatViewController {
     private func checkForSpam() {
-        guard ThreemaEnvironment.enableSpamReporting else {
+        guard ThreemaEnvironment.enableSpamReporting || ThreemaEnvironment.enableGroupSpamReporting else {
             return
         }
         
-        // When opening a 1:1 conversation on an application not built for the _OnPrem_
+        // When opening a 1:1 or group conversation on an application not built for the _OnPrem_
         // flavour, run the following steps:
-        
-        guard conversation.isGroup == false else {
-            DDLogDebug("Only check for spam in 1:1 conversations")
-            return
-        }
         
         guard TargetManager.isOnPrem == false, TargetManager.isCustomOnPrem == false else {
             return
         }
         
+        // Only try to detect spam if there is any detector and read it on the main actor to avoid a main actor hop when
+        // accessing the isolated `spamDetection` property inside the detached task.
+        guard let spamDetection else {
+            DDLogDebug("No spam detection as there is no spam detector")
+            return
+        }
+        
         // Loaded on the main actor such that it can be safely used in another actor
         let conversationObjectID = conversation.objectID
-        // Read on the main actor to avoid a main actor hop when accessing the isolated `spamDetection` property
-        // inside the detached task.
-        let spamDetection = spamDetection
 
         // Run in a separate task to prevent blocking the loading of the chat view. The detection itself runs
         // on the `SpamDetector` actor and thus off the main actor
@@ -3433,15 +3512,41 @@ extension ChatViewController {
     }
     
     @MainActor
+    private func markAsNotSpam() {
+        guard ThreemaEnvironment.enableSpamReporting || ThreemaEnvironment.enableGroupSpamReporting else {
+            return
+        }
+        
+        removeSpamReportingBanner()
+        
+        businessInjector.entityManager.performSave {
+            self.conversation.spamReportingState = .notSpam
+        }
+    }
+    
+    @MainActor
     private func reportSpam(with action: ChatViewSpamReportingBanner.ReportAction) {
-        guard ThreemaEnvironment.enableSpamReporting else {
+        guard ThreemaEnvironment.enableSpamReporting || ThreemaEnvironment.enableGroupSpamReporting else {
             return
         }
         
         // The API call is fire-and-forget. Thus we immediately hide the view and don't need to show a progress
-        spamReportingBannerView?.isHidden = true
-        updateContentInsets(force: true) // Needed to update top content insets
+        removeSpamReportingBanner()
         
+        businessInjector.entityManager.performSave {
+            self.conversation.spamReportingState = .reported
+        }
+        
+        if conversation.isGroup {
+            reportGroupSpam(with: action)
+        }
+        else {
+            reportContactSpam(with: action)
+        }
+    }
+    
+    @MainActor
+    private func reportContactSpam(with action: ChatViewSpamReportingBanner.ReportAction) {
         guard let sender = conversation.contact else {
             DDLogError("Unable to report spam, because conversation has not contact")
             return
@@ -3454,8 +3559,8 @@ extension ChatViewController {
         // Send to server (fire-and-forget)
         Task.detached(priority: .utility) {
             do {
-                try await ServerAPIConnector().reportSpamForSender(
-                    with: senderIdentity,
+                try await ServerAPIConnector().reportSpam(
+                    for: senderIdentity,
                     and: senderPublicNickname,
                     store: MyIdentityStore.shared()
                 )
@@ -3479,5 +3584,64 @@ extension ChatViewController {
                 self?.willDeleteAllMessages()
             }
         }
+    }
+    
+    @MainActor
+    private func reportGroupSpam(with action: ChatViewSpamReportingBanner.ReportAction) {
+        guard let group = businessInjector.groupManager.getGroup(conversation: conversation) else {
+            DDLogError("Unable to report spam, because conversation has no group")
+            return
+        }
+        
+        guard case let .contact(creator) = group.creator else {
+            DDLogError("Unable to report spam, because group creator is not a known contact")
+            return
+        }
+        
+        // Loaded on main actor to such that it can be safely used in another actor
+        let groupID = group.groupID
+        let numberOfMembers = group.numberOfMembers
+        let creatorIdentity = creator.identity.rawValue
+        let creatorPublicNickname = creator.publicNickname
+
+        Task.detached(priority: .utility) {
+            do {
+                try await ServerAPIConnector().reportSpamForGroup(
+                    groupID: groupID,
+                    adminIdentity: creatorIdentity,
+                    adminNickname: creatorPublicNickname,
+                    memberCount: numberOfMembers,
+                    store: MyIdentityStore.shared()
+                )
+            }
+            catch {
+                // Move into separate variable to prevent deprecation warning of `DDLogError`
+                let errorMessage =
+                    "Unable to report group \(groupID.hexString) created by \(creatorIdentity) (\(creatorPublicNickname, default: "nil")) as spam: \(error)"
+                DDLogError("\(errorMessage)")
+            }
+        }
+
+        if action == .reportBlockAndDelete {
+            // Block creator
+            businessInjector.settingsStore.blacklist.insert(creatorIdentity)
+            
+            // This might ask for confirmation of the leaving & deletion and thus can be canceled
+            // Using `chatProfileView` instead of `spamReportingBannerView` because the latter is hidden
+            DeleteConversationAction.execute(
+                for: conversation,
+                owner: self,
+                anchorView: chatProfileView,
+                singleFunction: .delete
+            ) { _ in
+                DDLogVerbose("Group reported as spam was deleted")
+            }
+        }
+    }
+    
+    @MainActor
+    private func removeSpamReportingBanner() {
+        spamReportingBannerView?.isHidden = true
+        updateContentInsets(force: true) // Needed to update top content insets
     }
 }

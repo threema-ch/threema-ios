@@ -9,7 +9,7 @@ public final class DataRestore: DataRestoreProtocol {
 
     private let backupURL: URL
     private let fileUtility: any FileUtilityProtocol
-    private let restoreTask: any BackupRestoreTaskProtocol
+    private let restoreTask: any DataBackupRestoreTaskProtocol
     private weak let delegate: (any DataRestoreDelegate)!
     private var identityRestored = false
 
@@ -18,7 +18,7 @@ public final class DataRestore: DataRestoreProtocol {
     public init(
         backupURL: URL,
         fileUtility: any FileUtilityProtocol,
-        restoreTask: any BackupRestoreTaskProtocol,
+        restoreTask: any DataBackupRestoreTaskProtocol,
         delegate: any DataRestoreDelegate
     ) {
         self.backupURL = backupURL
@@ -80,13 +80,15 @@ public final class DataRestore: DataRestoreProtocol {
         }
     }
 
-    public func addProviders(_ providers: BackupRestoreProviders) throws {
-        try restoreTask.addProviders(providers: providers)
+    public func addProviders(_ providers: DataBackupProviders) throws {
+        try restoreTask.response(
+            response: DataBackupRestoreResponse(providers: providers, readResponse: nil)
+        )
     }
 
     // MARK: - Private methods
 
-    private func handleInstruction(_ instruction: BackupRestoreInstruction, fileHandle: FileHandle) throws {
+    private func handleInstruction(_ instruction: DataBackupRestoreInstruction, fileHandle: FileHandle) throws {
         if let identityData = instruction.identityData {
             if identityRestored {
                 throw DataRestoreError.duplicatedIdentityDataInstruction
@@ -94,34 +96,36 @@ public final class DataRestore: DataRestoreProtocol {
             try delegate.dataRestore(self, didReceiveIdentityData: identityData)
             identityRestored = true
         }
-        if let readInstruction = instruction.readInstruction {
-            try handleReadInstruction(readInstruction, fileHandle: fileHandle)
-        }
         if let stateUpdate = instruction.stateUpdate {
             try handleStateUpdateInstruction(stateUpdate)
         }
+        if let readInstruction = instruction.readInstruction {
+            try handleReadInstruction(readInstruction, fileHandle: fileHandle)
+        }
     }
 
-    private func handleReadInstruction(_ instruction: ReadInstruction, fileHandle: FileHandle) throws {
+    private func handleReadInstruction(_ instruction: DataBackupRestoreReadInstruction, fileHandle: FileHandle) throws {
         switch instruction {
         case let .local(instruction):
             let streamOffset = instruction.offset
             let chunk = try fileUtility.read(
-                offset: streamOffset.offset,
-                length: instruction.length,
+                offset: streamOffset,
+                length: UInt64(instruction.length),
                 from: fileHandle,
                 fileURL: backupURL
             )
-            let response = BackupRestoreResponse(offset: streamOffset, chunk: chunk)
-            _ = try restoreTask.response(readResponse: response)
-
-        case .remote:
-            throw DataRestoreError.remoteRestoreNotSupported
+            let readResponse = DataBackupRestoreReadResponse(offset: streamOffset, chunk: chunk)
+            try restoreTask.response(
+                response: DataBackupRestoreResponse(providers: nil, readResponse: readResponse)
+            )
         }
     }
 
-    private func handleStateUpdateInstruction(_ stateUpdate: BackupRestoreStateUpdate) throws {
+    private func handleStateUpdateInstruction(_ stateUpdate: DataBackupRestoreStateUpdate) throws {
         switch stateUpdate {
+        case .userData:
+            DDLogInfo("Restoring user data...")
+
         case .contacts:
             DDLogInfo("Restoring contacts...")
 

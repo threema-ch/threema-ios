@@ -183,11 +183,12 @@ message MessageMetadata {
 //
 // 1. Lookup the message with `message_id` originally sent by the sender within
 //    the associated conversation and let `referred-message` be the result.
-// 2. If `referred-message` is not defined or the sender is not the original
-//    sender of `referred-message`, discard the message and abort these steps.²
-// 3. If `referred-message` is not editable (see the associated _Edit applies
+// 2. If `referred-message` is not defined, abort these steps.²
+// 3. If the sender is not the original sender of `referred-message`, discard
+//    the message and abort these steps.³
+// 4. If `referred-message` is not editable (see the associated _Edit applies
 //    to_ property), discard the message and abort these steps.
-// 4. Edit `referred-message` as defined by the associated _Edit applies to_
+// 5. Edit `referred-message` as defined by the associated _Edit applies to_
 //    property and add an indicator to `referred-message`, informing the user
 //    that the message has been edited by the sender at the message's (the
 //    `EditMessage`'s) `created-at`.
@@ -196,7 +197,10 @@ message MessageMetadata {
 // The receiver will always accept a request to edit a message. This is deemed
 // acceptable considering this is not a security feature.
 //
-// ²: Implementations do not track the group member setup at the time a message
+// ²: The message isn't discarded on purpose because on linked devices the
+//    referred message may exist.
+//
+// ³: Implementations do not track the group member setup at the time a message
 // was received. Therefore, an edited message is always sent to the **current**
 // group member setup, including any group members that weren't part of the
 // group when the message was sent. However, any ordinary client will discard
@@ -325,19 +329,23 @@ message EditMessage {
 //
 // 1. Lookup the message with `message_id` originally sent by the sender within
 //    the associated conversation and let `referred-message` be the result.
-// 2. If `referred-message` is not defined or the sender is not the original
-//    sender of `referred-message`, discard the message and abort these steps.
-// 3. If `referred-message` is not deletable (see the associated _Deletable by_
+// 2. If `referred-message` is not defined, abort these steps.²
+// 3. If the sender is not the original sender of `referred-message`, discard
+//    the message and abort these steps.
+// 4. If `referred-message` is not deletable (see the associated _Deletable by_
 //    property), discard the message and abort these steps.
-// 4. Replace `referred-message` with a message informing the user that the
+// 5. Replace `referred-message` with a message informing the user that the
 //    message of the sender has been removed at the message's (the
-//    `DeleteMessage`'s) `created-at`.²
+//    `DeleteMessage`'s) `created-at`.³
 //
 // ¹: For simplicity, the time constraint is applied on the sender side only.
 // The receiver will always accept a request to delete a message. This is deemed
 // acceptable considering this is just barely a soft-security feature.
 //
-// ²: All references to a removed message (e.g. quotes) must be updated as well,
+// ²: The message isn't discarded on purpose because on linked devices the
+//    referred message may exist.
+//
+// ³: All references to a removed message (e.g. quotes) must be updated as well,
 // so that the message content is no longer visible. An implementation should
 // also try to withdraw or update any notification created for a removed
 // message.
@@ -414,7 +422,7 @@ message GroupCallStart {
   //
   // Note: This is a _major_ version and may only be increased in case of
   // breaking changes due to the significant UX impact this has when running the
-  // _Common Group Receive Steps_ (i.e. only calls with supported protocol
+  // _Group Call Refresh Steps_ (i.e. only calls with supported protocol
   // versions can be _chosen_).
   uint32 protocol_version = 1;
 
@@ -559,8 +567,7 @@ message GroupCallStart {
 //
 // 1. Lookup the referred message with `message_id` within the associated
 //    conversation and let `referred-message` be the result.
-// 2. If `referred-message` is not defined, discard the message and abort these
-//    steps.
+// 2. If `referred-message` is not defined, abort these steps.⁴
 // 3. If `referred-message` is not reactable (see the associated _Reactions_
 //    property), discard the message and abort these steps.
 // 4. If `action` is of variant `apply`:
@@ -570,13 +577,13 @@ message GroupCallStart {
 //       message and abort these steps.
 //    3. Apply (or re-apply) the resulting emoji from the sender to
 //       `referred-message` with the message's (the `Reaction`'s) `created-at`
-//       timestamp used for the time of reaction.⁴⁵
+//       timestamp used for the time of reaction.⁵⁶
 // 5. If `action` is of variant `withdraw`:
 //    1. If `withdraw` contains more than 64 bytes, discard the message and
 //       abort these steps.
 //    2. Decode `withdraw` to a UTF-8 string. If the string is empty, discard
 //       the message and abort these steps.
-//    3. Remove the resulting emoji reaction from the sender for `message`.⁴⁵
+//    3. Remove the resulting emoji reaction from the sender for `message`.⁵⁶
 //
 // ¹: The UI should not allow to create non-legacy reactions in 1:1
 // conversations with a sender or receiver that does not have
@@ -590,13 +597,16 @@ message GroupCallStart {
 // results in a `Reaction` message being sent to group members that currently do
 // not support reactions. This is intentional.
 //
-// ⁴: Note that the _apply_ mechanism is additive, meaning multiple reactions
+// ⁴: The message isn't discarded on purpose because on linked devices the
+//    referred message may exist.
+//
+// ⁵: Note that the _apply_ mechanism is additive, meaning multiple reactions
 // from the same sender are allowed on a single message. This is why the
 // _withdraw_ mechanism is needed which removes a specific reaction. On the
 // other hand, a deprecated `e2e.delivery-receipt` will replace all existing
 // reactions of the sender at once (including these new-style reactions).
 //
-// ⁵: The UI should display a placeholder (�) for unknown emojis, meaining those
+// ⁶: The UI should display a placeholder (�) for unknown emojis, meaining those
 // which are not a single fully-qualified [emoji codepoint sequence that is part
 // of the currently supported Unicode standard][emoji-test.txt]. But the
 // individual code sequences still have individual display buckets.
@@ -641,8 +651,8 @@ message Reaction {
 //
 // When receiving this message:
 //
-// 1. If not Work flavour, log a warning, discard the message and abort these
-//    steps.
+// 1. If the application is not built for the _Work_, _Blue_ or _OnPrem_
+//    flavour, log a warning, discard the message and abort these steps.
 // 2. If the sender is not `*3MAW0RK`, discard the message and abort these
 //    steps.
 // 3. If `action` is of variant `require_work_sync`, schedule a persistent task
@@ -659,8 +669,8 @@ message Reaction {
 //       2. Run the _Work Sync Delta Change Determination Steps_ another time
 //          and update `changes` with the result.¹
 //       3. If `changes` is a marker that a _full Work Sync is required_,
-//          schedule a persistent task to make a full Work Sync. Otherwise, reflect
-//          all `changes`.
+//          schedule a persistent task to make a full Work Sync. Otherwise,
+//          reflect all `changes`.
 //       4. Commit the transaction and await acknowledgement.
 //    5. Apply all `changes` persistently.
 // 5. If `action` is an unknown variant, log a warning that an unknown Work Sync

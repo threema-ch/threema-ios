@@ -289,18 +289,6 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     
     // MARK: - Continuing user activities
     
-    /// Tells the delegate that it’s about to receive Handoff-related data
-    ///
-    /// - After this method returns, UIKit provides feedback to the user that your scene is handling the activity
-    ///
-    /// <https://developer.apple.com/documentation/uikit/uiscenedelegate/scene(_:willcontinueuseractivitywithtype:)>
-//    func scene(
-//        _ scene: UIScene,
-//        willContinueUserActivityWithType userActivityType: String
-//    ) {
-//        DDLogNotice(#function)
-//    }
-    
     /// Tells the delegate to handle the specified Handoff-related activity
     ///
     /// - UIKit calls this method on your app’s main thread only after it receives all of the data for an activity
@@ -316,68 +304,7 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         intentHandlerProxy.handle(userActivity: userActivity)
     }
     
-    /// Tells the delegate that the activity couldn’t be continued
-    ///
-    /// - If you don’t implement this method, UIKit displays an error to the user with an appropriate message about the
-    ///   reason for the failure
-    ///
-    /// <https://developer.apple.com/documentation/uikit/uiscenedelegate/scene(_:didfailtocontinueuseractivitywithtype:error:)>
-//    func scene(_ scene: UIScene, didFailToContinueUserActivityWithType userActivityType: String, error: any Error) {
-//        DDLogError("\(#function): error=\(error)")
-//    }
-
-    // MARK: Saving the state of the scene
-    
-    // This methods might become relevant if we add state restoration
-    
-    /// Returns a user activity object encapsulating the current state of the specified scene
-    ///
-    /// - Save enough information to be able to restore that state again after UIKit disconnects and then reconnects the
-    ///   scene
-    ///
-    /// <https://developer.apple.com/documentation/uikit/uiscenedelegate/staterestorationactivity(for:)>
-//    func stateRestorationActivity(for scene: UIScene) -> NSUserActivity? {
-//        DDLogNotice(#function)
-//
-//        return nil
-//    }
-    
-    // No documentation:
-    // https://developer.apple.com/documentation/uikit/uiscenedelegate/scene(_:restoreinteractionstatewith:)
-//    func scene(_ scene: UIScene, restoreInteractionStateWith stateRestorationActivity: NSUserActivity) {
-//        DDLogNotice(#function)
-//    }
-    
-    /// Tells the delegate that the specified activity object was updated
-    ///
-    /// - Add any final data to the specified user activity object
-    /// - UIKit calls this method on your app’s main thread after calling your `stateRestorationActivity(for:)` method
-    ///   and after giving other parts of your app an opportunity to update the activity object returned by that method
-    ///
-    /// <https://developer.apple.com/documentation/uikit/uiscenedelegate/scene(_:didupdate:)>
-//    func scene(_ scene: UIScene, didUpdate userActivity: NSUserActivity) {
-//        DDLogNotice(#function)
-//    }
-    
     // MARK: - UIWindowSceneDelegate
-    
-    // MARK: Managing the scene’s main window
-    
-    // See `window` above
-    
-    // MARK: Responding to scene changes
-    
-    /// Called when the window scene’s effective geometry has changed
-    ///
-    /// - Always called when a `UIWindowScene` moves between screens
-    ///
-    /// <https://developer.apple.com/documentation/uikit/uiwindowscenedelegate/windowscene(_:didupdateeffectivegeometry:)>
-//    func windowScene(
-//        _ windowScene: UIWindowScene,
-//        didUpdateEffectiveGeometry previousEffectiveGeometry: UIWindowScene.Geometry
-//    ) {
-//        DDLogNotice(#function)
-//    }
     
     // MARK: Performing tasks
     
@@ -398,9 +325,6 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         let handled = intentHandlerProxy.handle(shortcutItem: shortcutItem)
         completionHandler(handled)
     }
-    
-    // Omitted `windowScene(_:userDidAcceptCloudKitShareWith:)`, because we don't support CloudKit (also needs CloudKit
-    // import)
     
     // MARK: Instance Methods
     

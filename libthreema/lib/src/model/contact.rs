@@ -35,7 +35,7 @@ pub(crate) enum ContactUpdateError {
 }
 impl From<ContactUpdateError> for ProviderError {
     fn from(error: ContactUpdateError) -> Self {
-        Self::InvalidState(format!("Cannot update contact: {error}"))
+        Self::ContractViolation(format!("Cannot update contact: {error}"))
     }
 }
 
@@ -99,6 +99,7 @@ impl From<&ContactNotificationTriggerPolicyOverride>
 // IMPORTANT: When touching these, always make sure to update [`ContactUpdate`] and
 // [`ContactUpdate::try_apply`] accordingly.
 #[derive(Clone, Debug)]
+#[cfg_attr(test, derive(PartialEq))]
 pub struct Contact {
     /// Threema ID of the contact.
     pub identity: ThreemaId,
@@ -432,12 +433,12 @@ pub struct PredefinedContact {
     pub nickname: String,
 }
 impl PredefinedContact {
-    pub(crate) const _3MAPUSH_IDENTITY: ThreemaId = ThreemaId::predefined(*b"*3MAPUSH");
+    pub(crate) const THREEMAPUSH_IDENTITY: ThreemaId = ThreemaId::predefined(*b"*3MAPUSH");
 
     pub(crate) fn production() -> HashMap<ThreemaId, Self> {
         [
             Self {
-                identity: Self::_3MAPUSH_IDENTITY,
+                identity: Self::THREEMAPUSH_IDENTITY,
                 special: true,
                 #[rustfmt::skip]
                 public_key: PublicKey::from([
@@ -529,7 +530,7 @@ impl PredefinedContact {
     pub(crate) fn sandbox() -> HashMap<ThreemaId, Self> {
         [
             Self {
-                identity: Self::_3MAPUSH_IDENTITY,
+                identity: Self::THREEMAPUSH_IDENTITY,
                 special: true,
                 #[rustfmt::skip]
                 public_key: PublicKey::from([
@@ -706,6 +707,7 @@ impl From<&PredefinedContact> for ContactInit {
 
 /// All protocol relevant data associated to a contact.
 #[derive(Clone, Debug, Name)]
+#[cfg_attr(test, derive(PartialEq))]
 pub struct ContactWithProfilePictures {
     /// The contact.
     pub contact: Contact,
@@ -720,9 +722,9 @@ pub struct ContactWithProfilePictures {
 /// Contact storage interface.
 pub trait ContactProvider {
     /// 1. For each `contact` of `contacts`:
-    ///    1. If `contact.identity` is the user's Threema ID, return [`ProviderError::InvalidState`].
+    ///    1. If `contact.identity` is the user's Threema ID, return [`ProviderError::ContractViolation`].
     ///    2. If a contact with identity `contact.identity` already exists, return
-    ///       [`ProviderError::InvalidState`].¹
+    ///       [`ProviderError::ContractViolation`].¹
     /// 2. For each `contact` of `contacts`:
     ///    1. Add `contact` to the application storage.
     ///
@@ -735,9 +737,10 @@ pub trait ContactProvider {
     fn add(&mut self, contacts: Vec<Contact>) -> Result<(), ProviderError>;
 
     /// 1. For each `contact` of `contacts`:
-    ///    1. If `contact.contact.identity` is the user's Threema ID, return [`ProviderError::InvalidState`].
+    ///    1. If `contact.contact.identity` is the user's Threema ID, return
+    ///       [`ProviderError::ContractViolation`].
     ///    2. If a contact with identity `contact.contact.identity` already exists, return
-    ///       [`ProviderError::InvalidState`].¹
+    ///       [`ProviderError::ContractViolation`].¹
     /// 2. For each `contact` of `contacts`:
     ///    1. Add `contact` to the application storage.
     ///
@@ -752,9 +755,10 @@ pub trait ContactProvider {
         contacts: Vec<ContactWithProfilePictures>,
     ) -> Result<(), ProviderError>;
 
-    /// 1. If `identity` is the user's Threema ID, return [`ProviderError::InvalidState`].
+    // TODO(LIB-209): Evaluate whether this is necessary.
+    /// 1. If `identity` is the user's Threema ID, return [`ProviderError::ContractViolation`].
     /// 2. Look up the contact associated to `identity` and let `contact` be the result.¹
-    /// 3. If `contact` is not defined, return [`ProviderError::InvalidState`].
+    /// 3. If `contact` is not defined, return [`ProviderError::ContractViolation`].
     /// 4. Set the contact-defined profile picture associated to `contact` to `profile_picture`.²
     ///
     /// ¹: This must consider contacts with acquaintance level _direct_ or _group_.
@@ -771,9 +775,10 @@ pub trait ContactProvider {
         profile_picture: Option<ProfilePicture>,
     ) -> Result<(), ProviderError>;
 
-    /// 1. If `identity` is the user's Threema ID, return [`ProviderError::InvalidState`].
+    // TODO(LIB-209): Evaluate whether this is necessary.
+    /// 1. If `identity` is the user's Threema ID, return [`ProviderError::ContractViolation`].
     /// 2. Look up the contact associated to `identity` and let `contact` be the result.¹
-    /// 3. If `contact` is not defined, return [`ProviderError::InvalidState`].
+    /// 3. If `contact` is not defined, return [`ProviderError::ContractViolation`].
     /// 4. Set the user-defined profile picture associated to `contact` to `profile_picture`.²
     ///
     /// ¹: This must consider contacts with acquaintance level _direct_ or _group_.
@@ -791,9 +796,9 @@ pub trait ContactProvider {
     ) -> Result<(), ProviderError>;
 
     /// 1. For each `update` of `updates`:
-    ///    1. If `update.identity` is the user's Threema ID, return [`ProviderError::InvalidState`].
+    ///    1. If `update.identity` is the user's Threema ID, return [`ProviderError::ContractViolation`].
     ///    2. If no contact with the identity `update.identity` exists, return
-    ///       [`ProviderError::InvalidState`].¹
+    ///       [`ProviderError::ContractViolation`].¹
     /// 2. For each `update` of `updates`:
     ///    1. Apply `update` to the contact referred to by `update.identity`.
     ///
@@ -807,7 +812,7 @@ pub trait ContactProvider {
 
     /// 1. Let `count` be `0`.
     /// 2. For each `identity` of `identities`:
-    ///    1. If identity is the user's Threema ID, return [`ProviderError::InvalidState`].
+    ///    1. If identity is the user's Threema ID, return [`ProviderError::ContractViolation`].
     ///    2. If a contact for `identity` exists, increase `count` by 1.¹
     /// 3. Return `count`.
     ///
@@ -819,7 +824,7 @@ pub trait ContactProvider {
     /// considered infallible and should not return an error.
     fn count_existing(&self, identities: &[ThreemaId]) -> Result<usize, ProviderError>;
 
-    /// 1. If `identity` is the user's Threema ID, return [`ProviderError::InvalidState`].
+    /// 1. If `identity` is the user's Threema ID, return [`ProviderError::ContractViolation`].
     /// 2. Return the contact stored for `identity`, if any.¹
     ///
     /// ¹: This must return contacts with any acquaintance level, including _deleted_.
@@ -838,7 +843,7 @@ pub trait ContactProvider {
     /// This function is considered infallible and should not return an error.
     fn get_identities(&self) -> Result<HashSet<ThreemaId>, ProviderError>;
 
-    /// 1. If `identity` is the user's Threema ID, return [`ProviderError::InvalidState`].
+    /// 1. If `identity` is the user's Threema ID, return [`ProviderError::ContractViolation`].
     /// 2. Return the contact with its profile pictures stored for `identity`, if any.¹
     ///
     /// ¹: This must return contacts with any acquaintance level, including _deleted_.
@@ -852,7 +857,7 @@ pub trait ContactProvider {
         identity: ThreemaId,
     ) -> Result<Option<ContactWithProfilePictures>, ProviderError>;
 
-    /// 1. If `identity` is the user's Threema ID, return [`ProviderError::InvalidState`].
+    /// 1. If `identity` is the user's Threema ID, return [`ProviderError::ContractViolation`].
     /// 2. Return whether a contact for `identity` exists.¹
     ///
     /// ¹: This must consider contacts with any acquaintance level, including _deleted_.
@@ -863,7 +868,7 @@ pub trait ContactProvider {
     /// considered infallible and should not return an error.
     fn has(&self, identity: ThreemaId) -> Result<bool, ProviderError>;
 
-    /// 1. If `identity` is the user's Threema ID, return [`ProviderError::InvalidState`].
+    /// 1. If `identity` is the user's Threema ID, return [`ProviderError::ContractViolation`].
     /// 2. Return whether `identity` is present in the set of explicitly blocked identities.
     ///
     /// # Errors

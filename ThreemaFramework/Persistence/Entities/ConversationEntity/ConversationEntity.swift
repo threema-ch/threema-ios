@@ -61,6 +61,17 @@ public final class ConversationEntity: ThreemaManagedObject, Identifiable {
         }
     }
     
+    @EncryptedField(name: "spamReportingState")
+    @objc public dynamic var spamReportingStateRawValue: NSNumber {
+        get {
+            getSpamReportingStateRawValue()
+        }
+        
+        set {
+            setSpamReportingStateRawValue(newValue)
+        }
+    }
+    
     @objc public dynamic var typing: NSNumber {
         get {
             getTyping()
@@ -87,7 +98,8 @@ public final class ConversationEntity: ThreemaManagedObject, Identifiable {
 
     // Cached decrypted values
     private var decryptedGroupName: String?
-    private var decryptedMarked: Bool? // Non optional
+    private var decryptedMarked: Bool? // Non-optional
+    private var decryptedSpamReportingStateRawValue: Int16? // Non-optional
 
     // MARK: - Lifecycle
 
@@ -118,6 +130,7 @@ public final class ConversationEntity: ThreemaManagedObject, Identifiable {
         groupName: String? = nil,
         lastTypingStart: Date? = nil,
         lastUpdate: Date? = nil,
+        spamReportingState: SpamReportingState = .open,
         typing: Bool = false,
         unreadMessageCount: NSNumber = 0,
         visibility: Visibility = .default,
@@ -137,6 +150,7 @@ public final class ConversationEntity: ThreemaManagedObject, Identifiable {
         setGroupName(groupName)
         self.lastTypingStart = lastTypingStart
         self.lastUpdate = lastUpdate
+        self.spamReportingStateRawValue = spamReportingState.rawValue as NSNumber
         // Deprecated
         setMarked(false)
         setTyping(NSNumber(booleanLiteral: typing))
@@ -243,6 +257,44 @@ public final class ConversationEntity: ThreemaManagedObject, Identifiable {
         }
     }
     
+    // MARK: spamReportingStateRawValue
+    
+    private func getSpamReportingStateRawValue() -> NSNumber {
+        var value: NSNumber = 0 // Default value
+        guard let managedObjectContext else {
+            return value
+        }
+
+        if managedObjectContext.usesAdditionallyEncryptedModel {
+            decrypt(&decryptedSpamReportingStateRawValue, forKey: Self.encryptedSpamReportingStateRawValueName)
+            if let decryptedSpamReportingStateRawValue {
+                value = NSNumber(integerLiteral: Int(decryptedSpamReportingStateRawValue))
+            }
+        }
+        else {
+            willAccessValue(forKey: Self.spamReportingStateRawValueName)
+            value = primitiveValue(forKey: Self.spamReportingStateRawValueName) as? NSNumber ?? value
+            didAccessValue(forKey: Self.spamReportingStateRawValueName)
+        }
+        return value
+    }
+    
+    private func setSpamReportingStateRawValue(_ newValue: NSNumber) {
+        guard let managedObjectContext else {
+            return
+        }
+        
+        if managedObjectContext.usesAdditionallyEncryptedModel {
+            encrypt(newValue.int16Value, forKey: Self.encryptedSpamReportingStateRawValueName)
+            decryptedSpamReportingStateRawValue = newValue.int16Value
+        }
+        else {
+            willChangeValue(forKey: Self.spamReportingStateRawValueName)
+            setPrimitiveValue(newValue, forKey: Self.spamReportingStateRawValueName)
+            didChangeValue(forKey: Self.spamReportingStateRawValueName)
+        }
+    }
+    
     // MARK: Typing
     
     private func getTyping() -> NSNumber {
@@ -278,12 +330,16 @@ public final class ConversationEntity: ThreemaManagedObject, Identifiable {
         else if key == Self.encryptedMarkedName {
             decryptedMarked = nil
         }
+        else if key == Self.encryptedSpamReportingStateRawValueName {
+            decryptedSpamReportingStateRawValue = nil
+        }
         super.didChangeValue(forKey: key)
     }
 
     override public func didTurnIntoFault() {
         decryptedGroupName = nil
         decryptedMarked = nil
+        decryptedSpamReportingStateRawValue = nil
         super.didTurnIntoFault()
     }
 

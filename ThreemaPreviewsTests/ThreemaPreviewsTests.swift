@@ -4,7 +4,12 @@ import DataBackup
 import SwiftUI
 import Testing
 
+/// Every test drives the same shared UI state: the key window of the test host, the global animation
+/// switch and the output directory. Swift Testing runs tests in parallel by default, and being
+/// `@MainActor` only keeps them from running at the same instant, not from interleaving at every
+/// `await`, so they have to be serialized.
 @MainActor
+@Suite(.serialized)
 struct ThreemaPreviewsTests {
     @Test func `Generate screenshots iPhone Light`() async throws {
         try await ScreenshotGenerator.generate(
@@ -97,12 +102,12 @@ struct PreviewDefinition: Sendable {
     static var values: [Self] {
         []
             + BackupCenterView.Stance.previewDefinitions
-            + ThreemaSafeLearnMoreView.Stance.previewDefinitions
-            + LocalBackupLearnMoreView.Stance.previewDefinitions
             + LocalBackupCreateBackupView.Stance.previewDefinitions
             + LocalBackupDetailsView.Stance.previewDefinitions
             + LocalBackupRecoveryKeyConfirmationView.Stance.previewDefinitions
             + LocalBackupRecoveryKeyView.Stance.previewDefinitions
             + LocalBackupSettingsView.Stance.previewDefinitions
+            + LocalBackupRecoveryKeyEntryView.Stance.previewDefinitions
+            + LocalBackupRestoreView.Stance.previewDefinitions
     }
 }

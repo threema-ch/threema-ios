@@ -1,47 +1,6 @@
 import ThreemaProtocols
 
 public final class ThreemaEnvironment: NSObject {
-    @objc public enum EnvironmentType: Int, CustomStringConvertible {
-        case appStore
-        case testFlight
-        case xcode
-        
-        public var shortDescription: String {
-            switch self {
-            case .appStore:
-                ""
-            case .testFlight:
-                "-T"
-            case .xcode:
-                "-X"
-            }
-        }
-        
-        public var description: String {
-            switch self {
-            case .appStore:
-                "appstore"
-            case .testFlight:
-                "testflight"
-            case .xcode:
-                "xcode"
-            }
-        }
-    }
-
-    @objc public static func env() -> EnvironmentType {
-        #if DEBUG
-            return .xcode
-        #endif
-        
-        // TestFLight
-        if Bundle.main.appStoreReceiptURL?.lastPathComponent == "sandboxReceipt" {
-            return .testFlight
-        }
-        
-        return .appStore
-    }
-    
     // MARK: - Feature flags
     
     // MARK: Forward security
@@ -104,19 +63,6 @@ public final class ThreemaEnvironment: NSObject {
         #endif
     }
 
-    // MARK: Backups Version 2
-
-    @objc public static var backups2Enabled: Bool {
-        if ProcessInfoHelper.isRunningForScreenshots {
-            return false
-        }
-        #if DEBUG
-            return UserSettings.shared().backups2Enabled
-        #else
-            return false
-        #endif
-    }
-
     // MARK: Delete & edit messages
     
     public static var deleteEditMessage: Bool {
@@ -156,11 +102,20 @@ public final class ThreemaEnvironment: NSObject {
     // MARK: Spam reporting
     
     public static var enableSpamReporting: Bool {
-        if env() == .appStore {
+        if EnvironmentType.current == .appStore {
             false
         }
         else {
-            true
+            TargetManager.isSandbox
+        }
+    }
+    
+    public static var enableGroupSpamReporting: Bool {
+        if EnvironmentType.current == .appStore {
+            false
+        }
+        else {
+            TargetManager.isSandbox
         }
     }
 }

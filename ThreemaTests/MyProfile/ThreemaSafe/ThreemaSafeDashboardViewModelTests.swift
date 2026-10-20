@@ -481,6 +481,35 @@ struct ThreemaSafeDashboardViewModelTests {
         #expect(sut.alert?.dismissTitle == "OK")
     }
 
+    @Test("The backup status row is only actionable when the last backup failed and no backup is running")
+    func backupStatusActionable() async throws {
+        // `onAppear()` is deliberately not called: `refresh()` would overwrite `backupStatusValue`.
+        let sut = ThreemaSafeDashboardViewModel(
+            appFlavor: .mock,
+            myIdentityStore: .mock,
+            mdmSetup: .mock,
+            notificationCenter: .mock,
+            safeConfigManager: .mock,
+            safeManager: .mock,
+            safeStore: .mock
+        )
+
+        #expect(sut.isBackupStatusActionable == false)
+
+        sut.backupStatusValue = .succeeded("Successful")
+        #expect(sut.isBackupStatusActionable == false)
+
+        sut.backupStatusValue = .failed("Failing error message.")
+        #expect(sut.isBackupStatusActionable == true)
+
+        // A running backup replaces the button with a progress indicator, so there is nothing to activate.
+        sut.isLoading = true
+        #expect(sut.isBackupStatusActionable == false)
+
+        sut.isLoading = false
+        #expect(sut.isBackupStatusActionable == true)
+    }
+
     @Test("Backup information is updated on screen")
     func backupInformation() async throws {
         let sut = ThreemaSafeDashboardViewModel(

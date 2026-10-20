@@ -48,6 +48,7 @@ public final class PendingUserNotificationManager: NSObject, PendingUserNotifica
     public static let pendingQueue = DispatchQueue(label: "ch.threema.PendingUserNotificationManager.pendingQueue")
 
     private static var processedUserNotifications: [String]?
+    private static let maxProcessedUserNotificationsCount = 300
     private static let processedQueue = DispatchQueue(label: "ch.threema.PendingUserNotificationManager.processedQueue")
 
     public static let processedUserNotificationsFileName = "ProcessedUserNotifications"
@@ -192,7 +193,7 @@ public final class PendingUserNotificationManager: NSObject, PendingUserNotifica
             }
             else {
                 guard pendingUserNotification.abstractMessage?.canShowUserNotification() ?? true else {
-                    DDLogNotice("Removing notification from \(#function)")
+                    DDLogNotice("[Push] Removing notification from \(#function)")
                     userNotificationCenterManager.remove(
                         contentKey: pendingUserNotification.contentKey,
                         exceptStage: nil,
@@ -376,7 +377,7 @@ public final class PendingUserNotificationManager: NSObject, PendingUserNotifica
         let center = UNUserNotificationCenter.current()
         center.add(notificationRequest) { error in
             if let err = error {
-                DDLogNotice("Error while adding test push notification: \(err)")
+                DDLogNotice("[Push] Error while adding test push notification: \(err)")
             }
             completion()
         }
@@ -392,7 +393,7 @@ public final class PendingUserNotificationManager: NSObject, PendingUserNotifica
     /// Remove all timed user notifications from notification center for pending user notification.
     /// - Parameter pendingUserNotification: Remove all timed notifications for this pending user notification
     public func removeAllTimedUserNotifications(pendingUserNotification: PendingUserNotification) {
-        DDLogNotice("Removing all notifications from \(#function)")
+        DDLogNotice("[Push] Removing all notifications from \(#function)")
         userNotificationCenterManager.remove(
             contentKey: pendingUserNotification.contentKey,
             exceptStage: nil,
@@ -403,16 +404,39 @@ public final class PendingUserNotificationManager: NSObject, PendingUserNotifica
     /// Add pending user notification as processed.
     /// - Parameter pendingUserNotification: Adding pending user notification as processed
     public func addAsProcessed(pendingUserNotification: PendingUserNotification) {
+        // A processed notification is done, so it must not stay pending: otherwise only the (limited) processed list
+        // keeps `showIsNotPending()` from showing it again. Async, because this is also called on `pendingQueue`.
+        let key = pendingUserNotification.key
+        PendingUserNotificationManager.pendingQueue.async {
+            guard PendingUserNotificationManager.pendingUserNotifications?.contains(where: { $0.key == key }) == true
+            else {
+                return
+            }
+
+            PendingUserNotificationManager.pendingUserNotifications?.removeAll { $0.key == key }
+            PendingUserNotificationManager.savePendingUserNotifications()
+        }
+
+        // Messages that never show a notification (receipts, typing indicators, …) would only push the keys of real
+        // notifications out of the limited list. Reactions do notify, despite `canShowUserNotification()`.
+        if let abstractMessage = pendingUserNotification.abstractMessage,
+           !abstractMessage.canShowUserNotification(),
+           !(abstractMessage is ReactionMessage || abstractMessage is GroupReactionMessage) {
+            return
+        }
+
         PendingUserNotificationManager.processedQueue.sync {
             if PendingUserNotificationManager.processedUserNotifications == nil {
                 PendingUserNotificationManager.processedUserNotifications = [String]()
             }
-            if !(
-                PendingUserNotificationManager.processedUserNotifications?
-                    .contains(pendingUserNotification.key) ?? false
-            ) {
-                PendingUserNotificationManager.processedUserNotifications?.append(pendingUserNotification.key)
+            // Already processed: nothing changed, so don't rewrite the file
+            guard PendingUserNotificationManager.processedUserNotifications?
+                .contains(pendingUserNotification.key) != true else {
+                return
             }
+
+            PendingUserNotificationManager.processedUserNotifications?.append(pendingUserNotification.key)
+            _ = PendingUserNotificationManager.limitProcessedUserNotifications()
             PendingUserNotificationManager.saveProcessedUserNotifications()
         }
     }
@@ -519,6 +543,7 @@ public final class PendingUserNotificationManager: NSObject, PendingUserNotifica
             
             guard let savedPendingUserNotifications = try? NSKeyedUnarchiver.unarchivedObject(
                 ofClasses: [
+                    NSArray.self,
                     PendingUserNotification.self,
                     NSString.self,
                     AbstractMessage.self,
@@ -569,19 +594,21 @@ public final class PendingUserNotificationManager: NSObject, PendingUserNotifica
         
         // Limit
         PendingUserNotificationManager.processedQueue.sync {
-            guard var savedProcessedUserNotifications = PendingUserNotificationManager.processedUserNotifications,
-                  !savedProcessedUserNotifications.isEmpty else {
-                return
-            }
-            let maxListCount = 300
-                
-            if savedProcessedUserNotifications.count > maxListCount {
-                for _ in 0...savedProcessedUserNotifications.count - maxListCount {
-                    savedProcessedUserNotifications.remove(at: 0)
-                }
+            if PendingUserNotificationManager.limitProcessedUserNotifications() {
                 PendingUserNotificationManager.saveProcessedUserNotifications()
             }
         }
+    }
+
+    /// Drop the oldest processed keys beyond `maxProcessedUserNotificationsCount`, must run on `processedQueue`
+    /// - Returns: True if keys were dropped
+    private static func limitProcessedUserNotifications() -> Bool {
+        guard let count = processedUserNotifications?.count, count > maxProcessedUserNotificationsCount else {
+            return false
+        }
+
+        processedUserNotifications?.removeFirst(count - maxProcessedUserNotificationsCount)
+        return true
     }
 
     /// Caution: This function is only for unit testing!

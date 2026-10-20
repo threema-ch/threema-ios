@@ -114,9 +114,9 @@ final class RemoteSecretMonitor: RemoteSecretMonitorSwiftProtocol {
                 )
             )
         }
-        catch let RemoteSecretMonitorError.InvalidParameter(message: message) {
-            DDLogError("Invalid parameter while unlocking: \(message)")
-            throw RemoteSecretManagerError.invalidParameter
+        catch let RemoteSecretMonitorError.ConversionError(message: message) {
+            DDLogError("Coversion error while unlocking: \(message)")
+            throw RemoteSecretManagerError.conversionError
         }
         catch {
             DDLogError("Unexpected error from libthreema while unlocking: \(error)")
@@ -161,13 +161,17 @@ final class RemoteSecretMonitor: RemoteSecretMonitorSwiftProtocol {
                 httpClient: httpClient
             )
         }
-        catch let RemoteSecretMonitorError.InvalidParameter(message: message) {
-            DDLogError("Remote secret invalid parameter: \(message)")
-            throw RemoteSecretManagerError.invalidParameter
+        catch let RemoteSecretMonitorError.ConversionError(message: message) {
+            DDLogError("Remote secret conversion error: \(message)")
+            throw RemoteSecretManagerError.conversionError
         }
-        catch let RemoteSecretMonitorError.InvalidState(message: message) {
-            DDLogError("Remote secret invalid state: \(message)")
-            throw RemoteSecretManagerError.invalidState
+        catch let RemoteSecretMonitorError.ContractViolation(message: message) {
+            DDLogError("Remote secret contract violation: \(message)")
+            throw RemoteSecretManagerError.contractViolation
+        }
+        catch let RemoteSecretMonitorError.InternalError(message: message) {
+            DDLogError("Remote secret internal error: \(message)")
+            throw RemoteSecretManagerError.internalError
         }
         catch let RemoteSecretMonitorError.ServerError(message: message) {
             DDLogError("Remote secret server error: \(message)")

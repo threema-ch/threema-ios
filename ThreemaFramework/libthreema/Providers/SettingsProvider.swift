@@ -16,7 +16,6 @@ final class SettingsProvider: libthreemaSwift.SettingsProvider {
 
     func get() throws -> libthreemaSwift.Settings {
         libthreemaSwift.Settings(
-            contactSyncPolicy: userSettings.syncContacts ? .sync : .notSynced,
             unknownContactPolicy: userSettings.blockUnknown ? .blockUnknown : .allowUnknown,
             readReceiptPolicy: userSettings.sendReadReceipts ? .sendReadReceipt : .dontSendReadReceipt,
             typingIndicatorPolicy: userSettings.sendTypingIndicator ? .sendTypingIndicator : .dontSendTypingIndicator,
@@ -32,7 +31,6 @@ final class SettingsProvider: libthreemaSwift.SettingsProvider {
 
     func set(settings: libthreemaSwift.Settings) throws {
         let settingsUpdate = SettingsUpdate(
-            contactSyncPolicy: settings.contactSyncPolicy,
             unknownContactPolicy: settings.unknownContactPolicy,
             readReceiptPolicy: settings.readReceiptPolicy,
             typingIndicatorPolicy: settings.typingIndicatorPolicy,
@@ -41,8 +39,8 @@ final class SettingsProvider: libthreemaSwift.SettingsProvider {
             o2oCallVideoPolicy: settings.o2oCallVideoPolicy,
             groupCallPolicy: settings.groupCallPolicy,
             screenshotPolicy: settings.screenshotPolicy,
-            blockedIdentities: settings.blockedIdentities,
-            excludeFromSyncIdentities: settings.excludeFromSyncIdentities
+            blockedIdentities: Set(settings.blockedIdentities),
+            excludeFromSyncIdentities: Set(settings.excludeFromSyncIdentities)
         )
 
         try update(update: settingsUpdate)
@@ -50,16 +48,13 @@ final class SettingsProvider: libthreemaSwift.SettingsProvider {
 
     func update(update: libthreemaSwift.SettingsUpdate) throws {
         if update.blockedIdentities?.contains(userIdentity.rawValue) == true {
-            throw ProviderError.InvalidParameter("Error: Blocked identities must not contain the user's own identity.")
+            throw ProviderError.ConversionError("Error: Blocked identities must not contain the user's own identity.")
         }
 
         if update.excludeFromSyncIdentities?.contains(userIdentity.rawValue) == true {
-            throw ProviderError.InvalidParameter("Error: Excluded identities must not contain the user's own identity.")
+            throw ProviderError.ConversionError("Error: Excluded identities must not contain the user's own identity.")
         }
 
-        if let policy = update.contactSyncPolicy {
-            userSettings.syncContacts = policy == .sync
-        }
         if let policy = update.unknownContactPolicy {
             userSettings.blockUnknown = policy == .blockUnknown
         }
@@ -82,10 +77,10 @@ final class SettingsProvider: libthreemaSwift.SettingsProvider {
             userSettings.enableThreemaGroupCalls = policy == .allowGroupCall
         }
         if let blockedIdentities = update.blockedIdentities {
-            userSettings.blacklist = NSOrderedSet(array: blockedIdentities)
+            userSettings.blacklist = NSOrderedSet(array: Array(blockedIdentities))
         }
         if let excludeFromSyncIdentities = update.excludeFromSyncIdentities {
-            userSettings.syncExclusionList = excludeFromSyncIdentities
+            userSettings.syncExclusionList = Array(excludeFromSyncIdentities)
         }
         if let policy = update.screenshotPolicy {
             userSettings.allowScreenshot = policy == .allowScreenshot

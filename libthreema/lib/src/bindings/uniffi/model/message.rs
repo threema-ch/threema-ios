@@ -67,7 +67,7 @@ pub enum MessageStateBodyUpdate {
     UserRead(u64),
     StarMarker(MessageStarMarker),
     Edit(MessageTextRevision),
-    Delete,
+    Delete(u64),
     Reaction(MessageReactionUpdate),
 }
 impl From<message::MessageStateBodyUpdate> for MessageStateBodyUpdate {
@@ -79,8 +79,8 @@ impl From<message::MessageStateBodyUpdate> for MessageStateBodyUpdate {
             },
             message::MessageStateBodyUpdate::UserRead(read_at) => Self::UserRead(read_at.0),
             message::MessageStateBodyUpdate::StarMarker(star_marker) => Self::StarMarker(star_marker),
-            message::MessageStateBodyUpdate::Delete(_) => Self::Delete,
             message::MessageStateBodyUpdate::Edit(text_message_revision) => Self::Edit(text_message_revision),
+            message::MessageStateBodyUpdate::Delete(deleted_at) => Self::Delete(deleted_at.0),
             message::MessageStateBodyUpdate::Reaction(reaction) => Self::Reaction(reaction.into()),
         }
     }

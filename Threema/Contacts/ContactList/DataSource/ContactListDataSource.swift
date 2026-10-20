@@ -235,7 +235,6 @@ final class ContactListDataSource<
     public func checkLimitedAccessHeader() {
         guard
             let tableView,
-            #available(iOS 18, *),
             UserSettings.shared().syncContacts,
             sourceType == .contacts,
             CNContactStore.authorizationStatus(for: .contacts) == .limited,

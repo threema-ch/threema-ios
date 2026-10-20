@@ -38,7 +38,7 @@ message IdentityData {
   // The permanent client key associated to the Threema ID (32 bytes)
   bytes ck = 2;
 
-  // The CSP server group associated to the Threema ID (1 byte)
+  // The CSP server group associated to the Threema ID ([a-zA-Z0-9\-]+)
   string csp_server_group = 3;
 }
 
@@ -214,7 +214,11 @@ message MessageReaction {
 }
 
 message DeletedMessageState {
+  // The message type of the original enclosed message.
   MessageStateBodyType previous_type = 1;
+
+  // Unix timestamp in milliseconds for when the original enclosed message was deleted.
+  uint64 deleted_at = 2;
 }
 
 // Keep this in sync with `MessageStateBody`.
@@ -240,7 +244,20 @@ message MessageStateBody {
 // Directional data associated to an incoming message.
 message IncomingMessageDirection {
   // Unix timestamp in milliseconds for when the original enclosed message was received.
-  uint64 received_at = 5;
+  uint64 received_at = 1;
+
+  /// Message behaviour overrides.
+  message MessageOverrides {
+    // Delivery receipt policy.
+    enum DeliveryReceiptPolicy {
+      // Apply the default delivery receipt policy (no override).
+      DEFAULT_DELIVERY_RECEIPT_POLICY = 0;
+      // Don't send delivery receipt.
+      DONT_SEND_DELIVERY_RECEIPT = 1;
+    }
+    DeliveryReceiptPolicy delivery_receipt_policy = 1;
+  }
+  MessageOverrides overrides = 2;
 }
 
 // Directional data associated to an outgoing message.
@@ -293,12 +310,6 @@ message MessageState {
 
   // The message type dependent message body state.
   MessageStateBody body = 9;
-}
-
-// Message behaviour overrides that need to be stored.
-message MessageOverrides {
-  // Whether delivery receipts should be omitted. If `true`, this overrides the default behaviour.
-  bool disable_delivery_receipts = 1;
 }
 
 // The forward security mode of a message.
@@ -419,8 +430,11 @@ message Poll {
 
     // A summary of the poll results.
     message PollVotesSummary {
-      // A map of poll choice IDs to the number of votes for it.
+      // A map of poll choice IDs to the number of votes for it (including the user's votes).
       map<uint32, uint32> poll_choice_id_to_count = 1;
+
+      // The poll choice IDs the user voted for.
+      repeated uint32 user_choices = 2;
     }
 
     oneof votes {

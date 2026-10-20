@@ -73,7 +73,7 @@ final class SingleDetailsDataSource: UITableViewDiffableDataSource<SingleDetails
     // Keep track of debug info taps and configure threshold after how many taps to show debug info
     private let showDebugInfoThreshold = 5
     private var showDebugInfo: Bool {
-        showDebugInfoTapCounter >= showDebugInfoThreshold || ThreemaEnvironment.env() == .xcode
+        showDebugInfoTapCounter >= showDebugInfoThreshold || EnvironmentType.current == .xcode
     }
     
     // MARK: - Lifecycle
@@ -271,6 +271,9 @@ final class SingleDetailsDataSource: UITableViewDiffableDataSource<SingleDetails
         
         if showDebugInfo {
             snapshot.appendSections([.debugInfo])
+            if let resetSpamDetectionState {
+                snapshot.appendItems(resetSpamDetectionState)
+            }
             snapshot.appendItems([.coreDataDebugInfo(contact: contact)])
             snapshot.appendItems(fsSessionDebugInfo)
         }
@@ -1331,6 +1334,28 @@ extension SingleDetailsDataSource {
         )
         
         return [.fsDebugInfo(sessionInfo: session?.description ?? "No Session")]
+    }
+    
+    private var resetSpamDetectionState: [SingleDetails.Row]? {
+        guard case let .conversationDetails(contact: _, conversation: conversation) = state else {
+            return nil
+        }
+        let conversationObjectID = conversation.objectID
+        
+        let resetAction = Details.Action(title: "Reset Spam Detection State", destructive: true) { [weak self] _ in
+            guard let strongSelf = self else {
+                return
+            }
+            
+            strongSelf.businessInjector.entityManager.performAndWaitSave {
+                let conversationEntity = strongSelf.businessInjector.entityManager.entityFetcher.conversationEntity(
+                    with: conversationObjectID
+                )
+                conversationEntity?.spamReportingState = .open
+            }
+        }
+        
+        return [.action(resetAction)]
     }
 }
 

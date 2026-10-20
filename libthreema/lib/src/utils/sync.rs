@@ -1,20 +1,22 @@
 //! Sync-related utilities.
-use std::sync::{Mutex, MutexGuard, PoisonError};
+#[cfg(any(test, feature = "cli"))]
+use std::sync::{Mutex, MutexGuard};
 
-/// Extension for [`Mutex`] to ignore and disregard any poison introduced by a thread panicking
-/// while holding the lock.
-pub(crate) trait MutexIgnorePoison {
+/// Extension for [`Mutex`] to lock and panic if the lock could not be obtained.
+#[cfg(any(test, feature = "cli"))]
+pub(crate) trait MutexPoisonPanic {
     type T;
 
-    /// Acquires a mutex, blocking the current thread until it is able to do so, ignoring any mutex
-    /// poison.
-    fn lock_ignore_poison(&self) -> MutexGuard<'_, Self::T>;
+    /// Acquires a mutex, blocking the current thread until it is able to do so, or panic if the lock is
+    /// poisoned.
+    fn lock_unwrap(&self) -> MutexGuard<'_, Self::T>;
 }
 
-impl<T> MutexIgnorePoison for Mutex<T> {
+#[cfg(any(test, feature = "cli"))]
+impl<T> MutexPoisonPanic for Mutex<T> {
     type T = T;
 
-    fn lock_ignore_poison(&self) -> MutexGuard<'_, Self::T> {
-        self.lock().unwrap_or_else(PoisonError::into_inner)
+    fn lock_unwrap(&self) -> MutexGuard<'_, Self::T> {
+        self.lock().expect("lock should not be poisoned")
     }
 }

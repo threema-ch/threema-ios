@@ -19,8 +19,7 @@ struct DataRestoreTests {
 
         let fileUtilityMock = FileUtilityMock()
 
-        let restoreTask = BackupRestoreTaskMock()
-        restoreTask.mockResponseReadResponse = { _ in 1100 }
+        let restoreTask = DataBackupRestoreTaskMock()
         restoreTask.mockPoll(returning: .success([
             .identityDataInstruction,
             .stateUpdateInstruction(.contacts),
@@ -76,25 +75,25 @@ struct DataRestoreTests {
             .closeFileHandle
         ])
 
-        let responses = restoreTask.calls.compactMap { call -> BackupRestoreResponse? in
-            if case let .response(readResponse) = call {
+        let readResponses = restoreTask.calls.compactMap { call -> DataBackupRestoreReadResponse? in
+            if case let .readResponse(readResponse) = call {
                 return readResponse
             }
             return nil
         }
 
-        #expect(responses == [
-            BackupRestoreResponse(offset: StreamOffset(offset: 0), chunk: Data()),
-            BackupRestoreResponse(offset: StreamOffset(offset: 101), chunk: Data()),
-            BackupRestoreResponse(offset: StreamOffset(offset: 201), chunk: Data()),
-            BackupRestoreResponse(offset: StreamOffset(offset: 301), chunk: Data()),
-            BackupRestoreResponse(offset: StreamOffset(offset: 401), chunk: Data()),
-            BackupRestoreResponse(offset: StreamOffset(offset: 501), chunk: Data()),
+        #expect(readResponses == [
+            DataBackupRestoreReadResponse(offset: StreamOffset(0), chunk: Data()),
+            DataBackupRestoreReadResponse(offset: StreamOffset(101), chunk: Data()),
+            DataBackupRestoreReadResponse(offset: StreamOffset(201), chunk: Data()),
+            DataBackupRestoreReadResponse(offset: StreamOffset(301), chunk: Data()),
+            DataBackupRestoreReadResponse(offset: StreamOffset(401), chunk: Data()),
+            DataBackupRestoreReadResponse(offset: StreamOffset(501), chunk: Data()),
         ])
     }
 
     @Test func `Perform throws when the poll sends successive identity data`() async throws {
-        let restoreTask = BackupRestoreTaskMock()
+        let restoreTask = DataBackupRestoreTaskMock()
         restoreTask.mockPoll(returning: .success([
             .identityDataInstruction,
             .stateUpdateInstruction(.contacts),
@@ -123,7 +122,7 @@ struct DataRestoreTests {
     }
 
     @Test func `Perform throws when the poll call throws`() async throws {
-        await #expect(throws: BackupRestoreTaskError.pollError) {
+        await #expect(throws: DataBackupRestoreTaskError.pollError) {
             let sut = makeSUT(
                 backupURL: testBackupURL(),
                 restoreTask: .failingOnPoll
@@ -132,21 +131,8 @@ struct DataRestoreTests {
         }
     }
 
-    @Test func `Perform throws when the poll sends a remote read instruction`() async throws {
-        let restoreTask = BackupRestoreTaskMock()
-        restoreTask.mockPoll(returning: .success([.remoteReadInstruction(), .done]))
-
-        await #expect(throws: DataRestoreError.remoteRestoreNotSupported) {
-            let sut = makeSUT(
-                backupURL: testBackupURL(),
-                restoreTask: restoreTask
-            )
-            try await sut.perform()
-        }
-    }
-
     @Test func `Perform throws when the poll sends a read instruction but the backup file cannot be read`() async throws {
-        let restoreTask = BackupRestoreTaskMock()
+        let restoreTask = DataBackupRestoreTaskMock()
         restoreTask.mockPoll(returning: .success([.localReadInstruction(offset: 0, length: 100), .done]))
 
         await #expect(throws: FileUtilityError.readFailed) {
@@ -160,9 +146,9 @@ struct DataRestoreTests {
     }
 
     @Test func `Perform throws when the poll sends a read instruction but libthreema cannot handle the read response`() async throws {
-        let restoreTask = BackupRestoreTaskMock()
+        let restoreTask = DataBackupRestoreTaskMock()
         restoreTask.mockPoll(returning: .success([.localReadInstruction(offset: 0, length: 100), .done]))
-        restoreTask.mockResponseReadResponse = { _ in throw LibThreemaSwiftError.restoreResponse }
+        restoreTask.mockResponse = { _ in throw LibThreemaSwiftError.restoreResponse }
 
         await #expect(throws: LibThreemaSwiftError.restoreResponse) {
             let sut = makeSUT(
@@ -176,7 +162,7 @@ struct DataRestoreTests {
     @Test func `Perform logs when the backup file cannot be closed`() async throws {
         let backupURL = testBackupURL()
         let fileUtilityMock = FileUtilityMock.failingOnClose
-        let restoreTask = BackupRestoreTaskMock()
+        let restoreTask = DataBackupRestoreTaskMock()
 
         let sut = makeSUT(
             backupURL: backupURL,
@@ -202,7 +188,7 @@ struct DataRestoreTests {
     // - MARK: addProviders() tests
 
     @Test func `Add providers forwards the providers to the restore task`() throws {
-        let restoreTask = BackupRestoreTaskMock()
+        let restoreTask = DataBackupRestoreTaskMock()
 
         let sut = makeSUT(
             backupURL: testBackupURL(),
@@ -211,19 +197,19 @@ struct DataRestoreTests {
 
         try sut.addProviders(.mock)
 
-        #expect(restoreTask.calls.filter { $0 == .addProviders }.count == 1)
+        #expect(restoreTask.calls == [.providersResponse])
     }
 
     @Test func `Add providers throws when the restore task throws`() throws {
-        let restoreTask = BackupRestoreTaskMock()
-        restoreTask.mockAddProviders = { _ in throw BackupRestoreTaskError.addProvidersError }
+        let restoreTask = DataBackupRestoreTaskMock()
+        restoreTask.mockResponse = { _ in throw DataBackupRestoreTaskError.responseError }
 
         let sut = makeSUT(
             backupURL: testBackupURL(),
             restoreTask: restoreTask
         )
 
-        #expect(throws: BackupRestoreTaskError.addProvidersError) {
+        #expect(throws: DataBackupRestoreTaskError.responseError) {
             try sut.addProviders(.mock)
         }
     }
@@ -233,7 +219,7 @@ struct DataRestoreTests {
     private func makeSUT(
         backupURL: URL,
         fileUtility: any FileUtilityProtocol = .mock,
-        restoreTask: any BackupRestoreTaskProtocol = .working,
+        restoreTask: any DataBackupRestoreTaskProtocol = .working,
         delegate: (any DataRestoreDelegate)? = nil
     ) -> DataRestore {
         DataRestore(

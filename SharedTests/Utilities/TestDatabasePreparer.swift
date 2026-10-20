@@ -443,6 +443,35 @@ public final class TestDatabasePreparer {
         return fileMessage
     }
 
+    @discardableResult public func createMessageReactionEntity(
+        message: BaseMessageEntity,
+        reaction: String,
+        date: Date = Date(),
+        contact: ContactEntity? = nil
+    ) -> MessageReactionEntity {
+        MessageReactionEntity(
+            context: objCnx,
+            date: date,
+            reaction: reaction,
+            contact: contact,
+            message: message
+        )
+    }
+
+    @discardableResult func createMessageHisoryEntry(
+        message: BaseMessageEntity,
+        editDate: Date,
+        text: String?
+    ) -> MessageHistoryEntryEntity {
+        let historyEntry = MessageHistoryEntryEntity(
+            context: objCnx,
+            editDate: editDate,
+            message: message
+        )
+        historyEntry.text = text
+        return historyEntry
+    }
+
     @discardableResult
     func createGroup(
         groupID: Data = BytesUtility.generateGroupID(),

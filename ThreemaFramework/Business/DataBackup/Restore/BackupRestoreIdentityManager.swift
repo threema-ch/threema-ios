@@ -36,7 +36,7 @@ public final class BackupRestoreIdentityManager: BackupRestoreIdentityManagerPro
             let dataRestore = DataRestore(
                 backupURL: url,
                 fileUtility: fileUtility,
-                restoreTask: BackupRestoreTask(password: password),
+                restoreTask: DataBackupRestoreTask(password: password),
                 delegate: delegate
             )
 
@@ -79,7 +79,7 @@ private final class IdentityRestoreDelegate: DataRestoreDelegate {
 
     func dataRestore(
         _ dataRestore: DataRestore,
-        didReceiveStateUpdate update: libthreemaSwift.BackupRestoreStateUpdate
+        didReceiveStateUpdate update: libthreemaSwift.DataBackupRestoreStateUpdate
     ) {
         // Nothing of the backup is read in this pass, so there is no progress to report
     }

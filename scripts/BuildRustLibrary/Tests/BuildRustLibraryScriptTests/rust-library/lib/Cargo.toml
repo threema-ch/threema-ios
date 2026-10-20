@@ -8,10 +8,10 @@ name = "rust_library"
 crate-type = ["staticlib"]
 
 [dependencies]
-uniffi = { version = "0.31", optional = true }
+uniffi = { version = "0.32", optional = true }
 
 [build-dependencies]
-uniffi = { version = "0.31", features = ["build"], optional = true }
+uniffi = { version = "0.32", features = ["build"], optional = true }
 
 [features]
 uniffi = ["dep:uniffi"]

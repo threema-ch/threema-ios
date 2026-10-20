@@ -27,7 +27,7 @@ extension libthreemaSwift.Poll {
             announceType: PollAnnounceType(ballotType: ballotEntity.type),
             displayMode: PollDisplayMode(ballotDisplayMode: ballotEntity.displayMode),
             choices: ballotEntity.choicesSortedByOrder.map { try PollChoice(ballotChoiceEntity: $0) },
-            votes: PollVotes(ballotEntity: ballotEntity)
+            votes: PollVotes(ballotEntity: ballotEntity, userIdentity: userIdentity)
         )
     }
 }
@@ -42,19 +42,34 @@ extension libthreemaSwift.PollChoice {
 }
 
 extension libthreemaSwift.PollVotes {
-    init(ballotEntity: BallotEntity) {
+    init(ballotEntity: BallotEntity, userIdentity: ThreemaIdentity) {
         // In summary mode individual votes are not known, we only the aggregate count per choice.
         if ballotEntity.isSummary {
             var summary: [LibthreemaPollChoiceID: UInt16] = [:]
             for choice in ballotEntity.choices ?? [] {
                 summary[choice.id.uint32Value] = choice.totalVotes?.uint16Value ?? 0
             }
-            self = .summary(summary)
+
+            let userChoices: Set<LibthreemaPollChoiceID> =
+                if let choicesWithResult = ballotEntity.choices?.filter(
+                    { $0.result != nil }
+                ) {
+                    Set(
+                        choicesWithResult.filter(
+                            { $0.result!.contains(where: { $0.participantID == userIdentity.rawValue }) }
+                        ).map(\.id.uint32Value)
+                    )
+                }
+                else {
+                    Set()
+                }
+
+            self = .summary(PollVotesSummary(summary: summary, userChoices: userChoices))
             return
         }
 
         // Otherwise we invert the per-choice results (Core Data) into per-voter votes (libthreema).
-        var choicesByVoter: [LibthreemaThreemaID: [LibthreemaPollChoiceID]] = [:]
+        var choicesByVoter: [LibthreemaThreemaID: Set<LibthreemaPollChoiceID>] = [:]
         var createdAtByVoter: [LibthreemaThreemaID: UInt64] = [:]
         var modifiedAtByVoter: [LibthreemaThreemaID: UInt64] = [:]
 
@@ -68,7 +83,7 @@ extension libthreemaSwift.PollVotes {
                     choicesByVoter[voter] = []
                 }
                 if result.boolValue {
-                    choicesByVoter[voter]?.append(choiceID)
+                    choicesByVoter[voter]?.insert(choiceID)
                 }
 
                 if let createdAt = result.createDate?.millisecondsSince1970 {

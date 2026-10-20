@@ -11,7 +11,6 @@ struct LocalBackupRestoreViewModelTests {
         let sut = LocalBackupRestoreViewModel(state: .inProgress)
 
         #expect(sut.cancelButtonTitle == "Cancel")
-        #expect(sut.dismissButtonTitle == "Dismiss")
         #expect(sut.tryAgainButtonTitle == "Try Again")
         #expect(sut.errorIconName == "exclamationmark.circle")
         #expect(sut.restoreError == nil)
@@ -34,11 +33,11 @@ struct LocalBackupRestoreViewModelTests {
     @Test func `In progress state resources are correctly set in the primary language`() {
         let sut = LocalBackupRestoreViewModel(state: .inProgress)
 
-        #expect(sut.state.iconSymbolName == "arrow.trianglehead.2.counterclockwise.rotate.90")
+        #expect(sut.state.headerIconName == "arrow.trianglehead.clockwise")
         #expect(sut.headerTitle == "Restoring Backup")
         #expect(sut.headerSubtitle == "This may take a few minutes depending on your backup size.")
 
-        #expect(sut.currentPhase == .preparing)
+        #expect(sut.currentPhase == .userData)
         #expect(sut.restoreItems.map(\.title) == stepTitles)
         #expect(sut.restoreItems.map(\.state) == [.inProgress, .waiting, .waiting, .waiting, .waiting, .waiting])
     }
@@ -46,7 +45,7 @@ struct LocalBackupRestoreViewModelTests {
     @Test func `Complete state resources are correctly set in the primary language`() {
         let sut = LocalBackupRestoreViewModel(state: .complete)
 
-        #expect(sut.state.iconSymbolName == "checkmark")
+        #expect(sut.state.headerIconName == "checkmark.circle")
         #expect(sut.headerTitle == "Restoring Complete")
         #expect(sut.headerSubtitle == "The app is ready to be used!")
 
@@ -58,7 +57,7 @@ struct LocalBackupRestoreViewModelTests {
         let sut = LocalBackupRestoreViewModel(state: .failed)
         sut.apply(DataRestoreProgress.mock(phase: .messages))
 
-        #expect(sut.state.iconSymbolName == "exclamationmark")
+        #expect(sut.state.headerIconName == "exclamationmark.circle")
         #expect(sut.headerTitle == "Restoring Failed")
         #expect(
             sut.headerSubtitle ==
@@ -70,14 +69,7 @@ struct LocalBackupRestoreViewModelTests {
     }
 
     @Test(arguments: [
-        (Phase.preparing, [
-            ItemState.inProgress,
-            .waiting,
-            .waiting,
-            .waiting,
-            .waiting,
-            .waiting,
-        ]),
+        (Phase.userData, [ItemState.inProgress, .waiting, .waiting, .waiting, .waiting, .waiting]),
         (.contacts, [.done, .inProgress, .waiting, .waiting, .waiting, .waiting]),
         (.distributionLists, [.done, .done, .waiting, .waiting, .waiting, .waiting]),
         (.groups, [.done, .done, .inProgress, .waiting, .waiting, .waiting]),
@@ -136,7 +128,7 @@ struct LocalBackupRestoreViewModelTests {
         await sut.runRestore()
 
         #expect(sut.state == .failed)
-        #expect(sut.currentPhase == .preparing)
+        #expect(sut.currentPhase == .userData)
         #expect(sut.restoreItems.map(\.state) == Array(repeating: .failed, count: stepTitles.count))
     }
 
@@ -182,7 +174,7 @@ struct LocalBackupRestoreViewModelTests {
     }
 
     private let stepTitles = [
-        "Preparing restore",
+        "Restoring user data",
         "Restoring contacts",
         "Restoring groups",
         "Restoring nonces",

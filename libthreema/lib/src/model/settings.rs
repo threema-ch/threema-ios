@@ -13,10 +13,8 @@ use crate::{
 // IMPORTANT: When touching these, always make sure to update [`SettingsUpdate`] and [`Settings::apply`]
 // accordingly.
 #[derive(Clone, Debug, Name)]
+#[cfg_attr(test, derive(PartialEq))]
 pub struct Settings {
-    /// Contact synchronization policy.
-    pub contact_sync_policy: protobuf_settings::ContactSyncPolicy,
-
     /// Unknown contacts policy.
     pub unknown_contact_policy: protobuf_settings::UnknownContactPolicy,
 
@@ -55,7 +53,6 @@ pub struct Settings {
 impl Default for Settings {
     fn default() -> Self {
         Self {
-            contact_sync_policy: protobuf_settings::ContactSyncPolicy::NotSynced,
             unknown_contact_policy: protobuf_settings::UnknownContactPolicy::AllowUnknown,
             read_receipt_policy: protobuf::d2d_sync::ReadReceiptPolicy::SendReadReceipt,
             typing_indicator_policy: protobuf::d2d_sync::TypingIndicatorPolicy::SendTypingIndicator,
@@ -73,9 +70,6 @@ impl Default for Settings {
 /// An update to the settings.
 #[derive(Clone, Debug, Name)]
 pub struct SettingsUpdate {
-    /// Contact synchronization policy.
-    pub contact_sync_policy: Option<protobuf_settings::ContactSyncPolicy>,
-
     /// Unknown contacts policy.
     pub unknown_contact_policy: Option<protobuf_settings::UnknownContactPolicy>,
 
@@ -114,7 +108,6 @@ pub struct SettingsUpdate {
 impl Apply<SettingsUpdate> for Settings {
     fn apply(&mut self, update: SettingsUpdate) {
         let SettingsUpdate {
-            contact_sync_policy,
             unknown_contact_policy,
             read_receipt_policy,
             typing_indicator_policy,
@@ -127,7 +120,6 @@ impl Apply<SettingsUpdate> for Settings {
             exclude_from_sync_identities,
         } = update;
 
-        self.contact_sync_policy.apply_some(contact_sync_policy);
         self.unknown_contact_policy.apply_some(unknown_contact_policy);
         self.read_receipt_policy.apply_some(read_receipt_policy);
         self.typing_indicator_policy.apply_some(typing_indicator_policy);

@@ -2,44 +2,68 @@ import SwiftUI
 import ThreemaFramework
 
 struct LocalBackupRecoveryKeyView: View {
+    private static let bottomViewID = "bottomView"
+
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.verticalSizeClass) private var verticalSizeClass
-
+    @ScaledMetric private var scaledMetric: CGFloat = 1.0
     @Bindable var model: LocalBackupRecoveryKeyViewModel
 
-    private static let bottomViewID = "bottomView"
+    private let headerHeight = DotHeaderView.defaultHeight
+    private let headerOverlap = DotHeaderView.defaultOverlap
 
     var body: some View {
         ScrollViewReader { proxy in
-            List {
-                HeaderView(model: model)
+            ScrollView {
+                VStack(spacing: 0) {
+                    DotHeaderView(
+                        icon: DotHeaderView.Icon(name: model.headerIconName, color: .accentColor),
+                        dotColor: .accentColor.opacity(0.3),
+                        height: headerHeight
+                    )
 
-                BackupInfoView(
-                    title: model.info?.title,
-                    content: model.info?.content,
-                    textColor: .primary,
-                    textFont: .callout,
-                    iconName: model.errorIconName,
-                    iconColor: .red
-                )
+                    VStack(spacing: 10 * scaledMetric) {
+                        BackupHeaderView(
+                            step: model.stepLabel,
+                            title: model.headerTitle,
+                            subtitle: model.headerSubtitle,
+                            backdrop: Color.listsBackgroundColor
+                        )
+                        .padding(.bottom, 20 * scaledMetric)
 
-                KeyView(model: model)
+                        KeyView(model: model)
 
-                if isBottomViewInlined {
-                    BottomView(model: model, isInlined: true)
-                        .id(Self.bottomViewID)
+                        BackupInfoView(
+                            title: nil,
+                            content: model.warning,
+                            textColor: .accentColor,
+                            textFont: .callout,
+                            iconName: model.warningIconName,
+                            iconColor: .accentColor,
+                            backgroundColor: Color(.secondary)
+                        )
+                        .padding(.bottom, 20 * scaledMetric)
+
+                        if isBottomViewInlined {
+                            BottomView(model: model, isInlined: true)
+                                .id(Self.bottomViewID)
+                        }
+                    }
+                    .safeAreaPadding(.horizontal, 20)
+                    .padding(.top, -headerHeight * headerOverlap / scaledMetric)
                 }
             }
-            .listSectionSpacing(.compact)
-            .contentMargins(.top, 0, for: .scrollContent)
+            .background(Color.listsBackgroundColor.ignoresSafeArea())
+            .ignoresSafeArea(edges: .top)
             .scrollIndicators(.hidden)
             .scrollBounceBehavior(.basedOnSize)
+            .contentMargins(.top, 0, for: .scrollContent)
             .navigationBarTitleDisplayMode(.inline)
             .safeAreaInset(edge: .bottom) {
                 if !isBottomViewInlined {
                     BottomView(model: model, isInlined: false)
-                        .padding(.horizontal, 28)
+                        .padding(.horizontal, 22)
                 }
             }
             .onAppear {
@@ -120,52 +144,23 @@ struct LocalBackupRecoveryKeyView: View {
         }
     }
 
-    private struct HeaderView: View {
-        let model: LocalBackupRecoveryKeyViewModel
-        
-        var body: some View {
-            BackupHeaderView(
-                icon: .init(symbolName: model.headerSymbolName, color: .blue, rotationDegrees: 30),
-                step: model.stepLabel,
-                title: model.keyTitle,
-                subtitle: model.keyDescription
-            )
-            .listRowInsets(EdgeInsets())
-            .listRowBackground(Color.clear)
-            .listRowSeparator(.hidden)
-            .frame(maxWidth: .infinity)
-        }
-    }
-
     private struct KeyView: View {
         @ScaledMetric private var scaledMetric: CGFloat = 1.0
 
         let model: LocalBackupRecoveryKeyViewModel
 
         var body: some View {
-            Section {
-                VStack(spacing: 12 * scaledMetric) {
-                    CurrentKeyView(model: model)
+            SectionCard {
+                VStack(spacing: 20 * scaledMetric) {
                     GridView(model: model)
-                    UsageView(model: model)
                     ActionsView(model: model)
                 }
-            }
-        }
-
-        private struct CurrentKeyView: View {
-            let model: LocalBackupRecoveryKeyViewModel
-
-            var body: some View {
-                if model.hasDefaultRecoveryKey {
-                    Text(model.currentKeyLabel)
-                        .font(.callout)
-                        .bold()
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 4)
-                        .foregroundStyle(Color(.systemBackground))
-                        .background(Color.accentColor, in: Capsule())
-                        .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.vertical, 8 * scaledMetric)
+            } header: {
+                Text(model.currentKeyLabel)
+            } footer: {
+                if model.hasDefaultRecoveryKey, let usage = model.recoveryKeyUsage {
+                    Text(usage)
                 }
             }
         }
@@ -179,20 +174,20 @@ struct LocalBackupRecoveryKeyView: View {
             let model: LocalBackupRecoveryKeyViewModel
 
             var body: some View {
-                Grid(verticalSpacing: 12 * scaledMetric) {
+                Grid(horizontalSpacing: 0, verticalSpacing: 24 * scaledMetric) {
                     ForEach(model.keyRows(columnsPerRow: columnsPerRow)) { row in
                         GridRow {
                             ForEach(row.cells) { cell in
-                                Text(attributedCode(cell.text))
-                                    .font(.callout)
+                                Text(cell.text)
+                                    .font(.callout.weight(.medium))
+                                    .frame(maxWidth: .infinity)
                             }
                         }
-                        .frame(maxWidth: .infinity)
                     }
                 }
+                .frame(maxWidth: .infinity)
             }
 
-            /// Number of key chunks shown per row for the current size class and Dynamic Type setting.
             private var columnsPerRow: Int {
                 guard let horizontalSizeClass, let verticalSizeClass else {
                     return 1
@@ -220,53 +215,30 @@ struct LocalBackupRecoveryKeyView: View {
                     1
                 }
             }
-
-            private func attributedCode(_ code: String) -> AttributedString {
-                var attributed = AttributedString(code)
-
-                for run in code.ranges(of: /\d+/) {
-                    if let range = Range(run, in: attributed) {
-                        attributed[range].foregroundColor = Color.accentColor
-                    }
-                }
-
-                return attributed
-            }
-        }
-
-        private struct UsageView: View {
-            let model: LocalBackupRecoveryKeyViewModel
-
-            var body: some View {
-                if model.hasDefaultRecoveryKey, let value = model.recoveryKeyUsage {
-                    Text(value)
-                        .font(.footnote).bold()
-                        .foregroundStyle(.secondary)
-                        .frame(maxWidth: .infinity)
-                }
-            }
         }
 
         private struct ActionsView: View {
             let model: LocalBackupRecoveryKeyViewModel
 
             var body: some View {
-                VStack(spacing: 16) {
-                    CapsuleButton(
-                        iconName: model.copyIconName,
-                        label: model.copyButtonTitle,
-                        style: .filled,
-                        action: model.copyKeyButtonTapped
-                    )
-
+                HStack(spacing: 16) {
                     if model.hasDefaultRecoveryKey {
                         CapsuleButton(
                             iconName: model.deleteIconName,
                             label: model.deleteLabel,
                             style: .bordered(.red),
+                            fillsAvailableWidth: true,
                             action: model.deleteKeyButtonTapped
                         )
                     }
+
+                    CapsuleButton(
+                        iconName: model.copyIconName,
+                        label: model.copyButtonTitle,
+                        style: .filled,
+                        fillsAvailableWidth: model.hasDefaultRecoveryKey,
+                        action: model.copyKeyButtonTapped
+                    )
                 }
                 .transaction { $0.disablesAnimations = true } // disable the animation of the icon movement
             }
@@ -277,6 +249,7 @@ struct LocalBackupRecoveryKeyView: View {
                 let iconName: String
                 let label: String
                 let style: Style
+                let fillsAvailableWidth: Bool
                 let action: () -> Void
 
                 enum Style {
@@ -290,20 +263,20 @@ struct LocalBackupRecoveryKeyView: View {
                             Image(systemName: iconName)
                                 .resizable()
                                 .scaledToFit()
-                                .frame(width: 16 * scaledMetric, height: 16 * scaledMetric)
+                                .frame(width: 14 * scaledMetric, height: 14 * scaledMetric)
 
                             Text(label)
                                 .font(.footnote)
                         }
-                        .frame(maxWidth: .infinity)
+                        .frame(maxWidth: fillsAvailableWidth ? .infinity : nil)
                         .foregroundStyle(contentColor)
-                        .padding(6 * scaledMetric)
+                        .padding(10 * scaledMetric)
                         .background {
                             switch style {
                             case .filled:
                                 Capsule().fill(Color(.systemGray5))
                             case let .bordered(color):
-                                Capsule().strokeBorder(color, lineWidth: 1)
+                                Capsule().fill(color.opacity(0.2))
                             }
                         }
                     }
@@ -328,87 +301,19 @@ struct LocalBackupRecoveryKeyView: View {
         let isInlined: Bool
 
         var body: some View {
-            if model.hasDefaultRecoveryKey {
-                CreateNewKeyView(model: model, isInlined: isInlined)
-            }
-            else {
-                SaveKeyView(model: model)
-            }
-        }
-
-        private struct SaveKeyView: View {
-            @ScaledMetric private var scaledMetric: CGFloat = 1
-            let model: LocalBackupRecoveryKeyViewModel
-
-            var body: some View {
-                VStack(spacing: 24 * scaledMetric) {
-                    BackupInfoView(
-                        title: nil,
-                        content: model.warning,
-                        textColor: Color.accentColor,
-                        textFont: .callout,
-                        iconName: model.warningIconName,
-                        iconColor: Color.accentColor
-                    )
-
-                    ThreemaButton(
-                        title: model.saveButtonTitle,
-                        style: .borderedProminent,
-                        size: .fullWidth
-                    ) {
-                        model.saveButtonTapped()
-                    }
-                }
-                .frame(maxWidth: .infinity)
-                .listRowInsets(EdgeInsets())
-                .listRowBackground(Color.clear)
-            }
-        }
-
-        private struct CreateNewKeyView: View {
-            let model: LocalBackupRecoveryKeyViewModel
-            let isInlined: Bool
-
-            var body: some View {
-                if isInlined {
-                    Section {
-                        Button {
-                            model.createNewKeyButtonTapped()
-                        } label: {
-                            content
-                        }
-                    }
+            ThreemaButton(
+                title: model.hasDefaultRecoveryKey ? model.createKeyLabel : model.saveButtonTitle,
+                style: .borderedProminent,
+                size: .fullWidth
+            ) {
+                if model.hasDefaultRecoveryKey {
+                    model.createNewKeyButtonTapped()
                 }
                 else {
-                    Button {
-                        model.createNewKeyButtonTapped()
-                    } label: {
-                        content
-                            .padding(.vertical, 12)
-                    }
-                    .padding(.horizontal, 18)
-                    .frame(maxWidth: .infinity)
-                    .background(Color(.secondarySystemGroupedBackground), in: Capsule())
+                    model.saveButtonTapped()
                 }
             }
-
-            private var content: some View {
-                HStack {
-                    VStack(alignment: .leading) {
-                        Text(model.createKeyLabel)
-                            .font(.callout)
-                            .foregroundStyle(Color.primary)
-                        Text(model.createKeyDescription)
-                            .font(.footnote)
-                            .foregroundStyle(Color.secondary)
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-
-                    Image(systemName: model.createKeyIconName)
-                        .font(.footnote.weight(.semibold))
-                        .foregroundStyle(Color(.tertiaryLabel))
-                }
-            }
+            .frame(maxWidth: .infinity)
         }
     }
 }

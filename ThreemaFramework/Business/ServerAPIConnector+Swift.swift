@@ -1,4 +1,5 @@
 import Foundation
+import ThreemaEssentials
 
 extension ServerAPIConnector {
 
@@ -92,13 +93,37 @@ extension ServerAPIConnector {
         }
     }
     
-    public func reportSpamForSender(
-        with identity: String,
+    public func reportSpam(
+        for identity: String,
         and nickname: String?,
         store: MyIdentityStoreProtocol
     ) async throws {
         try await withCheckedThrowingContinuation { continuation in
-            reportSpamForSender(withIdentity: identity, andNickname: nickname, withStore: store) {
+            reportSpam(forIdentity: identity, andNickname: nickname, withStore: store) {
+                continuation.resume()
+            } onError: { error in
+                continuation.resume(throwing: error ?? ServerAPIConnectorError.genericError)
+            }
+        }
+    }
+
+    public func reportSpamForGroup(
+        groupID: Data,
+        adminIdentity: String,
+        adminNickname: String?,
+        memberCount: Int,
+        store: MyIdentityStoreProtocol
+    ) async throws {
+        let groupIDInteger: UInt64 = try groupID.littleEndian()
+
+        try await withCheckedThrowingContinuation { continuation in
+            reportSpamForGroup(
+                withGroupID: groupIDInteger,
+                adminIdentity: adminIdentity,
+                adminNickname: adminNickname,
+                memberCount: memberCount,
+                withStore: store
+            ) {
                 continuation.resume()
             } onError: { error in
                 continuation.resume(throwing: error ?? ServerAPIConnectorError.genericError)

@@ -110,6 +110,9 @@ extern NSString * const kPreferenceAllowScreenshotKey;
 @property (nonatomic, readwrite) BOOL didShowIdentityThisDeviceOnly;
 
 @property (nonatomic, readwrite) NSData *evaluatedPolicyDomainStateApp;
+@property (nonatomic, readwrite) BOOL distributionListsEnabled;
+@property (nonatomic, readwrite) BOOL backups2Enabled;
+@property (nonatomic, readwrite) BOOL localBackupDebugRecoveryKeyEnabled;
 
 @end
 
@@ -146,9 +149,6 @@ typedef NS_ENUM(NSInteger, AcceptPrivacyPolicyVariant) {
 @property (nonatomic, readwrite) BOOL desktopInfoBannerShown;
 @property (nonatomic, readwrite) BOOL resetTipKitOnNextLaunch;
 @property (nonatomic, readwrite) BOOL partialReactionSupportAlertShown;
-
-@property (nonatomic, readwrite) BOOL distributionListsEnabled;
-@property (nonatomic, readwrite) BOOL backups2Enabled;
 
 + (UserSettings*)sharedUserSettings;
 - (instancetype) __unavailable init;

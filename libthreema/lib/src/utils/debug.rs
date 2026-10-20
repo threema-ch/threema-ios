@@ -4,14 +4,15 @@ use core::fmt;
 use libthreema_dependencies::{crypto::x25519, data_encoding::HEXLOWER_PERMISSIVE};
 
 /// Formatter to format a slice to its length.
-pub(crate) fn debug_slice_length<E, T: AsRef<[E]>>(
-    slice: T,
-    formatter: &mut fmt::Formatter<'_>,
-) -> fmt::Result {
+pub(crate) fn debug_slice_length<E, T>(slice: T, formatter: &mut fmt::Formatter<'_>) -> fmt::Result
+where
+    T: AsRef<[E]>,
+{
     write!(formatter, "length={}", slice.as_ref().len())
 }
 
 /// Formatter to format arbitrary collections that implement [`IntoIterator`] with [`ExactSizeIterator`].
+#[expect(dead_code, reason = "Will use later")]
 pub(crate) fn debug_collection_length<'collection, TCollection>(
     collection: &'collection TCollection,
     formatter: &mut fmt::Formatter<'_>,

@@ -1,4 +1,5 @@
 import FileUtility
+import Keychain
 import KeychainTestHelper
 import RemoteSecretProtocolTestHelper
 import ThreemaEssentials
@@ -16,6 +17,8 @@ final class AppMigrationTests: XCTestCase {
     private var myIdentityStoreMock: MyIdentityStoreMock!
     private var groupManagerMock: GroupManagerMock!
     private var userSettingsMock: UserSettingsMock!
+
+    private var pushEncryptionKey: Data!
 
     override func setUp() {
         AppGroup.setGroupID("group.ch.threema") // THREEMA_GROUP_IDENTIFIER @"group.ch.threema"
@@ -58,7 +61,8 @@ final class AppMigrationTests: XCTestCase {
         setupDataForMigrationVersion7_0_4()
         setupDataForMigrationVersion7_1()
         try setupDataForMigrationVersion7_4()
-                
+        setupDataForMigrationVersion7_5()
+
         // Verify that the migration was started by `doMigrate` and not some other function accidentally accessing the
         // database before the proper migration was initialized.
         try DatabaseManager(
@@ -164,6 +168,9 @@ final class AppMigrationTests: XCTestCase {
         XCTAssertTrue(ddLoggerMock.exists(message: "[AppMigration] App migration to version 7.4 started"))
         XCTAssertTrue(ddLoggerMock.exists(message: "[AppMigration] App migration to version 7.4 successfully finished"))
         
+        XCTAssertTrue(ddLoggerMock.exists(message: "[AppMigration] App migration to version 7.5 started"))
+        XCTAssertTrue(ddLoggerMock.exists(message: "[AppMigration] App migration to version 7.5 successfully finished"))
+
         XCTAssertEqual(1, keychainManagerMock.migrateToVersion0Calls)
 
         let entityManager = testDatabase.entityManager
@@ -351,6 +358,10 @@ final class AppMigrationTests: XCTestCase {
         // Checks for 7.4 migration
         let documentInbox = try XCTUnwrap(FileUtility.shared.appDocumentsDirectory?.appending(path: "Inbox"))
         XCTAssertFalse(FileUtility.shared.fileExists(at: documentInbox))
+
+        // Key is moved out of the user defaults into the Keychain
+        XCTAssertNil(AppGroup.userDefaults().object(forKey: AppMigration.legacyPushEncryptionKeyUserDefaultsKey))
+        XCTAssertEqual(pushEncryptionKey, try KeychainManager.loadPushNotificationEncryptionKey())
     }
 
     private func setupDataForMigrationVersion4_8() {
@@ -755,5 +766,10 @@ final class AppMigrationTests: XCTestCase {
 
         let test2: URL = try XCTUnwrap(FileUtility.shared.appDocumentsDirectory?.appending(path: "Inbox/test2"))
         FileUtility.shared.write(contents: Data("test2".utf8), to: test2)
+    }
+    
+    func setupDataForMigrationVersion7_5() {
+        pushEncryptionKey = BytesUtility.generateRandomBytes(length: 32)!
+        AppGroup.userDefaults().set(pushEncryptionKey, forKey: AppMigration.legacyPushEncryptionKeyUserDefaultsKey)
     }
 }

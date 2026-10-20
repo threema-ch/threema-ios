@@ -6,15 +6,40 @@ struct LocalBackupSettingsView: View {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.verticalSizeClass) private var verticalSizeClass
+    @ScaledMetric private var scaledMetric: CGFloat = 1.0
+    
+    private let headerHeight = DotHeaderView.defaultHeight
+    private let headerOverlap = DotHeaderView.defaultOverlap
 
     var body: some View {
-        List {
-            HeaderView(model: model)
-            RecoveryKeySection(model: model)
-            AlwaysIncludedSection(model: model)
-            IncludeMediaSection(model: model)
-            BottomView(model: model, isVisible: isBottomViewInlined)
+        ScrollView {
+            VStack(spacing: 0) {
+                DotHeaderView(
+                    icon: DotHeaderView.Icon(name: model.headerIconName, color: .accentColor),
+                    dotColor: .accentColor.opacity(0.3),
+                    height: headerHeight
+                )
+
+                VStack(spacing: 10 * scaledMetric) {
+                    BackupHeaderView(
+                        step: model.stepLabel,
+                        title: model.headerTitle,
+                        subtitle: model.headerSubtitle,
+                        backdrop: Color.listsBackgroundColor
+                    )
+                    .padding(.bottom, 20 * scaledMetric)
+
+                    RecoveryKeySection(model: model)
+                    AlwaysIncludedSection(model: model)
+                    IncludeMediaSection(model: model)
+                    BottomView(model: model, isVisible: isBottomViewInlined)
+                }
+                .safeAreaPadding(.horizontal, 20)
+                .padding(.top, -headerHeight * headerOverlap / scaledMetric)
+            }
         }
+        .background(Color.listsBackgroundColor.ignoresSafeArea())
+        .ignoresSafeArea(edges: .top)
         .navigationBarTitleDisplayMode(.inline)
         .scrollBounceBehavior(.basedOnSize)
         .scrollIndicators(.hidden)
@@ -38,24 +63,7 @@ struct LocalBackupSettingsView: View {
                 model.cancelButtonTapped()
             }
         } message: {
-            Text(verbatim: model.notEnoughStorageMessage)
-        }
-    }
-
-    private struct HeaderView: View {
-        let model: LocalBackupSettingsViewModel
-
-        var body: some View {
-            BackupHeaderView(
-                icon: .init(symbolName: model.symbolName, color: .blue),
-                step: model.stepLabel,
-                title: model.headerTitle,
-                subtitle: model.headerDescription
-            )
-            .listRowInsets(EdgeInsets())
-            .listRowBackground(Color.clear)
-            .listRowSeparator(.hidden)
-            .frame(maxWidth: .infinity)
+            Text(model.notEnoughStorageMessage)
         }
     }
 
@@ -64,21 +72,30 @@ struct LocalBackupSettingsView: View {
 
         var body: some View {
             if model.isDefaultKey {
-                Section {
-                    ButtonNavigation {
+                SectionCard {
+                    Button {
                         model.recoveryKeyDetailsButtonTapped()
                     } label: {
-                        AdaptiveStack {
-                            Text(model.recoveryKeyLabel)
-                                .font(.body)
-                                .foregroundStyle(.primary)
-                            Spacer()
-                            Text(model.recoveryKeyTrimmed)
-                                .font(.body)
-                                .foregroundStyle(.secondary)
+                        HStack {
+                            AdaptiveStack {
+                                Text(model.recoveryKeyLabel)
+                                    .font(.body)
+                                    .foregroundStyle(.primary)
+                                Spacer()
+                                Text(model.recoveryKeyTrimmed)
+                                    .font(.body)
+                                    .foregroundStyle(.secondary)
+                            }
+                            .multilineTextAlignment(.leading)
+
+                            Image(systemName: model.disclosureIconName)
+                                .foregroundStyle(.tertiary)
+                                .imageScale(.small)
+                                .accessibilityHidden(true)
                         }
-                        .multilineTextAlignment(.leading)
+                        .contentShape(Rectangle())
                     }
+                    .buttonStyle(.plain)
                 } header: {
                     Text(model.recoveryKeySectionHeader)
                 }
@@ -90,27 +107,30 @@ struct LocalBackupSettingsView: View {
         let model: LocalBackupSettingsViewModel
 
         var body: some View {
-            Section {
+            SectionCard {
                 HStack {
                     VStack(alignment: .leading) {
-                        Text(verbatim: model.includedMessagesTitle)
+                        Text(model.includedMessagesTitle)
                             .font(.body)
                             .foregroundStyle(.primary)
+                            .frame(maxWidth: .infinity, alignment: .leading)
 
-                        Text(verbatim: model.includedMessagesSubtitle)
+                        Text(model.includedMessagesSubtitle)
                             .font(.caption)
                             .foregroundStyle(.secondary)
+                            .frame(maxWidth: .infinity, alignment: .leading)
                     }
+
                     if model.isDefaultKey {
                         Spacer()
-                        Image(systemName: "checkmark.circle.fill")
+                        Image(systemName: model.checkmarkIconName)
                             .foregroundStyle(.green)
                     }
                 }
             } header: {
-                Text(verbatim: model.includedSectionHeader)
+                Text(model.includedSectionHeader)
             } footer: {
-                Text(verbatim: model.includedSectionFooter)
+                Text(model.includedSectionFooter)
             }
         }
     }
@@ -119,15 +139,15 @@ struct LocalBackupSettingsView: View {
         @Bindable var model: LocalBackupSettingsViewModel
 
         var body: some View {
-            Section {
+            SectionCard {
                 VStack(alignment: .leading) {
                     HStack {
                         Toggle(isOn: $model.includeMedia) {
-                            Text(verbatim: model.includeMediaTitle)
+                            Text(model.includeMediaTitle)
                                 .font(.body)
                                 .foregroundStyle(.primary)
 
-                            Text(verbatim: model.includeMediaSubtitle)
+                            Text(model.includeMediaSubtitle)
                                 .font(.caption)
                                 .foregroundStyle(.primary)
                         }
@@ -136,10 +156,6 @@ struct LocalBackupSettingsView: View {
 
                     if model.includeMedia {
                         Divider()
-
-                        Text(verbatim: model.whatsIncludedLabel)
-                            .font(.body)
-                            .foregroundStyle(.secondary)
                             .padding(.vertical, 8)
 
                         VStack(alignment: .leading, spacing: 12) {
@@ -148,16 +164,17 @@ struct LocalBackupSettingsView: View {
                                     iconName: item.iconName,
                                     title: item.title,
                                     subtitle: item.subtitle,
-                                    isDefaultKey: model.isDefaultKey
+                                    isDefaultKey: model.isDefaultKey,
+                                    checkmarkIconName: model.checkmarkIconName
                                 )
                             }
                         }
                     }
                 }
             } header: {
-                Text(verbatim: model.mediaSectionHeader)
+                Text(model.mediaSectionHeader)
             } footer: {
-                Text(verbatim: model.mediaSectionFooter)
+                Text(model.mediaSectionFooter)
             }
         }
 
@@ -168,29 +185,30 @@ struct LocalBackupSettingsView: View {
             let title: String
             let subtitle: String
             let isDefaultKey: Bool
+            let checkmarkIconName: String
 
             var body: some View {
-                HStack(alignment: .top, spacing: 16) {
+                HStack(spacing: 16) {
                     Image(systemName: iconName)
                         .resizable()
                         .symbolRenderingMode(.monochrome)
                         .aspectRatio(contentMode: .fit)
-                        .frame(width: 16 * scaledMetric, height: 16 * scaledMetric)
+                        .frame(width: 22 * scaledMetric, height: 22 * scaledMetric)
 
                     VStack(alignment: .leading) {
-                        Text(verbatim: title)
+                        Text(title)
                             .font(.body)
                             .foregroundStyle(.primary)
 
                         // TODO: Check if this is still needed?
-                        Text(verbatim: subtitle)
+                        Text(subtitle)
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
 
                     if isDefaultKey {
                         Spacer()
-                        Image(systemName: "checkmark.circle.fill")
+                        Image(systemName: checkmarkIconName)
                             .foregroundStyle(.green)
                     }
                 }
@@ -203,19 +221,16 @@ struct LocalBackupSettingsView: View {
         let isVisible: Bool
 
         var body: some View {
-            Group {
-                if isVisible {
-                    ThreemaButton(
-                        title: model.startButtonTitle,
-                        style: .borderedProminent,
-                        size: .fullWidth
-                    ) {
-                        model.startButtonTapped()
-                    }
+            if isVisible {
+                ThreemaButton(
+                    title: model.startButtonTitle,
+                    style: .borderedProminent,
+                    size: .fullWidth
+                ) {
+                    model.startButtonTapped()
                 }
+                .frame(maxWidth: .infinity, alignment: .center)
             }
-            .listRowInsets(EdgeInsets())
-            .listRowBackground(Color.clear)
         }
     }
 
@@ -257,6 +272,10 @@ struct LocalBackupSettingsView: View {
         LocalBackupSettingsView.Stance.space.view
     }
 
+    #Preview(LocalBackupSettingsView.Stance.recoveryKeySheet.title) {
+        LocalBackupSettingsView.Stance.recoveryKeySheet.view
+    }
+
     extension LocalBackupSettingsView {
         enum Stance: PreviewCase {
             case generatedKey
@@ -264,6 +283,7 @@ struct LocalBackupSettingsView: View {
             case generatedKeyIncludeMediaOff
             case defaultKeyIncludeMediaOff
             case space
+            case recoveryKeySheet
 
             var title: String {
                 switch self {
@@ -272,27 +292,49 @@ struct LocalBackupSettingsView: View {
                 case .generatedKeyIncludeMediaOff: "Backup Settings - Generated Key - Media Off"
                 case .defaultKeyIncludeMediaOff: "Backup Settings - Default Key - Media Off"
                 case .space: "Backup Settings - Alert Not enough space"
+                case .recoveryKeySheet: "Backup Settings - Recovery Key Sheet"
                 }
+            }
+
+            @MainActor
+            private func makeSettings(key: BackupEncryptionKey) -> some View {
+                PushedPreview {
+                    LocalBackupSettingsView(
+                        model: LocalBackupSettingsViewModel(
+                            manager: BackupCreateManagerMock(currentRecoveryKey: key)
+                        )
+                    )
+                }
+            }
+
+            @MainActor
+            private func makeRecoveryKeySheet(
+                key: BackupEncryptionKey,
+                sizing: SheetPreviewSizing
+            ) -> some View {
+                let model = LocalBackupRecoveryKeySheetViewModel(
+                    manager: BackupCreateManagerMock(currentRecoveryKey: key)
+                )
+                model.onContentHeightChange = { sizing.height = $0 }
+
+                return LocalBackupRecoveryKeySheetView(model: model)
             }
 
             @MainActor var view: some View {
                 switch self {
                 case .generatedKey:
-                    PushedPreview {
-                        LocalBackupSettingsView(
-                            model: LocalBackupSettingsViewModel(
-                                manager: BackupCreateManagerMock(currentRecoveryKey: .mockGeneratedKey)
-                            )
-                        )
-                    }
+                    makeSettings(key: .mockGeneratedKey)
+
                 case .defaultKey:
-                    PushedPreview {
-                        LocalBackupSettingsView(
-                            model: LocalBackupSettingsViewModel(
-                                manager: BackupCreateManagerMock(currentRecoveryKey: .mockDefaultKey)
-                            )
-                        )
+                    makeSettings(key: .mockDefaultKey)
+
+                case .recoveryKeySheet:
+                    ContentSizedSheetPreview { sizing in
+                        makeRecoveryKeySheet(key: .mockDefaultKey, sizing: sizing)
+                    } over: {
+                        makeSettings(key: .mockDefaultKey)
                     }
+
                 case .generatedKeyIncludeMediaOff:
                     PushedPreview {
                         LocalBackupSettingsView(
@@ -305,6 +347,7 @@ struct LocalBackupSettingsView: View {
                             }()
                         )
                     }
+
                 case .defaultKeyIncludeMediaOff:
                     PushedPreview {
                         LocalBackupSettingsView(
@@ -317,6 +360,7 @@ struct LocalBackupSettingsView: View {
                             }()
                         )
                     }
+
                 case .space:
                     PushedPreview {
                         let model = LocalBackupSettingsViewModel(

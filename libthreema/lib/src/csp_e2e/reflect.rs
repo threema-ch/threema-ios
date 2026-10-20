@@ -1,5 +1,4 @@
 //! Task for reflecting messages.
-use const_format::formatcp;
 use libthreema_macros::Name;
 use tracing::{error, warn};
 
@@ -31,7 +30,7 @@ pub struct ReflectResponse {
 }
 
 /// Flags applied when reflecting/reflected.
-#[derive(Default)]
+#[derive(Debug, Default)]
 pub struct ReflectFlags {
     /// If `true`, the reflected message is only transmitted to other devices currently online.
     pub ephemeral: bool,
@@ -53,6 +52,7 @@ impl From<&MessageProperties> for ReflectFlags {
 /// A message that should be reflected or has been reflected.
 ///
 /// TODO(LIB-16): Add a `From` for the D2M layer reflect payload / align with those structs.
+#[derive(Debug)]
 pub struct ReflectPayload {
     /// Flags used for the reflected message.
     pub flags: ReflectFlags,
@@ -127,9 +127,9 @@ impl ReflectSubtask {
     pub(crate) fn poll(mut self) -> Result<(), CspE2eProtocolError> {
         // Ensure the caller provided the acknowledged reflect IDs
         let Some(mut acknowledged_reflect_ids) = self.acknowledged_reflect_ids else {
-            return Err(CspE2eProtocolError::InvalidState(formatcp!(
+            return Err(CspE2eProtocolError::ContractViolation(format!(
                 "Acknowledged reflect IDs were not provided for '{}' state",
-                ReflectSubtask::NAME,
+                Self::NAME,
             )));
         };
 

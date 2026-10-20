@@ -652,7 +652,11 @@ Process incoming message.
             [self processIncomingGroupDeliveryReceipt:(GroupDeliveryReceiptMessage*)amsg onCompletion:onCompletion onError:onError];
         } else if ([amsg isKindOfClass:[GroupCallStartMessage class]]) {
             GroupCallStartMessage *newMsg = (GroupCallStartMessage *) amsg;
-            [[GlobalGroupCallManagerSingleton shared] handleMessageWithRawMessage:newMsg.decodedObj from:newMsg.fromIdentity in:conversation.objectID receiveDate:newMsg.date completionHandler:^{
+            [[GlobalGroupCallManagerSingleton shared] handleMessageWithRawMessage:newMsg.decodedObj from:newMsg.fromIdentity in:conversation.objectID receiveDate:newMsg.date completionHandler:^(BOOL callMightBeRunning){
+                // Handling the message peeks the SFU. Remember the verdict, it is used to suppress the user
+                // notification for a call that already ended.
+                newMsg.callEnded = !callMightBeRunning;
+
                 dispatch_async(dispatch_get_main_queue(), ^{
                     DDLogNotice(@"[GroupCall] [DB] Completion handler called");
                     onCompletion();

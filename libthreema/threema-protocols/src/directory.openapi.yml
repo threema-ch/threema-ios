@@ -1103,7 +1103,7 @@ paths:
       summary: Work Properties (Legacy)
       description: |-
         Update Work properties associated to the currently used Threema ID. Only
-        used by the _Work_ flavour of Threema.
+        used by the _Work_, _Blue_ or _OnPrem_ flavour of Threema.
 
         The first call without the challenge response properties initiates the
         challenge request. The second call must repeat the exact same properties
@@ -1145,7 +1145,7 @@ paths:
       summary: Work Sync
       description: |-
         Full sync of all data associated to the Work subscription. Only used by
-        the _Work_ flavour of Threema.
+        the _Work_, _Blue_ or _OnPrem_ flavour of Threema.
 
         TODO(SE-368): When sending/receiving steps.
       servers: *work-servers
@@ -1238,7 +1238,7 @@ paths:
       summary: Work Properties
       description: |-
         Update Work properties associated to the currently used Threema ID. Only
-        used by the _Work_ flavour of Threema.
+        used by the _Work_, _Blue_ or _OnPrem_ flavour of Threema.
 
         The first call without the challenge response properties initiates the
         challenge request. The second call must repeat the exact same properties

@@ -210,7 +210,7 @@ pub trait ContactProvider: Send + Sync {
 
     fn get(&self, identity: ThreemaId) -> Result<Option<Contact>, ProviderError>;
 
-    fn get_identities(&self) -> Result<Vec<ThreemaId>, ProviderError>;
+    fn get_identities(&self) -> Result<HashSet<ThreemaId>, ProviderError>;
 
     fn get_with_profile_pictures(
         &self,
@@ -271,25 +271,27 @@ impl<T: ContactProvider + ?Sized> contact::ContactProvider for Arc<T> {
     }
 
     fn get(&self, identity: common::ThreemaId) -> Result<Option<contact::Contact>, ProviderError> {
-        ContactProvider::get(self.as_ref(), identity.into())?
-            .map(|contact| Ok(contact::Contact::try_from(contact)?))
-            .transpose()
+        Ok(ContactProvider::get(self.as_ref(), identity.into())?
+            .map(contact::Contact::try_from)
+            .transpose()?)
     }
 
     fn get_identities(&self) -> Result<HashSet<common::ThreemaId>, ProviderError> {
-        ContactProvider::get_identities(self.as_ref())?
+        Ok(ContactProvider::get_identities(self.as_ref())?
             .into_iter()
-            .map(|identity| Ok(common::ThreemaId::try_from(identity)?))
-            .collect()
+            .map(common::ThreemaId::try_from)
+            .collect::<Result<_, _>>()?)
     }
 
     fn get_with_profile_pictures(
         &self,
         identity: common::ThreemaId,
     ) -> Result<Option<contact::ContactWithProfilePictures>, ProviderError> {
-        ContactProvider::get_with_profile_pictures(self.as_ref(), identity.into())?
-            .map(|contact| Ok(contact::ContactWithProfilePictures::try_from(contact)?))
-            .transpose()
+        Ok(
+            ContactProvider::get_with_profile_pictures(self.as_ref(), identity.into())?
+                .map(contact::ContactWithProfilePictures::try_from)
+                .transpose()?,
+        )
     }
 
     fn has(&self, identity: common::ThreemaId) -> Result<bool, ProviderError> {

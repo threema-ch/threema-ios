@@ -13,7 +13,7 @@ public final actor DataBackup: DataBackupProtocol {
 
     private let backupURL: URL
     private let fileUtility: FileUtilityProtocol
-    private let createTask: any BackupCreateTaskProtocol
+    private let createTask: any DataBackupCreateTaskProtocol
     private let progressInterval: Duration
     private let onProgress: ProgressHandler?
 
@@ -26,7 +26,7 @@ public final actor DataBackup: DataBackupProtocol {
     public init(
         backupURL: URL,
         fileUtility: any FileUtilityProtocol,
-        createTask: any BackupCreateTaskProtocol,
+        createTask: any DataBackupCreateTaskProtocol,
         progressInterval: Duration = .milliseconds(500),
         onProgress: ProgressHandler? = nil
     ) {
@@ -59,17 +59,8 @@ public final actor DataBackup: DataBackupProtocol {
             case let .instruction(instruction):
                 try handleInstruction(instruction, fileHandle: fileHandle)
 
-            case let .done(writtenBytes):
+            case .done:
                 done = true
-
-                let actualBytes = try fileHandle.seekToEnd()
-
-                guard actualBytes == writtenBytes else {
-                    throw DataBackupError.backupCreateFileWrittenBytesMismatch(
-                        actual: actualBytes, expected: writtenBytes
-                    )
-                }
-
                 incompleteBackupURL = nil
             }
         }
@@ -77,7 +68,7 @@ public final actor DataBackup: DataBackupProtocol {
 
     // MARK: - Private methods
 
-    private func handleInstruction(_ payload: BackupCreateInstruction, fileHandle: FileHandle) throws {
+    private func handleInstruction(_ payload: DataBackupCreateInstruction, fileHandle: FileHandle) throws {
         if let writeInstruction = payload.writeInstruction {
             try handleWriteInstruction(writeInstruction, fileHandle: fileHandle)
         }
@@ -87,16 +78,13 @@ public final actor DataBackup: DataBackupProtocol {
         }
     }
 
-    private func handleWriteInstruction(_ instruction: WriteInstruction, fileHandle: FileHandle) throws {
+    private func handleWriteInstruction(_ instruction: DataBackupCreateWriteInstruction, fileHandle: FileHandle) throws {
         switch instruction {
         case let .local(.append(data)):
             try fileUtility.write(contents: data, offset: nil, to: fileHandle, fileURL: backupURL)
 
         case let .local(.writeAt(offset, data)):
             try fileUtility.write(contents: data, offset: offset, to: fileHandle, fileURL: backupURL)
-
-        case .remote:
-            throw DataBackupError.remoteBackupNotSupported
         }
     }
 
@@ -105,7 +93,7 @@ public final actor DataBackup: DataBackupProtocol {
     /// The backup task recomputes its state update on every poll, so within a phase only the item count moves and an
     /// update arrives once per written item. Phase changes are always reported, item counts of the phase that is
     /// already reported at most once per ``progressInterval``.
-    private func handleStateUpdate(_ stateUpdate: BackupCreateStateUpdate) {
+    private func handleStateUpdate(_ stateUpdate: DataBackupCreateStateUpdate) {
         let progress = DataBackupProgress(stateUpdate)
         let now = ContinuousClock.now
 
@@ -116,7 +104,7 @@ public final actor DataBackup: DataBackupProtocol {
         lastReportedPhase = progress.phase
         lastReportedAt = now
 
-        DDLogVerbose("Backup create progress: \(progress.phase) with \(progress.itemsProcessed) item(s)")
+        DDLogVerbose("Backup create progress: \(progress.phase)")
 
         onProgress?(progress)
     }

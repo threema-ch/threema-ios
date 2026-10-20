@@ -152,49 +152,23 @@ final class CoreDataContactListProviderTests {
         #expect(recorder.deliveries.allSatisfy { $0 }, "sortOrderFirstName: delivered off the main thread")
     }
 
-    @Test(
-        "The block list subscription fetches once per blocked identity at init, then never again",
-        arguments: [[String](), ["ECHOECHO"], ["ECHOECHO", "AAAAAAAA", "BBBBBBBB"]]
-    )
-    func blockListSubscriptionOnlyRunsDuringInit(blockedIdentities: [String]) async throws {
-        let settingsStore = SettingsStoreMock()
-        settingsStore.blacklist = Set(blockedIdentities)
-
+    @Test("Init fetches once, block list changes do not fetch again")
+    func initFetchesOnce() async throws {
         let fetchCounter = FetchCounter()
-        let provider = makeProvider(settingsStore: settingsStore, fetchCounter: fetchCounter)
+        let provider = makeProvider(fetchCounter: fetchCounter)
         await drainMainQueue()
 
-        // One fetch from `init` itself, plus one per element emitted by `Set.publisher` while subscribing
-        #expect(fetchCounter.count == 1 + blockedIdentities.count)
+        #expect(fetchCounter.count == 1)
 
-        // The store does publish block list changes...
-        var storeEmissions = 0
-        let storeSubscription = settingsStore.$blacklist
-            .dropFirst()
-            .sink { _ in
-                storeEmissions += 1
-            }
+        // Blocking goes through `UserSettings` and its stores, which the provider no longer observes
+        let initialBlacklist = userSettings.blacklist
         defer {
-            storeSubscription.cancel()
+            userSettings.blacklist = initialBlacklist
         }
-
-        settingsStore.blacklist.insert("CCCCCCCC")
-        settingsStore.blacklist = ["DDDDDDDD"]
-        nonisolated(unsafe) let backgroundSettingsStore = settingsStore
-        await runOnBackgroundThread {
-            backgroundSettingsStore.blacklist = []
-        }
-        await drainMainQueue()
-        try await Task.sleep(for: .milliseconds(200))
+        userSettings.blacklist = NSOrderedSet(array: ["ECHOECHO", "AAAAAAAA", "BBBBBBBB"])
         await drainMainQueue()
 
-        #expect(storeEmissions == 3, "The store did not publish the block list changes")
-
-        // ...but the provider never fetches again
-        #expect(
-            fetchCounter.count == 1 + blockedIdentities.count,
-            "The provider reacted to a block list change"
-        )
+        #expect(fetchCounter.count == 1)
 
         withExtendedLifetime(provider) { }
     }
@@ -202,7 +176,6 @@ final class CoreDataContactListProviderTests {
     // MARK: - Private helpers
 
     private func makeProvider(
-        settingsStore: SettingsStoreMock,
         fetchCounter: FetchCounter
     ) -> CoreDataContactListProvider<ContactEntity, Contact> {
         let entityFetcher = testDatabase.entityManager.entityFetcher
@@ -211,7 +184,6 @@ final class CoreDataContactListProviderTests {
         return CoreDataContactListProvider(
             entityFetcher: entityFetcher,
             userSettings: userSettings,
-            settingsStore: settingsStore,
             fetchedResultsController: {
                 let template = entityFetcher.contactsResultController(
                     sortOrderFirstName: userSettings.sortOrderFirstName,
@@ -237,7 +209,6 @@ final class CoreDataContactListProviderTests {
         return CoreDataContactListProvider(
             entityFetcher: entityFetcher,
             userSettings: userSettings,
-            settingsStore: SettingsStoreMock(),
             fetchedResultsController: {
                 entityFetcher.contactsResultController(
                     sortOrderFirstName: userSettings.sortOrderFirstName,

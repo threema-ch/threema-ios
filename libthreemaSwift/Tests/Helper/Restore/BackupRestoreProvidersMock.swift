@@ -1,8 +1,8 @@
 import libthreemaSwift
 
-extension BackupRestoreProviders {
-    public static var mock: BackupRestoreProviders {
-        BackupRestoreProviders(
+extension DataBackupProviders {
+    public static var mock: DataBackupProviders {
+        DataBackupProviders(
             userProfile: UserProfileProviderMock(
                 userProfile: .init(
                     nickname: "",
@@ -15,7 +15,6 @@ extension BackupRestoreProviders {
             ),
             settings: SettingsProviderMock(
                 settings: .init(
-                    contactSyncPolicy: .sync,
                     unknownContactPolicy: .allowUnknown,
                     readReceiptPolicy: .sendReadReceipt,
                     typingIndicatorPolicy: .sendTypingIndicator,
@@ -28,10 +27,10 @@ extension BackupRestoreProviders {
                     excludeFromSyncIdentities: []
                 )
             ),
-            cspNonces: NonceProviderMock(),
             contacts: ContactProviderMock(identities: [], contacts: []),
             groups: GroupProviderMock(),
             distributionLists: DistributionListProviderMock(),
+            cspNonces: NonceProviderMock(),
             polls: PollProviderMock(),
             conversations: ConversationProviderMock(),
         )

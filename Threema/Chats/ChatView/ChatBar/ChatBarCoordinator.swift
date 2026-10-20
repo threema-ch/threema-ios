@@ -569,7 +569,6 @@ extension ChatBarCoordinator: ChatBarViewDelegate {
         }
     }
     
-    @available(iOS 18.0, *)
     func processAndSendGlyph(_ glyph: NSAdaptiveImageGlyph) {
         if let senderItem = imageSender.senderItem(from: glyph.imageContent, uti: UTType.png.identifier) {
             Task {

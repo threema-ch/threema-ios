@@ -98,13 +98,14 @@ impl<T: Into<String>> From<T> for CspProtocolInternalErrorCause {
 )]
 #[cfg_attr(test, derive(PartialEq))]
 pub enum CspProtocolError {
-    /// Invalid parameter provided by the caller.
-    #[error("Invalid parameter: {0}")]
-    InvalidParameter(&'static str),
+    /// Some provided parameter could not be converted into the required internal representation.
+    #[cfg(feature = "uniffi")]
+    #[error("Conversion error: {0}")]
+    ConversionError(&'static str),
 
-    /// Invalid state for the requested operation.
-    #[error("Invalid state: {0}")]
-    InvalidState(&'static str),
+    /// A contract violation occurred.
+    #[error("Contract violation: {0}")]
+    ContractViolation(&'static str),
 
     /// An internal error happened.
     #[cfg_attr(feature = "wasm", serde(serialize_with = "string::to_string::serialize"))]
@@ -199,7 +200,7 @@ impl TryFrom<CspProtocolContextInit> for CspProtocolContext {
 
     fn try_from(init: CspProtocolContextInit) -> Result<Self, Self::Error> {
         if init.permanent_server_keys.is_empty() {
-            return Err(CspProtocolError::InvalidParameter(
+            return Err(CspProtocolError::ContractViolation(
                 "permanent_server_keys must contain at least one public key.",
             ));
         }
@@ -656,7 +657,7 @@ impl CspProtocol {
     pub fn poll(&mut self) -> Result<Option<CspProtocolInstruction>, CspProtocolError> {
         let poll_result = match mem::replace(
             &mut self.state,
-            State::Error(CspProtocolError::InvalidState(formatcp!(
+            State::Error(CspProtocolError::ContractViolation(formatcp!(
                 "{} in a transitional state",
                 CspProtocol::NAME
             ))),
@@ -683,7 +684,7 @@ impl CspProtocol {
     ///
     /// # Errors
     ///
-    /// Returns [`CspProtocolError::InvalidState`] if the protocol is in the error state.
+    /// Returns [`CspProtocolError::ContractViolation`] if the protocol is in the error state.
     #[tracing::instrument(skip_all, fields(
         ?self,
         chunks_byte_length = chunks.iter().map(|chunk| chunk.len()).sum::<usize>(),
@@ -703,7 +704,7 @@ impl CspProtocol {
             State::Error(error) => {
                 let message = "Cannot add chunks in error state";
                 error!(?error, message);
-                return Err(CspProtocolError::InvalidState(message));
+                return Err(CspProtocolError::ContractViolation(message));
             },
         }
         Ok(())
@@ -717,7 +718,7 @@ impl CspProtocol {
     ///
     /// # Errors
     ///
-    /// Returns [`CspProtocolError::InvalidState`] if the protocol is in the error state.
+    /// Returns [`CspProtocolError::ContractViolation`] if the protocol is in the error state.
     #[tracing::instrument(skip_all, fields(?self))]
     pub fn next_required_length(&self) -> Result<usize, CspProtocolError> {
         let required_length = match &self.state {
@@ -727,7 +728,7 @@ impl CspProtocol {
             State::Error(error) => {
                 let message = "Cannot query next required length in error state";
                 error!(?error, message);
-                return Err(CspProtocolError::InvalidState(message));
+                return Err(CspProtocolError::ContractViolation(message));
             },
         };
         trace!(required_length);
@@ -738,7 +739,7 @@ impl CspProtocol {
     ///
     /// # Errors
     ///
-    /// Returns [`CspProtocolError::InvalidState`] if the protocol is not in the post-handshake state.
+    /// Returns [`CspProtocolError::ContractViolation`] if the protocol is not in the post-handshake state.
     #[tracing::instrument(skip_all, fields(?self))]
     pub fn create_payload(
         &mut self,
@@ -750,12 +751,12 @@ impl CspProtocol {
             State::Error(error) => {
                 let message = "Cannot create an outgoing payload in the error state";
                 error!(?error, message);
-                return Err(CspProtocolError::InvalidState(message));
+                return Err(CspProtocolError::ContractViolation(message));
             },
             _ => {
                 let message = "Creating an outgoing payload requires the post-handshake state";
                 error!(message);
-                return Err(CspProtocolError::InvalidState(message));
+                return Err(CspProtocolError::ContractViolation(message));
             },
         };
 

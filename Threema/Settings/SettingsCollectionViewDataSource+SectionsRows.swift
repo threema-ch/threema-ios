@@ -32,7 +32,7 @@ extension SettingsCollectionViewDataSource {
                 var generalRows = [Row]()
                 generalRows.append(contentsOf: [.privacy, .appearance, .notifications, .chat, .media])
 
-                if ThreemaEnvironment.backups2Enabled {
+                if BusinessInjector.ui.userSettings.backups2Enabled {
                     generalRows.append(.backups)
                 }
 
@@ -102,7 +102,7 @@ extension SettingsCollectionViewDataSource {
         }
         
         private var showFeedback: Bool {
-            switch ThreemaEnvironment.env() {
+            switch EnvironmentType.current {
             case .appStore:
                 false
             case .testFlight:
@@ -118,7 +118,7 @@ extension SettingsCollectionViewDataSource {
         }
 
         private var showDeveloper: Bool {
-            switch ThreemaEnvironment.env() {
+            switch EnvironmentType.current {
             case .appStore:
                 false
             case .testFlight:

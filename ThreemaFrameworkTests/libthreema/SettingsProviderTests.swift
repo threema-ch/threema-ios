@@ -11,17 +11,6 @@ struct SettingsProviderTests {
 
     // MARK: - get()
 
-    @Test func getContactSyncPolicySyncWhenSyncContacts() throws {
-        let settings = UserSettingsMock()
-        let sut = makeSUT(userSettings: settings)
-
-        settings.syncContacts = true
-        #expect(try sut.get().contactSyncPolicy == .sync)
-
-        settings.syncContacts = false
-        #expect(try sut.get().contactSyncPolicy == .notSynced)
-    }
-
     @Test func getUnknownContactPolicyBlockUnknownWhenBlockUnknown() throws {
         let settings = UserSettingsMock()
         let sut = makeSUT(userSettings: settings)
@@ -157,7 +146,6 @@ struct SettingsProviderTests {
         let sut = makeSUT(userIdentity: ThreemaIdentity("AAAAAAAA"), userSettings: userSettings)
 
         var settings = libthreemaSwift.Settings(
-            contactSyncPolicy: .notSynced,
             unknownContactPolicy: .allowUnknown,
             readReceiptPolicy: .dontSendReadReceipt,
             typingIndicatorPolicy: .dontSendTypingIndicator,
@@ -173,7 +161,7 @@ struct SettingsProviderTests {
         try sut.set(settings: settings)
 
         #expect(userSettings.allowScreenshot == false)
-        #expect(userSettings.syncContacts == false)
+        #expect(userSettings.syncContacts == true)
         #expect(userSettings.blockUnknown == false)
         #expect(userSettings.sendReadReceipts == false)
         #expect(userSettings.sendTypingIndicator == false)
@@ -181,11 +169,10 @@ struct SettingsProviderTests {
         #expect(userSettings.alwaysRelayCalls == false)
         #expect(userSettings.enableVideoCall == false)
         #expect(userSettings.enableThreemaGroupCalls == false)
-        #expect(userSettings.blacklist == ["BBBBBBBB", "CCCCCCCC"])
-        #expect(userSettings.syncExclusionList == ["DDDDDDDD", "EEEEEEEE"])
+        #expect(userSettings.blacklist?.set == Set(["BBBBBBBB", "CCCCCCCC"]))
+        #expect(try Set(#require(userSettings.syncExclusionList)) == Set(["DDDDDDDD", "EEEEEEEE"]))
 
         settings = libthreemaSwift.Settings(
-            contactSyncPolicy: .sync,
             unknownContactPolicy: .blockUnknown,
             readReceiptPolicy: .sendReadReceipt,
             typingIndicatorPolicy: .sendTypingIndicator,
@@ -219,7 +206,6 @@ struct SettingsProviderTests {
         let sut = makeSUT(userIdentity: ThreemaIdentity("AAAAAAAA"))
 
         let update = libthreemaSwift.SettingsUpdate(
-            contactSyncPolicy: nil,
             unknownContactPolicy: nil,
             readReceiptPolicy: nil,
             typingIndicatorPolicy: nil,
@@ -232,7 +218,7 @@ struct SettingsProviderTests {
             excludeFromSyncIdentities: nil
         )
 
-        let expectedError = ProviderError.InvalidParameter(
+        let expectedError = ProviderError.ConversionError(
             "Error: Blocked identities must not contain the user's own identity."
         )
 
@@ -243,7 +229,6 @@ struct SettingsProviderTests {
         let sut = makeSUT(userIdentity: ThreemaIdentity("AAAAAAAA"))
 
         let update = libthreemaSwift.SettingsUpdate(
-            contactSyncPolicy: nil,
             unknownContactPolicy: nil,
             readReceiptPolicy: nil,
             typingIndicatorPolicy: nil,
@@ -256,32 +241,11 @@ struct SettingsProviderTests {
             excludeFromSyncIdentities: ["AAAAAAAA", "BBBBBBBB"]
         )
 
-        let expectedError = ProviderError.InvalidParameter(
+        let expectedError = ProviderError.ConversionError(
             "Error: Excluded identities must not contain the user's own identity."
         )
 
         #expect(throws: expectedError) { try sut.update(update: update) }
-    }
-
-    @Test func updateContactSyncPolicySyncSetsSyncContacts() throws {
-        let settings = UserSettingsMock()
-        let sut = makeSUT(userSettings: settings)
-
-        settings.syncContacts = true
-        try sut.update(update: .testUpdate(contactSyncPolicy: nil))
-        #expect(settings.syncContacts == true)
-
-        settings.syncContacts = false
-        try sut.update(update: .testUpdate(contactSyncPolicy: nil))
-        #expect(settings.syncContacts == false)
-
-        settings.syncContacts = false
-        try sut.update(update: .testUpdate(contactSyncPolicy: .sync))
-        #expect(settings.syncContacts == true)
-
-        settings.syncContacts = true
-        try sut.update(update: .testUpdate(contactSyncPolicy: .notSynced))
-        #expect(settings.syncContacts == false)
     }
 
     @Test func updateUnknownContactPolicyBlockUnknownSetsBlockUnknown() throws {
@@ -476,7 +440,7 @@ struct SettingsProviderTests {
         let sut = makeSUT(userSettings: settings)
 
         try sut.update(update: .testUpdate(blockedIdentities: ["BBBBBBBB", "CCCCCCCC"]))
-        #expect(settings.blacklist == NSOrderedSet(array: ["BBBBBBBB", "CCCCCCCC"]))
+        #expect(settings.blacklist?.set == Set(["BBBBBBBB", "CCCCCCCC"]))
     }
 
     @Test func updateBlockedIdentitiesDeduplicatedIntoSet() throws {
@@ -484,7 +448,7 @@ struct SettingsProviderTests {
         let sut = makeSUT(userSettings: settings)
 
         try sut.update(update: .testUpdate(blockedIdentities: ["BBBBBBBB", "BBBBBBBB", "CCCCCCCC"]))
-        #expect(settings.blacklist == NSOrderedSet(array: ["BBBBBBBB", "CCCCCCCC"]))
+        #expect(settings.blacklist?.set == Set(["BBBBBBBB", "CCCCCCCC"]))
     }
 
     @Test func updateNilExcludeFromSyncIdentitiesDoesNotChangeSyncExclusionList() throws {
@@ -502,7 +466,7 @@ struct SettingsProviderTests {
         let sut = makeSUT(userSettings: settings)
 
         try sut.update(update: .testUpdate(excludeFromSyncIdentities: []))
-        #expect((settings.syncExclusionList)?.isEmpty == true)
+        #expect(settings.syncExclusionList?.isEmpty == true)
     }
 
     @Test func updateExcludeFromSyncIdentitiesReplacesSyncExclusionList() throws {
@@ -511,7 +475,7 @@ struct SettingsProviderTests {
         let sut = makeSUT(userSettings: settings)
 
         try sut.update(update: .testUpdate(excludeFromSyncIdentities: ["BBBBBBBB", "CCCCCCCC"]))
-        #expect(settings.syncExclusionList == ["BBBBBBBB", "CCCCCCCC"])
+        #expect(try Set(#require(settings.syncExclusionList)) == Set(["BBBBBBBB", "CCCCCCCC"]))
     }
 
     @Test func updateAllNilFieldsMakesNoChanges() throws {
@@ -549,7 +513,6 @@ struct SettingsProviderTests {
         let sut = makeSUT(userSettings: settings)
 
         try sut.update(update: .testUpdate(
-            contactSyncPolicy: .sync,
             unknownContactPolicy: .blockUnknown,
             readReceiptPolicy: .sendReadReceipt,
             typingIndicatorPolicy: .sendTypingIndicator,
@@ -562,7 +525,7 @@ struct SettingsProviderTests {
             excludeFromSyncIdentities: ["CCCCCCCC"]
         ))
 
-        #expect(settings.syncContacts == true)
+        #expect(settings.syncContacts == false)
         #expect(settings.blockUnknown == true)
         #expect(settings.sendReadReceipts == true)
         #expect(settings.sendTypingIndicator == true)
@@ -587,7 +550,6 @@ struct SettingsProviderTests {
 
 extension libthreemaSwift.SettingsUpdate {
     fileprivate static func testUpdate(
-        contactSyncPolicy: ContactSyncPolicy? = nil,
         unknownContactPolicy: UnknownContactPolicy? = nil,
         readReceiptPolicy: ReadReceiptPolicy? = nil,
         typingIndicatorPolicy: TypingIndicatorPolicy? = nil,
@@ -596,11 +558,10 @@ extension libthreemaSwift.SettingsUpdate {
         o2oCallVideoPolicy: O2oCallVideoPolicy? = nil,
         groupCallPolicy: GroupCallPolicy? = nil,
         screenshotPolicy: ScreenshotPolicy? = nil,
-        blockedIdentities: [String]? = nil,
-        excludeFromSyncIdentities: [String]? = nil
+        blockedIdentities: Set<String>? = nil,
+        excludeFromSyncIdentities: Set<String>? = nil
     ) -> libthreemaSwift.SettingsUpdate {
         libthreemaSwift.SettingsUpdate(
-            contactSyncPolicy: contactSyncPolicy,
             unknownContactPolicy: unknownContactPolicy,
             readReceiptPolicy: readReceiptPolicy,
             typingIndicatorPolicy: typingIndicatorPolicy,

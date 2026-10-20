@@ -10,7 +10,7 @@ final class LocalBackupDetailsViewModel {
 
     let shareActionTitle = #localize("share_backup")
     let shareActionIconName = "square.and.arrow.up"
-    let keyActionTitle = #localize("recovery_key")
+    let keyActionTitle = #localize("Recovery_key")
     let buttonTitle = #localize("create_new_backup")
 
     @ObservationIgnored var onCreateButtonTapped: () -> Void = { /* no-op */ }

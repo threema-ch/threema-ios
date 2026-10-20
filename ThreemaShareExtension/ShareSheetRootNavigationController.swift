@@ -891,6 +891,10 @@ extension ShareSheetRootNavigationController: JKLLockScreenViewControllerDelegat
     func unlockWasCancelledLockScreenViewController(_ lockScreenViewController: JKLLockScreenViewController!) {
         finishAndClose(success: false)
     }
+
+    func didRequestBiometricAuthentication(_ viewController: JKLLockScreenViewController!) {
+        tryTouchIDAuthentication()
+    }
     
     func didPasscodeViewDismiss(_ viewController: JKLLockScreenViewController!) {
         if isAuthorized {

@@ -196,7 +196,6 @@ pub mod setup {
 
         use crate::{
             bindings::wasm::https::{HttpsRequest, HttpsResult},
-            common::keys::RemoteSecretAuthenticationToken,
             remote_secret::setup::{self, delete},
         };
 
@@ -270,16 +269,13 @@ pub mod setup {
             /// `remote_secret_authentication_token` is not exactly 32 bytes.
             pub fn new(
                 context: super::RemoteSecretSetupContext,
-                remote_secret_authentication_token: Vec<u8>,
+                remote_secret_authentication_token: &[u8],
             ) -> Result<Self, Error> {
-                let remote_secret_authentication_token: [u8; RemoteSecretAuthenticationToken::LENGTH] =
-                    remote_secret_authentication_token
-                        .try_into()
-                        .map_err(|_| Error::new("'remote_secret_authentication_token' must be 32 bytes"))?;
-
                 Ok(Self(delete::RemoteSecretDeleteTask::new(
                     context.try_into()?,
-                    remote_secret_authentication_token.into(),
+                    remote_secret_authentication_token
+                        .try_into()
+                        .map_err(|_| Error::new("'remote_secret_authentication_token' must be 32 bytes"))?,
                 )))
             }
 
@@ -306,11 +302,7 @@ pub mod monitor {
 
     use crate::{
         bindings::wasm::https::{HttpsRequest, HttpsResult},
-        common::{
-            ClientInfo,
-            config::WorkServerBaseUrl,
-            keys::{RemoteSecretAuthenticationToken, RemoteSecretHash},
-        },
+        common::ClientInfo,
         remote_secret::monitor,
     };
 
@@ -401,27 +393,21 @@ pub mod monitor {
         pub fn new(
             client_info: ClientInfo,
             work_server_base_url: String,
-            remote_secret_authentication_token: Vec<u8>,
-            remote_secret_hash: Vec<u8>,
+            remote_secret_authentication_token: &[u8],
+            remote_secret_hash: &[u8],
         ) -> Result<Self, Error> {
-            let work_server_url = WorkServerBaseUrl::try_from(work_server_base_url)
-                .map_err(|_| Error::new("'work_server_base_url' invalid"))?;
-
-            let remote_secret_authentication_token: [u8; RemoteSecretAuthenticationToken::LENGTH] =
-                remote_secret_authentication_token
-                    .try_into()
-                    .map_err(|_| Error::new("'remote_secret_authentication_token' must be 32 bytes"))?;
-
-            let remote_secret_hash: [u8; RemoteSecretHash::LENGTH] = remote_secret_hash
-                .try_into()
-                .map_err(|_| Error::new("'remote_secret_hash' must be 32 bytes"))?;
-
             let context = monitor::RemoteSecretMonitorContext {
                 client_info,
-                work_server_url,
-                remote_secret_authentication_token: remote_secret_authentication_token.into(),
+                work_server_url: work_server_base_url
+                    .try_into()
+                    .map_err(|_| Error::new("'work_server_base_url' invalid"))?,
+                remote_secret_authentication_token: remote_secret_authentication_token
+                    .try_into()
+                    .map_err(|_| Error::new("'remote_secret_authentication_token' must be 32 bytes"))?,
                 remote_secret_verifier: monitor::RemoteSecretVerifier::RemoteSecretHash(
-                    remote_secret_hash.into(),
+                    remote_secret_hash
+                        .try_into()
+                        .map_err(|_| Error::new("'remote_secret_hash' must be 32 bytes"))?,
                 ),
             };
 

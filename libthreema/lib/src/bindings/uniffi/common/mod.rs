@@ -28,7 +28,7 @@ impl TryFrom<ThreemaId> for common::ThreemaId {
 
 /// Binding version of [`common::GroupIdentity`].
 #[expect(missing_docs, reason = "Binding version")]
-#[derive(uniffi::Record)]
+#[derive(uniffi::Record, Eq, Hash, PartialEq)]
 pub struct GroupIdentity {
     pub group_id: u64,
     pub creator_identity: ThreemaId,

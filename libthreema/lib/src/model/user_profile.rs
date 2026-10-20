@@ -25,6 +25,7 @@ pub struct IdentityData {
 
 /// Profile picture sharing policy.
 #[derive(Clone, Debug, Default, Name)]
+#[cfg_attr(test, derive(PartialEq))]
 pub enum ProfilePictureSharePolicy {
     /// Do not share the profile picture with anyone.
     Nobody,
@@ -41,6 +42,7 @@ pub enum ProfilePictureSharePolicy {
 
 /// A phone number identity link.
 #[derive(Clone, Debug)]
+#[cfg_attr(test, derive(PartialEq))]
 #[cfg_attr(feature = "uniffi", derive(uniffi::Enum))]
 pub enum IdentityLinkPhoneNumber {
     /// Linked with a verified telephone number in E.164 format without leading `+`.
@@ -52,6 +54,7 @@ pub enum IdentityLinkPhoneNumber {
 
 /// An email address identity link.
 #[derive(Clone, Debug)]
+#[cfg_attr(test, derive(PartialEq))]
 #[cfg_attr(feature = "uniffi", derive(uniffi::Enum))]
 pub enum IdentityLinkEmailAddress {
     /// Linked with a verified email address.
@@ -63,6 +66,7 @@ pub enum IdentityLinkEmailAddress {
 
 /// The user's profile.
 #[derive(Clone, Debug, Default, Name)]
+#[cfg_attr(test, derive(PartialEq))]
 pub struct UserProfile {
     /// The nickname of the user.
     ///

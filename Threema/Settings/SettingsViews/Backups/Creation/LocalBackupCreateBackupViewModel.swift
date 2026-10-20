@@ -1,6 +1,7 @@
 import CocoaLumberjackSwift
 import DataBackup
 import Observation
+import ThreemaFramework
 import ThreemaMacros
 
 @MainActor
@@ -14,14 +15,14 @@ final class LocalBackupCreateBackupViewModel {
         case complete
         case failed
 
-        var iconSymbolName: String {
+        var headerIconName: String {
             switch self {
             case .inProgress:
-                "arrow.trianglehead.2.counterclockwise.rotate.90"
+                "key"
             case .complete:
-                "checkmark"
+                "checkmark.circle"
             case .failed:
-                "exclamationmark"
+                "exclamationmark.circle"
             }
         }
     }
@@ -67,14 +68,16 @@ final class LocalBackupCreateBackupViewModel {
 
     let cancelButtonTitle = #localize("cancel")
     let dismissButtonTitle = #localize("dismiss")
-    let doneButtonTitle = #localize("done")
+    let continueButtonTitle = #localize("continue")
     let tryAgainButtonTitle = #localize("try_again")
     let errorIconName = "exclamationmark.circle"
+    let note = #localize("backup_local_create_backup_note")
 
     var state: State = .inProgress
 
-    @ObservationIgnored
-    var onDoneButtonTapped: () -> Void = { /* no-op */ }
+    @ObservationIgnored var onCancelButtonTapped: () -> Void = { /* no-op */ }
+    @ObservationIgnored var onContinueButtonTapped: () -> Void = { /* no-op */ }
+    @ObservationIgnored var onDismissButtonTapped: () -> Void = { /* no-op */ }
 
     var backupError: (title: String, content: String)?
 
@@ -106,7 +109,7 @@ final class LocalBackupCreateBackupViewModel {
 
     var headerStep: String? {
         switch state {
-        case .inProgress:
+        case .inProgress, .complete:
             let currentStep = hasDefaultRecoveryKey ? 2 : 3
             let totalSteps = hasDefaultRecoveryKey ? 2 : 3
             return String.localizedStringWithFormat(
@@ -114,16 +117,6 @@ final class LocalBackupCreateBackupViewModel {
             ).uppercased()
         default:
             return nil
-        }
-    }
-
-    var note: String? {
-        switch state {
-        case .inProgress:
-            #localize("backup_local_create_backup_note")
-
-        default:
-            nil
         }
     }
 
@@ -138,7 +131,7 @@ final class LocalBackupCreateBackupViewModel {
                 true
             }
             else {
-                ThreemaEnvironment.distributionListsActive
+                userSettings.distributionListsEnabled
             }
         }
 
@@ -148,7 +141,7 @@ final class LocalBackupCreateBackupViewModel {
             return ExportItem(
                 state: itemState,
                 title: phase.title,
-                statusText: statusText(for: phase, state: itemState)
+                statusText: itemState.label
             )
         }
     }
@@ -156,12 +149,10 @@ final class LocalBackupCreateBackupViewModel {
     /// The phase the backup last reported, or `nil` if it has not reported anything yet.
     private(set) var currentPhase: DataBackupProgress.Phase?
 
-    /// Number of items the backup wrote in ``currentPhase`` so far.
-    private(set) var itemsProcessed: UInt64 = 0
-
     // MARK: - Private properties
 
     private let manager: any BackupCreateManagerProtocol
+    private let userSettings: any UserSettingsProtocol
     private var backupHasStarted = false
 
     @ObservationIgnored
@@ -169,8 +160,9 @@ final class LocalBackupCreateBackupViewModel {
 
     // MARK: - Lifecycle
 
-    init(manager: any BackupCreateManagerProtocol) {
+    init(manager: any BackupCreateManagerProtocol, userSettings: any UserSettingsProtocol) {
         self.manager = manager
+        self.userSettings = userSettings
     }
 
     // MARK: - Public methods
@@ -187,17 +179,17 @@ final class LocalBackupCreateBackupViewModel {
 
     func cancelButtonTapped() {
         backupTask?.cancel()
+        onCancelButtonTapped()
     }
 
-    func doneButtonTapped() {
-        onDoneButtonTapped()
+    func continueButtonTapped() {
+        onContinueButtonTapped()
     }
 
     func tryAgainButtonTapped() {
         backupTask?.cancel()
 
         currentPhase = nil
-        itemsProcessed = 0
         backupError = nil
         state = .inProgress
         backupHasStarted = false
@@ -206,10 +198,9 @@ final class LocalBackupCreateBackupViewModel {
     }
 
     func dismissButtonTapped() {
-        // TODO: Implement
+        onDismissButtonTapped()
     }
 
-    /// Runs a backup to completion and reflects its progress.
     func runBackup() async {
         let password = manager.currentRecoveryKey.rawValue
 
@@ -239,7 +230,6 @@ final class LocalBackupCreateBackupViewModel {
 
     func apply(_ progress: DataBackupProgress) {
         currentPhase = progress.phase
-        itemsProcessed = progress.itemsProcessed
     }
 
     // MARK: - Private methods
@@ -276,14 +266,6 @@ final class LocalBackupCreateBackupViewModel {
             return .waiting
         }
     }
-
-    private func statusText(for phase: DataBackupProgress.Phase, state itemState: ExportItem.State) -> String {
-        guard itemState == .inProgress, let countLabel = phase.countLabel(itemsProcessed) else {
-            return itemState.label
-        }
-
-        return countLabel
-    }
 }
 
 // MARK: - DataBackupProgress.Phase + Localization
@@ -291,8 +273,8 @@ final class LocalBackupCreateBackupViewModel {
 extension DataBackupProgress.Phase {
     fileprivate var title: String {
         switch self {
-        case .initializing:
-            #localize("backup_local_create_backup_step_initialize_title")
+        case .userData:
+            #localize("backup_local_create_backup_step_user_data_title")
         case .contacts:
             #localize("backup_local_create_backup_step_contacts_title")
         case .distributionLists:
@@ -308,31 +290,5 @@ extension DataBackupProgress.Phase {
         case .finalizing:
             #localize("backup_local_create_backup_step_finalize_title")
         }
-    }
-
-    fileprivate func countLabel(_ itemsProcessed: UInt64) -> String? {
-        let format: String? =
-            switch self {
-            case .initializing, .finalizing:
-                nil
-            case .contacts:
-                #localize("backup_local_create_backup_step_contacts_count")
-            case .distributionLists:
-                #localize("backup_local_create_backup_step_distribution_lists_count")
-            case .groups:
-                #localize("backup_local_create_backup_step_groups_count")
-            case .cspNonces:
-                #localize("backup_local_create_backup_step_nonces_count")
-            case .polls:
-                #localize("backup_local_create_backup_step_polls_count")
-            case .messages:
-                #localize("backup_local_create_backup_step_messages_count")
-            }
-
-        guard let format else {
-            return nil
-        }
-
-        return String.localizedStringWithFormat(format, Int64(itemsProcessed))
     }
 }

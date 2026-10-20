@@ -102,6 +102,8 @@ extension MyIdentityStore {
         userDefaults?.removeObject(forKey: "DirectoryCategories")
         userDefaults?.removeObject(forKey: "LastWorkUpdateRequestHash")
         userDefaults?.removeObject(forKey: "LastWorkUpdateDate")
+        userDefaults?.removeObject(forKey: WorkAvailabilityStatusManager.workAvailabilityStatusCategoryKey)
+        userDefaults?.removeObject(forKey: WorkAvailabilityStatusManager.workAvailabilityStatusTextKey)
         userDefaults?.removeObject(forKey: "MessageDrafts")
         userDefaults?.removeObject(forKey: "PushNotificationEncryptionKey")
         userDefaults?.removeObject(forKey: "MatchToken")

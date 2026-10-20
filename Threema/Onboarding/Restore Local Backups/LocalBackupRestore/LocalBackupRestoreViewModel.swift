@@ -17,14 +17,14 @@ final class LocalBackupRestoreViewModel {
         case complete
         case failed
 
-        var iconSymbolName: String {
+        var headerIconName: String {
             switch self {
             case .inProgress:
-                "arrow.trianglehead.2.counterclockwise.rotate.90"
+                "arrow.trianglehead.clockwise"
             case .complete:
-                "checkmark"
+                "checkmark.circle"
             case .failed:
-                "exclamationmark"
+                "exclamationmark.circle"
             }
         }
     }
@@ -68,8 +68,9 @@ final class LocalBackupRestoreViewModel {
     // MARK: - Internal properties
 
     let cancelButtonTitle = #localize("cancel")
+    let contactButtonTitle = #localize("Contact_Support")
     let tryAgainButtonTitle = #localize("try_again")
-    let dismissButtonTitle = #localize("dismiss")
+    let continueButtonTitle = #localize("Continue_To_Chats")
     let errorIconName = "exclamationmark.circle"
 
     var state: State
@@ -81,6 +82,9 @@ final class LocalBackupRestoreViewModel {
 
     @ObservationIgnored
     var onDismissButtonTapped: () -> Void = { /* no-op */ }
+
+    @ObservationIgnored
+    var onContinueButtonTapped: () -> Void = { /* no-op */ }
 
     var headerTitle: String {
         switch state {
@@ -123,7 +127,7 @@ final class LocalBackupRestoreViewModel {
         }
     }
 
-    private(set) var currentPhase: DataRestoreProgress.Phase = .preparing
+    private(set) var currentPhase: DataRestoreProgress.Phase = .userData
 
     // MARK: - Private properties
 
@@ -171,6 +175,10 @@ final class LocalBackupRestoreViewModel {
 
     func dimissButtonTapped() {
         onDismissButtonTapped()
+    }
+
+    func continueButtonTapped() {
+        onContinueButtonTapped()
     }
 
     /// Runs the restore to completion and reflects its outcome.
@@ -234,8 +242,8 @@ final class LocalBackupRestoreViewModel {
 extension DataRestoreProgress.Phase {
     fileprivate var title: String {
         switch self {
-        case .preparing:
-            #localize("backup_local_restore_step_prepare_title")
+        case .userData:
+            #localize("backup_local_restore_step_user_data_title")
         case .contacts:
             #localize("backup_local_restore_step_contacts_title")
         case .distributionLists:

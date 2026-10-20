@@ -138,6 +138,7 @@ final class SettingsCoordinator: NSObject, Coordinator {
 
         case .channel:
             openChannelChat()
+            settingsViewController.updateSelection()
 
         case .invite:
             showInviteActivity(from: nil)
@@ -340,6 +341,7 @@ final class SettingsCoordinator: NSObject, Coordinator {
             BusinessInjector.ui.myIdentityStore.identity ?? ""
         )
         shareActivityRouter.present(items: [shareText], sourceView: sourceView)
+        settingsViewController.updateSelection()
     }
 
     private func openChannelChat() {
@@ -475,6 +477,52 @@ final class SettingsCoordinator: NSObject, Coordinator {
                 userInfo: info
             )
         }
+    }
+
+    /// Presenter for this tab's modals: the navigation controller the tab's
+    /// stack currently lives in — its own one when collapsed, the split view's
+    /// secondary column when expanded — so modals belong to the column the
+    /// settings screens are shown in instead of the whole split view.
+    private var modalPresenter: UIViewController? {
+        presentingViewController?.navigationController(for: .settings) ?? presentingViewController
+    }
+
+    func showRecoveryKeySlideInConfirmation() {
+        guard let modalPresenter else {
+            return
+        }
+
+        let sheetViewController = screenFactory.makeRecoveryKeySheet { [weak self] in
+            self?.showCreateNewRecoveryKeyAlert()
+        }
+
+        modalPresenter.present(sheetViewController, animated: true)
+    }
+
+    private func showCreateNewRecoveryKeyAlert() {
+        guard let modalPresenter else {
+            return
+        }
+
+        UIAlertTemplate.showAlert(
+            owner: modalPresenter,
+            title: #localize("backup_local_recovery_create_new_confirmation_title"),
+            message: #localize("backup_local_recovery_create_new_confirmation_message"),
+            titleOk: #localize("backup_local_recovery_create_new_key_backup_title"),
+            actionOk: { [weak self] _ in
+                guard let self else {
+                    return
+                }
+                do {
+                    try screenFactory.backupCreateManager.createNewRecoveryKey()
+                    setPath([.backups(.center), .backups(.recoveryKey)], animated: true)
+                }
+                catch {
+                    // TODO: Show user facing error
+                }
+            },
+            actionCancel: nil
+        )
     }
 }
 

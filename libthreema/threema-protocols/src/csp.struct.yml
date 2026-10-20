@@ -1299,9 +1299,9 @@ e2e: &e2e
         7. Add `identity` to `unknown-identities`.
     5.  Let `directory-response` be the response of asynchronously looking up
         `unknown-identities` on the Directory Server.
-    6.  If Work flavour, let `work-directory-response` be the response of
-        asynchronously looking up `unknown-identities` on the Work Contacts API
-        endpoint.
+    6.  If the application is built for the _Work_, _Blue_ or _OnPrem_ flavour,
+        let `work-directory-response` be the response of asynchronously looking
+        up `unknown-identities` on the Work Contacts API endpoint.
     7.  Await `directory-response` and `work-directory-response`.
     8.  Process the result of `directory-response`:
         1. If the server could not be reached, exceptionally abort these steps.
@@ -2652,7 +2652,7 @@ e2e: &e2e
 
     The following steps are defined as _Application Work Credentials URL
     Entrypoint Steps_ and must be run when the application is built for the
-    _Work_ flavour and is invoked by a Work credentials URL:
+    _Work_, _Blue_ or _OnPrem_ flavour and is invoked by a Work credentials URL:
 
     1. Decode the Work credentials URL and let `work-credentials` be the result.
     2. Run the _Common Application Entrypoint Steps_ with `work-credentials`.
@@ -2685,7 +2685,7 @@ e2e: &e2e
     2. (Identity data is missing at this point.)
     3. (If the application is built for the _Consumer_ flavour,
        request/verify the license. TODO(SE-137): Specify more clearly.)
-    4. If the application is built for the _Work_ flavour:
+    4. If the application is built for the _Work_, _Blue_ or _OnPrem_ flavour:
        1. Let `work-credentials` be the provided parameters.
        2. If `work-credentials` is not defined, request the user to provide
           this information and update `work-credentials` with the result.
@@ -2732,8 +2732,9 @@ e2e: &e2e
     1. [...]
     2. (The application allows to create a new Threema ID or restore a backup
        here. TODO(SE-137): Specify more clearly.)
-    3. If OnPrem sub-flavour and the MDM parameter `th_enable_remote_secret` is
-       `true`, run the _Remote Secret Activate Steps_.
+    3. If the application is built for the _OnPrem_ flavour and the MDM
+       parameter `th_enable_remote_secret` is `true`, run the _Remote Secret
+       Activate Steps_.
     4. If application state has not been set up by the _Device Join Protocol_
        (meaning that multi-device is deactivated), run the following steps:
        1.   [...]
@@ -2820,6 +2821,7 @@ e2e: &e2e
     4. Unlock the inner storage, optionally protected by RS (if activated).
     5. [...]
     6. Initialise the application from the unlocked storage.
+    7. For each group, run the _Group Call Refresh Steps_.
 
   container:
     _group: Header
@@ -4043,11 +4045,11 @@ e2e: &e2e
           - Rejection reason (`'rejectReason'`): If the call has been rejected,
             this field contains a reject reason:
             - `0`: Generic or unspecified rejection.
-            - `1`: The callee is busy (another call is active).
-            - `2`: The callee did not accept the call in time.
+            - `1`: **DEPRECATED**: The callee is busy (another call is active).
+            - `2`: **DEPRECATED**: The callee did not accept the call in time.
             - `3`: The callee explicitly rejected the call.
-            - `4`: The callee disabled calls.
-            - `5`: The callee was called during an off-hour period.
+            - `4`: **DEPRECATED**: The callee disabled calls.
+            - `5`: **DEPRECATED**: The callee was called during an off-hour period.
           - WebRTC Answer (`'answer'`): An answer object.
           - Feature negotiation (`'features'`): Optional Call Features object.
 
@@ -4156,6 +4158,12 @@ e2e: &e2e
           - Call ID (`'callId'`): Random 32 bit unsigned integer greater than 0
             that uniquely identifies a call throughout its lifetime. Assume
             `0` if not set.
+          - Call duration (`'duration'`): Optional unsigned integer, indicating
+            the call duration in seconds, measured from transport `CONNECTED`
+            to local hangup decision. Absent for never-connected calls.
+
+            Note: The duration should only be processed by sibling devices, not
+            by the recipient. (TODO(SE-102): Move this note into the processing steps)
         name: hangup
         type: b*
 

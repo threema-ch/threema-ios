@@ -33,12 +33,7 @@ extension EmojiCategory {
             case .objects:
                 "lightbulb"
             case .symbols:
-                if #available(iOS 18.0, *) {
-                    "xmark.triangle.circle.square"
-                }
-                else {
-                    "checkmark.square"
-                }
+                "xmark.triangle.circle.square"
             case .flags:
                 "flag"
             }

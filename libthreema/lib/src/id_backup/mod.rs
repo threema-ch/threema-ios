@@ -25,10 +25,10 @@ mod legacy_scheme;
 #[derive(Debug, thiserror::Error)]
 #[cfg_attr(feature = "uniffi", derive(uniffi::Error), uniffi(flat_error))]
 pub enum IdentityBackupError {
-    /// Invalid parameter provided by foreign code.
+    /// Some provided parameter could not be converted into the required internal representation.
     #[cfg(feature = "uniffi")]
-    #[error("Invalid parameter: {0}")]
-    InvalidParameter(String),
+    #[error("Conversion error: {0}")]
+    ConversionError(String),
 
     /// The decoding failed.
     #[error("Decoding failed: {0}")]
@@ -37,10 +37,6 @@ pub enum IdentityBackupError {
     /// The decrypted backup scheme version is unknown.
     #[error("Unknown backup scheme version: {0}")]
     UnknownVersion(u8),
-
-    /// The key derivation failed. This is most likely an internal error.
-    #[error("Key derivation failed")]
-    KdfFailed,
 
     /// The decryption failed, either due to an internal error or due to an invalid ciphertext.
     #[error("Decryption failed")]
@@ -53,7 +49,7 @@ pub enum IdentityBackupError {
 #[cfg(feature = "uniffi")]
 impl From<crate::bindings::uniffi::ConversionError> for IdentityBackupError {
     fn from(error: crate::bindings::uniffi::ConversionError) -> Self {
-        Self::InvalidParameter(error.to_string())
+        Self::ConversionError(error.to_string())
     }
 }
 

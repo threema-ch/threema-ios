@@ -109,7 +109,7 @@ final class NotificationManager: NotificationManagerProtocol {
             DDLogVerbose("[Push] remote notification: \(payload), while running: \(receivedWhileRunning)")
             
             guard let threemaPayload = PushPayloadDecryptor
-                .decryptPushPayload(payload[ThreemaPushNotificationDictionary.key.rawValue] as? [String: Any])
+                .decryptPushPayload(payload[ThreemaPushNotificationDictionary.key.rawValue] as? [AnyHashable: Any])
             else {
                 DDLogError("[Push] Missing information to handle notification")
                 completionHandler?([])

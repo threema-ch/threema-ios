@@ -56,10 +56,13 @@ enum UnauthorizedDetails {
     Unknown,
 }
 
-fn handle_status<TStatusFn: FnOnce(u16) -> Option<HttpsEndpointError>>(
+fn handle_status<TStatusFn>(
     result: HttpsResult,
     unexpected_status_map_fn: TStatusFn,
-) -> Result<HttpsResponse, HttpsEndpointError> {
+) -> Result<HttpsResponse, HttpsEndpointError>
+where
+    TStatusFn: FnOnce(u16) -> Option<HttpsEndpointError>,
+{
     let response = result?;
     match response.status {
         200 | 204 => Ok(response),
@@ -632,10 +635,10 @@ mod tests {
     #[case(0, || HttpsEndpointError::CustomPossiblyLocalizedError("why not".to_owned()))]
     #[case(403, || HttpsEndpointError::Forbidden)]
     #[case(404, || HttpsEndpointError::NotFound)]
-    fn common_status_unexpected_mapped<TErrorFn: Fn() -> HttpsEndpointError>(
-        #[case] status: u16,
-        #[case] error_fn: TErrorFn,
-    ) {
+    fn common_status_unexpected_mapped<TErrorFn>(#[case] status: u16, #[case] error_fn: TErrorFn)
+    where
+        TErrorFn: Fn() -> HttpsEndpointError,
+    {
         assert_eq!(
             handle_status(Ok(HttpsResponse { status, body: vec![] }), |unexpected_status| {
                 if unexpected_status == status {

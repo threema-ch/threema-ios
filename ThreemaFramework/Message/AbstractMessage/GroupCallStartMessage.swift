@@ -8,6 +8,9 @@ import ThreemaProtocols
 public final class GroupCallStartMessage: AbstractGroupMessage {
     public var decoded: CspE2e_GroupCallStart?
     
+    /// Is there no (longer a) call to join for this message?
+    @objc public var callEnded = false
+
     override public func type() -> UInt8 {
         UInt8(MSGTYPE_GROUP_CALL_START)
     }
@@ -56,6 +59,10 @@ public final class GroupCallStartMessage: AbstractGroupMessage {
         decoded != nil
     }
 
+    override public func isGroupCall() -> Bool {
+        true
+    }
+    
     @objc override public init() {
         super.init()
     }
@@ -68,6 +75,7 @@ public final class GroupCallStartMessage: AbstractGroupMessage {
 
     private enum CodingKeys: String, CodingKey {
         case cspMessage
+        case callEnded
     }
 
     private enum CodingError: Error {
@@ -76,7 +84,10 @@ public final class GroupCallStartMessage: AbstractGroupMessage {
 
     required init?(coder: NSCoder) {
         super.init(coder: coder)
-
+        
+        // Outside the `do`, so a CSP decoding failure cannot skip it
+        self.callEnded = coder.decodeBool(forKey: CodingKeys.callEnded.rawValue)
+        
         do {
             guard let data = coder.decodeObject(of: NSData.self, forKey: CodingKeys.cspMessage.rawValue) else {
                 throw CodingError.decodeObjectFailed
@@ -90,6 +101,10 @@ public final class GroupCallStartMessage: AbstractGroupMessage {
     
     override public func encode(with coder: NSCoder) {
         super.encode(with: coder)
+        
+        // Outside the `do`, so a CSP encoding failure cannot skip it
+        coder.encode(callEnded, forKey: CodingKeys.callEnded.rawValue)
+        
         do {
             guard let data = try decoded?.serializedData() else {
                 throw CodingError.serializedDataFailed
@@ -102,10 +117,6 @@ public final class GroupCallStartMessage: AbstractGroupMessage {
     }
 
     override public static var supportsSecureCoding: Bool {
-        true
-    }
-    
-    override public func isGroupCall() -> Bool {
         true
     }
 }

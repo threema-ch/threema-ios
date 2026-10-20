@@ -57,10 +57,10 @@ final class ContactProvider: libthreemaSwift.ContactProvider {
         }
     }
 
-    func getIdentities() throws -> [LibthreemaThreemaID] {
+    func getIdentities() throws -> Set<LibthreemaThreemaID> {
         // Return the Threema IDs of all the user’s contacts.
         entityManager.performAndWait {
-            self.entityManager.entityFetcher.contactIdentities().compactMap { LibthreemaThreemaID($0) }
+            Set(self.entityManager.entityFetcher.contactIdentities().compactMap { LibthreemaThreemaID($0) })
         }
     }
 
@@ -94,7 +94,7 @@ final class ContactProvider: libthreemaSwift.ContactProvider {
         guard !contacts.map(\.identity).contains(where: {
             contactIdentities.contains($0)
         }) else {
-            throw ProviderError.InvalidState("Some contacts are already existing")
+            throw ProviderError.ContractViolation("Some contacts are already existing")
         }
 
         do {
@@ -164,7 +164,7 @@ final class ContactProvider: libthreemaSwift.ContactProvider {
         guard !contacts.map(\.contact).map(\.identity).contains(where: {
             contactIdentities.contains($0)
         }) else {
-            throw ProviderError.InvalidState("Some contacts are already existing")
+            throw ProviderError.ContractViolation("Some contacts are already existing")
         }
 
         do {
@@ -198,7 +198,7 @@ final class ContactProvider: libthreemaSwift.ContactProvider {
                     // 2. If any contact for contacts does not exist, return ProviderError::InvalidState.¹
                     guard let contactEntity = self.entityManager.entityFetcher
                         .contactEntity(for: contact.identity) else {
-                        throw ProviderError.InvalidState("Contact \(contact.identity) not exists")
+                        throw ProviderError.ContractViolation("Contact \(contact.identity) not exists")
                     }
 
                     try contactEntity.update(with: contact, sortOrderFirstName: self.userSettings.sortOrderFirstName)
@@ -250,7 +250,7 @@ final class ContactProvider: libthreemaSwift.ContactProvider {
                 // 2. Look up the contact associated to identity and let contact be the result.¹
                 guard let contactEntity = self.entityManager.entityFetcher.contactEntity(for: identity) else {
                     // 3. If contact is not defined, return ProviderError::InvalidState.
-                    throw ProviderError.InvalidState("Contact not found for identity")
+                    throw ProviderError.ContractViolation("Contact not found for identity")
                 }
 
                 // 4. Set the contact-defined profile picture associated to contact to profile_picture.²
@@ -293,7 +293,7 @@ final class ContactProvider: libthreemaSwift.ContactProvider {
                 // 2. Look up the contact associated to identity and let contact be the result.¹
                 guard let contactEntity = self.entityManager.entityFetcher.contactEntity(for: identity) else {
                     // 3. If contact is not defined, return ProviderError::InvalidState.
-                    throw ProviderError.InvalidState("Contact not found for identity")
+                    throw ProviderError.ContractViolation("Contact not found for identity")
                 }
 
                 // 4. Set the user-defined profile picture associated to contact to profile_picture.²

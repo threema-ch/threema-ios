@@ -23,7 +23,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     protobuf,
-    utils::{debug::Name as _, protobuf::PaddedMessage as _, time::utc_now_ms},
+    utils::{debug::Name as _, protobuf::PaddedMessage as _, time::utc_now_ms, update::Apply},
 };
 
 pub mod config;
@@ -875,6 +875,7 @@ impl fmt::Debug for Nonce {
 
 /// A nonce hashed with HMAC-SHA256 using the identity as key.
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Name)]
+#[cfg_attr(test, derive(Debug))]
 pub struct HashedNonce(pub [u8; Self::LENGTH]);
 impl HashedNonce {
     /// Byte length of a hashed nonce.
@@ -940,6 +941,71 @@ impl From<[u8; Self::LENGTH]> for MessageId {
     }
 }
 
+/// Whether delivery receipts should be sent.
+#[derive(Clone, Copy, Debug, Name)]
+#[cfg_attr(test, derive(PartialEq, Default))]
+#[cfg_attr(feature = "uniffi", derive(uniffi::Enum))]
+pub enum MessageOverridesDeliveryReceiptPolicy {
+    /// Apply the default behaviour as defined by the message's properties.
+    #[cfg_attr(test, default)]
+    Default,
+
+    /// Don't send delivery receipts in response to the referred message.
+    ///
+    /// This overrides the default behaviour as defined by the message's properties.
+    DontSend,
+}
+
+/// Message behaviour overrides that need to be stored.
+#[derive(Clone, Copy, Name)]
+#[cfg_attr(test, derive(PartialEq, Default))]
+#[cfg_attr(feature = "uniffi", derive(uniffi::Record))]
+pub struct MessageOverrides {
+    /// Delivery receipt override policy.
+    pub delivery_receipt_policy: MessageOverridesDeliveryReceiptPolicy,
+}
+impl Apply<MessageOverrides> for MessageFlags {
+    fn apply(&mut self, overrides: MessageOverrides) {
+        if matches!(
+            overrides.delivery_receipt_policy,
+            MessageOverridesDeliveryReceiptPolicy::DontSend
+        ) {
+            self.0 |= Self::NO_DELIVERY_RECEIPTS;
+        }
+    }
+}
+impl fmt::Debug for MessageOverrides {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        // Keep this format in sync with `MessageFlags`!
+        write!(
+            formatter,
+            "{}({})",
+            Self::NAME,
+            itertools::join(
+                [matches!(
+                    self.delivery_receipt_policy,
+                    MessageOverridesDeliveryReceiptPolicy::DontSend
+                )
+                .then_some("no-receipts"),]
+                .into_iter()
+                .flatten(),
+                ", ",
+            ),
+        )
+    }
+}
+impl From<MessageFlags> for MessageOverrides {
+    fn from(flags: MessageFlags) -> Self {
+        Self {
+            delivery_receipt_policy: if flags.0 & MessageFlags::NO_DELIVERY_RECEIPTS != 0 {
+                MessageOverridesDeliveryReceiptPolicy::DontSend
+            } else {
+                MessageOverridesDeliveryReceiptPolicy::Default
+            },
+        }
+    }
+}
+
 /// Message flags which were/are transmitted to the server.
 #[derive(Clone, Copy, Default, Name, PartialEq, Eq)]
 pub struct MessageFlags(pub u8);
@@ -977,7 +1043,7 @@ impl fmt::Debug for MessageFlags {
             if self.0 & flag != 0 { Some(name) } else { None }
         };
 
-        // Keep this format in sync with [`MessageOverrides`]!
+        // Keep this format in sync with `MessageOverrides`!
         write!(
             formatter,
             "{}({})",
@@ -1042,5 +1108,18 @@ impl From<MessageMetadata> for Vec<u8> {
             nickname: metadata.nickname,
         };
         metadata.encode_to_vec_padded()
+    }
+}
+
+/// An offset within a stream.
+///
+/// Note: The offset is relative to the *beginning* of the stream including any metadata, i.e. offset `0`
+/// marks the first byte of the stream.
+#[derive(Copy, Clone, Debug, Eq, Hash, Name, PartialEq, PartialOrd)]
+#[cfg_attr(feature = "uniffi", derive(UniffiNewType))]
+pub struct StreamOffset(pub u64);
+impl fmt::Display for StreamOffset {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.0.fmt(formatter)
     }
 }

@@ -7,13 +7,13 @@ public final class DataRestoreDelegateMock: DataRestoreDelegate {
 
     public enum Call: Equatable, Sendable {
         case didReceiveIdentityData(IdentityData)
-        case didReceiveStateUpdate(BackupRestoreStateUpdate)
+        case didReceiveStateUpdate(DataBackupRestoreStateUpdate)
     }
 
     private struct State {
         var calls: [Call] = []
         var mockDidReceiveIdentityData: @Sendable (DataRestore, IdentityData) throws -> Void = { _, _ in /* no-op */ }
-        var mockDidReceiveStateUpdate: @Sendable (DataRestore, BackupRestoreStateUpdate) -> Void = { _, _ in /* no-op */ }
+        var mockDidReceiveStateUpdate: @Sendable (DataRestore, DataBackupRestoreStateUpdate) -> Void = { _, _ in /* no-op */ }
     }
 
     private let state = OSAllocatedUnfairLock<State>(initialState: State())
@@ -28,8 +28,8 @@ public final class DataRestoreDelegateMock: DataRestoreDelegate {
         try stub(dataRestore, data)
     }
 
-    public func dataRestore(_ dataRestore: DataRestore, didReceiveStateUpdate update: BackupRestoreStateUpdate) {
-        let stub: @Sendable (DataRestore, BackupRestoreStateUpdate) -> Void = state.withLock {
+    public func dataRestore(_ dataRestore: DataRestore, didReceiveStateUpdate update: DataBackupRestoreStateUpdate) {
+        let stub: @Sendable (DataRestore, DataBackupRestoreStateUpdate) -> Void = state.withLock {
             $0.calls.append(.didReceiveStateUpdate(update))
             return $0.mockDidReceiveStateUpdate
         }
@@ -45,7 +45,7 @@ public final class DataRestoreDelegateMock: DataRestoreDelegate {
         set { state.withLock { $0.mockDidReceiveIdentityData = newValue } }
     }
 
-    public var mockDidReceiveStateUpdate: @Sendable (DataRestore, BackupRestoreStateUpdate) -> Void {
+    public var mockDidReceiveStateUpdate: @Sendable (DataRestore, DataBackupRestoreStateUpdate) -> Void {
         get { state.withLock { $0.mockDidReceiveStateUpdate } }
         set { state.withLock { $0.mockDidReceiveStateUpdate = newValue } }
     }

@@ -111,7 +111,7 @@ struct AdvancedSettingsView: View {
                     }
                     .contextMenu(
                         ContextMenu {
-                            Button(#localize("copy")) {
+                            Button(#localize("Copy")) {
                                 UIPasteboard.general.string = settingsVM.sentryAppDevice ?? "-"
                             }
                         }

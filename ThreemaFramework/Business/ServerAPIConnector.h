@@ -78,6 +78,8 @@ enum IdentityState {
 
 - (void)obtainAuthTokenOnCompletion:(void(^)(NSString *authToken))onCompletion onError:(void(^)(NSError *error))onError;
 
-- (void)reportSpamForSenderWithIdentity:(nonnull NSString *)senderIdentity andNickname:(nullable NSString *)senderNickname withStore:(nonnull id<MyIdentityStoreProtocol>)identityStore onCompletion:(void(^_Nonnull)(void))onCompletion onError:(void(^_Nonnull)( NSError * _Nullable error))onError;
+- (void)reportSpamForIdentity:(nonnull NSString *)peerIdentity andNickname:(nullable NSString *)peerNickname withStore:(nonnull id<MyIdentityStoreProtocol>)identityStore onCompletion:(void(^_Nonnull)(void))onCompletion onError:(void(^_Nonnull)( NSError * _Nullable error))onError;
+
+- (void)reportSpamForGroupWithGroupID:(uint64_t)groupID adminIdentity:(nonnull NSString *)groupAdminIdentity adminNickname:(nullable NSString *)groupAdminNickname memberCount:(NSInteger)memberCount withStore:(nonnull id<MyIdentityStoreProtocol>)identityStore onCompletion:(void(^_Nonnull)(void))onCompletion onError:(void(^_Nonnull)( NSError * _Nullable error))onError;
 
 @end

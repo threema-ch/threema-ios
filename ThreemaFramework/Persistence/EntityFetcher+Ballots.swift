@@ -94,8 +94,8 @@ extension EntityFetcher {
     public func ballotEntitiesInContactOrGroupConversations(
         offset: Int = 0,
         limit: Int? = nil
-    ) -> [BallotEntity] {
-        fetchEntities(
+    ) throws -> [BallotEntity] {
+        try fetchEntities(
             entityName: "Ballot",
             predicate: .ballotInContactOrGroupConversation,
             sortDescriptors: [NSSortDescriptor(key: "id", ascending: true)],

@@ -6,7 +6,7 @@ extension LibthreemaConversationID {
     init(conversationEntity: ConversationEntity, entityManager: EntityManager, userIdentity: ThreemaIdentity) throws {
         if conversationEntity.isGroup {
             guard let groupEntity = entityManager.entityFetcher.groupEntity(for: conversationEntity) else {
-                throw MappingError.ballotConversation
+                throw MappingError.messageReceiverMissing
             }
 
             let groupIdentity = ThreemaEssentials.GroupIdentity(
@@ -20,7 +20,7 @@ extension LibthreemaConversationID {
             self = .contact(contact.identity)
         }
         else {
-            throw MappingError.ballotConversation
+            throw MappingError.messageReceiverMissing
         }
     }
 }

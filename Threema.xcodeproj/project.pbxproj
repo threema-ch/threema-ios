@@ -8,8 +8,35 @@
 
 /* Begin PBXBuildFile section */
 		082966472F63122300A57ABE /* libPhoneNumber in Frameworks */ = {isa = PBXBuildFile; productRef = 082966462F63122300A57ABE /* libPhoneNumber */; };
+		085B5EFF302EF2DA00F0A5FC /* Ed25519 in Frameworks */ = {isa = PBXBuildFile; productRef = 085B5EFE302EF2DA00F0A5FC /* Ed25519 */; };
+		085B5F01302EF2F900F0A5FC /* Ed25519 in Frameworks */ = {isa = PBXBuildFile; productRef = 085B5F00302EF2F900F0A5FC /* Ed25519 */; };
+		085B5F03302EF31000F0A5FC /* Ed25519 in Frameworks */ = {isa = PBXBuildFile; productRef = 085B5F02302EF31000F0A5FC /* Ed25519 */; };
+		085B5F05302EF35C00F0A5FC /* PromiseKit in Frameworks */ = {isa = PBXBuildFile; productRef = 085B5F04302EF35C00F0A5FC /* PromiseKit */; };
+		085B5F07302EF37B00F0A5FC /* PromiseKit in Frameworks */ = {isa = PBXBuildFile; productRef = 085B5F06302EF37B00F0A5FC /* PromiseKit */; };
+		085B5F09302EF38A00F0A5FC /* PromiseKit in Frameworks */ = {isa = PBXBuildFile; productRef = 085B5F08302EF38A00F0A5FC /* PromiseKit */; };
+		085B5F0B302EF3A700F0A5FC /* MBProgressHUD in Frameworks */ = {isa = PBXBuildFile; productRef = 085B5F0A302EF3A700F0A5FC /* MBProgressHUD */; };
+		085B5F0D302EF3B000F0A5FC /* MBProgressHUD in Frameworks */ = {isa = PBXBuildFile; productRef = 085B5F0C302EF3B000F0A5FC /* MBProgressHUD */; };
+		085B5F0F302EF3BB00F0A5FC /* MBProgressHUD in Frameworks */ = {isa = PBXBuildFile; productRef = 085B5F0E302EF3BB00F0A5FC /* MBProgressHUD */; };
+		085B5F11302EF3CF00F0A5FC /* TrustKit in Frameworks */ = {isa = PBXBuildFile; productRef = 085B5F10302EF3CF00F0A5FC /* TrustKit */; };
+		085B5F13302EF3D700F0A5FC /* TrustKit in Frameworks */ = {isa = PBXBuildFile; productRef = 085B5F12302EF3D700F0A5FC /* TrustKit */; };
+		085B5F15302EF3E300F0A5FC /* TrustKit in Frameworks */ = {isa = PBXBuildFile; productRef = 085B5F14302EF3E300F0A5FC /* TrustKit */; };
+		085B5F17302EF3F800F0A5FC /* SDWebImage in Frameworks */ = {isa = PBXBuildFile; productRef = 085B5F16302EF3F800F0A5FC /* SDWebImage */; };
+		085B5F19302EF40200F0A5FC /* SDWebImage in Frameworks */ = {isa = PBXBuildFile; productRef = 085B5F18302EF40200F0A5FC /* SDWebImage */; };
+		085B5F1B302EF40B00F0A5FC /* SDWebImage in Frameworks */ = {isa = PBXBuildFile; productRef = 085B5F1A302EF40B00F0A5FC /* SDWebImage */; };
+		085B5F1D302EF41700F0A5FC /* PromiseKit in Frameworks */ = {isa = PBXBuildFile; productRef = 085B5F1C302EF41700F0A5FC /* PromiseKit */; };
+		085B5F1F302EF42E00F0A5FC /* Sentry in Frameworks */ = {isa = PBXBuildFile; productRef = 085B5F1E302EF42E00F0A5FC /* Sentry */; };
+		085B5F21302EF44900F0A5FC /* RSKImageCropper in Frameworks */ = {isa = PBXBuildFile; productRef = 085B5F20302EF44900F0A5FC /* RSKImageCropper */; };
+		085B5F23302EF45900F0A5FC /* ZipArchive in Frameworks */ = {isa = PBXBuildFile; productRef = 085B5F22302EF45900F0A5FC /* ZipArchive */; };
+		085B5F25302EF52800F0A5FC /* JDStatusBarNotification in Frameworks */ = {isa = PBXBuildFile; productRef = 085B5F24302EF52800F0A5FC /* JDStatusBarNotification */; };
+		085B5F27302EF53D00F0A5FC /* Gzip in Frameworks */ = {isa = PBXBuildFile; productRef = 085B5F26302EF53D00F0A5FC /* Gzip */; };
+		085B5F29302EF55500F0A5FC /* DSWaveformImage in Frameworks */ = {isa = PBXBuildFile; productRef = 085B5F28302EF55500F0A5FC /* DSWaveformImage */; };
+		085B5F2B302EF56700F0A5FC /* SwiftMsgPack in Frameworks */ = {isa = PBXBuildFile; productRef = 085B5F2A302EF56700F0A5FC /* SwiftMsgPack */; };
+		085B5F2D302EF5F700F0A5FC /* JDStatusBarNotification in Frameworks */ = {isa = PBXBuildFile; productRef = 085B5F2C302EF5F700F0A5FC /* JDStatusBarNotification */; };
+		085B5F2F302EF61200F0A5FC /* DSWaveformImageViews in Frameworks */ = {isa = PBXBuildFile; productRef = 085B5F2E302EF61200F0A5FC /* DSWaveformImageViews */; };
 		087D48C430224ED000792070 /* FileUtility in Frameworks */ = {isa = PBXBuildFile; productRef = 087D48C330224ED000792070 /* FileUtility */; };
 		087D48C630224EDE00792070 /* ThreemaEssentials in Frameworks */ = {isa = PBXBuildFile; productRef = 087D48C530224EDE00792070 /* ThreemaEssentials */; };
+		08A9B91D302EE8CC00513E7C /* CocoaLumberjack in Frameworks */ = {isa = PBXBuildFile; productRef = 08A9B91C302EE8CC00513E7C /* CocoaLumberjack */; };
+		08A9B91F302EE8CC00513E7C /* CocoaLumberjackSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 08A9B91E302EE8CC00513E7C /* CocoaLumberjackSwift */; };
 		08BFCC5F2FC09F9C00235F00 /* ZipArchive in Frameworks */ = {isa = PBXBuildFile; productRef = 08BFCC5E2FC09F9C00235F00 /* ZipArchive */; };
 		08BFCC612FC0A02000235F00 /* ZipArchive in Frameworks */ = {isa = PBXBuildFile; productRef = 08BFCC602FC0A02000235F00 /* ZipArchive */; };
 		08BFCC632FC0A02900235F00 /* ZipArchive in Frameworks */ = {isa = PBXBuildFile; productRef = 08BFCC622FC0A02900235F00 /* ZipArchive */; };
@@ -241,7 +268,6 @@
 		2D3FD51D2E61A804003D3DEE /* FileUtility in Frameworks */ = {isa = PBXBuildFile; productRef = 2D3FD51C2E61A804003D3DEE /* FileUtility */; };
 		2D3FD51F2E61A80C003D3DEE /* PromiseKit in Frameworks */ = {isa = PBXBuildFile; productRef = 2D3FD51E2E61A80C003D3DEE /* PromiseKit */; };
 		2D3FD5212E61B194003D3DEE /* FileUtility in Frameworks */ = {isa = PBXBuildFile; productRef = 2D3FD5202E61B194003D3DEE /* FileUtility */; };
-		2D3FD5232E61B19E003D3DEE /* PromiseKit in Frameworks */ = {isa = PBXBuildFile; productRef = 2D3FD5222E61B19E003D3DEE /* PromiseKit */; };
 		2D44B64D2F16482200459A99 /* FileUtilityTestHelper in Frameworks */ = {isa = PBXBuildFile; productRef = 2D44B64C2F16482200459A99 /* FileUtilityTestHelper */; };
 		2D44B6512F16483600459A99 /* KeychainTestHelper in Frameworks */ = {isa = PBXBuildFile; productRef = 2D44B6502F16483600459A99 /* KeychainTestHelper */; };
 		2D44B6532F16484100459A99 /* RemoteSecretProtocolTestHelper in Frameworks */ = {isa = PBXBuildFile; productRef = 2D44B6522F16484100459A99 /* RemoteSecretProtocolTestHelper */; };
@@ -411,8 +437,6 @@
 		2DE70BCE2ED4462D00F4F2E0 /* TrustKit in Frameworks */ = {isa = PBXBuildFile; productRef = 2DE70BCD2ED4462D00F4F2E0 /* TrustKit */; };
 		2DE70BD02ED446E500F4F2E0 /* Ed25519 in Frameworks */ = {isa = PBXBuildFile; productRef = 2DE70BCF2ED446E500F4F2E0 /* Ed25519 */; };
 		2DE70BD22ED446EE00F4F2E0 /* JDStatusBarNotification in Frameworks */ = {isa = PBXBuildFile; productRef = 2DE70BD12ED446EE00F4F2E0 /* JDStatusBarNotification */; };
-		2DE70BD42ED446F600F4F2E0 /* SDWebImage in Frameworks */ = {isa = PBXBuildFile; productRef = 2DE70BD32ED446F600F4F2E0 /* SDWebImage */; };
-		2DE70BD62ED4470700F4F2E0 /* TrustKit in Frameworks */ = {isa = PBXBuildFile; productRef = 2DE70BD52ED4470700F4F2E0 /* TrustKit */; };
 		2DE70D162ED450C300F4F2E0 /* Ed25519 in Frameworks */ = {isa = PBXBuildFile; productRef = 2DE70D152ED450C300F4F2E0 /* Ed25519 */; };
 		2DE70D182ED450CE00F4F2E0 /* JDStatusBarNotification in Frameworks */ = {isa = PBXBuildFile; productRef = 2DE70D172ED450CE00F4F2E0 /* JDStatusBarNotification */; };
 		2DE70D1A2ED450E400F4F2E0 /* SDWebImage in Frameworks */ = {isa = PBXBuildFile; productRef = 2DE70D192ED450E400F4F2E0 /* SDWebImage */; };
@@ -641,7 +665,6 @@
 		4D088C4C255C163D002F3129 /* Ed25519 in Frameworks */ = {isa = PBXBuildFile; productRef = 4D088C4B255C163D002F3129 /* Ed25519 */; };
 		4D088C4E255C1640002F3129 /* Ed25519 in Frameworks */ = {isa = PBXBuildFile; productRef = 4D088C4D255C1640002F3129 /* Ed25519 */; };
 		4D088C50255C1643002F3129 /* Ed25519 in Frameworks */ = {isa = PBXBuildFile; productRef = 4D088C4F255C1643002F3129 /* Ed25519 */; };
-		4D088C68255C1680002F3129 /* Ed25519 in Frameworks */ = {isa = PBXBuildFile; productRef = 4D088C63255C1680002F3129 /* Ed25519 */; };
 		4D088CA9255C1D1D002F3129 /* Threema OnPrem ShareExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 4D088BAE255C1501002F3129 /* Threema OnPrem ShareExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		4D088CBA255C1D22002F3129 /* Threema OnPrem NotificationExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 4D088C71255C1680002F3129 /* Threema OnPrem NotificationExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		4D08BF13190FB04800458BC4 /* CoreImage.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D08BF12190FB04800458BC4 /* CoreImage.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
@@ -761,11 +784,6 @@
 		8DF1BC802710718E000D241D /* SwiftMsgPack in Frameworks */ = {isa = PBXBuildFile; productRef = 8DF1BC7F2710718E000D241D /* SwiftMsgPack */; };
 		8DF1BC822710719A000D241D /* SwiftMsgPack in Frameworks */ = {isa = PBXBuildFile; productRef = 8DF1BC812710719A000D241D /* SwiftMsgPack */; };
 		8DF1BC84271071A6000D241D /* SwiftMsgPack in Frameworks */ = {isa = PBXBuildFile; productRef = 8DF1BC83271071A6000D241D /* SwiftMsgPack */; };
-		941735112C4FD819008534FC /* AsyncAlgorithms in Frameworks */ = {isa = PBXBuildFile; productRef = 941735102C4FD819008534FC /* AsyncAlgorithms */; };
-		941735132C4FD884008534FC /* AsyncAlgorithms in Frameworks */ = {isa = PBXBuildFile; productRef = 941735122C4FD884008534FC /* AsyncAlgorithms */; };
-		941735152C4FD88B008534FC /* AsyncAlgorithms in Frameworks */ = {isa = PBXBuildFile; productRef = 941735142C4FD88B008534FC /* AsyncAlgorithms */; };
-		941735172C4FD894008534FC /* AsyncAlgorithms in Frameworks */ = {isa = PBXBuildFile; productRef = 941735162C4FD894008534FC /* AsyncAlgorithms */; };
-		941735192C4FD89C008534FC /* AsyncAlgorithms in Frameworks */ = {isa = PBXBuildFile; productRef = 941735182C4FD89C008534FC /* AsyncAlgorithms */; };
 		94913A982B2CB61300336FC9 /* DSWaveformImageViews in Frameworks */ = {isa = PBXBuildFile; productRef = 94913A972B2CB61300336FC9 /* DSWaveformImageViews */; };
 		94913A9A2B2CB61A00336FC9 /* DSWaveformImageViews in Frameworks */ = {isa = PBXBuildFile; productRef = 94913A992B2CB61A00336FC9 /* DSWaveformImageViews */; };
 		94913A9C2B2CB62100336FC9 /* DSWaveformImageViews in Frameworks */ = {isa = PBXBuildFile; productRef = 94913A9B2B2CB62100336FC9 /* DSWaveformImageViews */; };
@@ -990,16 +1008,12 @@
 		F2EAFE9D2D6CC9C400DFFD48 /* PPVideoViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE10D8FF1EA8FA0300802355 /* PPVideoViewCell.swift */; };
 		F2EAFEA22D6CC9C400DFFD48 /* UniformTypeIdentifiers.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 423AA9782C46FE3F0067C80A /* UniformTypeIdentifiers.framework */; };
 		F2EAFEA32D6CC9C400DFFD48 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DD01F6E14C1CCA900EF7690 /* Foundation.framework */; };
-		F2EAFEA42D6CC9C400DFFD48 /* DSWaveformImage in Frameworks */ = {isa = PBXBuildFile; productRef = F2EAFBD32D6CC9C400DFFD48 /* DSWaveformImage */; };
 		F2EAFEA52D6CC9C400DFFD48 /* libsaltyrtc_task_relayed_data_ffi.a in Frameworks */ = {isa = PBXBuildFile; fileRef = CE6511EA202C829100239FB6 /* libsaltyrtc_task_relayed_data_ffi.a */; };
 		F2EAFEA62D6CC9C400DFFD48 /* ThreemaMacros in Frameworks */ = {isa = PBXBuildFile; productRef = F2EAFBE62D6CC9C400DFFD48 /* ThreemaMacros */; };
 		F2EAFEA82D6CC9C400DFFD48 /* libresolv.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = CE5E6E23202C5A80006796B5 /* libresolv.tbd */; };
 		F2EAFEA92D6CC9C400DFFD48 /* ContactsUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CE88CABE20347CE20021475F /* ContactsUI.framework */; };
 		F2EAFEAA2D6CC9C400DFFD48 /* AVKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CEFFAABC1FA0F90E0039916C /* AVKit.framework */; };
-		F2EAFEAB2D6CC9C400DFFD48 /* PromiseKit in Frameworks */ = {isa = PBXBuildFile; productRef = F2EAFBDA2D6CC9C400DFFD48 /* PromiseKit */; };
 		F2EAFEAC2D6CC9C400DFFD48 /* Contacts.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CE654D7C1F1E066400E24C1E /* Contacts.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
-		F2EAFEAD2D6CC9C400DFFD48 /* CocoaLumberjackSwift in Frameworks */ = {isa = PBXBuildFile; productRef = F2EAFBE32D6CC9C400DFFD48 /* CocoaLumberjackSwift */; };
-		F2EAFEAE2D6CC9C400DFFD48 /* Sentry in Frameworks */ = {isa = PBXBuildFile; productRef = F2EAFBD12D6CC9C400DFFD48 /* Sentry */; };
 		F2EAFEAF2D6CC9C400DFFD48 /* PushKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CE5397E91ED31582002EB388 /* PushKit.framework */; };
 		F2EAFEB02D6CC9C400DFFD48 /* CallKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CEE6296E1ECC7AB20055F239 /* CallKit.framework */; };
 		F2EAFEB12D6CC9C400DFFD48 /* UserNotifications.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CE0B5E141E5F49480044E3BB /* UserNotifications.framework */; };
@@ -1010,10 +1024,8 @@
 		F2EAFEB62D6CC9C400DFFD48 /* QuickLook.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D0FC68619E3F33900CF7BB5 /* QuickLook.framework */; };
 		F2EAFEB82D6CC9C400DFFD48 /* CoreImage.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D08BF12190FB04800458BC4 /* CoreImage.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		F2EAFEB92D6CC9C400DFFD48 /* ThreemaFramework.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A677B821C6250C90019B361 /* ThreemaFramework.framework */; };
-		F2EAFEBA2D6CC9C400DFFD48 /* AsyncAlgorithms in Frameworks */ = {isa = PBXBuildFile; productRef = F2EAFBE42D6CC9C400DFFD48 /* AsyncAlgorithms */; };
 		F2EAFEBB2D6CC9C400DFFD48 /* CoreTelephony.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DAAD7B1182F96CD00873B67 /* CoreTelephony.framework */; };
 		F2EAFEBC2D6CC9C400DFFD48 /* AssetsLibrary.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DD318841829AE3A000D3933 /* AssetsLibrary.framework */; };
-		F2EAFEBD2D6CC9C400DFFD48 /* MBProgressHUD in Frameworks */ = {isa = PBXBuildFile; productRef = F2EAFBDF2D6CC9C400DFFD48 /* MBProgressHUD */; };
 		F2EAFEBE2D6CC9C400DFFD48 /* Social.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DA38C86178AF5D100937DD7 /* Social.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		F2EAFEBF2D6CC9C400DFFD48 /* MediaPlayer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DD55131168C681600B19DF8 /* MediaPlayer.framework */; };
 		F2EAFEC02D6CC9C400DFFD48 /* CoreLocation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D22601616677EC2003C5691 /* CoreLocation.framework */; };
@@ -1024,23 +1036,16 @@
 		F2EAFEC52D6CC9C400DFFD48 /* CoreText.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D6CF5A616458642003D7DCC /* CoreText.framework */; };
 		F2EAFEC62D6CC9C400DFFD48 /* MobileCoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D6CF5AC1645A056003D7DCC /* MobileCoreServices.framework */; };
 		F2EAFEC72D6CC9C400DFFD48 /* CoreData.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D10447F16432837002DEF85 /* CoreData.framework */; };
-		F2EAFEC82D6CC9C400DFFD48 /* Gzip in Frameworks */ = {isa = PBXBuildFile; productRef = F2EAFBC92D6CC9C400DFFD48 /* Gzip */; };
 		F2EAFEC92D6CC9C400DFFD48 /* AddressBook.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D29097B1641880C00364E22 /* AddressBook.framework */; };
 		F2EAFECA2D6CC9C400DFFD48 /* CoreMedia.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D290977164187F700364E22 /* CoreMedia.framework */; };
 		F2EAFECB2D6CC9C400DFFD48 /* CoreVideo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D290975164187F200364E22 /* CoreVideo.framework */; };
 		F2EAFECC2D6CC9C400DFFD48 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D290973164187ED00364E22 /* AudioToolbox.framework */; };
-		F2EAFECD2D6CC9C400DFFD48 /* DSWaveformImageViews in Frameworks */ = {isa = PBXBuildFile; productRef = F2EAFBDC2D6CC9C400DFFD48 /* DSWaveformImageViews */; };
-		F2EAFECF2D6CC9C400DFFD48 /* RSKImageCropper in Frameworks */ = {isa = PBXBuildFile; productRef = F2EAFBC52D6CC9C400DFFD48 /* RSKImageCropper */; };
 		F2EAFED02D6CC9C400DFFD48 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D290971164187E400364E22 /* AVFoundation.framework */; };
-		F2EAFED12D6CC9C400DFFD48 /* SwiftMsgPack in Frameworks */ = {isa = PBXBuildFile; productRef = F2EAFBC72D6CC9C400DFFD48 /* SwiftMsgPack */; };
-		F2EAFED22D6CC9C400DFFD48 /* CocoaLumberjack in Frameworks */ = {isa = PBXBuildFile; productRef = F2EAFBE12D6CC9C400DFFD48 /* CocoaLumberjack */; };
-		F2EAFED32D6CC9C400DFFD48 /* ZipArchive in Frameworks */ = {isa = PBXBuildFile; productRef = F2EAFBCD2D6CC9C400DFFD48 /* ZipArchive */; };
 		F2EAFED42D6CC9C400DFFD48 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D3E342E1639BD210025B606 /* SystemConfiguration.framework */; };
 		F2EAFED52D6CC9C400DFFD48 /* ThreemaEssentials in Frameworks */ = {isa = PBXBuildFile; productRef = F2EAFBD92D6CC9C400DFFD48 /* ThreemaEssentials */; };
 		F2EAFED62D6CC9C400DFFD48 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D90AF79163466F3001BDF83 /* QuartzCore.framework */; };
 		F2EAFED72D6CC9C400DFFD48 /* CFNetwork.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DF773161630AA7A001808D3 /* CFNetwork.framework */; };
 		F2EAFED82D6CC9C400DFFD48 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DF773141630A858001808D3 /* Security.framework */; };
-		F2EAFED92D6CC9C400DFFD48 /* MarqueeLabel in Frameworks */ = {isa = PBXBuildFile; productRef = F2EAFBCB2D6CC9C400DFFD48 /* MarqueeLabel */; };
 		F2EAFEDA2D6CC9C400DFFD48 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DD01F6C14C1CCA900EF7690 /* UIKit.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		F2EAFEDB2D6CC9C400DFFD48 /* WebRTC.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8D965B3D271E9C4F009A4E4C /* WebRTC.xcframework */; };
 		F2EAFEDC2D6CC9C400DFFD48 /* GroupCalls in Frameworks */ = {isa = PBXBuildFile; productRef = F2EAFBD52D6CC9C400DFFD48 /* GroupCalls */; };
@@ -1052,24 +1057,12 @@
 		F2EAFF332D6CC9C400DFFD48 /* WebRTC.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 8D965B3D271E9C4F009A4E4C /* WebRTC.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		F2EAFF342D6CC9C400DFFD48 /* ThreemaFramework.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 0A677B821C6250C90019B361 /* ThreemaFramework.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		F2EAFF5C2D6CCA2400DFFD48 /* ThreemaEssentials in Frameworks */ = {isa = PBXBuildFile; productRef = F2EAFF502D6CCA2400DFFD48 /* ThreemaEssentials */; };
-		F2EAFF5D2D6CCA2400DFFD48 /* TrustKit in Frameworks */ = {isa = PBXBuildFile; productRef = F2EAFF562D6CCA2400DFFD48 /* TrustKit */; };
 		F2EAFF5E2D6CCA2400DFFD48 /* CocoaLumberjackSwift in Frameworks */ = {isa = PBXBuildFile; productRef = F2EAFF552D6CCA2400DFFD48 /* CocoaLumberjackSwift */; };
-		F2EAFF5F2D6CCA2400DFFD48 /* MBProgressHUD in Frameworks */ = {isa = PBXBuildFile; productRef = F2EAFF512D6CCA2400DFFD48 /* MBProgressHUD */; };
 		F2EAFF602D6CCA2400DFFD48 /* ThreemaMacros in Frameworks */ = {isa = PBXBuildFile; productRef = F2EAFF582D6CCA2400DFFD48 /* ThreemaMacros */; };
-		F2EAFF612D6CCA2400DFFD48 /* SDWebImage in Frameworks */ = {isa = PBXBuildFile; productRef = F2EAFF4A2D6CCA2400DFFD48 /* SDWebImage */; settings = {ATTRIBUTES = (Weak, ); }; };
 		F2EAFF622D6CCA2400DFFD48 /* CocoaLumberjack in Frameworks */ = {isa = PBXBuildFile; productRef = F2EAFF532D6CCA2400DFFD48 /* CocoaLumberjack */; };
-		F2EAFF632D6CCA2400DFFD48 /* JDStatusBarNotification in Frameworks */ = {isa = PBXBuildFile; productRef = F2EAFF4C2D6CCA2400DFFD48 /* JDStatusBarNotification */; };
-		F2EAFF642D6CCA2400DFFD48 /* Ed25519 in Frameworks */ = {isa = PBXBuildFile; productRef = F2EAFF482D6CCA2400DFFD48 /* Ed25519 */; };
-		F2EAFF652D6CCA2400DFFD48 /* PromiseKit in Frameworks */ = {isa = PBXBuildFile; productRef = F2EAFF4E2D6CCA2400DFFD48 /* PromiseKit */; };
 		F2EAFF8C2D6CCA3700DFFD48 /* CocoaLumberjack in Frameworks */ = {isa = PBXBuildFile; productRef = F2EAFF7F2D6CCA3700DFFD48 /* CocoaLumberjack */; };
-		F2EAFF8D2D6CCA3700DFFD48 /* JDStatusBarNotification in Frameworks */ = {isa = PBXBuildFile; productRef = F2EAFF792D6CCA3700DFFD48 /* JDStatusBarNotification */; };
-		F2EAFF8E2D6CCA3700DFFD48 /* TrustKit in Frameworks */ = {isa = PBXBuildFile; productRef = F2EAFF822D6CCA3700DFFD48 /* TrustKit */; };
-		F2EAFF8F2D6CCA3700DFFD48 /* PromiseKit in Frameworks */ = {isa = PBXBuildFile; productRef = F2EAFF7B2D6CCA3700DFFD48 /* PromiseKit */; };
 		F2EAFF902D6CCA3700DFFD48 /* ThreemaMacros in Frameworks */ = {isa = PBXBuildFile; productRef = F2EAFF842D6CCA3700DFFD48 /* ThreemaMacros */; };
-		F2EAFF912D6CCA3700DFFD48 /* MBProgressHUD in Frameworks */ = {isa = PBXBuildFile; productRef = F2EAFF7D2D6CCA3700DFFD48 /* MBProgressHUD */; };
 		F2EAFF922D6CCA3700DFFD48 /* CocoaLumberjackSwift in Frameworks */ = {isa = PBXBuildFile; productRef = F2EAFF812D6CCA3700DFFD48 /* CocoaLumberjackSwift */; };
-		F2EAFF932D6CCA3700DFFD48 /* SDWebImage in Frameworks */ = {isa = PBXBuildFile; productRef = F2EAFF772D6CCA3700DFFD48 /* SDWebImage */; settings = {ATTRIBUTES = (Weak, ); }; };
-		F2EAFF942D6CCA3700DFFD48 /* Ed25519 in Frameworks */ = {isa = PBXBuildFile; productRef = F2EAFF752D6CCA3700DFFD48 /* Ed25519 */; };
 		F2FD1BF92E059A13006959B6 /* InternalDocumentation.docc in Sources */ = {isa = PBXBuildFile; fileRef = F2B743662DFC677B008C5C52 /* InternalDocumentation.docc */; };
 /* End PBXBuildFile section */
 
@@ -2493,7 +2486,6 @@
 				Utilities/ContactUtil.h,
 				Utilities/MediaConverter.h,
 				Utilities/NonceHasher.h,
-				Utilities/PushPayloadDecryptor.h,
 				Utilities/ThreemaUtilityObjC.h,
 				Vendor/JKLLockScreenViewController/JKLLockScreenViewController.h,
 				Vendor/KKPasscodeLock/KKPasscodeLock.h,
@@ -3033,7 +3025,6 @@
 				0A7DF7FB1C9FDBDE002D4DC3 /* LocalAuthentication.framework in Frameworks */,
 				0A7DF7FC1C9FDBDE002D4DC3 /* QuickLook.framework in Frameworks */,
 				0A7DF7FD1C9FDBDE002D4DC3 /* CoreImage.framework in Frameworks */,
-				941735132C4FD884008534FC /* AsyncAlgorithms in Frameworks */,
 				0A7DF7FF1C9FDBDE002D4DC3 /* ThreemaFramework.framework in Frameworks */,
 				2DE70BC42ED4425D00F4F2E0 /* SDWebImage in Frameworks */,
 				0A7DF8011C9FDBDE002D4DC3 /* CoreTelephony.framework in Frameworks */,
@@ -3146,7 +3137,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				2D3FD5212E61B194003D3DEE /* FileUtility in Frameworks */,
-				2D3FD5232E61B19E003D3DEE /* PromiseKit in Frameworks */,
+				085B5F1D302EF41700F0A5FC /* PromiseKit in Frameworks */,
 				2DC2047F2F41C00000000CF3 /* AudioSessionManager in Frameworks */,
 				2DD3048F2F41D00000000EF4 /* AudioSessionManagerTestHelper in Frameworks */,
 			);
@@ -3223,7 +3214,6 @@
 				2D5A1EDF24C9B5DF00F87DD0 /* CoreImage.framework in Frameworks */,
 				8DBF271C27108D550008045E /* Sentry in Frameworks */,
 				2D5A1EE124C9B5DF00F87DD0 /* CoreTelephony.framework in Frameworks */,
-				941735192C4FD89C008534FC /* AsyncAlgorithms in Frameworks */,
 				2D5A1EE224C9B5DF00F87DD0 /* AssetsLibrary.framework in Frameworks */,
 				2DE70D1A2ED450E400F4F2E0 /* SDWebImage in Frameworks */,
 				2D5A1EE324C9B5DF00F87DD0 /* Social.framework in Frameworks */,
@@ -3359,7 +3349,6 @@
 				2DEDB36A24C9903400FC9099 /* ThreemaFramework.framework in Frameworks */,
 				2DEDB36B24C9903400FC9099 /* CoreTelephony.framework in Frameworks */,
 				2DEDB36C24C9903400FC9099 /* AssetsLibrary.framework in Frameworks */,
-				941735172C4FD894008534FC /* AsyncAlgorithms in Frameworks */,
 				2DEDB36D24C9903400FC9099 /* Social.framework in Frameworks */,
 				2DEDB36E24C9903400FC9099 /* MediaPlayer.framework in Frameworks */,
 				24D02F392A56EF760074ABE4 /* ThreemaEssentials in Frameworks */,
@@ -3477,7 +3466,6 @@
 				4D088A95255C0CD4002F3129 /* QuickLook.framework in Frameworks */,
 				4D088A96255C0CD4002F3129 /* CoreImage.framework in Frameworks */,
 				4D088A97255C0CD4002F3129 /* ThreemaFramework.framework in Frameworks */,
-				941735152C4FD88B008534FC /* AsyncAlgorithms in Frameworks */,
 				4D088A98255C0CD4002F3129 /* CoreTelephony.framework in Frameworks */,
 				2DE70BCC2ED4462300F4F2E0 /* SDWebImage in Frameworks */,
 				4D088A99255C0CD4002F3129 /* AssetsLibrary.framework in Frameworks */,
@@ -3549,6 +3537,7 @@
 				F2A87DF02E4B687D00646386 /* FLAnimatedImage in Frameworks */,
 				7EACDD7D2B0CE34D00D9BC27 /* ThreemaEssentials in Frameworks */,
 				7EC0229C2B890707005024AE /* TrustKit in Frameworks */,
+				085B5EFF302EF2DA00F0A5FC /* Ed25519 in Frameworks */,
 				24B820092B32CE7600E8D13E /* CocoaLumberjackSwift in Frameworks */,
 				08BFCC712FC0A07000235F00 /* ZipArchive in Frameworks */,
 				24EFCD982B31E99C00DD7C66 /* MBProgressHUD in Frameworks */,
@@ -3557,7 +3546,6 @@
 				D73A95D027AD1855003E847C /* SDWebImage in Frameworks */,
 				24B820072B32CE7600E8D13E /* CocoaLumberjack in Frameworks */,
 				24DB324928AE48A500B37182 /* JDStatusBarNotification in Frameworks */,
-				4D088C68255C1680002F3129 /* Ed25519 in Frameworks */,
 				7E0A4BD92AD68F3700C38A25 /* PromiseKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -3618,7 +3606,6 @@
 				4D0FC68719E3F33900CF7BB5 /* QuickLook.framework in Frameworks */,
 				8DDCF7A5271077BE000CB4F6 /* Gzip in Frameworks */,
 				4D08BF13190FB04800458BC4 /* CoreImage.framework in Frameworks */,
-				941735112C4FD819008534FC /* AsyncAlgorithms in Frameworks */,
 				0A677B971C6250CA0019B361 /* ThreemaFramework.framework in Frameworks */,
 				4DAAD7B2182F96CD00873B67 /* CoreTelephony.framework in Frameworks */,
 				94913A982B2CB61300336FC9 /* DSWaveformImageViews in Frameworks */,
@@ -3717,61 +3704,59 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				085B5F29302EF55500F0A5FC /* DSWaveformImage in Frameworks */,
 				F2EAFEA22D6CC9C400DFFD48 /* UniformTypeIdentifiers.framework in Frameworks */,
 				F2EAFEA32D6CC9C400DFFD48 /* Foundation.framework in Frameworks */,
-				F2EAFEA42D6CC9C400DFFD48 /* DSWaveformImage in Frameworks */,
 				F2EAFEA52D6CC9C400DFFD48 /* libsaltyrtc_task_relayed_data_ffi.a in Frameworks */,
 				F2380D272E4CB3D30059D4F3 /* ChunkedDC in Frameworks */,
 				F2EAFEA62D6CC9C400DFFD48 /* ThreemaMacros in Frameworks */,
 				F2EAFEA82D6CC9C400DFFD48 /* libresolv.tbd in Frameworks */,
+				085B5F2F302EF61200F0A5FC /* DSWaveformImageViews in Frameworks */,
 				2B8896FE2E4451150074D387 /* NotificationBannerSwift in Frameworks */,
+				085B5F21302EF44900F0A5FC /* RSKImageCropper in Frameworks */,
 				F2EAFEA92D6CC9C400DFFD48 /* ContactsUI.framework in Frameworks */,
+				085B5F2B302EF56700F0A5FC /* SwiftMsgPack in Frameworks */,
+				085B5F0B302EF3A700F0A5FC /* MBProgressHUD in Frameworks */,
 				F2EAFEAA2D6CC9C400DFFD48 /* AVKit.framework in Frameworks */,
-				2DE70BD42ED446F600F4F2E0 /* SDWebImage in Frameworks */,
-				F2EAFEAB2D6CC9C400DFFD48 /* PromiseKit in Frameworks */,
 				F2EAFEAC2D6CC9C400DFFD48 /* Contacts.framework in Frameworks */,
-				F2EAFEAD2D6CC9C400DFFD48 /* CocoaLumberjackSwift in Frameworks */,
-				F2EAFEAE2D6CC9C400DFFD48 /* Sentry in Frameworks */,
 				F2EAFEAF2D6CC9C400DFFD48 /* PushKit.framework in Frameworks */,
 				244F24D52D92899C004CC9D7 /* Coordinator in Frameworks */,
 				F2EAFEB02D6CC9C400DFFD48 /* CallKit.framework in Frameworks */,
 				F2EAFEB12D6CC9C400DFFD48 /* UserNotifications.framework in Frameworks */,
 				F2EAFEB22D6CC9C400DFFD48 /* PassKit.framework in Frameworks */,
+				085B5F23302EF45900F0A5FC /* ZipArchive in Frameworks */,
 				F2EAFEB32D6CC9C400DFFD48 /* Photos.framework in Frameworks */,
 				F2EAFEB42D6CC9C400DFFD48 /* CoreMotion.framework in Frameworks */,
 				F2EAFEB52D6CC9C400DFFD48 /* LocalAuthentication.framework in Frameworks */,
 				F2EAFEB62D6CC9C400DFFD48 /* QuickLook.framework in Frameworks */,
 				F2EAFEB82D6CC9C400DFFD48 /* CoreImage.framework in Frameworks */,
 				F2EAFEB92D6CC9C400DFFD48 /* ThreemaFramework.framework in Frameworks */,
-				F2EAFEBA2D6CC9C400DFFD48 /* AsyncAlgorithms in Frameworks */,
 				F2EAFEBB2D6CC9C400DFFD48 /* CoreTelephony.framework in Frameworks */,
 				F2EAFEBC2D6CC9C400DFFD48 /* AssetsLibrary.framework in Frameworks */,
-				F2EAFEBD2D6CC9C400DFFD48 /* MBProgressHUD in Frameworks */,
+				08A9B91D302EE8CC00513E7C /* CocoaLumberjack in Frameworks */,
 				F2EAFEBE2D6CC9C400DFFD48 /* Social.framework in Frameworks */,
 				F2EAFEBF2D6CC9C400DFFD48 /* MediaPlayer.framework in Frameworks */,
 				F2EAFEC02D6CC9C400DFFD48 /* CoreLocation.framework in Frameworks */,
 				F2EAFEC12D6CC9C400DFFD48 /* MapKit.framework in Frameworks */,
+				085B5F1F302EF42E00F0A5FC /* Sentry in Frameworks */,
+				085B5F27302EF53D00F0A5FC /* Gzip in Frameworks */,
 				F2EAFEC22D6CC9C400DFFD48 /* ThreemaProtocols in Frameworks */,
+				085B5F11302EF3CF00F0A5FC /* TrustKit in Frameworks */,
+				08A9B91F302EE8CC00513E7C /* CocoaLumberjackSwift in Frameworks */,
 				F2EAFEC32D6CC9C400DFFD48 /* MessageUI.framework in Frameworks */,
 				F2EAFEC42D6CC9C400DFFD48 /* ImageIO.framework in Frameworks */,
 				F2EAFEC52D6CC9C400DFFD48 /* CoreText.framework in Frameworks */,
 				F2EAFEC62D6CC9C400DFFD48 /* MobileCoreServices.framework in Frameworks */,
 				F2A87DE82E4B683F00646386 /* FLAnimatedImage in Frameworks */,
 				F2EAFEC72D6CC9C400DFFD48 /* CoreData.framework in Frameworks */,
-				F2EAFEC82D6CC9C400DFFD48 /* Gzip in Frameworks */,
 				F2EAFEC92D6CC9C400DFFD48 /* AddressBook.framework in Frameworks */,
 				F2EAFECA2D6CC9C400DFFD48 /* CoreMedia.framework in Frameworks */,
 				F2EAFECB2D6CC9C400DFFD48 /* CoreVideo.framework in Frameworks */,
 				F2EAFECC2D6CC9C400DFFD48 /* AudioToolbox.framework in Frameworks */,
-				F2EAFECD2D6CC9C400DFFD48 /* DSWaveformImageViews in Frameworks */,
 				245565D02E94DB4B00B1E0BC /* Collections in Frameworks */,
-				F2EAFECF2D6CC9C400DFFD48 /* RSKImageCropper in Frameworks */,
-				2DE70BD62ED4470700F4F2E0 /* TrustKit in Frameworks */,
 				241CC5432DC25FEB00962323 /* FileUtility in Frameworks */,
+				085B5F17302EF3F800F0A5FC /* SDWebImage in Frameworks */,
 				F2EAFED02D6CC9C400DFFD48 /* AVFoundation.framework in Frameworks */,
-				F2EAFED12D6CC9C400DFFD48 /* SwiftMsgPack in Frameworks */,
-				F2EAFED22D6CC9C400DFFD48 /* CocoaLumberjack in Frameworks */,
-				F2EAFED32D6CC9C400DFFD48 /* ZipArchive in Frameworks */,
 				2DE70BD02ED446E500F4F2E0 /* Ed25519 in Frameworks */,
 				F2EAFED42D6CC9C400DFFD48 /* SystemConfiguration.framework in Frameworks */,
 				F2EAFED52D6CC9C400DFFD48 /* ThreemaEssentials in Frameworks */,
@@ -3779,11 +3764,11 @@
 				F2EAFED72D6CC9C400DFFD48 /* CFNetwork.framework in Frameworks */,
 				2DE70BD22ED446EE00F4F2E0 /* JDStatusBarNotification in Frameworks */,
 				F2EAFED82D6CC9C400DFFD48 /* Security.framework in Frameworks */,
-				F2EAFED92D6CC9C400DFFD48 /* MarqueeLabel in Frameworks */,
 				F2EAFEDA2D6CC9C400DFFD48 /* UIKit.framework in Frameworks */,
 				F2EAFEDB2D6CC9C400DFFD48 /* WebRTC.xcframework in Frameworks */,
 				F2EAFEDC2D6CC9C400DFFD48 /* GroupCalls in Frameworks */,
 				2DB1056F2F41B00000000BE2 /* AudioSessionManager in Frameworks */,
+				085B5F05302EF35C00F0A5FC /* PromiseKit in Frameworks */,
 				2DA0055F052F41A00500AD10 /* AudioSessionManagerRTC in Frameworks */,
 				F2EAFEDD2D6CC9C400DFFD48 /* CoreGraphics.framework in Frameworks */,
 			);
@@ -3796,17 +3781,17 @@
 				246FD2E42E717B140040A5C2 /* FileUtility in Frameworks */,
 				F2A87DF22E4B688400646386 /* FLAnimatedImage in Frameworks */,
 				F2EAFF5C2D6CCA2400DFFD48 /* ThreemaEssentials in Frameworks */,
-				F2EAFF5D2D6CCA2400DFFD48 /* TrustKit in Frameworks */,
+				085B5F25302EF52800F0A5FC /* JDStatusBarNotification in Frameworks */,
+				085B5F01302EF2F900F0A5FC /* Ed25519 in Frameworks */,
+				085B5F07302EF37B00F0A5FC /* PromiseKit in Frameworks */,
 				F2EAFF5E2D6CCA2400DFFD48 /* CocoaLumberjackSwift in Frameworks */,
 				08BFCC732FC0A07600235F00 /* ZipArchive in Frameworks */,
-				F2EAFF5F2D6CCA2400DFFD48 /* MBProgressHUD in Frameworks */,
 				08F9DE262F62C45B00E4164B /* libPhoneNumber in Frameworks */,
 				F2EAFF602D6CCA2400DFFD48 /* ThreemaMacros in Frameworks */,
-				F2EAFF612D6CCA2400DFFD48 /* SDWebImage in Frameworks */,
+				085B5F0D302EF3B000F0A5FC /* MBProgressHUD in Frameworks */,
+				085B5F19302EF40200F0A5FC /* SDWebImage in Frameworks */,
+				085B5F13302EF3D700F0A5FC /* TrustKit in Frameworks */,
 				F2EAFF622D6CCA2400DFFD48 /* CocoaLumberjack in Frameworks */,
-				F2EAFF632D6CCA2400DFFD48 /* JDStatusBarNotification in Frameworks */,
-				F2EAFF642D6CCA2400DFFD48 /* Ed25519 in Frameworks */,
-				F2EAFF652D6CCA2400DFFD48 /* PromiseKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3815,17 +3800,17 @@
 			buildActionMask = 2147483647;
 			files = (
 				F2EAFF8C2D6CCA3700DFFD48 /* CocoaLumberjack in Frameworks */,
-				F2EAFF8D2D6CCA3700DFFD48 /* JDStatusBarNotification in Frameworks */,
-				F2EAFF8E2D6CCA3700DFFD48 /* TrustKit in Frameworks */,
-				F2EAFF8F2D6CCA3700DFFD48 /* PromiseKit in Frameworks */,
 				2DA017A42EAA30F4008EAB3C /* FileUtility in Frameworks */,
+				085B5F2D302EF5F700F0A5FC /* JDStatusBarNotification in Frameworks */,
 				F2EAFF902D6CCA3700DFFD48 /* ThreemaMacros in Frameworks */,
-				F2EAFF912D6CCA3700DFFD48 /* MBProgressHUD in Frameworks */,
+				085B5F03302EF31000F0A5FC /* Ed25519 in Frameworks */,
 				F2EAFF922D6CCA3700DFFD48 /* CocoaLumberjackSwift in Frameworks */,
 				08F9DE1C2F62C42F00E4164B /* libPhoneNumber in Frameworks */,
+				085B5F09302EF38A00F0A5FC /* PromiseKit in Frameworks */,
+				085B5F0F302EF3BB00F0A5FC /* MBProgressHUD in Frameworks */,
 				F2A87DFC2E4B68C600646386 /* FLAnimatedImage in Frameworks */,
-				F2EAFF932D6CCA3700DFFD48 /* SDWebImage in Frameworks */,
-				F2EAFF942D6CCA3700DFFD48 /* Ed25519 in Frameworks */,
+				085B5F1B302EF40B00F0A5FC /* SDWebImage in Frameworks */,
+				085B5F15302EF3E300F0A5FC /* TrustKit in Frameworks */,
 				08BFCC672FC0A03600235F00 /* ZipArchive in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -4393,7 +4378,6 @@
 				24EFCD822B31E91200DD7C66 /* MBProgressHUD */,
 				24B81FDA2B32CE0700E8D13E /* CocoaLumberjack */,
 				24B81FDC2B32CE0700E8D13E /* CocoaLumberjackSwift */,
-				941735122C4FD884008534FC /* AsyncAlgorithms */,
 				242083A62CBCDC550079D9B8 /* ThreemaMacros */,
 				244F24D02D92898F004CC9D7 /* Coordinator */,
 				241CC53E2DC25FDF00962323 /* FileUtility */,
@@ -4541,9 +4525,9 @@
 			name = "Custom Onprem Tests";
 			packageProductDependencies = (
 				2D3FD5202E61B194003D3DEE /* FileUtility */,
-				2D3FD5222E61B19E003D3DEE /* PromiseKit */,
 				2DC2047E2F41C00000000CF3 /* AudioSessionManager */,
 				2DD3048E2F41D00000000EF4 /* AudioSessionManagerTestHelper */,
+				085B5F1C302EF41700F0A5FC /* PromiseKit */,
 			);
 			productName = "Custom Onprem Tests";
 			productReference = 2412D2D02DA63A5A008823F5 /* Custom Onprem Tests.xctest */;
@@ -4657,7 +4641,6 @@
 				24EFCD882B31E93600DD7C66 /* MBProgressHUD */,
 				24B81FE62B32CE2200E8D13E /* CocoaLumberjack */,
 				24B81FE82B32CE2200E8D13E /* CocoaLumberjackSwift */,
-				941735182C4FD89C008534FC /* AsyncAlgorithms */,
 				242083AC2CBCDC690079D9B8 /* ThreemaMacros */,
 				244F24D82D9289AA004CC9D7 /* Coordinator */,
 				241CC5462DC25FF900962323 /* FileUtility */,
@@ -4815,7 +4798,6 @@
 				24EFCD862B31E92A00DD7C66 /* MBProgressHUD */,
 				24B81FE22B32CE1B00E8D13E /* CocoaLumberjack */,
 				24B81FE42B32CE1B00E8D13E /* CocoaLumberjackSwift */,
-				941735162C4FD894008534FC /* AsyncAlgorithms */,
 				242083AA2CBCDC620079D9B8 /* ThreemaMacros */,
 				244F24D62D9289A3004CC9D7 /* Coordinator */,
 				241CC5442DC25FF200962323 /* FileUtility */,
@@ -4938,7 +4920,6 @@
 				24EFCD842B31E91C00DD7C66 /* MBProgressHUD */,
 				24B81FDE2B32CE1200E8D13E /* CocoaLumberjack */,
 				24B81FE02B32CE1200E8D13E /* CocoaLumberjackSwift */,
-				941735142C4FD88B008534FC /* AsyncAlgorithms */,
 				242083A82CBCDC5C0079D9B8 /* ThreemaMacros */,
 				244F24D22D928995004CC9D7 /* Coordinator */,
 				241CC5402DC25FE500962323 /* FileUtility */,
@@ -5003,7 +4984,6 @@
 			);
 			name = "Threema OnPrem NotificationExtension";
 			packageProductDependencies = (
-				4D088C63255C1680002F3129 /* Ed25519 */,
 				D73A95CF27AD1855003E847C /* SDWebImage */,
 				24DB324828AE48A500B37182 /* JDStatusBarNotification */,
 				7E0A4BD82AD68F3700C38A25 /* PromiseKit */,
@@ -5017,6 +4997,7 @@
 				681766F12E687E950083D372 /* FileUtility */,
 				08F9DE232F62C45500E4164B /* libPhoneNumber */,
 				08BFCC702FC0A07000235F00 /* ZipArchive */,
+				085B5EFE302EF2DA00F0A5FC /* Ed25519 */,
 			);
 			productName = ThreemaNotificationExtension;
 			productReference = 4D088C71255C1680002F3129 /* Threema OnPrem NotificationExtension.appex */;
@@ -5093,7 +5074,6 @@
 				24FD0C4E2B31E5BD0086892A /* MBProgressHUD */,
 				248BF4332B31EFCB00722B72 /* CocoaLumberjack */,
 				248BF4352B31EFCB00722B72 /* CocoaLumberjackSwift */,
-				941735102C4FD819008534FC /* AsyncAlgorithms */,
 				242083A42CBCDC4B0079D9B8 /* ThreemaMacros */,
 				244F24CE2D928988004CC9D7 /* Coordinator */,
 				241CC53C2DC25FD900962323 /* FileUtility */,
@@ -5229,24 +5209,11 @@
 			);
 			name = "Custom OnPrem";
 			packageProductDependencies = (
-				F2EAFBC52D6CC9C400DFFD48 /* RSKImageCropper */,
-				F2EAFBC72D6CC9C400DFFD48 /* SwiftMsgPack */,
-				F2EAFBC92D6CC9C400DFFD48 /* Gzip */,
-				F2EAFBCB2D6CC9C400DFFD48 /* MarqueeLabel */,
-				F2EAFBCD2D6CC9C400DFFD48 /* ZipArchive */,
-				F2EAFBD12D6CC9C400DFFD48 /* Sentry */,
-				F2EAFBD32D6CC9C400DFFD48 /* DSWaveformImage */,
 				F2EAFBD52D6CC9C400DFFD48 /* GroupCalls */,
 				2DB1056E2F41B00000000BE2 /* AudioSessionManager */,
 				2DA0055E052F41A00500AD10 /* AudioSessionManagerRTC */,
 				F2EAFBD62D6CC9C400DFFD48 /* ThreemaProtocols */,
 				F2EAFBD92D6CC9C400DFFD48 /* ThreemaEssentials */,
-				F2EAFBDA2D6CC9C400DFFD48 /* PromiseKit */,
-				F2EAFBDC2D6CC9C400DFFD48 /* DSWaveformImageViews */,
-				F2EAFBDF2D6CC9C400DFFD48 /* MBProgressHUD */,
-				F2EAFBE12D6CC9C400DFFD48 /* CocoaLumberjack */,
-				F2EAFBE32D6CC9C400DFFD48 /* CocoaLumberjackSwift */,
-				F2EAFBE42D6CC9C400DFFD48 /* AsyncAlgorithms */,
 				F2EAFBE62D6CC9C400DFFD48 /* ThreemaMacros */,
 				244F24D42D92899C004CC9D7 /* Coordinator */,
 				241CC5422DC25FEB00962323 /* FileUtility */,
@@ -5256,8 +5223,19 @@
 				245565CF2E94DB4B00B1E0BC /* Collections */,
 				2DE70BCF2ED446E500F4F2E0 /* Ed25519 */,
 				2DE70BD12ED446EE00F4F2E0 /* JDStatusBarNotification */,
-				2DE70BD32ED446F600F4F2E0 /* SDWebImage */,
-				2DE70BD52ED4470700F4F2E0 /* TrustKit */,
+				08A9B91C302EE8CC00513E7C /* CocoaLumberjack */,
+				08A9B91E302EE8CC00513E7C /* CocoaLumberjackSwift */,
+				085B5F04302EF35C00F0A5FC /* PromiseKit */,
+				085B5F0A302EF3A700F0A5FC /* MBProgressHUD */,
+				085B5F10302EF3CF00F0A5FC /* TrustKit */,
+				085B5F16302EF3F800F0A5FC /* SDWebImage */,
+				085B5F1E302EF42E00F0A5FC /* Sentry */,
+				085B5F20302EF44900F0A5FC /* RSKImageCropper */,
+				085B5F22302EF45900F0A5FC /* ZipArchive */,
+				085B5F26302EF53D00F0A5FC /* Gzip */,
+				085B5F28302EF55500F0A5FC /* DSWaveformImage */,
+				085B5F2A302EF56700F0A5FC /* SwiftMsgPack */,
+				085B5F2E302EF61200F0A5FC /* DSWaveformImageViews */,
 			);
 			productName = Threema;
 			productReference = F2EAFF3E2D6CC9C400DFFD48 /* Custom OnPrem.app */;
@@ -5278,20 +5256,20 @@
 			);
 			name = "Custom OnPrem NotificationExtension";
 			packageProductDependencies = (
-				F2EAFF482D6CCA2400DFFD48 /* Ed25519 */,
-				F2EAFF4A2D6CCA2400DFFD48 /* SDWebImage */,
-				F2EAFF4C2D6CCA2400DFFD48 /* JDStatusBarNotification */,
-				F2EAFF4E2D6CCA2400DFFD48 /* PromiseKit */,
 				F2EAFF502D6CCA2400DFFD48 /* ThreemaEssentials */,
-				F2EAFF512D6CCA2400DFFD48 /* MBProgressHUD */,
 				F2EAFF532D6CCA2400DFFD48 /* CocoaLumberjack */,
 				F2EAFF552D6CCA2400DFFD48 /* CocoaLumberjackSwift */,
-				F2EAFF562D6CCA2400DFFD48 /* TrustKit */,
 				F2EAFF582D6CCA2400DFFD48 /* ThreemaMacros */,
 				F2A87DF12E4B688400646386 /* FLAnimatedImage */,
 				681766F32E687E9A0083D372 /* FileUtility */,
 				08F9DE252F62C45B00E4164B /* libPhoneNumber */,
 				08BFCC722FC0A07600235F00 /* ZipArchive */,
+				085B5F00302EF2F900F0A5FC /* Ed25519 */,
+				085B5F06302EF37B00F0A5FC /* PromiseKit */,
+				085B5F0C302EF3B000F0A5FC /* MBProgressHUD */,
+				085B5F12302EF3D700F0A5FC /* TrustKit */,
+				085B5F18302EF40200F0A5FC /* SDWebImage */,
+				085B5F24302EF52800F0A5FC /* JDStatusBarNotification */,
 			);
 			productName = ThreemaNotificationExtension;
 			productReference = F2EAFF702D6CCA2400DFFD48 /* Custom OnPrem NotificationExtension.appex */;
@@ -5312,19 +5290,19 @@
 			);
 			name = "Custom OnPrem ShareExtension";
 			packageProductDependencies = (
-				F2EAFF752D6CCA3700DFFD48 /* Ed25519 */,
-				F2EAFF772D6CCA3700DFFD48 /* SDWebImage */,
-				F2EAFF792D6CCA3700DFFD48 /* JDStatusBarNotification */,
-				F2EAFF7B2D6CCA3700DFFD48 /* PromiseKit */,
-				F2EAFF7D2D6CCA3700DFFD48 /* MBProgressHUD */,
 				F2EAFF7F2D6CCA3700DFFD48 /* CocoaLumberjack */,
 				F2EAFF812D6CCA3700DFFD48 /* CocoaLumberjackSwift */,
-				F2EAFF822D6CCA3700DFFD48 /* TrustKit */,
 				F2EAFF842D6CCA3700DFFD48 /* ThreemaMacros */,
 				F2A87DFB2E4B68C600646386 /* FLAnimatedImage */,
 				2DA017A32EAA30F4008EAB3C /* FileUtility */,
 				08F9DE1B2F62C42F00E4164B /* libPhoneNumber */,
 				08BFCC662FC0A03600235F00 /* ZipArchive */,
+				085B5F02302EF31000F0A5FC /* Ed25519 */,
+				085B5F08302EF38A00F0A5FC /* PromiseKit */,
+				085B5F0E302EF3BB00F0A5FC /* MBProgressHUD */,
+				085B5F14302EF3E300F0A5FC /* TrustKit */,
+				085B5F1A302EF40B00F0A5FC /* SDWebImage */,
+				085B5F2C302EF5F700F0A5FC /* JDStatusBarNotification */,
 			);
 			productName = ThreemaShareExtension;
 			productReference = F2EAFFA32D6CCA3700DFFD48 /* Custom OnPrem ShareExtension.appex */;
@@ -5548,7 +5526,6 @@
 				24FD0C4D2B31E5BC0086892A /* XCRemoteSwiftPackageReference "MBProgressHUD" */,
 				248BF4322B31EFCB00722B72 /* XCRemoteSwiftPackageReference "CocoaLumberjack" */,
 				24AD2ECD2B4D8F4500BB0BDF /* XCRemoteSwiftPackageReference "Reachability" */,
-				9417350F2C4FD819008534FC /* XCRemoteSwiftPackageReference "swift-async-algorithms" */,
 				2B8896F22E4450A00074D387 /* XCRemoteSwiftPackageReference "NotificationBanner" */,
 				F2A4C91B2E4B57D50062B883 /* XCRemoteSwiftPackageReference "FLAnimatedImage" */,
 				F25031B32E4CADEF00C93B17 /* XCRemoteSwiftPackageReference "chunked-dc-swift" */,
@@ -6616,7 +6593,7 @@
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
 				MARKETING_VERSION = 1.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
@@ -6686,7 +6663,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MARKETING_VERSION = 1.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
@@ -6757,7 +6734,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MARKETING_VERSION = 1.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
@@ -10560,7 +10537,7 @@
 				CODE_SIGN_IDENTITY = "Apple Distribution";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "Apple Distribution";
 				COPY_PHASE_STRIP = YES;
-				COREDATA_VERSION = 56;
+				COREDATA_VERSION = 57;
 				DEPLOYMENT_POSTPROCESSING = YES;
 				ENABLE_BITCODE = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -10687,7 +10664,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "Apple Development";
 				COPY_PHASE_STRIP = NO;
-				COREDATA_VERSION = 56;
+				COREDATA_VERSION = 57;
 				ENABLE_BITCODE = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
@@ -10757,7 +10734,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = YES;
-				COREDATA_VERSION = 56;
+				COREDATA_VERSION = 57;
 				DEPLOYMENT_POSTPROCESSING = YES;
 				ENABLE_BITCODE = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -12470,7 +12447,7 @@
 			repositoryURL = "https://github.com/apple/swift-collections";
 			requirement = {
 				kind = exactVersion;
-				version = 1.3.0;
+				version = 1.6.0;
 			};
 		};
 		248BF4322B31EFCB00722B72 /* XCRemoteSwiftPackageReference "CocoaLumberjack" */ = {
@@ -12527,14 +12504,6 @@
 			requirement = {
 				kind = exactVersion;
 				version = 1.1.0;
-			};
-		};
-		4D088C64255C1680002F3129 /* XCRemoteSwiftPackageReference "ed25519" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/AndrewBarba/ed25519.git";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 1.1.0;
 			};
 		};
 		4D4941F328B8F68F003FFC9B /* XCRemoteSwiftPackageReference "SQLite" */ = {
@@ -12627,14 +12596,6 @@
 				version = 1.2.0;
 			};
 		};
-		9417350F2C4FD819008534FC /* XCRemoteSwiftPackageReference "swift-async-algorithms" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/apple/swift-async-algorithms";
-			requirement = {
-				kind = exactVersion;
-				version = 1.0.4;
-			};
-		};
 		E152440926145E2100471E1B /* XCRemoteSwiftPackageReference "RSKImageCropper" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/ruslanskorb/RSKImageCropper";
@@ -12659,206 +12620,6 @@
 				version = 1.0.17;
 			};
 		};
-		F2EAFBC62D6CC9C400DFFD48 /* XCRemoteSwiftPackageReference "RSKImageCropper" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/ruslanskorb/RSKImageCropper.git";
-			requirement = {
-				kind = exactVersion;
-				version = 4.0.0;
-			};
-		};
-		F2EAFBC82D6CC9C400DFFD48 /* XCRemoteSwiftPackageReference "SwiftMsgPack" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/malcommac/SwiftMsgPack";
-			requirement = {
-				kind = exactVersion;
-				version = 1.2.0;
-			};
-		};
-		F2EAFBCA2D6CC9C400DFFD48 /* XCRemoteSwiftPackageReference "GzipSwift" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/1024jp/GzipSwift";
-			requirement = {
-				kind = exactVersion;
-				version = 6.0.1;
-			};
-		};
-		F2EAFBCC2D6CC9C400DFFD48 /* XCRemoteSwiftPackageReference "MarqueeLabel" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/cbpowell/MarqueeLabel";
-			requirement = {
-				kind = exactVersion;
-				version = 4.4.0;
-			};
-		};
-		F2EAFBCE2D6CC9C400DFFD48 /* XCRemoteSwiftPackageReference "ZipArchive" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/ZipArchive/ZipArchive";
-			requirement = {
-				kind = exactVersion;
-				version = 2.4.2;
-			};
-		};
-		F2EAFBD22D6CC9C400DFFD48 /* XCRemoteSwiftPackageReference "sentry-cocoa" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/threema-ch/sentry-cocoa";
-			requirement = {
-				kind = revision;
-				revision = b4eacc3656505ac6b2e727ebe59c3c404ada0187;
-			};
-		};
-		F2EAFBD42D6CC9C400DFFD48 /* XCRemoteSwiftPackageReference "DSWaveformImage" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/dmrschmidt/DSWaveformImage.git";
-			requirement = {
-				kind = exactVersion;
-				version = 14.2.2;
-			};
-		};
-		F2EAFBDB2D6CC9C400DFFD48 /* XCRemoteSwiftPackageReference "PromiseKit" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/mxcl/PromiseKit";
-			requirement = {
-				kind = exactVersion;
-				version = 8.1.1;
-			};
-		};
-		F2EAFBE02D6CC9C400DFFD48 /* XCRemoteSwiftPackageReference "MBProgressHUD" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/jdg/MBProgressHUD.git";
-			requirement = {
-				kind = revision;
-				revision = 18c442d57398cee5ef57f852df10fc5ff65f0763;
-			};
-		};
-		F2EAFBE22D6CC9C400DFFD48 /* XCRemoteSwiftPackageReference "CocoaLumberjack" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/CocoaLumberjack/CocoaLumberjack.git";
-			requirement = {
-				kind = exactVersion;
-				version = 3.8.2;
-			};
-		};
-		F2EAFBE52D6CC9C400DFFD48 /* XCRemoteSwiftPackageReference "swift-async-algorithms" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/apple/swift-async-algorithms.git";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 1.0.1;
-			};
-		};
-		F2EAFF492D6CCA2400DFFD48 /* XCRemoteSwiftPackageReference "ed25519" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/AndrewBarba/ed25519.git";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 1.1.0;
-			};
-		};
-		F2EAFF4B2D6CCA2400DFFD48 /* XCRemoteSwiftPackageReference "SDWebImage" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/SDWebImage/SDWebImage";
-			requirement = {
-				kind = exactVersion;
-				version = 5.18.10;
-			};
-		};
-		F2EAFF4D2D6CCA2400DFFD48 /* XCRemoteSwiftPackageReference "JDStatusBarNotification" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/calimarkus/JDStatusBarNotification";
-			requirement = {
-				kind = exactVersion;
-				version = 2.2.0;
-			};
-		};
-		F2EAFF4F2D6CCA2400DFFD48 /* XCRemoteSwiftPackageReference "PromiseKit" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/mxcl/PromiseKit";
-			requirement = {
-				kind = exactVersion;
-				version = 8.1.1;
-			};
-		};
-		F2EAFF522D6CCA2400DFFD48 /* XCRemoteSwiftPackageReference "MBProgressHUD" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/jdg/MBProgressHUD.git";
-			requirement = {
-				kind = revision;
-				revision = 18c442d57398cee5ef57f852df10fc5ff65f0763;
-			};
-		};
-		F2EAFF542D6CCA2400DFFD48 /* XCRemoteSwiftPackageReference "CocoaLumberjack" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/CocoaLumberjack/CocoaLumberjack.git";
-			requirement = {
-				kind = exactVersion;
-				version = 3.8.2;
-			};
-		};
-		F2EAFF572D6CCA2400DFFD48 /* XCRemoteSwiftPackageReference "TrustKit" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/datatheorem/TrustKit";
-			requirement = {
-				kind = exactVersion;
-				version = 3.0.3;
-			};
-		};
-		F2EAFF762D6CCA3700DFFD48 /* XCRemoteSwiftPackageReference "ed25519" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/AndrewBarba/ed25519.git";
-			requirement = {
-				kind = exactVersion;
-				version = 1.1.0;
-			};
-		};
-		F2EAFF782D6CCA3700DFFD48 /* XCRemoteSwiftPackageReference "SDWebImage" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/SDWebImage/SDWebImage";
-			requirement = {
-				kind = exactVersion;
-				version = 5.18.10;
-			};
-		};
-		F2EAFF7A2D6CCA3700DFFD48 /* XCRemoteSwiftPackageReference "JDStatusBarNotification" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/calimarkus/JDStatusBarNotification";
-			requirement = {
-				kind = exactVersion;
-				version = 2.2.0;
-			};
-		};
-		F2EAFF7C2D6CCA3700DFFD48 /* XCRemoteSwiftPackageReference "PromiseKit" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/mxcl/PromiseKit";
-			requirement = {
-				kind = exactVersion;
-				version = 8.1.1;
-			};
-		};
-		F2EAFF7E2D6CCA3700DFFD48 /* XCRemoteSwiftPackageReference "MBProgressHUD" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/jdg/MBProgressHUD.git";
-			requirement = {
-				kind = revision;
-				revision = 18c442d57398cee5ef57f852df10fc5ff65f0763;
-			};
-		};
-		F2EAFF802D6CCA3700DFFD48 /* XCRemoteSwiftPackageReference "CocoaLumberjack" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/CocoaLumberjack/CocoaLumberjack.git";
-			requirement = {
-				kind = exactVersion;
-				version = 3.8.2;
-			};
-		};
-		F2EAFF832D6CCA3700DFFD48 /* XCRemoteSwiftPackageReference "TrustKit" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/datatheorem/TrustKit";
-			requirement = {
-				kind = exactVersion;
-				version = 3.0.3;
-			};
-		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -12867,6 +12628,131 @@
 			package = 08F9BAD82F62AE8100E4164B /* XCRemoteSwiftPackageReference "libPhoneNumber-iOS" */;
 			productName = libPhoneNumber;
 		};
+		085B5EFE302EF2DA00F0A5FC /* Ed25519 */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4D088B2E255C1287002F3129 /* XCRemoteSwiftPackageReference "ed25519" */;
+			productName = Ed25519;
+		};
+		085B5F00302EF2F900F0A5FC /* Ed25519 */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4D088B2E255C1287002F3129 /* XCRemoteSwiftPackageReference "ed25519" */;
+			productName = Ed25519;
+		};
+		085B5F02302EF31000F0A5FC /* Ed25519 */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4D088B2E255C1287002F3129 /* XCRemoteSwiftPackageReference "ed25519" */;
+			productName = Ed25519;
+		};
+		085B5F04302EF35C00F0A5FC /* PromiseKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 7EAEA2142ABD5FE4007C49F2 /* XCRemoteSwiftPackageReference "PromiseKit" */;
+			productName = PromiseKit;
+		};
+		085B5F06302EF37B00F0A5FC /* PromiseKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 7EAEA2142ABD5FE4007C49F2 /* XCRemoteSwiftPackageReference "PromiseKit" */;
+			productName = PromiseKit;
+		};
+		085B5F08302EF38A00F0A5FC /* PromiseKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 7EAEA2142ABD5FE4007C49F2 /* XCRemoteSwiftPackageReference "PromiseKit" */;
+			productName = PromiseKit;
+		};
+		085B5F0A302EF3A700F0A5FC /* MBProgressHUD */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 24FD0C4D2B31E5BC0086892A /* XCRemoteSwiftPackageReference "MBProgressHUD" */;
+			productName = MBProgressHUD;
+		};
+		085B5F0C302EF3B000F0A5FC /* MBProgressHUD */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 24FD0C4D2B31E5BC0086892A /* XCRemoteSwiftPackageReference "MBProgressHUD" */;
+			productName = MBProgressHUD;
+		};
+		085B5F0E302EF3BB00F0A5FC /* MBProgressHUD */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 24FD0C4D2B31E5BC0086892A /* XCRemoteSwiftPackageReference "MBProgressHUD" */;
+			productName = MBProgressHUD;
+		};
+		085B5F10302EF3CF00F0A5FC /* TrustKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 8DBF271D271096070008045E /* XCRemoteSwiftPackageReference "TrustKit" */;
+			productName = TrustKit;
+		};
+		085B5F12302EF3D700F0A5FC /* TrustKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 8DBF271D271096070008045E /* XCRemoteSwiftPackageReference "TrustKit" */;
+			productName = TrustKit;
+		};
+		085B5F14302EF3E300F0A5FC /* TrustKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 8DBF271D271096070008045E /* XCRemoteSwiftPackageReference "TrustKit" */;
+			productName = TrustKit;
+		};
+		085B5F16302EF3F800F0A5FC /* SDWebImage */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 8DDCF7D8271082AB000CB4F6 /* XCRemoteSwiftPackageReference "SDWebImage" */;
+			productName = SDWebImage;
+		};
+		085B5F18302EF40200F0A5FC /* SDWebImage */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 8DDCF7D8271082AB000CB4F6 /* XCRemoteSwiftPackageReference "SDWebImage" */;
+			productName = SDWebImage;
+		};
+		085B5F1A302EF40B00F0A5FC /* SDWebImage */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 8DDCF7D8271082AB000CB4F6 /* XCRemoteSwiftPackageReference "SDWebImage" */;
+			productName = SDWebImage;
+		};
+		085B5F1C302EF41700F0A5FC /* PromiseKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 7EAEA2142ABD5FE4007C49F2 /* XCRemoteSwiftPackageReference "PromiseKit" */;
+			productName = PromiseKit;
+		};
+		085B5F1E302EF42E00F0A5FC /* Sentry */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 8DBF271027108B350008045E /* XCRemoteSwiftPackageReference "sentry-cocoa" */;
+			productName = Sentry;
+		};
+		085B5F20302EF44900F0A5FC /* RSKImageCropper */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E152440926145E2100471E1B /* XCRemoteSwiftPackageReference "RSKImageCropper" */;
+			productName = RSKImageCropper;
+		};
+		085B5F22302EF45900F0A5FC /* ZipArchive */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 8DDCF7CD27108162000CB4F6 /* XCRemoteSwiftPackageReference "ZipArchive" */;
+			productName = ZipArchive;
+		};
+		085B5F24302EF52800F0A5FC /* JDStatusBarNotification */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 24CCB0D528AE23D300545893 /* XCRemoteSwiftPackageReference "JDStatusBarNotification" */;
+			productName = JDStatusBarNotification;
+		};
+		085B5F26302EF53D00F0A5FC /* Gzip */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 8DDCF7A3271077BE000CB4F6 /* XCRemoteSwiftPackageReference "GzipSwift" */;
+			productName = Gzip;
+		};
+		085B5F28302EF55500F0A5FC /* DSWaveformImage */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4AD3502928886518002B37C8 /* XCRemoteSwiftPackageReference "DSWaveformImage" */;
+			productName = DSWaveformImage;
+		};
+		085B5F2A302EF56700F0A5FC /* SwiftMsgPack */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 8DF1BC7927107140000D241D /* XCRemoteSwiftPackageReference "SwiftMsgPack" */;
+			productName = SwiftMsgPack;
+		};
+		085B5F2C302EF5F700F0A5FC /* JDStatusBarNotification */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 24CCB0D528AE23D300545893 /* XCRemoteSwiftPackageReference "JDStatusBarNotification" */;
+			productName = JDStatusBarNotification;
+		};
+		085B5F2E302EF61200F0A5FC /* DSWaveformImageViews */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4AD3502928886518002B37C8 /* XCRemoteSwiftPackageReference "DSWaveformImage" */;
+			productName = DSWaveformImageViews;
+		};
 		087D48C330224ED000792070 /* FileUtility */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = FileUtility;
@@ -12874,6 +12760,16 @@
 		087D48C530224EDE00792070 /* ThreemaEssentials */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = ThreemaEssentials;
+		};
+		08A9B91C302EE8CC00513E7C /* CocoaLumberjack */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 248BF4322B31EFCB00722B72 /* XCRemoteSwiftPackageReference "CocoaLumberjack" */;
+			productName = CocoaLumberjack;
+		};
+		08A9B91E302EE8CC00513E7C /* CocoaLumberjackSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 248BF4322B31EFCB00722B72 /* XCRemoteSwiftPackageReference "CocoaLumberjack" */;
+			productName = CocoaLumberjackSwift;
 		};
 		08BFCC5E2FC09F9C00235F00 /* ZipArchive */ = {
 			isa = XCSwiftPackageProductDependency;
@@ -13664,11 +13560,6 @@
 			isa = XCSwiftPackageProductDependency;
 			productName = FileUtility;
 		};
-		2D3FD5222E61B19E003D3DEE /* PromiseKit */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 7EAEA2142ABD5FE4007C49F2 /* XCRemoteSwiftPackageReference "PromiseKit" */;
-			productName = PromiseKit;
-		};
 		2D44B64C2F16482200459A99 /* FileUtilityTestHelper */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = FileUtilityTestHelper;
@@ -13924,16 +13815,6 @@
 			package = 24CCB0D528AE23D300545893 /* XCRemoteSwiftPackageReference "JDStatusBarNotification" */;
 			productName = JDStatusBarNotification;
 		};
-		2DE70BD32ED446F600F4F2E0 /* SDWebImage */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 8DDCF7D8271082AB000CB4F6 /* XCRemoteSwiftPackageReference "SDWebImage" */;
-			productName = SDWebImage;
-		};
-		2DE70BD52ED4470700F4F2E0 /* TrustKit */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 8DBF271D271096070008045E /* XCRemoteSwiftPackageReference "TrustKit" */;
-			productName = TrustKit;
-		};
 		2DE70D152ED450C300F4F2E0 /* Ed25519 */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 4D088B2E255C1287002F3129 /* XCRemoteSwiftPackageReference "ed25519" */;
@@ -14075,11 +13956,6 @@
 		4D088C4F255C1643002F3129 /* Ed25519 */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 4D088B2E255C1287002F3129 /* XCRemoteSwiftPackageReference "ed25519" */;
-			productName = Ed25519;
-		};
-		4D088C63255C1680002F3129 /* Ed25519 */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 4D088C64255C1680002F3129 /* XCRemoteSwiftPackageReference "ed25519" */;
 			productName = Ed25519;
 		};
 		4D4941F428B8F68F003FFC9B /* SQLite */ = {
@@ -14399,31 +14275,6 @@
 			package = 8DF1BC7927107140000D241D /* XCRemoteSwiftPackageReference "SwiftMsgPack" */;
 			productName = SwiftMsgPack;
 		};
-		941735102C4FD819008534FC /* AsyncAlgorithms */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 9417350F2C4FD819008534FC /* XCRemoteSwiftPackageReference "swift-async-algorithms" */;
-			productName = AsyncAlgorithms;
-		};
-		941735122C4FD884008534FC /* AsyncAlgorithms */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 9417350F2C4FD819008534FC /* XCRemoteSwiftPackageReference "swift-async-algorithms" */;
-			productName = AsyncAlgorithms;
-		};
-		941735142C4FD88B008534FC /* AsyncAlgorithms */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 9417350F2C4FD819008534FC /* XCRemoteSwiftPackageReference "swift-async-algorithms" */;
-			productName = AsyncAlgorithms;
-		};
-		941735162C4FD894008534FC /* AsyncAlgorithms */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 9417350F2C4FD819008534FC /* XCRemoteSwiftPackageReference "swift-async-algorithms" */;
-			productName = AsyncAlgorithms;
-		};
-		941735182C4FD89C008534FC /* AsyncAlgorithms */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 9417350F2C4FD819008534FC /* XCRemoteSwiftPackageReference "swift-async-algorithms" */;
-			productName = AsyncAlgorithms;
-		};
 		94913A972B2CB61300336FC9 /* DSWaveformImageViews */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 4AD3502928886518002B37C8 /* XCRemoteSwiftPackageReference "DSWaveformImage" */;
@@ -14723,41 +14574,6 @@
 			isa = XCSwiftPackageProductDependency;
 			productName = KeychainTestHelper;
 		};
-		F2EAFBC52D6CC9C400DFFD48 /* RSKImageCropper */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = F2EAFBC62D6CC9C400DFFD48 /* XCRemoteSwiftPackageReference "RSKImageCropper" */;
-			productName = RSKImageCropper;
-		};
-		F2EAFBC72D6CC9C400DFFD48 /* SwiftMsgPack */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = F2EAFBC82D6CC9C400DFFD48 /* XCRemoteSwiftPackageReference "SwiftMsgPack" */;
-			productName = SwiftMsgPack;
-		};
-		F2EAFBC92D6CC9C400DFFD48 /* Gzip */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = F2EAFBCA2D6CC9C400DFFD48 /* XCRemoteSwiftPackageReference "GzipSwift" */;
-			productName = Gzip;
-		};
-		F2EAFBCB2D6CC9C400DFFD48 /* MarqueeLabel */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = F2EAFBCC2D6CC9C400DFFD48 /* XCRemoteSwiftPackageReference "MarqueeLabel" */;
-			productName = MarqueeLabel;
-		};
-		F2EAFBCD2D6CC9C400DFFD48 /* ZipArchive */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = F2EAFBCE2D6CC9C400DFFD48 /* XCRemoteSwiftPackageReference "ZipArchive" */;
-			productName = ZipArchive;
-		};
-		F2EAFBD12D6CC9C400DFFD48 /* Sentry */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = F2EAFBD22D6CC9C400DFFD48 /* XCRemoteSwiftPackageReference "sentry-cocoa" */;
-			productName = Sentry;
-		};
-		F2EAFBD32D6CC9C400DFFD48 /* DSWaveformImage */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = F2EAFBD42D6CC9C400DFFD48 /* XCRemoteSwiftPackageReference "DSWaveformImage" */;
-			productName = DSWaveformImage;
-		};
 		F2EAFBD52D6CC9C400DFFD48 /* GroupCalls */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = GroupCalls;
@@ -14770,127 +14586,37 @@
 			isa = XCSwiftPackageProductDependency;
 			productName = ThreemaEssentials;
 		};
-		F2EAFBDA2D6CC9C400DFFD48 /* PromiseKit */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = F2EAFBDB2D6CC9C400DFFD48 /* XCRemoteSwiftPackageReference "PromiseKit" */;
-			productName = PromiseKit;
-		};
-		F2EAFBDC2D6CC9C400DFFD48 /* DSWaveformImageViews */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = F2EAFBD42D6CC9C400DFFD48 /* XCRemoteSwiftPackageReference "DSWaveformImage" */;
-			productName = DSWaveformImageViews;
-		};
-		F2EAFBDF2D6CC9C400DFFD48 /* MBProgressHUD */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = F2EAFBE02D6CC9C400DFFD48 /* XCRemoteSwiftPackageReference "MBProgressHUD" */;
-			productName = MBProgressHUD;
-		};
-		F2EAFBE12D6CC9C400DFFD48 /* CocoaLumberjack */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = F2EAFBE22D6CC9C400DFFD48 /* XCRemoteSwiftPackageReference "CocoaLumberjack" */;
-			productName = CocoaLumberjack;
-		};
-		F2EAFBE32D6CC9C400DFFD48 /* CocoaLumberjackSwift */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = F2EAFBE22D6CC9C400DFFD48 /* XCRemoteSwiftPackageReference "CocoaLumberjack" */;
-			productName = CocoaLumberjackSwift;
-		};
-		F2EAFBE42D6CC9C400DFFD48 /* AsyncAlgorithms */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = F2EAFBE52D6CC9C400DFFD48 /* XCRemoteSwiftPackageReference "swift-async-algorithms" */;
-			productName = AsyncAlgorithms;
-		};
 		F2EAFBE62D6CC9C400DFFD48 /* ThreemaMacros */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = ThreemaMacros;
-		};
-		F2EAFF482D6CCA2400DFFD48 /* Ed25519 */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = F2EAFF492D6CCA2400DFFD48 /* XCRemoteSwiftPackageReference "ed25519" */;
-			productName = Ed25519;
-		};
-		F2EAFF4A2D6CCA2400DFFD48 /* SDWebImage */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = F2EAFF4B2D6CCA2400DFFD48 /* XCRemoteSwiftPackageReference "SDWebImage" */;
-			productName = SDWebImage;
-		};
-		F2EAFF4C2D6CCA2400DFFD48 /* JDStatusBarNotification */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = F2EAFF4D2D6CCA2400DFFD48 /* XCRemoteSwiftPackageReference "JDStatusBarNotification" */;
-			productName = JDStatusBarNotification;
-		};
-		F2EAFF4E2D6CCA2400DFFD48 /* PromiseKit */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = F2EAFF4F2D6CCA2400DFFD48 /* XCRemoteSwiftPackageReference "PromiseKit" */;
-			productName = PromiseKit;
 		};
 		F2EAFF502D6CCA2400DFFD48 /* ThreemaEssentials */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = ThreemaEssentials;
 		};
-		F2EAFF512D6CCA2400DFFD48 /* MBProgressHUD */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = F2EAFF522D6CCA2400DFFD48 /* XCRemoteSwiftPackageReference "MBProgressHUD" */;
-			productName = MBProgressHUD;
-		};
 		F2EAFF532D6CCA2400DFFD48 /* CocoaLumberjack */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = F2EAFF542D6CCA2400DFFD48 /* XCRemoteSwiftPackageReference "CocoaLumberjack" */;
+			package = 248BF4322B31EFCB00722B72 /* XCRemoteSwiftPackageReference "CocoaLumberjack" */;
 			productName = CocoaLumberjack;
 		};
 		F2EAFF552D6CCA2400DFFD48 /* CocoaLumberjackSwift */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = F2EAFF542D6CCA2400DFFD48 /* XCRemoteSwiftPackageReference "CocoaLumberjack" */;
+			package = 248BF4322B31EFCB00722B72 /* XCRemoteSwiftPackageReference "CocoaLumberjack" */;
 			productName = CocoaLumberjackSwift;
-		};
-		F2EAFF562D6CCA2400DFFD48 /* TrustKit */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = F2EAFF572D6CCA2400DFFD48 /* XCRemoteSwiftPackageReference "TrustKit" */;
-			productName = TrustKit;
 		};
 		F2EAFF582D6CCA2400DFFD48 /* ThreemaMacros */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = ThreemaMacros;
 		};
-		F2EAFF752D6CCA3700DFFD48 /* Ed25519 */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = F2EAFF762D6CCA3700DFFD48 /* XCRemoteSwiftPackageReference "ed25519" */;
-			productName = Ed25519;
-		};
-		F2EAFF772D6CCA3700DFFD48 /* SDWebImage */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = F2EAFF782D6CCA3700DFFD48 /* XCRemoteSwiftPackageReference "SDWebImage" */;
-			productName = SDWebImage;
-		};
-		F2EAFF792D6CCA3700DFFD48 /* JDStatusBarNotification */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = F2EAFF7A2D6CCA3700DFFD48 /* XCRemoteSwiftPackageReference "JDStatusBarNotification" */;
-			productName = JDStatusBarNotification;
-		};
-		F2EAFF7B2D6CCA3700DFFD48 /* PromiseKit */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = F2EAFF7C2D6CCA3700DFFD48 /* XCRemoteSwiftPackageReference "PromiseKit" */;
-			productName = PromiseKit;
-		};
-		F2EAFF7D2D6CCA3700DFFD48 /* MBProgressHUD */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = F2EAFF7E2D6CCA3700DFFD48 /* XCRemoteSwiftPackageReference "MBProgressHUD" */;
-			productName = MBProgressHUD;
-		};
 		F2EAFF7F2D6CCA3700DFFD48 /* CocoaLumberjack */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = F2EAFF802D6CCA3700DFFD48 /* XCRemoteSwiftPackageReference "CocoaLumberjack" */;
+			package = 248BF4322B31EFCB00722B72 /* XCRemoteSwiftPackageReference "CocoaLumberjack" */;
 			productName = CocoaLumberjack;
 		};
 		F2EAFF812D6CCA3700DFFD48 /* CocoaLumberjackSwift */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = F2EAFF802D6CCA3700DFFD48 /* XCRemoteSwiftPackageReference "CocoaLumberjack" */;
+			package = 248BF4322B31EFCB00722B72 /* XCRemoteSwiftPackageReference "CocoaLumberjack" */;
 			productName = CocoaLumberjackSwift;
-		};
-		F2EAFF822D6CCA3700DFFD48 /* TrustKit */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = F2EAFF832D6CCA3700DFFD48 /* XCRemoteSwiftPackageReference "TrustKit" */;
-			productName = TrustKit;
 		};
 		F2EAFF842D6CCA3700DFFD48 /* ThreemaMacros */ = {
 			isa = XCSwiftPackageProductDependency;

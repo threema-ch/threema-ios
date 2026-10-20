@@ -7,6 +7,7 @@ use crate::utils::debug::debug_slice_length;
 /// Media type of a profile picture image.
 /// TODO(SE-625): Remove it and reuse the enum from protobuf.
 #[derive(Clone, Debug)]
+#[cfg_attr(test, derive(PartialEq))]
 #[cfg_attr(feature = "uniffi", derive(uniffi::Enum))]
 pub enum ProfilePictureMediaType {
     /// JPEG.
@@ -16,6 +17,7 @@ pub enum ProfilePictureMediaType {
 /// A profile picture.
 #[derive(Clone, Educe)]
 #[educe(Debug)]
+#[cfg_attr(test, derive(PartialEq))]
 #[cfg_attr(feature = "uniffi", derive(uniffi::Record))]
 pub struct ProfilePicture {
     /// Media type of the profile picture.

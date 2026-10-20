@@ -58,10 +58,10 @@ impl<const LENGTH: usize> FixedLengthFrameDecoder<LENGTH> {
     /// Get the next frame from the decoder, passing through a transformation step (e.g. to avoid
     /// copying) if available.
     #[inline]
-    pub(crate) fn next_frame_and_then<TFrame, F: FnOnce(&[u8; LENGTH]) -> TFrame>(
-        &mut self,
-        map_fn: F,
-    ) -> Option<TFrame> {
+    pub(crate) fn next_frame_and_then<TResult, F>(&mut self, map_fn: F) -> Option<TResult>
+    where
+        F: FnOnce(&[u8; LENGTH]) -> TResult,
+    {
         if self.data.len() < LENGTH {
             return None;
         }
@@ -93,15 +93,15 @@ pub(crate) trait FrameDelimiter<const LENGTH: usize> {
 }
 
 /// [`u16`] little endian length delimiter.
-pub(crate) struct U16LittleEndianDelimiter;
+pub(crate) struct LittleEndianDelimiterU16;
 
 /// [`u32`] little endian length delimiter.
-pub(crate) struct U32LittleEndianDelimiter;
+pub(crate) struct LittleEndianDelimiterU32;
 
 #[duplicate_item(
     delimiter_type               int_type int_length;
-    [ U16LittleEndianDelimiter ] [ u16 ]  [ 2 ];
-    [ U32LittleEndianDelimiter ] [ u32 ]  [ 4 ];
+    [ LittleEndianDelimiterU16 ] [ u16 ]  [ 2 ];
+    [ LittleEndianDelimiterU32 ] [ u32 ]  [ 4 ];
 )]
 impl FrameDelimiter<int_length> for delimiter_type {
     const LENGTH: usize = int_length;
@@ -150,12 +150,6 @@ impl<const DELIMITER_LENGTH: usize, TDelimiter: FrameDelimiter<DELIMITER_LENGTH>
         }
     }
 
-    /// Return the buffered amount of bytes contained in the decoder.
-    #[inline]
-    pub(crate) fn buffered_length(&self) -> usize {
-        self.data.len()
-    }
-
     /// The required amount of bytes for the decoder to advance its internal state, eventually decoding a full
     /// frame.
     ///
@@ -184,12 +178,10 @@ impl<const DELIMITER_LENGTH: usize, TDelimiter: FrameDelimiter<DELIMITER_LENGTH>
     /// Get the next frame from the decoder, passing through a transformation step (e.g. to avoid
     /// copying) if available.
     #[inline]
-    pub(crate) fn next_frame_and_then<TResult, F: FnOnce(&[u8]) -> TResult>(
-        &mut self,
-        map_fn: F,
-    ) -> Option<TResult>
+    pub(crate) fn next_frame_and_then<TResult, F>(&mut self, map_fn: F) -> Option<TResult>
     where
         [(); DELIMITER_LENGTH]:,
+        F: FnOnce(&[u8]) -> TResult,
     {
         if let VariableLengthFrameDecoderState::PartialDelimiter = &self.state {
             // Check if we have sufficient bytes to decode the limiter or wait for more
@@ -233,3 +225,8 @@ impl<const DELIMITER_LENGTH: usize, TDelimiter: FrameDelimiter<DELIMITER_LENGTH>
             .finish()
     }
 }
+
+pub(crate) type VariableLengthFrameDecoderU16LittleEndianDelimited =
+    VariableLengthFrameDecoder<{ LittleEndianDelimiterU16::LENGTH }, LittleEndianDelimiterU16>;
+pub(crate) type VariableLengthFrameDecoderU32LittleEndianDelimited =
+    VariableLengthFrameDecoder<{ LittleEndianDelimiterU32::LENGTH }, LittleEndianDelimiterU32>;

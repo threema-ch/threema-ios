@@ -1,5 +1,5 @@
 //! Implementation of the _Connection Rendezvous Protocol_.
-use std::collections::HashMap;
+use std::{collections::HashMap, sync::PoisonError};
 
 use duplicate::duplicate_item;
 use educe::Educe;
@@ -39,10 +39,10 @@ mod rxdxk;
 #[derive(Debug, thiserror::Error)]
 #[cfg_attr(feature = "uniffi", derive(uniffi::Error), uniffi(flat_error))]
 pub enum RendezvousProtocolError {
-    /// Invalid parameter provided by foreign code.
+    /// Some provided parameter could not be converted into the required internal representation.
     #[cfg(feature = "uniffi")]
-    #[error("Invalid parameter: {0}")]
-    InvalidParameter(&'static str),
+    #[error("Conversion error: {0}")]
+    ConversionError(&'static str),
 
     /// Exhausted the available sequence numbers to use for sending/receiving frames.
     #[error("Sequence number would overflow")]
@@ -110,6 +110,17 @@ pub enum RendezvousProtocolError {
     /// Public key was non-contributory.
     #[error("Remote public key was non-contributory")]
     NonContributoryPublicKey,
+
+    /// Unable to obtain a lock.
+    #[cfg(feature = "uniffi")]
+    #[error("Obtaining a lock failed")]
+    LockPoisoned,
+}
+#[cfg(feature = "uniffi")]
+impl<T> From<PoisonError<T>> for RendezvousProtocolError {
+    fn from(_: PoisonError<T>) -> Self {
+        Self::LockPoisoned
+    }
 }
 
 /// Authentication Key (AK).

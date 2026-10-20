@@ -45,6 +45,9 @@ import ThreemaMacros
 /// ```
 final class AppMigration {
 
+    /// Where the push notification encryption key was stored before the migration to 7.4
+    static let legacyPushEncryptionKeyUserDefaultsKey = "PushNotificationEncryptionKey"
+
     private let osPOILog = OSLog(subsystem: "ch.threema.iapp.appMigration", category: .pointsOfInterest)
 
     // BusinessInjector for main or background thread
@@ -190,6 +193,10 @@ final class AppMigration {
             if migratedTo < .v7_4 {
                 try migrateTo7_4()
                 migratedTo = .v7_4
+            }
+            if migratedTo < .v7_5 {
+                try migrateTo7_5()
+                migratedTo = .v7_5
             }
 
             // Add here a check if migration is necessary for a particular version...
@@ -1040,8 +1047,48 @@ final class AppMigration {
             let nsError = NSError(domain: "\(type(of: self))", code: 1, userInfo: dict)
             throw nsError
         }
-            
+
         os_signpost(.end, log: osPOILog, name: "7.4 migration")
         DDLogNotice("[AppMigration] App migration to version 7.4 successfully finished")
+    }
+    
+    /// Migrate to version 7.5
+    /// - Move the push notification encryption key from the user defaults into the Keychain
+    private func migrateTo7_5() throws {
+        DDLogNotice("[AppMigration] App migration to version 7.5 started")
+        os_signpost(.begin, log: osPOILog, name: "7.5 migration")
+        
+        /// Move the push notification encryption key from the app group user defaults into the Keychain
+        ///
+        /// Before 7.5 the key was stored in the user defaults, thus it was part of unencrypted backups. If it cannot be
+        /// moved the key is lost, but a new one is created on the next launch (see `AppLaunchTasks`) and registered
+        /// with
+        /// the server on the next login.
+        func migratePushNotificationEncryptionKeyToKeychain() {
+            guard let userDefaults = AppGroup.userDefaults(),
+                  let key = userDefaults
+                  .object(forKey: AppMigration.legacyPushEncryptionKeyUserDefaultsKey) as? Data else {
+                return
+            }
+
+            do {
+                try KeychainManager.storePushNotificationEncryptionKey(key)
+            }
+            catch {
+                DDLogError("[AppMigration] Unable to move the push notification encryption key: \(error)")
+                return
+            }
+
+            userDefaults.removeObject(forKey: AppMigration.legacyPushEncryptionKeyUserDefaultsKey)
+
+            DDLogNotice("[AppMigration] Moved the push notification encryption key into the Keychain")
+        }
+        
+        migratePushNotificationEncryptionKeyToKeychain()
+
+        businessInjector.userSettings.ipcCommunicationEnabled = true
+        
+        os_signpost(.end, log: osPOILog, name: "7.5 migration")
+        DDLogNotice("[AppMigration] App migration to version 7.5 successfully finished")
     }
 }

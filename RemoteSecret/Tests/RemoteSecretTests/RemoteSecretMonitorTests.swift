@@ -154,23 +154,23 @@ struct RemoteSecretMonitorTests {
             func scheduleAndCrash() async throws {
                 await #expect(processExitsWith: .failure) {
                     // Prepare
-                
+
                     let expectedRemoteSecret = Data(repeating: 1, count: 32)
-                
+
                     let remoteSecretMonitorProtocolMock = RemoteSecretMonitorProtocolMock(pollResponses: [
                         .schedule(timeout: 0, remoteSecret: expectedRemoteSecret),
                         .schedule(timeout: 0, remoteSecret: nil),
                         .schedule(timeout: 0, remoteSecret: nil),
                         .error(.Blocked(message: "")),
                     ])
-                
+
                     let appInfo = AppInfo(
                         version: "1.0",
                         locale: "en/CH",
                         deviceModel: "iPhone1,0",
                         osVersion: "18.0"
                     )
-                    
+
                     let sut = await RemoteSecretMonitor(
                         appInfo: appInfo,
                         monitorProtocolResolver: TestingRemoteSecretMonitorProtocolResolver(
@@ -178,7 +178,7 @@ struct RemoteSecretMonitorTests {
                         ),
                         httpClient: RemoteSecretHTTPSClientMock()
                     )
-                    
+
                     // Run
                     let actualRemoteSecret = try await sut.createAndStart(
                         workServerBaseURL: "https://example.com",
@@ -186,11 +186,11 @@ struct RemoteSecretMonitorTests {
                         remoteSecretAuthenticationToken: Data(repeating: 2, count: 32),
                         remoteSecretIdentityHash: Data(repeating: 3, count: 32)
                     )
-                    
+
                     // Validate
-                
+
                     #expect(actualRemoteSecret.rawValue == expectedRemoteSecret)
-                
+
                     // Wait until the scheduled tasks complete & the process exits. `Task.yield()` doesn't work here
                     try await Task.sleep(seconds: 0.1)
                 }
@@ -213,13 +213,13 @@ struct RemoteSecretMonitorTests {
             let sut = await RemoteSecretMonitor(
                 appInfo: appInfo,
                 monitorProtocolResolver: TestingRemoteSecretMonitorProtocolResolver(
-                    answer: .failure(.InvalidParameter(message: ""))
+                    answer: .failure(.ConversionError(message: ""))
                 ),
                 httpClient: RemoteSecretHTTPSClientMock()
             )
             
             // Run & validate
-            await #expect(throws: RemoteSecretManagerError.invalidParameter) {
+            await #expect(throws: RemoteSecretManagerError.conversionError) {
                 try await sut.createAndStart(
                     workServerBaseURL: "https://example.com",
                     identity: ThreemaIdentity("ABCDEFGH"),
@@ -232,8 +232,9 @@ struct RemoteSecretMonitorTests {
         @Test(
             "Run error mapping",
             arguments: [
-                (RemoteSecretMonitorError.InvalidParameter(message: ""), RemoteSecretManagerError.invalidParameter),
-                (.InvalidState(message: ""), .invalidState),
+                (RemoteSecretMonitorError.ConversionError(message: ""), RemoteSecretManagerError.conversionError),
+                (.ContractViolation(message: ""), .contractViolation),
+                (.InternalError(message: ""), .internalError),
                 (.ServerError(message: ""), .serverError),
                 (.Timeout(message: ""), .timeout),
                 (.NotFound(message: ""), .remoteSecretNotFound),

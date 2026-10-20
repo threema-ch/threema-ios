@@ -18130,6 +18130,12 @@
             "value" : "Centre de Sauvegarde"
           }
         },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Backup-Zentrale"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
@@ -18200,6 +18206,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sauvegardez tous vos chats, messages et fichiers multimédias localement pour une sauvegarde complète."
+          }
+        },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sichered Sie all Ihri Chats, Nachrichte und Medie lokal für es vollständigs Backup."
           }
         },
         "it" : {
@@ -18274,6 +18286,12 @@
             "value" : "Sauvegarde locale des données"
           }
         },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lokals Date-Backup"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
@@ -18345,6 +18363,12 @@
             "value" : "Hors ligne"
           }
         },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Offline"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
@@ -18414,7 +18438,13 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Stockez en toute sécurité votre identifiant Threema, vos contacts et vos groupes dans le cloud pour une restauration facile."
+            "value" : "Stockez en toute sécurité votre identifiant Threema, vos contacts et vos groupes dans le cloud pour les restaurer facilement."
+          }
+        },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spiechered Sie Ihri Threema-ID, Kontäkt und Gruppe sicher ide Cloud, damit Sie si eifach widerherstelle chönd."
           }
         },
         "it" : {
@@ -18471,8 +18501,8 @@
         },
         "en" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "This backup needs at least %1$(required)@ but only %2$(available)@ is available. Free up space or exclude media before continuing."
+            "state" : "translated",
+            "value" : "This backup needs at least %1$(required)@, but only %2$(available)@ are available. Free up space or exclude media before continuing."
           }
         },
         "es" : {
@@ -18484,7 +18514,13 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Cette sauvegarde nécessite au moins %1$(required)@ mais seulement %2$(available)@ sont disponibles. Libérez de l’espace ou excluez des médias avant de continuer."
+            "value" : "Cette sauvegarde nécessite au moins %1$(required)@, alors que seulement %2$(available)@ sont disponibles. Libérez de l’espace ou excluez certains médias avant de poursuivre."
+          }
+        },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Für das Backup werded mindestens %1$(required)@ bruucht, aber es sind nume %2$(available)@ verfüegbar. Gebed Sie Speicherplatz frei oder schlüssed Sie Medie us, bevor Sie wiitermached."
           }
         },
         "it" : {
@@ -19335,78 +19371,6 @@
         }
       }
     },
-    "backup_local_backup_center_status_available" : {
-      "comment" : "A message displayed when there is a backup available.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Poslední záloha: %@"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Letztes Backup: %@"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Last backup: %@"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Última copia de seguridad: %@"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dernière sauvegarde : %@"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ultimo backup: %@"
-          }
-        },
-        "sk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Posledná záloha: %@"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Son yedekleme: %@"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Остання резервна копія: %@"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "上次备份：%@"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "上次備份：%@"
-          }
-        }
-      }
-    },
     "backup_local_backup_center_status_unavailable" : {
       "comment" : "A message displayed when there is no backup available.",
       "isCommentAutoGenerated" : true,
@@ -19425,14 +19389,14 @@
         },
         "en" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "No backup yet"
+            "state" : "translated",
+            "value" : "No backup available"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Aún no hay ninguna copia de seguridad"
+            "value" : "No hay copia de seguridad disponible"
           }
         },
         "fr" : {
@@ -19441,10 +19405,16 @@
             "value" : "Pas encore de sauvegarde"
           }
         },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No keis Backup ume"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ancora nessun backup"
+            "value" : "Nessun backup disponibile"
           }
         },
         "sk" : {
@@ -19511,6 +19481,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sauvegarde terminée"
+          }
+        },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Backup abgschlosse"
           }
         },
         "it" : {
@@ -19582,7 +19558,13 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Vos messages et fichiers multimédias ont été chiffrés et enregistrés en toute sécurité."
+            "value" : "Vos messages et fichiers multimédias ont été chiffrés et sauvegardés en toute sécurité."
+          }
+        },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ihri Nachrichte und Medie sind verschlüsslet und sicher gspeicheret worde."
           }
         },
         "it" : {
@@ -19651,6 +19633,12 @@
             "value" : "Ne verrouillez pas votre écran et n’arrêtez pas l’application de force."
           }
         },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sperred Sie Ihre Bildschirm nöd und beendet Sie nöd d’App."
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
@@ -19679,407 +19667,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "備份時，請勿鎖定屏幕或強制關閉本應用程式。"
-          }
-        }
-      }
-    },
-    "backup_local_create_backup_step_contacts_count" : {
-      "comment" : "Number of contacts written to the backup so far.",
-      "localizations" : {
-        "bg" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld contact"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld contacts"
-                }
-              }
-            }
-          }
-        },
-        "cs" : {
-          "variations" : {
-            "plural" : {
-              "few" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld contacts"
-                }
-              },
-              "many" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld contacts"
-                }
-              },
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld kontakt"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld kontaktů"
-                }
-              }
-            }
-          }
-        },
-        "de" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld Kontakt"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld Kontakte"
-                }
-              }
-            }
-          }
-        },
-        "en" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "needs_review",
-                  "value" : "%lld contact"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "needs_review",
-                  "value" : "%lld contacts"
-                }
-              }
-            }
-          }
-        },
-        "es" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld contacto"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld contactos"
-                }
-              }
-            }
-          }
-        },
-        "fr" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld contact"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld contacts"
-                }
-              }
-            }
-          }
-        },
-        "gsw-CH" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld contact"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld contacts"
-                }
-              }
-            }
-          }
-        },
-        "it" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld contatto"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld contatti"
-                }
-              }
-            }
-          }
-        },
-        "ja" : {
-          "variations" : {
-            "plural" : {
-              "other" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld contacts"
-                }
-              }
-            }
-          }
-        },
-        "ko" : {
-          "variations" : {
-            "plural" : {
-              "other" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld contacts"
-                }
-              }
-            }
-          }
-        },
-        "nl" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld contact"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld contacts"
-                }
-              }
-            }
-          }
-        },
-        "pl" : {
-          "variations" : {
-            "plural" : {
-              "few" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld contacts"
-                }
-              },
-              "many" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld contacts"
-                }
-              },
-              "one" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld contact"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld contacts"
-                }
-              }
-            }
-          }
-        },
-        "pt-BR" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld contact"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld contacts"
-                }
-              }
-            }
-          }
-        },
-        "ru" : {
-          "variations" : {
-            "plural" : {
-              "few" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld contacts"
-                }
-              },
-              "many" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld contacts"
-                }
-              },
-              "one" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld contact"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld contacts"
-                }
-              }
-            }
-          }
-        },
-        "sk" : {
-          "variations" : {
-            "plural" : {
-              "few" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld contacts"
-                }
-              },
-              "many" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld contacts"
-                }
-              },
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld kontakt"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld kontaktov"
-                }
-              }
-            }
-          }
-        },
-        "sv" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld contact"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld contacts"
-                }
-              }
-            }
-          }
-        },
-        "tr" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld kişi"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld kişiler"
-                }
-              }
-            }
-          }
-        },
-        "uk" : {
-          "variations" : {
-            "plural" : {
-              "few" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld contacts"
-                }
-              },
-              "many" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld contacts"
-                }
-              },
-              "one" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld contact"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld contacts"
-                }
-              }
-            }
-          }
-        },
-        "zh-Hans" : {
-          "variations" : {
-            "plural" : {
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld个联系人"
-                }
-              }
-            }
-          }
-        },
-        "zh-Hant" : {
-          "variations" : {
-            "plural" : {
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld位聯絡人"
-                }
-              }
-            }
           }
         }
       }
@@ -20117,10 +19704,16 @@
             "value" : "Exportation des contacts"
           }
         },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kontäkt werded exportiert"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Esportazione contatti"
+            "value" : "Esportazione contatti in corso"
           }
         },
         "sk" : {
@@ -20145,407 +19738,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "匯出聯絡人"
-          }
-        }
-      }
-    },
-    "backup_local_create_backup_step_distribution_lists_count" : {
-      "comment" : "Number of distribution lists written to the backup so far.",
-      "localizations" : {
-        "bg" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld distribution list"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld distribution lists"
-                }
-              }
-            }
-          }
-        },
-        "cs" : {
-          "variations" : {
-            "plural" : {
-              "few" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld distribution lists"
-                }
-              },
-              "many" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld distribution lists"
-                }
-              },
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld distribuční seznam"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld distribučních seznamů"
-                }
-              }
-            }
-          }
-        },
-        "de" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld Verteilerliste"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld Verteilerlisten"
-                }
-              }
-            }
-          }
-        },
-        "en" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "needs_review",
-                  "value" : "%lld distribution list"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "needs_review",
-                  "value" : "%lld distribution lists"
-                }
-              }
-            }
-          }
-        },
-        "es" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld lista de distribución"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld listas de distribución"
-                }
-              }
-            }
-          }
-        },
-        "fr" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld liste de distribution"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld listes de distribution"
-                }
-              }
-            }
-          }
-        },
-        "gsw-CH" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld distribution list"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld distribution lists"
-                }
-              }
-            }
-          }
-        },
-        "it" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld lista di distribuzione"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld liste di distribuzione"
-                }
-              }
-            }
-          }
-        },
-        "ja" : {
-          "variations" : {
-            "plural" : {
-              "other" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld distribution lists"
-                }
-              }
-            }
-          }
-        },
-        "ko" : {
-          "variations" : {
-            "plural" : {
-              "other" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld distribution lists"
-                }
-              }
-            }
-          }
-        },
-        "nl" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld distribution list"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld distribution lists"
-                }
-              }
-            }
-          }
-        },
-        "pl" : {
-          "variations" : {
-            "plural" : {
-              "few" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld distribution lists"
-                }
-              },
-              "many" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld distribution lists"
-                }
-              },
-              "one" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld distribution list"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld distribution lists"
-                }
-              }
-            }
-          }
-        },
-        "pt-BR" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld distribution list"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld distribution lists"
-                }
-              }
-            }
-          }
-        },
-        "ru" : {
-          "variations" : {
-            "plural" : {
-              "few" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld distribution lists"
-                }
-              },
-              "many" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld distribution lists"
-                }
-              },
-              "one" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld distribution list"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld distribution lists"
-                }
-              }
-            }
-          }
-        },
-        "sk" : {
-          "variations" : {
-            "plural" : {
-              "few" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld distribution lists"
-                }
-              },
-              "many" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld distribution lists"
-                }
-              },
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld distribučný zoznam"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld distribučných zoznamov"
-                }
-              }
-            }
-          }
-        },
-        "sv" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld distribution list"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld distribution lists"
-                }
-              }
-            }
-          }
-        },
-        "tr" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld dağıtım listesi"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld dağıtım listeleri"
-                }
-              }
-            }
-          }
-        },
-        "uk" : {
-          "variations" : {
-            "plural" : {
-              "few" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld distribution lists"
-                }
-              },
-              "many" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld distribution lists"
-                }
-              },
-              "one" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld distribution list"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld distribution lists"
-                }
-              }
-            }
-          }
-        },
-        "zh-Hans" : {
-          "variations" : {
-            "plural" : {
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld个通讯组列表"
-                }
-              }
-            }
-          }
-        },
-        "zh-Hant" : {
-          "variations" : {
-            "plural" : {
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld個通訊群組清單"
-                }
-              }
-            }
           }
         }
       }
@@ -20580,13 +19772,19 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Exportation des listes de distribution"
+            "value" : "Exportation des listes de diffusion"
+          }
+        },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verteilerliste werded exportiert"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Esportazione delle liste di distribuzione"
+            "value" : "Esportazione delle liste di distribuzione in corso"
           }
         },
         "sk" : {
@@ -20649,10 +19847,16 @@
             "value" : "Exportation des messages"
           }
         },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nachrichte werded exportiert"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Esportazione dei messaggi"
+            "value" : "Esportazione dei messaggi in corso"
           }
         },
         "sk" : {
@@ -20715,10 +19919,16 @@
             "value" : "Finalisation de la sauvegarde"
           }
         },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Backup wird abgschlosse"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Finalizzazione del backup"
+            "value" : "Finalizzazione del backup in corso"
           }
         },
         "sk" : {
@@ -20743,407 +19953,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "即將完成備份"
-          }
-        }
-      }
-    },
-    "backup_local_create_backup_step_groups_count" : {
-      "comment" : "Number of groups written to the backup so far.",
-      "localizations" : {
-        "bg" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld group"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld groups"
-                }
-              }
-            }
-          }
-        },
-        "cs" : {
-          "variations" : {
-            "plural" : {
-              "few" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld groups"
-                }
-              },
-              "many" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld groups"
-                }
-              },
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld skupina"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld skupin"
-                }
-              }
-            }
-          }
-        },
-        "de" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld Gruppe"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld Gruppen"
-                }
-              }
-            }
-          }
-        },
-        "en" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "needs_review",
-                  "value" : "%lld group"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "needs_review",
-                  "value" : "%lld groups"
-                }
-              }
-            }
-          }
-        },
-        "es" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld grupo"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld grupos"
-                }
-              }
-            }
-          }
-        },
-        "fr" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld groupe"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld groupes"
-                }
-              }
-            }
-          }
-        },
-        "gsw-CH" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld group"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld groups"
-                }
-              }
-            }
-          }
-        },
-        "it" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld gruppo"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld gruppi"
-                }
-              }
-            }
-          }
-        },
-        "ja" : {
-          "variations" : {
-            "plural" : {
-              "other" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld groups"
-                }
-              }
-            }
-          }
-        },
-        "ko" : {
-          "variations" : {
-            "plural" : {
-              "other" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld groups"
-                }
-              }
-            }
-          }
-        },
-        "nl" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld group"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld groups"
-                }
-              }
-            }
-          }
-        },
-        "pl" : {
-          "variations" : {
-            "plural" : {
-              "few" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld groups"
-                }
-              },
-              "many" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld groups"
-                }
-              },
-              "one" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld group"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld groups"
-                }
-              }
-            }
-          }
-        },
-        "pt-BR" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld group"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld groups"
-                }
-              }
-            }
-          }
-        },
-        "ru" : {
-          "variations" : {
-            "plural" : {
-              "few" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld groups"
-                }
-              },
-              "many" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld groups"
-                }
-              },
-              "one" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld group"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld groups"
-                }
-              }
-            }
-          }
-        },
-        "sk" : {
-          "variations" : {
-            "plural" : {
-              "few" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld groups"
-                }
-              },
-              "many" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld groups"
-                }
-              },
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld skupina"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld skupín"
-                }
-              }
-            }
-          }
-        },
-        "sv" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld group"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld groups"
-                }
-              }
-            }
-          }
-        },
-        "tr" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld grup"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld gruplar"
-                }
-              }
-            }
-          }
-        },
-        "uk" : {
-          "variations" : {
-            "plural" : {
-              "few" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld groups"
-                }
-              },
-              "many" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld groups"
-                }
-              },
-              "one" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld group"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld groups"
-                }
-              }
-            }
-          }
-        },
-        "zh-Hans" : {
-          "variations" : {
-            "plural" : {
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld个群组"
-                }
-              }
-            }
-          }
-        },
-        "zh-Hant" : {
-          "variations" : {
-            "plural" : {
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld個群組"
-                }
-              }
-            }
           }
         }
       }
@@ -21181,10 +19990,16 @@
             "value" : "Exportation des groupes"
           }
         },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gruppe werded exportiert"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Esportazione dei gruppi"
+            "value" : "Esportazione dei gruppi in corso"
           }
         },
         "sk" : {
@@ -21209,873 +20024,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "匯出群組"
-          }
-        }
-      }
-    },
-    "backup_local_create_backup_step_initialize_title" : {
-      "comment" : "Title of the backup creation step that initializes the backup.",
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Zahajování zálohy"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Backup wird initialisiert"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Initializing backup"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Inicializando copia de seguridad"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Initialisation de la sauvegarde"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Inizializzazione del backup"
-          }
-        },
-        "sk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Inicializácia zálohy"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Yedekleme başlatılıyor"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "正在初始化备份"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "正在初始化備份"
-          }
-        }
-      }
-    },
-    "backup_local_create_backup_step_messages_count" : {
-      "comment" : "Number of messages written to the backup so far.",
-      "localizations" : {
-        "bg" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld message"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld messages"
-                }
-              }
-            }
-          }
-        },
-        "cs" : {
-          "variations" : {
-            "plural" : {
-              "few" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld messages"
-                }
-              },
-              "many" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld messages"
-                }
-              },
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld zpráva"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld zpráv"
-                }
-              }
-            }
-          }
-        },
-        "de" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld Nachricht"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld Nachrichten"
-                }
-              }
-            }
-          }
-        },
-        "en" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "needs_review",
-                  "value" : "%lld message"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "needs_review",
-                  "value" : "%lld messages"
-                }
-              }
-            }
-          }
-        },
-        "es" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld mensaje"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld mensajes"
-                }
-              }
-            }
-          }
-        },
-        "fr" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld message"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld messages"
-                }
-              }
-            }
-          }
-        },
-        "gsw-CH" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld message"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld messages"
-                }
-              }
-            }
-          }
-        },
-        "it" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld messaggio"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld messaggi"
-                }
-              }
-            }
-          }
-        },
-        "ja" : {
-          "variations" : {
-            "plural" : {
-              "other" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld messages"
-                }
-              }
-            }
-          }
-        },
-        "ko" : {
-          "variations" : {
-            "plural" : {
-              "other" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld messages"
-                }
-              }
-            }
-          }
-        },
-        "nl" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld message"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld messages"
-                }
-              }
-            }
-          }
-        },
-        "pl" : {
-          "variations" : {
-            "plural" : {
-              "few" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld messages"
-                }
-              },
-              "many" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld messages"
-                }
-              },
-              "one" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld message"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld messages"
-                }
-              }
-            }
-          }
-        },
-        "pt-BR" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld message"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld messages"
-                }
-              }
-            }
-          }
-        },
-        "ru" : {
-          "variations" : {
-            "plural" : {
-              "few" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld messages"
-                }
-              },
-              "many" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld messages"
-                }
-              },
-              "one" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld message"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld messages"
-                }
-              }
-            }
-          }
-        },
-        "sk" : {
-          "variations" : {
-            "plural" : {
-              "few" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld messages"
-                }
-              },
-              "many" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld messages"
-                }
-              },
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld správa"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld správ"
-                }
-              }
-            }
-          }
-        },
-        "sv" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld message"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld messages"
-                }
-              }
-            }
-          }
-        },
-        "tr" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld mesaj"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld mesajlar"
-                }
-              }
-            }
-          }
-        },
-        "uk" : {
-          "variations" : {
-            "plural" : {
-              "few" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld messages"
-                }
-              },
-              "many" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld messages"
-                }
-              },
-              "one" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld message"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld messages"
-                }
-              }
-            }
-          }
-        },
-        "zh-Hans" : {
-          "variations" : {
-            "plural" : {
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld条消息"
-                }
-              }
-            }
-          }
-        },
-        "zh-Hant" : {
-          "variations" : {
-            "plural" : {
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld則訊息"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "backup_local_create_backup_step_nonces_count" : {
-      "comment" : "Number of nonces written to the backup so far.",
-      "localizations" : {
-        "bg" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld nonce"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld nonces"
-                }
-              }
-            }
-          }
-        },
-        "cs" : {
-          "variations" : {
-            "plural" : {
-              "few" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld nonces"
-                }
-              },
-              "many" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld nonces"
-                }
-              },
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld nonce"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld noncí"
-                }
-              }
-            }
-          }
-        },
-        "de" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld Nonce"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld Nonces"
-                }
-              }
-            }
-          }
-        },
-        "en" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "needs_review",
-                  "value" : "%lld nonce"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "needs_review",
-                  "value" : "%lld nonces"
-                }
-              }
-            }
-          }
-        },
-        "es" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld nonce"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld nonces"
-                }
-              }
-            }
-          }
-        },
-        "fr" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld nonce"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld nonces"
-                }
-              }
-            }
-          }
-        },
-        "gsw-CH" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld nonce"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld nonces"
-                }
-              }
-            }
-          }
-        },
-        "it" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld nonce"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld nonce"
-                }
-              }
-            }
-          }
-        },
-        "ja" : {
-          "variations" : {
-            "plural" : {
-              "other" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld nonces"
-                }
-              }
-            }
-          }
-        },
-        "ko" : {
-          "variations" : {
-            "plural" : {
-              "other" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld nonces"
-                }
-              }
-            }
-          }
-        },
-        "nl" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld nonce"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld nonces"
-                }
-              }
-            }
-          }
-        },
-        "pl" : {
-          "variations" : {
-            "plural" : {
-              "few" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld nonces"
-                }
-              },
-              "many" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld nonces"
-                }
-              },
-              "one" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld nonce"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld nonces"
-                }
-              }
-            }
-          }
-        },
-        "pt-BR" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld nonce"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld nonces"
-                }
-              }
-            }
-          }
-        },
-        "ru" : {
-          "variations" : {
-            "plural" : {
-              "few" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld nonces"
-                }
-              },
-              "many" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld nonces"
-                }
-              },
-              "one" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld nonce"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld nonces"
-                }
-              }
-            }
-          }
-        },
-        "sk" : {
-          "variations" : {
-            "plural" : {
-              "few" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld nonces"
-                }
-              },
-              "many" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld nonces"
-                }
-              },
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld nonce"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld nonces"
-                }
-              }
-            }
-          }
-        },
-        "sv" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld nonce"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld nonces"
-                }
-              }
-            }
-          }
-        },
-        "tr" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld bir kez"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld bir kez"
-                }
-              }
-            }
-          }
-        },
-        "uk" : {
-          "variations" : {
-            "plural" : {
-              "few" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld nonces"
-                }
-              },
-              "many" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld nonces"
-                }
-              },
-              "one" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld nonce"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld nonces"
-                }
-              }
-            }
-          }
-        },
-        "zh-Hans" : {
-          "variations" : {
-            "plural" : {
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld个随机数"
-                }
-              }
-            }
-          }
-        },
-        "zh-Hant" : {
-          "variations" : {
-            "plural" : {
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld個隨機數"
-                }
-              }
-            }
           }
         }
       }
@@ -22113,10 +20061,16 @@
             "value" : "Exportation des nonces"
           }
         },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nonces werded exportiert"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Esportazione dei nonce"
+            "value" : "Esportazione dei nonce in corso"
           }
         },
         "sk" : {
@@ -22141,407 +20095,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "匯出隨機數"
-          }
-        }
-      }
-    },
-    "backup_local_create_backup_step_polls_count" : {
-      "comment" : "Number of polls written to the backup so far.",
-      "localizations" : {
-        "bg" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld poll"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld polls"
-                }
-              }
-            }
-          }
-        },
-        "cs" : {
-          "variations" : {
-            "plural" : {
-              "few" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld polls"
-                }
-              },
-              "many" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld polls"
-                }
-              },
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld anketa"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld anket"
-                }
-              }
-            }
-          }
-        },
-        "de" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld Umfrage"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld Umfragen"
-                }
-              }
-            }
-          }
-        },
-        "en" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "needs_review",
-                  "value" : "%lld poll"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "needs_review",
-                  "value" : "%lld polls"
-                }
-              }
-            }
-          }
-        },
-        "es" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld encuesta"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld encuestas"
-                }
-              }
-            }
-          }
-        },
-        "fr" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld sondage"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld sondages"
-                }
-              }
-            }
-          }
-        },
-        "gsw-CH" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld poll"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld polls"
-                }
-              }
-            }
-          }
-        },
-        "it" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld sondaggio"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld sondaggi"
-                }
-              }
-            }
-          }
-        },
-        "ja" : {
-          "variations" : {
-            "plural" : {
-              "other" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld polls"
-                }
-              }
-            }
-          }
-        },
-        "ko" : {
-          "variations" : {
-            "plural" : {
-              "other" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld polls"
-                }
-              }
-            }
-          }
-        },
-        "nl" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld poll"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld polls"
-                }
-              }
-            }
-          }
-        },
-        "pl" : {
-          "variations" : {
-            "plural" : {
-              "few" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld polls"
-                }
-              },
-              "many" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld polls"
-                }
-              },
-              "one" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld poll"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld polls"
-                }
-              }
-            }
-          }
-        },
-        "pt-BR" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld poll"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld polls"
-                }
-              }
-            }
-          }
-        },
-        "ru" : {
-          "variations" : {
-            "plural" : {
-              "few" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld polls"
-                }
-              },
-              "many" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld polls"
-                }
-              },
-              "one" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld poll"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld polls"
-                }
-              }
-            }
-          }
-        },
-        "sk" : {
-          "variations" : {
-            "plural" : {
-              "few" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld polls"
-                }
-              },
-              "many" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld polls"
-                }
-              },
-              "one" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld poll"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld polls"
-                }
-              }
-            }
-          }
-        },
-        "sv" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld poll"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld polls"
-                }
-              }
-            }
-          }
-        },
-        "tr" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld anket"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld anketler"
-                }
-              }
-            }
-          }
-        },
-        "uk" : {
-          "variations" : {
-            "plural" : {
-              "few" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld polls"
-                }
-              },
-              "many" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld polls"
-                }
-              },
-              "one" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld poll"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "new",
-                  "value" : "%lld polls"
-                }
-              }
-            }
-          }
-        },
-        "zh-Hans" : {
-          "variations" : {
-            "plural" : {
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld个投票"
-                }
-              }
-            }
-          }
-        },
-        "zh-Hant" : {
-          "variations" : {
-            "plural" : {
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld個投票"
-                }
-              }
-            }
           }
         }
       }
@@ -22579,10 +20132,22 @@
             "value" : "Exportation des sondages"
           }
         },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Umfrage werded exportiert"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Esportazione dei sondaggi"
+            "value" : "Esportazione dei sondaggi in corso"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Export ankiet"
           }
         },
         "tr" : {
@@ -22605,7 +20170,90 @@
         }
       }
     },
+    "backup_local_create_backup_step_user_data_title" : {
+      "comment" : "Title of the first step in the backup process.",
+      "isCommentAutoGenerated" : true,
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Export uživatelských dat"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Benutzerdaten werden exportiert\""
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exporting user data"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exportando datos de usuarios"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exportation des données utilisateur"
+          }
+        },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nutzerdate werded exportiert"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esportazione dei dati utente"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kullanıcı verilerini dışa aktarmak"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "导出用户数据"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "匯出使用者資料"
+          }
+        }
+      }
+    },
     "backup_local_create_backup_title" : {
+      "backup_local_create_backup_step_user_data_title" : {
+        "comment" : "Title of the backup creation step that exports the user profile and settings.",
+        "localizations" : {
+          "de" : {
+            "stringUnit" : {
+              "state" : "needs_review",
+              "value" : "Benutzerdaten werden exportiert"
+            }
+          },
+          "en" : {
+            "stringUnit" : {
+              "state" : "needs_review",
+              "value" : "Exporting user data"
+            }
+          }
+        }
+      },
       "comment" : "Title of the view model.",
       "isCommentAutoGenerated" : true,
       "localizations" : {
@@ -22639,10 +20287,22 @@
             "value" : "Création de la sauvegarde"
           }
         },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Backup wird erstellt"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Creazione del backup"
+            "value" : "Creazione del backup in corso"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vytváranie zálohy"
           }
         },
         "tr" : {
@@ -22698,10 +20358,22 @@
             "value" : "Inclus"
           }
         },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enthalte"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Incluso"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zahrnuté"
           }
         },
         "tr" : {
@@ -22757,10 +20429,22 @@
             "value" : "Non inclus"
           }
         },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nöd enthalte"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Non incluso"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nie je zahrnuté"
           }
         },
         "tr" : {
@@ -22817,10 +20501,22 @@
             "value" : "Votre sauvegarde n’a pas pu être effectuée. Aucune donnée n’a été perdue."
           }
         },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ihres Backup hät nöd chöne abgschlosse werde. Es sind kei Date verloregange."
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Il backup non è stato completato. Nessun dato è stato perso."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zálohovanie sa nepodarilo dokončiť. K strate údajov nedošlo."
           }
         },
         "tr" : {
@@ -22877,10 +20573,22 @@
             "value" : "Échec de la sauvegarde"
           }
         },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Backup fehlgschlage"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Backup non riuscito"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zálohovanie zlyhalo"
           }
         },
         "tr" : {
@@ -22934,13 +20642,25 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Cela peut prendre quelques minutes en fonction de la taille de votre sauvegarde."
+            "value" : "Cela peut prendre plusieurs minutes en fonction de la taille de votre sauvegarde."
+          }
+        },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das cha je nach Grössi vo Ihrem Backup es paar Minute duure."
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Questo potrebbe richiedere alcuni minuti a seconda della dimensione del tuo backup."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "V závislosti od veľkosti zálohy to môže trvať niekoľko minút."
           }
         },
         "tr" : {
@@ -22976,13 +20696,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sichern Sie Ihre Chats, Nachrichten und Medien manuell auf Ihrem Gerät – für volle Kontrolle und Privatsphäre.\nBewahren Sie Ihre Daten sicher auf und stellen Sie sie wieder her, wenn Sie das Gerät wechseln oder es zurücksetzen.\n\nBackups werden ausschliesslich auf Ihrem Gerät gespeichert und können nicht wiederhergestellt werden, wenn das Gerät verloren geht oder beschädigt wird."
+            "value" : "Sichern Sie Ihre Chats, Nachrichten und Medien manuell auf Ihrem Gerät – für volle Kontrolle und Privatsphäre. Bewahren Sie Ihre Daten sicher auf und stellen Sie sie wieder her, wenn Sie das Gerät wechseln oder es zurücksetzen.\n\nBackups werden ausschliesslich auf Ihrem Gerät gespeichert und können nicht wiederhergestellt werden, wenn das Gerät verloren geht oder beschädigt wird."
           }
         },
         "en" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "Manually save your chats, messages, and media on your device for full control and privacy.\nKeep your data safe and restore it when switching devices or recovering from a reset.\n\nBackups are stored only on your device and cannot be restored if the device is lost or damaged."
+            "state" : "needs_review",
+            "value" : "Manually save your chats, messages, and media on your device for full control and privacy. Keep your data safe and restore it when switching devices or recovering from a reset.\n\nBackups are stored only on your device and cannot be restored if the device is lost or damaged."
           }
         },
         "es" : {
@@ -22994,13 +20714,25 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Enregistrez manuellement vos conversations, messages et fichiers multimédias sur votre appareil pour un contrôle total et une confidentialité accrue. \nAssurez la sécurité de vos données et restaurez-les lors du changement d’appareil ou d’un dépannage après une réinitialisation.\n\nLes sauvegardes ne sont stockées que sur votre appareil et ne peuvent pas être restaurées si l’appareil est perdu ou endommagé."
+            "value" : "Sauvegardez manuellement vos conversations, messages et fichiers multimédias sur votre appareil pour un contrôle total et une confidentialité accrue. \nLa sécurité de vos données est assurée et vous pouvez les restaurer lors du changement d’appareil ou d’un dépannage après une réinitialisation.\n\nLes sauvegardes ne sont stockées que sur votre appareil et ne pourront pas être restaurées si l’appareil est perdu ou endommagé."
+          }
+        },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sichered Sie Ihri Chats, Nachrichte und Medie manuell uf Ihrem Grät für volli Kontrolle und Privatsphäre. Bewahred Sie Ihri Date sicher uf und stelled Sie si wider her, wenn Sie s’Grät wächsled oder Sie’s zruggsetzed.\n\nBackups werded nume uf Ihrem Grät gspeicheret und chönd nöd widerhergstellt werded, wenn s’Grät verlore oder kaputt gaht."
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Salva manualmente le tue chat, i messaggi e i contenuti multimediali sul dispositivo per avere pieno controllo e privacy.\nProteggi i tuoi dati e ripristinali quando cambi dispositivo o dopo un reset.\n\nI backup sono archiviati solamente sul tuo dispositivo e non possono essere ripristinati in caso di smarrimento o danneggiamento."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ručne si uložte svoje konverzácie, správy a multimediálne súbory do zariadenia, aby ste mali plnú kontrolu a zabezpečili si súkromie.\nZabezpečte svoje údaje a obnovte ich pri prechode na iné zariadenie alebo po obnovení zariadenia po resete.\n\nZálohy sa ukladajú výlučne vo vašom zariadení a v prípade straty alebo poškodenia zariadenia ich nebude možné obnoviť."
           }
         },
         "tr" : {
@@ -23041,8 +20773,8 @@
         },
         "en" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "This will generate a new key and create a new backup. You’ll need to save the new key — your old key won’t work for future backups.\n\nYour existing backup remains saved locally on this device and stays accessible with your current key until you save the new key."
+            "state" : "translated",
+            "value" : "This will generate a new key and create a new backup. You’ll need to save the new key; your old key won’t work for future backups.\n\nYour existing backup remains saved locally on this device and stays accessible with your current key until you save the new key."
           }
         },
         "es" : {
@@ -23057,10 +20789,22 @@
             "value" : "Cela générera une nouvelle clé et créera une nouvelle sauvegarde. Vous devrez sauvegarder la nouvelle clé — votre ancienne clé ne fonctionnera plus pour les futures sauvegardes.\n\nVotre sauvegarde existante reste enregistrée localement sur cet appareil et reste accessible avec votre clé actuelle jusqu’à ce que vous sauvegardiez la nouvelle clé."
           }
         },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das erstellt en neue Schlüssel und es neus Backup. Sie müend de neu Schlüssel speichere. Ihre alt Schlüssel funktioniert für künftigi Backups nüme.\n\nIhres vorhandene Backup bliibt lokal uf dem Grät gspeicheret und isch mit Ihrem aktuelle Schlüssel wiiterhiin zuegänglich, bis Sie de neu Schlüssel speichered."
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Questo genererà una nuova chiave e creerà un nuovo backup. Dovrai salvare la nuova chiave; la tua vecchia chiave non funzionerà per i futuri backup.\n\nIl tuo backup esistente rimane salvato localmente su questo dispositivo e rimane accessibile con la tua chiave attuale fino a quando non salvi la nuova chiave."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Týmto sa vygeneruje nový kľúč a vytvorí sa nová záloha. Nový kľúč si budete musieť uložiť – starý kľúč nebude fungovať pri budúcich zálohách.\n\nVaša existujúca záloha zostane uložená lokálne na tomto zariadení a bude prístupná pomocou vášho súčasného kľúča, kým si nový kľúč neuložíte."
           }
         },
         "tr" : {
@@ -23117,10 +20861,22 @@
             "value" : "Créer une nouvelle clé de récupération ?"
           }
         },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neue Widerherstelligsschlüssel erstelle?"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Vuoi creare una nuova chiave di recupero?"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vytvoriť nový obnovovací kľúč?"
           }
         },
         "tr" : {
@@ -23177,10 +20933,22 @@
             "value" : "Créer une nouvelle clé et une sauvegarde"
           }
         },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neue Schlüssel und neus Backup erstelle"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Crea nuova chiave e backup"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vytvoriť nový kľúč a zálohu"
           }
         },
         "tr" : {
@@ -23234,13 +21002,25 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Avant de supprimer cette clé de l’application, assurez-vous de l’avoir sauvegardée en toute sécurité.\n\nVous en aurez encore besoin pour restaurer les sauvegardes chiffrées avec cette clé. Si elle est perdue, ces sauvegardes ne pourront pas être accessibles.\n\nLa supprimer ici ne rendra pas la clé invalide et toutes les copies sauvegardées continueront de fonctionner."
+            "value" : "Avant de supprimer cette clé de l’application, assurez-vous de l’avoir sauvegardée en toute sécurité.\n\nVous en aurez encore besoin pour restaurer les sauvegardes chiffrées avec cette clé. Si vous la perdez, ces sauvegardes ne seront pas accessibles.\n\nSi vous la supprimer ici, la clé continuera d'être valide et toutes les copies sauvegardées continueront de fonctionner."
+          }
+        },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bevor Sie de Schlüssel us de App entferned, stelled Sie sicher, dass Sie ihn gspeicheret händ.\n\nSie bruuched ihn wiiterhin, zum demit verschlüssleti Backups widerherzstelle. Wenner verlore gaht, chönd Sie nüme uf die Backups zuegriife.\n\nWenn Sie de Schlüssel da entferned, ischer immerno gültig, und scho gspeichereti Kopie funktioniered wiiterhin."
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Prima di rimuovere questa chiave dall'app, assicurati di averla salvata in modo sicuro.\n\nNe avrai ancora bisogno per ripristinare i backup crittografati con questa chiave. Se persa, non sarà possibile accedere a quei backup.\n\nRimuoverla qui non invaliderà la chiave e qualsiasi copia salvata continuerà a funzionare."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pred odstránením tohto kľúča z aplikácie sa uistite, že ste si ho bezpečne uložili.\n\nBudete ho naďalej potrebovať na obnovenie záloh zašifrovaných týmto kľúčom. V prípade jeho straty nebude možné k týmto zálohám získať prístup.\n\nJeho odstránenie v tejto aplikácii nezruší platnosť kľúča a všetky uložené kópie budú naďalej fungovať."
           }
         },
         "tr" : {
@@ -23294,13 +21074,25 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Retirer la clé de récupération de cet appareil ?"
+            "value" : "Supprimer la clé de récupération de cet appareil ?"
+          }
+        },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Widerherstelligsschlüssel vo dem Grät entferne?"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Vuoi rimuovere la chiave di recupero da questo dispositivo?"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odstrániť obnovovací kľúč z tohto zariadenia?"
           }
         },
         "tr" : {
@@ -23354,13 +21146,25 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tapez les derniers chiffres de votre clé de récupération pour confirmer que vous l’avez enregistrée correctement."
+            "value" : "Saisissez les derniers chiffres de votre clé de récupération pour confirmer que vous l’avez sauvegardée correctement."
+          }
+        },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gebed Sie di letschte Ziffere vo Ihrem Widerherstelligsschlüssel ii, zum bestätige, dass Sie ihn korrekt gspeicheret händ."
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Digita gli ultimi numeri della tua chiave di recupero per confermare di averla salvata correttamente."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zadajte posledné číslice vášho obnovovacieho kľúča, aby ste potvrdili, že ste ho správne uložili."
           }
         },
         "tr" : {
@@ -23401,8 +21205,8 @@
         },
         "en" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Key does not match. Keep trying."
+            "state" : "translated",
+            "value" : "Key does not match. Try again."
           }
         },
         "es" : {
@@ -23417,10 +21221,22 @@
             "value" : "La clé ne correspond pas. Continuez d’essayer."
           }
         },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schlüssel stimmt nöd überein. Versueched Sie’s nomal."
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "La chiave non corrisponde. Continua a provare."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kľúč sa nezhoduje. Skúste to znova."
           }
         },
         "tr" : {
@@ -23443,66 +21259,6 @@
         }
       }
     },
-    "backup_local_recovery_key_confirmation_message_success" : {
-      "comment" : "Message displayed in a label when the backup of the local recovery key is successful.",
-      "isCommentAutoGenerated" : true,
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Klíč se shoduje!"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Schlüssel stimmt überein!"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Key matches!"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "¡La clave coincide!"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Clé correspondante !"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Chiave corretta!"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Anahtar eşleşmesi başarılı!"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "密钥匹配！"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "金鑰相符！"
-          }
-        }
-      }
-    },
     "backup_local_recovery_key_confirmation_title" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -23521,7 +21277,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Confirm Your Key"
+            "value" : "Confirm your key"
           }
         },
         "es" : {
@@ -23536,10 +21292,22 @@
             "value" : "Confirmez votre clé"
           }
         },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bestätiged Sie Ihre Schlüssel"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Conferma la tua chiave"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Potvrďte svoj klúč"
           }
         },
         "tr" : {
@@ -23596,10 +21364,22 @@
             "value" : "Ce mot de passe sera utilisé pour chiffrer votre sauvegarde et pour restaurer la sauvegarde."
           }
         },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Passwort wird bruucht, zum Ihres Backup verschlüssle und widerherzstelle."
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Questa password verrà utilizzata per crittografare il tuo backup e per ripristinare il backup."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toto heslo sa použije na šifrovanie vašej zálohy a na jej obnovenie."
           }
         },
         "tr" : {
@@ -23655,10 +21435,22 @@
             "value" : "Ne partagez jamais cette clé avec qui que ce soit."
           }
         },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gebed Sie de Schlüssel nie a anderi wiiter."
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Non condividere mai questa chiave con nessuno."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tento kľúč s nikým nezdieľajte."
           }
         },
         "tr" : {
@@ -23715,10 +21507,22 @@
             "value" : "Quiconque la possède peut restaurer votre sauvegarde chiffrée et lire vos messages."
           }
         },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jedi Person, wo de Schlüssel hät, cha Ihres verschlüsslete Backup widerherstelle und Ihri Nachrichte läse."
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Chiunque ne sia in possesso può ripristinare il tuo backup crittografato e leggere i tuoi messaggi."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ktokoľvek, kto ho má, môže obnoviť vašu šifrovanú zálohu a čítať vaše správy."
           }
         },
         "tr" : {
@@ -23772,13 +21576,25 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "J’ai enregistré ma clé"
+            "value" : "J’ai sauvegardé ma clé"
+          }
+        },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ich ha min Schlüssel gspeicheret"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ho salvato la mia chiave"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uložil som si kľúč"
           }
         },
         "tr" : {
@@ -23832,13 +21648,25 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Utilisé pour la sauvegarde — %1$(date)@"
+            "value" : "Utilisé pour la sauvegarde : %1$(date)@"
+          }
+        },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fürs Backup bruucht – %1$(date)@"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Utilizzato per il backup — %1$(date)@"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Použitý v zálohe — %1$(date)@"
           }
         },
         "tr" : {
@@ -23868,37 +21696,49 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "**Důležité**: Toto heslo v případě ztráty nelze obnovit. Bezpečně si jej uložte do správce hesel, nebo si jej zapište a uschovejte na bezpečné místo."
+            "value" : "Důležité: Toto heslo v případě jeho ztráty nelze obnovit. Bezpečně si jej uložte do správce hesel, nebo si jej zapište a uschovejte na bezpečné místo."
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "**Wichtig**: Dieses Passwort kann nicht wiederhergestellt werden, wenn es verloren geht. Speichern Sie es sicher in einem Passwortmanager oder notieren Sie es und bewahren Sie es an einem sicheren Ort auf."
+            "value" : "Wichtig: Dieses Passwort kann nicht wiederhergestellt werden, wenn es verloren geht. Speichern Sie es sicher in einem Passwortmanager oder notieren Sie es und bewahren Sie es an einem sicheren Ort auf."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "**Important**: This password cannot be recovered if lost. Store it securely in a password manager or write it down and keep it somewhere safe."
+            "value" : "Important: This password cannot be recovered if lost. Store it securely in a password manager or write it down and keep it somewhere safe."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "**Importante**: Si pierde esta contraseña, no podrá recuperarla. Guárdela de forma segura en un gestor de contraseñas o anótela y guárdela en un lugar seguro."
+            "value" : "**Importante**: si pierde esta contraseña, no podrá recuperarla. Guárdela de forma segura en un gestor de contraseñas o anótela y guárdela en un lugar seguro."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "**Important** : ce mot de passe ne peut pas être récupéré s’il est perdu. Stockez-le en toute sécurité dans un gestionnaire de mots de passe ou notez-le et conservez-le dans un endroit sûr."
+            "value" : "**Important** : vous ne pourrez pas récupérer ce mot de passe si vous le perdez. Stockez-le en toute sécurité dans un gestionnaire de mots de passe ou notez-le et conservez-le dans un endroit sûr."
+          }
+        },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wichtig: Das Passwort cha nüme widerhergstellt werde, wenn Sie’s verlüüred. Speichered Sie’s sicher imene Passwortmanager oder notiered Sie’s sich und bewahred Sie’s amene sichere Ort uf."
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "**Importante**: se persa, questa password non può essere recuperata. Conservala in modo sicuro in un gestore di password o annotala e tienila in un luogo sicuro."
+            "value" : "Importante: se persa, questa password non può essere recuperata. Conservala in modo sicuro in un gestore di password o annotala e tienila in un luogo sicuro."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "**Dôležité**: V prípade straty nie je možné toto heslo obnoviť. Uložte si ho bezpečne v správcovi hesiel alebo si ho zapíšte a uchovajte na bezpečnom mieste."
           }
         },
         "tr" : {
@@ -23954,10 +21794,22 @@
             "value" : "Restauration des contacts"
           }
         },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kontäkt werded widerhergstellt"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ripristino dei contatti"
+            "value" : "Ripristino dei contatti in corso"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Obnovenie kontaktov"
           }
         },
         "tr" : {
@@ -24010,13 +21862,19 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Restauration des listes de distribution"
+            "value" : "Restauration des listes de diffusion"
+          }
+        },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verteilerliste werded widerhergstellt"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ripristino delle liste di distribuzione"
+            "value" : "Ripristino delle liste di distribuzione in corso"
           }
         },
         "tr" : {
@@ -24072,10 +21930,16 @@
             "value" : "Restauration des groupes"
           }
         },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gruppe werded widerhergstellt"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ripristino dei gruppi"
+            "value" : "Ripristino dei gruppi in corso"
           }
         },
         "tr" : {
@@ -24131,10 +21995,16 @@
             "value" : "Restauration des messages"
           }
         },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nachrichte werded widerhergstellt"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ripristino dei messaggi"
+            "value" : "Ripristino dei messaggi in corso"
           }
         },
         "tr" : {
@@ -24190,10 +22060,16 @@
             "value" : "Restauration des nonces"
           }
         },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nonces werded widerhergstellt"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ripristino dei nonce"
+            "value" : "Ripristino dei nonce in corso"
           }
         },
         "tr" : {
@@ -24249,10 +22125,22 @@
             "value" : "Restauration des sondages"
           }
         },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Umfrage werded widerhergstellt"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ripristino dei sondaggi"
+            "value" : "Ripristino dei sondaggi in corso"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Obnovujú sa ankety"
           }
         },
         "tr" : {
@@ -24275,61 +22163,67 @@
         }
       }
     },
-    "backup_local_restore_step_prepare_title" : {
-      "comment" : "Title of the backup restore step that runs before the backup content is read.",
+    "backup_local_restore_step_user_data_title" : {
+      "comment" : "Title of the backup restore step that restores the user profile and settings.",
       "localizations" : {
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Připravování obnovy"
+            "value" : "Obnovení uživatelských dat"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Wiederherstellung wird vorbereitet"
+            "value" : "Nutzerdaten werden wiederhergestellt"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Preparing restore"
+            "value" : "Restoring user data"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Preparando restauración"
+            "value" : "Restaurando datos de usuarios"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Préparation de la restauration"
+            "value" : "Restauration des données utilisateur"
+          }
+        },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nutzerdate werded widerhergstellt"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Preparazione del ripristino"
+            "value" : "Ripristino dei dati utente"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Yedekleme hazırlanıyor"
+            "value" : "Kullanıcı verilerini geri yüklüyor"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "准备恢复"
+            "value" : "恢复用户数据"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "準備還原"
+            "value" : "還原使用者資料"
           }
         }
       }
@@ -24366,6 +22260,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Choisissez ce que vous souhaitez inclure dans votre sauvegarde chiffrée."
+          }
+        },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wähled Sie us, was i Ihres verschlüsslete Backup söll ufgnoh werde."
           }
         },
         "it" : {
@@ -24428,6 +22328,12 @@
             "value" : "Inclure les fichiers multimédias"
           }
         },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Medie iischlüsse"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
@@ -24473,7 +22379,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "PDFs, attachments & shared files"
+            "value" : "PDFs, attachments and shared files"
           }
         },
         "es" : {
@@ -24485,7 +22391,13 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "PDFs, pièces jointes et fichiers partagés"
+            "value" : "PDF, pièces jointes et fichiers partagés"
+          }
+        },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "PDFs, Ahäng und freigehni Dateie"
           }
         },
         "it" : {
@@ -24533,7 +22445,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Photos, videos & audio"
+            "value" : "Photos, videos and audio"
           }
         },
         "es" : {
@@ -24546,6 +22458,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Photos, vidéos et audio"
+          }
+        },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fotis, Videos und Audio"
           }
         },
         "it" : {
@@ -24593,7 +22511,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "All photos sent & received"
+            "value" : "All photos sent and received"
           }
         },
         "es" : {
@@ -24606,6 +22524,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Toutes les photos envoyées et reçues"
+          }
+        },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All verschickte und empfangene Fotis"
           }
         },
         "it" : {
@@ -24653,7 +22577,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "These are always backup up."
+            "value" : "These are always backed up."
           }
         },
         "es" : {
@@ -24666,6 +22590,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ceci est toujours sauvegardé."
+          }
+        },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die werded immer gsicheret."
           }
         },
         "it" : {
@@ -24713,7 +22643,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Always Included"
+            "value" : "Always included"
           }
         },
         "es" : {
@@ -24726,6 +22656,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Toujours inclus"
+          }
+        },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Immer enthalte"
           }
         },
         "it" : {
@@ -24788,6 +22724,12 @@
             "value" : "Toutes les vidéos partagées dans les chats"
           }
         },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All in Chats teilte Videos"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
@@ -24845,7 +22787,13 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Inclure les fichiers multimédias augmente la taille de la sauvegarde mais préserve l’expérience complète du chat."
+            "value" : "Si vous incluez les fichiers multimédias, la taille de la sauvegarde augmente, mais l’expérience complète du chat est préservée."
+          }
+        },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Medie vergrössered s’Backup, bewahred aber s’vollständige Chat-Erlebnis."
           }
         },
         "it" : {
@@ -24908,6 +22856,12 @@
             "value" : "Texte, légendes, réactions et métadonnées"
           }
         },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Text, Bildunterschrifte, Reaktione und Metadate"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
@@ -24968,10 +22922,22 @@
             "value" : "Vos paramètres précédents sont présélectionnés."
           }
         },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ihri bisherige Iistellige sind vorusgwählt."
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Le tue impostazioni precedenti sono preselezionate."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vaše predchádzajúce nastavenia sú predvolené."
           }
         },
         "tr" : {
@@ -25026,6 +22992,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Lancer la sauvegarde"
+          }
+        },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Backup starte"
           }
         },
         "it" : {
@@ -25088,6 +23060,12 @@
             "value" : "Enregistrements audio des chats"
           }
         },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Audioufnahme us Chats"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
@@ -25110,66 +23088,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "對話中的錄音"
-          }
-        }
-      }
-    },
-    "backup_local_settings_whats_included_label" : {
-      "comment" : "Title of a section that describes what is included in the backup.",
-      "isCommentAutoGenerated" : true,
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Co je zahrnuto"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Enthaltene Inhalte"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "What’s Included"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Qué se incluye"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ce qui est inclus"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cosa è incluso"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Yedeklemeye Dahil Olanlar"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "包含内容"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "包括內容"
           }
         }
       }
@@ -25206,6 +23124,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Emplacement de sauvegarde"
+          }
+        },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Speicherort vom Backup"
           }
         },
         "it" : {
@@ -25353,66 +23277,6 @@
         }
       }
     },
-    "backup_recovery_key" : {
-      "comment" : "A title for a backup recovery key.",
-      "isCommentAutoGenerated" : true,
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Klíč pro obnovení zálohy:"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Wiederherstellungsschlüssel für das Backup:"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Backup recovery key:"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Clave de recuperación de la copia de seguridad:"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Clé de récupération de sauvegarde :"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Chiave di ripristino del backup:"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Yedek kurtarma anahtarı:"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "备份恢复密钥："
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "備份還原金鑰："
-          }
-        }
-      }
-    },
     "backup_settings" : {
       "comment" : "Title of the backup local settings screen.",
       "isCommentAutoGenerated" : true,
@@ -25445,6 +23309,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Paramètres de sauvegarde"
+          }
+        },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Backup-Iistellige"
           }
         },
         "it" : {
@@ -25507,6 +23377,12 @@
             "value" : "Taille de la sauvegarde"
           }
         },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Backup-Grössi"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
@@ -25529,6 +23405,72 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "備份大小"
+          }
+        }
+      }
+    },
+    "backup_status_availability_label" : {
+      "comment" : "A message displayed when there is a backup available.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Poslední záloha: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Letztes Backup: %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Last backup: %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Última copia de seguridad: %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dernière sauvegarde : %@"
+          }
+        },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Letschts Backup: %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ultimo backup: %@"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Son yedekleme: %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "上次备份：%@"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "上次備份：%@"
           }
         }
       }
@@ -38558,7 +36500,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Signaler, Bloquer et Supprimer"
+            "value" : "Signaler, bloquer et supprimer"
           }
         },
         "gsw-CH" : {
@@ -38662,7 +36604,7 @@
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ID a přezdívka tohoto uživatele budou nahlášeny společnosti Threema společně s vaším ID. Obsah zprávy nebo osobní informace sdíleny nebudou, a tento uživatel nebude nijak informován."
+            "value" : "ID a přezdívka tohoto uživatele budou nahlášeny společnosti Threema společně s vaším ID. Obsah zpráv nebo osobní informace sdíleny nebudou, a tento uživatel nebude nijak informován."
           }
         },
         "de" : {
@@ -38686,7 +36628,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "L’ID et le pseudo de cet utilisateur seront signalés à Threema avec votre ID. Aucun contenu de message ou information personnelle ne sera partagé, et cet utilisateur ne sera pas notifié."
+            "value" : "L’ID et le pseudo de cet utilisateur seront signalés à Threema avec votre ID. Aucun contenu de message ou information personnelle ne sera partagé, et cet utilisateur n'en sera pas informé."
           }
         },
         "gsw-CH" : {
@@ -38845,6 +36787,262 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "檢舉%1$(nickname)@"
+          }
+        }
+      }
+    },
+    "chat_view_spam_reporting_banner_group_confirmation_text" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ID této skupiny, počet jejích členů, ID a přezdívka tvůrce skupiny budou nahlášeny společnosti Threema spolu s vaším ID. Obsah zpráv nebo osobní informace sdíleny nebudou, a nikdo ze skupiny nebude nijak informován."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die ID dieser Gruppe, die Anzahl Mitglieder sowie die ID und der Nickname des Gruppen-Admins werden zusammen mit Ihrer ID an Threema übermittelt. Es werden weder Nachrichteninhalte noch personenbezogene Daten weitergegeben, und niemand in dieser Gruppe wird benachrichtigt."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This group’s ID, the number of members, and the ID and nickname of the group creator will be reported to Threema along with your ID. No message content or personal information will be shared, and no one in the group will be notified."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El identificador de este grupo, el número de miembros, así como el identificador y el apodo del creador del grupo, se comunicarán a Threema junto con su identificador. No se compartirá el contenido de los mensajes ni información personal, y no se notificará a ningún miembro del grupo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L'ID de ce groupe, le nombre de membres, ainsi que l'ID et le pseudo du créateur du groupe seront signalés à Threema avec votre ID. Aucun contenu de message ou information personnelle ne sera partagé, et personne dans le groupe ne sera informé."
+          }
+        },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "D’ID vo dere Gruppe, d’Azahl Mitglieder und d’ID und de Nickname vom Gruppe-Admin werded zäme mit Ihrere ID a Threema übermittled. Es werded kei Nachrichteinhält und kei personebezogeni Date wiitergeh, und niemer i dere Gruppe wird benachrichtigt."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le ID di questo gruppo, il numero di membri, e l'ID e il nickname del creatore del gruppo saranno riportati a Threema insieme al tuo ID. Nessun contenuto dei messaggi o informazione personale verrà condiviso, e nessuno nel gruppo sarà notificato."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu grubun kimliği, üye sayısı, grup kurucusunun kimliği ve takma ismi, sizin kimliğinizle birlikte Threema'ya bildirilecektir. Hiçbir mesaj içeriği veya kişisel bilgi paylaşılmayacak ve gruptaki hiç kimse bilgilendirilmeyecektir."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "该群组的 ID、成员人数，以及群组创建者的 ID 和昵称，将连同您的 ID 一并上报给 Threema。消息内容或个人信息都不会被分享，群组中的任何成员都不会收到通知。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "該群組的ID、成員人數，以及群組建立者的ID和暱稱，將連同您的 ID 一併回報給 Threema。訊息內容或個人資料均不會被分享，群組內任何成員都不會收到通知。"
+          }
+        }
+      }
+    },
+    "chat_view_spam_reporting_banner_group_confirmation_title_with_group_name" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nahlásit %1$(group_name)@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%(group_name)@ melden"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Report %1$(group_name)@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Denunciar %1$(group_name)@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Signaler %1$(group_name)@"
+          }
+        },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$(group_name)@ mälde"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Segnala %1$(group_name)@"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rapor %1$(group_name)@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "举报%1$(group_name)@"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "檢舉%1$(group_name)@"
+          }
+        }
+      }
+    },
+    "chat_view_spam_reporting_banner_group_text" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tato skupina pochází od neznámého uživatele"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diese Gruppe kommt von einem unbekannten Nutzer"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This group is from an unknown user"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Este grupo pertenece a un usuario desconocido"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ce groupe provient d’un utilisateur inconnu"
+          }
+        },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Gruppe chunnt vomene unbekannte Nutzer"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Questo gruppo proviene da un utente sconosciuto"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu sohbet bilinmeyen bir kullanıcıdan"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此群组来自一个未知用户"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此群組來自一位未知使用者"
+          }
+        }
+      }
+    },
+    "chat_view_spam_reporting_banner_not_spam_button" : {
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Není spam"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kein Spam"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not Spam"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No es spam"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pas un spam"
+          }
+        },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kei Spam"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non è spam"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spam Değil"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "非垃圾信息"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "非垃圾訊息"
           }
         }
       }
@@ -41454,6 +39652,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Conferma le impostazioni"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Potvrdiť nastavenia"
           }
         },
         "tr" : {
@@ -47013,6 +45217,72 @@
         }
       }
     },
+    "Contact_Support" : {
+      "comment" : "Button title to contact support.",
+      "isCommentAutoGenerated" : true,
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kontaktovat podporu"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Support kontaktieren"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contact Support"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contacte con el servicio de asistencia"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contacter l’assistance"
+          }
+        },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Support kontaktiere"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contatta l'assistenza"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contact Support"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "联系客服"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "聯絡支援人員"
+          }
+        }
+      }
+    },
     "contact_support_mail_message" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -49155,6 +47425,72 @@
         }
       }
     },
+    "Continue_To_Chats" : {
+      "comment" : "Button title to continue to the chats.",
+      "isCommentAutoGenerated" : true,
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pokračovat do konverzací"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Weiter zu den Chats"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continue to Chats"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Proceder a chats"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continuer vers les chats"
+          }
+        },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wiiter zude Chats"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continua alle chat"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sohbetlere Devam Et"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "继续进入聊天"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "繼續進入對話"
+          }
+        }
+      }
+    },
     "conversation_delete_confirm" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -50450,73 +48786,73 @@
         }
       }
     },
-    "copied_exclamationmark" : {
+    "Copied" : {
       "comment" : "Text displayed in a notification when a key is copied.",
       "isCommentAutoGenerated" : true,
       "localizations" : {
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zkopírováno!"
+            "value" : "Zkopírováno"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kopiert!"
+            "value" : "Kopiert"
           }
         },
         "en" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Copied!"
+            "state" : "translated",
+            "value" : "Copied"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "¡Copiado!"
+            "value" : "Copiado"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Copié !"
+            "value" : "Copié"
           }
         },
         "gsw-CH" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kopiert!"
+            "value" : "Kopiert"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Copiato!"
+            "value" : "Copiato"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kopyalandı!"
+            "value" : "Kopyalandı"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "已复制！"
+            "value" : "已复制"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "已複製！"
+            "value" : "已複製"
           }
         }
       }
     },
-    "copy" : {
+    "Copy" : {
       "extractionState" : "manual",
       "localizations" : {
         "bg" : {
@@ -51349,72 +49685,6 @@
         }
       }
     },
-    "create_a_key" : {
-      "comment" : "Button title to create a new recovery key.",
-      "isCommentAutoGenerated" : true,
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Vytvořit nový klíč"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Neuen Schlüssel erstellen"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Create New Key"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Crear una nueva clave"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Créer une nouvelle clé"
-          }
-        },
-        "gsw-CH" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Neue Schlüssel erstelle"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Crea nuova chiave"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Yeni Anahtar Oluştur"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "创建新密钥"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "建立新金鑰"
-          }
-        }
-      }
-    },
     "create_a_key_description" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -51499,7 +49769,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Create New Backup"
+            "value" : "Create new backup"
           }
         },
         "es" : {
@@ -51542,6 +49812,72 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "建立新備份"
+          }
+        }
+      }
+    },
+    "create_new_key" : {
+      "comment" : "Button title to create a new recovery key.",
+      "isCommentAutoGenerated" : true,
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vytvořit nový klíč"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neuen Schlüssel erstellen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Create new key"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Crear una nueva clave"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Créer une nouvelle clé"
+          }
+        },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neue Schlüssel erstelle"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Crea nuova chiave"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yeni Anahtar Oluştur"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "创建新密钥"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "建立新金鑰"
           }
         }
       }
@@ -51949,6 +50285,12 @@
             "value" : "Chiave attuale"
           }
         },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aktuálny kľúč"
+          }
+        },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -52084,6 +50426,72 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "位置"
+          }
+        }
+      }
+    },
+    "Current_recovery_key" : {
+      "comment" : "Label for the current recovery key.",
+      "isCommentAutoGenerated" : true,
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aktuální klíč pro obnovení"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aktueller Wiederherstellungsschlüssel"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Current recovery key"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clave de recuperación actual"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clé de récupération actuelle"
+          }
+        },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aktuell Widerherstelligsschlüssel"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chiave di recupero attuale"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mevcut kurtarma anahtarı"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "当前恢复密钥"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "目前還原金鑰"
           }
         }
       }
@@ -69438,68 +67846,68 @@
         }
       }
     },
-    "encrypting_with_dots" : {
+    "encrypting_with" : {
       "comment" : "Header for the recovery key section.",
       "isCommentAutoGenerated" : true,
       "localizations" : {
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Šifrování pomocí…"
+            "value" : "Šifrování pomocí"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Verschlüsselung mit …"
+            "value" : "Verschlüsselung mit"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Encrypting with…"
+            "value" : "Encrypting with"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Encriptando con…"
+            "value" : "Cifrando con"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Chiffrement en cours…"
+            "value" : "Chiffrement en cours avec"
           }
         },
         "gsw-CH" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Verschlüsslig mit …"
+            "value" : "Verschlüsselig mit"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Crittografia in corso con…"
+            "value" : "Crittografia con"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Şifreleniyor…"
+            "value" : "Şifreleniyor"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "以…加密"
+            "value" : "以……加密"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "以…加密"
+            "value" : "以……加密"
           }
         }
       }
@@ -71747,6 +70155,137 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "忘記了您的憑證？請聯絡您的 %@ 管理員。"
+          }
+        }
+      }
+    },
+    "enter_your_recovery_key" : {
+      "comment" : "Subtitle for the recovery key entry screen.",
+      "isCommentAutoGenerated" : true,
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zadejte svůj klíč pro obnovení"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geben Sie Ihren Wiederherstellungsschlüssel ein"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Enter your recovery key"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Introduzca su clave de recuperación"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saisissez votre clé de récupération"
+          }
+        },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gebed Sie Ihre Widerherstelligsschlüssel ii"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inserisci la tua chiave di ripristino"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kurtarma anahtarınızı girin"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请输入您的恢复密钥"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "請輸入您的還原金鑰"
+          }
+        }
+      }
+    },
+    "enter_your_recovery_key_subtitle" : {
+      "comment" : "Subtitle for the recovery key entry screen.",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zadejte klíč pro obnovení, který vám byl poskytnut během vytváření této zálohy. Tento klíč je nezbytný pro obnovení vaší zálohy."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geben Sie den Wiederherstellungsschlüssel ein, der bei der Erstellung dieses Backups bereitgestellt wurde. Dieser Schlüssel ist erforderlich, um Ihr Backup wiederherzustellen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Enter the recovery key that was provided when you created this backup. This key is required to restore your backup."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Introduzca la clave de recuperación que se le facilitó al crear esta copia de seguridad. Esta clave es necesaria para restaurar su copia de seguridad."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saisissez la clé de récupération fournie lors de la création de cette sauvegarde. Cette clé est nécessaire pour restaurer votre sauvegarde."
+          }
+        },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gebed Sie de Widerherstelligsschlüssel ii, wo Sie bi de Erstellig vo dem Backup übercho händ. De Schlüssel bruuchts, zum s’Backup widerherzstelle."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inserisci la chiave di recupero fornita quando hai creato questo backup. Questa chiave è necessaria per ripristinare il tuo backup."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu yedeklemeyi oluştururken size verilen kurtarma anahtarını girin. Yedeklemenizi geri yüklemek için bu anahtar gereklidir."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请输入创建此备份时提供的恢复密钥，恢复备份需要输入此密钥。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "請輸入建立此備份時提供的還原金鑰，恢復備份需要輸入此金鑰。"
           }
         }
       }
@@ -83283,13 +81822,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Llamada grupal iniciada"
+            "value" : "Llamada grupal iniciada a las %@"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Appel de groupe lancé"
+            "value" : "Appel de groupe lancé à %@"
           }
         },
         "gsw-CH" : {
@@ -83301,7 +81840,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Chiamata di gruppo avviata"
+            "value" : "Chiamata di gruppo avviata alle %@"
           }
         },
         "ja" : {
@@ -83402,13 +81941,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Llamada grupal iniciada por %@"
+            "value" : "Llamada grupal iniciada por %@ a las %@"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Appel de groupe lancé par %@"
+            "value" : "Appel de groupe lancé par %@ à %@"
           }
         },
         "gsw-CH" : {
@@ -83420,7 +81959,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Chiamata di gruppo avviata da %@"
+            "value" : "Chiamata di gruppo avviata da %@ alle %@"
           }
         },
         "ja" : {
@@ -97448,7 +95987,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ulteriori informazioni..."
+            "value" : "Ulteriori informazioni"
           }
         },
         "ja" : {
@@ -101446,9 +99985,15 @@
     },
     "loading_view_remove_confirmation_title" : {
       "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opravdu chcete odstranit své %1$(appname)@ ID a všechna vaše data?"
+          }
+        },
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Wollen Sie wirklich Ihre %1$(appname)@-ID und alle Ihre Daten löschen?"
           }
         },
@@ -101456,6 +100001,48 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "Do you really want to remove your %1$(appname)@ ID and all your data?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿De verdad desea eliminar su ID de %1$(appname)@ y todos sus datos?"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Voulez-vous vraiment supprimer votre identifiant %1$(appname)@ et toutes vos données ?"
+          }
+        },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wennd Sie würklich Ihri %1$(appname)@-ID und all Ihri Date lösche?"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vuoi davvero rimuovere l'ID %1$(appname)@ e tutti i tuoi dati?"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$(appname)@ Kimliğinizi ve tüm verilerinizi gerçekten kaldırmak istiyor musunuz?"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "您确定要移除您的 %1$(appname)@ ID 及所有数据吗？"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "您確定要移除您的 %1$(appname)@ ID及所有資料嗎？"
           }
         }
       }
@@ -119505,125 +118092,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "無平台詳細訊息"
-          }
-        }
-      }
-    },
-    "multi_device_new_linked_device_list_remove_button" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "bg" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Премахнете"
-          }
-        },
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Odebrat"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Entfernen"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Remove"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Eliminar"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Supprimer"
-          }
-        },
-        "gsw-CH" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Entferne"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Rimuovi"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "削除"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "제거"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Verwijderen"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Usuń"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Remover"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Удалить"
-          }
-        },
-        "sk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Odstrániť"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sil"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Видалити"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "移除"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "移除"
           }
         }
       }
@@ -139952,7 +138420,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Veuillez vérifier votre connexion Internet et réessayer. Si le problème persiste, veuillez contacter notre équipe d’assistance."
+            "value" : "Vérifiez votre connexion internet, puis réessayez. Si le problème persiste, contactez notre équipe d’assistance."
           }
         },
         "gsw-CH" : {
@@ -141559,6 +140027,136 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "原圖"
+          }
+        }
+      }
+    },
+    "passcode_unlock_with_face_id" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odemknout pomocí Face ID"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mit Face ID entsperren"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unlock with Face ID"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desbloquear con Face ID"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Déverrouiller avec Face ID"
+          }
+        },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mit Face ID entsperre"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sblocca con Face ID"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Face ID ile Aç"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用面容 ID 解锁"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用 Face ID 解鎖"
+          }
+        }
+      }
+    },
+    "passcode_unlock_with_touch_id" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odemknout pomocí Touch ID"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mit Touch ID entsperren"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unlock with Touch ID"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desbloquear con Touch ID"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Déverrouiller avec Touch ID"
+          }
+        },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mit Touch ID entsperre"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sblocca con Touch ID"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Touch ID ile Aç"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用触控 ID 解锁"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用 Touch ID 解鎖"
           }
         }
       }
@@ -156338,7 +154936,73 @@
         }
       }
     },
-    "recovery_key" : {
+    "Recovery_key" : {
+      "comment" : "Label for the recovery key.",
+      "isCommentAutoGenerated" : true,
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Klíč pro obnovení"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wiederherstellungsschlüssel"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recovery key"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clave de recuperación"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clé de récupération"
+          }
+        },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Widerherstelligsschlüssel"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chiave di recupero"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kurtarma Anahtarı"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "恢复密钥"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "還原金鑰"
+          }
+        }
+      }
+    },
+    "Recovery_Key" : {
       "comment" : "Action title for the recovery key.",
       "isCommentAutoGenerated" : true,
       "localizations" : {
@@ -156529,6 +155193,125 @@
         }
       }
     },
+    "Remove" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "bg" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Премахнете"
+          }
+        },
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odebrat"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entfernen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eliminar"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Supprimer"
+          }
+        },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entferne"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rimuovi"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "削除"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "제거"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verwijderen"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usuń"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remover"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Удалить"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odstrániť"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sil"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Видалити"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "移除"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "移除"
+          }
+        }
+      }
+    },
     "remove_current_image_from_selected_images" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -156644,78 +155427,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "從已選專案中移除目前專案"
-          }
-        }
-      }
-    },
-    "remove_key" : {
-      "comment" : "Label for the delete button.",
-      "isCommentAutoGenerated" : true,
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Odebrat klíč"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Schlüssel entfernen"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Remove key"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Eliminar clave"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Supprimer la clé"
-          }
-        },
-        "gsw-CH" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Schlüssel entferne"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Rimuovi chiave"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Anahtarı kaldır"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Видалити ключ"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "移除密钥"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "移除金鑰"
           }
         }
       }
@@ -157138,76 +155849,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Yedeği geri yükle"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Відновити резервну копію"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "恢复备份"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "還原備份"
-          }
-        }
-      }
-    },
-    "restore_backup_title" : {
-      "localizations" : {
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Obnovit zálohu"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Backup wiederherstellen"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Restore Backup"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Restaurar copia de seguridad"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Restaurer la sauvegarde"
-          }
-        },
-        "gsw-CH" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Backup widerherstelle"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ripristina il backup"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Yedeği Geri Yükle"
           }
         },
         "uk" : {
@@ -159668,7 +158309,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Cela peut prendre quelques minutes en fonction de la taille de votre sauvegarde."
+            "value" : "Cela peut durer plusieurs minutes en fonction de la taille de votre sauvegarde."
           }
         },
         "gsw-CH" : {
@@ -161198,9 +159839,15 @@
     },
     "root_coordinator_protected_data_unavailable_message" : {
       "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chráněná data nejsou dostupná. Odemkněte prosím své zařízení."
+          }
+        },
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Die geschützten Daten sind gegenwärtig nicht verfügbar. Bitte entsperren Sie Ihr Gerät."
           }
         },
@@ -161208,6 +159855,48 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "Protected data is not available. Please unlock your device."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Los datos protegidos no están disponibles. Por favor, desbloquee su dispositivo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les données protégées ne sont pas disponibles. Veuillez déverrouiller votre appareil."
+          }
+        },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Di gschützte Date sind grad nöd verfüegbar. Bitte entsperred Sie Ihres Grät."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I dati protetti non sono disponibili. Sblocca il tuo dispositivo."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Korumalı veriler mevcut değil. Lütfen cihazınızı kilidini açın."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法访问受保护的数据，请解锁您的设备。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "無法存取受保護的資料，請解鎖您的裝置。"
           }
         }
       }
@@ -203684,7 +202373,7 @@
         },
         "en" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Share Backup"
           }
         },
@@ -209207,7 +207896,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Effectué"
+            "value" : "Terminé"
           }
         },
         "gsw-CH" : {
@@ -209291,7 +207980,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Errore"
+            "value" : "Non riuscito"
           }
         },
         "tr" : {
@@ -225752,7 +224441,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Voyez si quelqu'un est occupé ou indisponible avant de lui envoyer un message. Vous pouvez définir votre propre statut dans votre profil."
+            "value" : "Vous pouvez voir si votre interlocuteur est occupé ou indisponible avant de lui envoyer un message. Vous pouvez définir votre propre statut dans votre profil."
           }
         },
         "gsw-CH" : {
@@ -226002,7 +224691,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Définissez votre statut pour montrer quand vous êtes occupé ou indisponible."
+            "value" : "Définissez votre statut pour informer les autres que vous êtes occupé ou indisponible."
           }
         },
         "gsw-CH" : {

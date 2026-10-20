@@ -58,7 +58,7 @@ final class RestoreOptionBackupViewController: IDCreationPageViewController {
             TargetManager.localizedAppName
         ) : #localize("restore_option_safe")
         
-        localBackupStackView.isHidden = !ThreemaEnvironment.backups2Enabled
+        localBackupStackView.isHidden = !UserSettings.shared().backups2Enabled
 
         localBackupButton.setTitle(#localize("restore_option_local_backup_title"), for: .normal)
         localBackupButton.accessibilityIdentifier = "RestoreOptionBackupViewControllerLocalBackupButton"

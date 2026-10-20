@@ -60,9 +60,10 @@ pub(super) trait PayloadDecoder: Sized + Name {
     fn decode(r#type: u8, reader: OwnedVecByteReader) -> Result<Self, D2mProtocolError>;
 
     /// Decode a D2M payload protobuf message.
-    fn decode_protobuf<TMessage: Default + Name + prost::Message>(
-        mut reader: OwnedVecByteReader,
-    ) -> Result<TMessage, D2mProtocolError> {
+    fn decode_protobuf<TMessage>(mut reader: OwnedVecByteReader) -> Result<TMessage, D2mProtocolError>
+    where
+        TMessage: Default + Name + prost::Message,
+    {
         TMessage::decode(reader.read_remaining()).map_err(|error| D2mProtocolError::DecodingFailed {
             name: TMessage::NAME,
             source: error.into(),
@@ -102,13 +103,19 @@ pub(super) trait PayloadEncoder: Sized + Name {
     fn type_and_length(&self) -> (u8, Option<usize>);
 
     /// Encode the D2M payload into a writer.
-    fn encode_into<TWriter: ByteWriter>(self, writer: &mut TWriter) -> Result<(), D2mProtocolError>;
+    fn encode_into<TWriter>(self, writer: &mut TWriter) -> Result<(), D2mProtocolError>
+    where
+        TWriter: ByteWriter;
 
     /// Encode a D2M payload protobuf message.
-    fn encode_protobuf<TMessage: Default + Name + prost::Message, TWriter: ByteWriter>(
+    fn encode_protobuf<TMessage, TWriter>(
         message: TMessage,
         writer: &mut TWriter,
-    ) -> Result<(), D2mProtocolError> {
+    ) -> Result<(), D2mProtocolError>
+    where
+        TMessage: Default + Name + prost::Message,
+        TWriter: ByteWriter,
+    {
         let mut buffer = writer.write_in_place(message.encoded_len()).map_err(|error| {
             D2mProtocolError::InternalError(D2mProtocolInternalErrorCause::EncodingFailed {
                 name: Self::NAME,

@@ -305,10 +305,8 @@ public final class ChatTextView: UITextView {
         backgroundColor = .secondarySystemGroupedBackground
         adjustsFontForContentSizeCategory = true
         
-        if #available(iOS 18.0, *) {
-            // To address the malfunction with the deactivate sticker switch, situated within the iOS settings
-            supportsAdaptiveImageGlyph = false
-        }
+        // To address the malfunction with the deactivate sticker switch, situated within the iOS settings
+        supportsAdaptiveImageGlyph = false
         
         textContainer.lineFragmentPadding = 0
         
@@ -918,7 +916,6 @@ extension ChatTextView: UITextViewDelegate {
 // MARK: - MarkupParsingTextStorageDelegate
 
 extension ChatTextView: MarkupParsingTextStorageDelegate {
-    @available(iOS 18.0, *)
     func didInsertAdaptiveGlyph(glyph: NSAdaptiveImageGlyph) {
         chatTextViewDelegate?.processAndSendGlyph(glyph)
     }

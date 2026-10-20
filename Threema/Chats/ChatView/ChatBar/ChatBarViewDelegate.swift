@@ -6,7 +6,6 @@ protocol ChatBarViewDelegate: AnyObject {
     func sendText(rawText: String)
     func sendTypingIndicator(startTyping: Bool)
     func sendOrPreviewPastedItem() -> Bool
-    @available(iOS 18.0, *)
     func processAndSendGlyph(_ glyph: NSAdaptiveImageGlyph)
     func showAssetsSelector()
     func showCamera()

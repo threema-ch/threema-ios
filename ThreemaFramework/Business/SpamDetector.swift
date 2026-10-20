@@ -3,17 +3,9 @@ import CoreData
 import Foundation
 import ThreemaEssentials
 
-/// Check if a conversation is potential spam
+/// This implements the _Spam Potential Detection Steps_ for 1:1 chats defined by the protocol
 ///
-/// - Note: The detection needs Core Data access. Thus it is isolated to an actor to guarantee that it never runs on
-///         the main queue.
-public protocol SpamDetecting: Actor {
-    func isPotentialSpam(conversationObjectID: NSManagedObjectID) async -> Bool
-}
-
-/// This implements the _Spam Potential Detection Steps_ defined by the protocol
-///
-/// Based on fcdb53c4ed669162b1c8a817db5081f55d664f95
+/// Based on 39f3fd03d41722a1843ab42de68e2297985b36d9 draft
 public actor SpamDetector: SpamDetecting {
     
     private let businessInjector: BusinessInjectorProtocol
@@ -35,20 +27,20 @@ public actor SpamDetector: SpamDetecting {
     }
     
     public func isPotentialSpam(conversationObjectID: NSManagedObjectID) async -> Bool {
-        // 1. & 2.
-        guard await contactIndicatesSpamPotential(of: conversationObjectID) else {
+        // 1. - 3.
+        guard await contactAndConversationIndicatesSpamPotential(of: conversationObjectID) else {
             return false
         }
         
-        // 3. - 6.
+        // 4. - 8.
         return await messagesIndicateSpamPotential(in: conversationObjectID)
     }
     
-    /// Steps 1 & 2: Unverified contact has some spam potential
+    /// Steps 1 - 3: Open spam reporting state and unverified contact has some spam potential
     ///
     /// - Parameter conversationObjectID: Object ID of the conversation to check
     /// - Returns: `true` if the contact indicates some spam potential
-    private func contactIndicatesSpamPotential(of conversationObjectID: NSManagedObjectID) async -> Bool {
+    private func contactAndConversationIndicatesSpamPotential(of conversationObjectID: NSManagedObjectID) async -> Bool {
         let entityManager = backgroundEntityManager
         
         return await entityManager.perform { () -> Bool in
@@ -66,7 +58,13 @@ public actor SpamDetector: SpamDetecting {
                 return false
             }
             
-            // 2. If `contact`'s verification level is not `UNVERIFIED`, return that no
+            // 2. If the spam reporting state of the associated conversation is either
+            //    _dismissed_ or _reported_, return that no spam potential was detected.
+            guard conversationEntity.spamReportingState != .notSpam, conversationEntity.spamReportingState != .reported else {
+                return false
+            }
+            
+            // 3. If `contact`'s verification level is not `UNVERIFIED`, return that no
             //    spam potential was detected.
             guard contactEntity.contactVerificationLevel == .unverified else {
                 return false
@@ -76,7 +74,7 @@ public actor SpamDetector: SpamDetecting {
         }
     }
     
-    /// Steps 3 - 6: Check the messages of the conversation for spam potential
+    /// Steps 4 - 8: Check the messages of the conversation for spam potential
     ///
     /// - Parameter conversationObjectID: Object ID of the conversation to check
     /// - Returns: `true` if the messages indicate spam potential
@@ -91,26 +89,28 @@ public actor SpamDetector: SpamDetecting {
                 return false
             }
             
-            // 3. If the conversation contains at least one outgoing _content_ message
+            // 4. If the conversation contains at least one outgoing _content_ message
             //    (i.e. one that was created by a message with persistent entry type
             //    _content_), return that no spam potential was detected.
             guard entityManager.entityFetcher.outgoingContentMessagesCount(in: conversationEntity) <= 0 else {
                 return false
             }
             
-            // 4. Look up the earliest incoming _content_ message (i.e. one that was
+            // 5. Look up the earliest incoming _content_ message (i.e. one that was
             //    created by a message with persistent entry type _content_) in the
             //    conversation and let `earliest-message` be the result.
-
+            // 6. If `earliest-message` is `undefined`, return that no spam potential was
+            //    detected.
+            
             guard let oldestMessageDate = entityManager.entityFetcher.dateOfOldestContentMessage(
                 in: conversationEntity
             ) else {
                 return false
             }
             
-            // 5. If the timespan between `earliest-message`'s `received-at` date and the
-            //    `contact`'s creation date is greater than 7 days, return that no spam
-            //    potential was detected.
+            // 7. If the timespan between `earliest-message`'s `received-at` date
+            //    and the `contact`'s creation date is greater than 7 days, return that no
+            //    spam potential was detected.
             
             guard let contactCreationDate = conversationEntity.contact?.createdAt else {
                 DDLogError("Contact creation date should be set")
@@ -122,7 +122,7 @@ public actor SpamDetector: SpamDetecting {
                 return false
             }
             
-            // 6. Return that spam potential was detected.
+            // 8. Return that spam potential was detected.
             return true
         }
     }

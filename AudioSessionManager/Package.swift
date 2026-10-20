@@ -5,7 +5,7 @@ import PackageDescription
 let package = Package(
     name: "AudioSessionManager",
     platforms: [
-        .iOS(.v17),
+        .iOS(.v18),
     ],
     products: [
         .library(

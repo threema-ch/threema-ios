@@ -10,7 +10,7 @@ public final class BackupRestoreDataManager: BackupRestoreDataManagerProtocol {
     // MARK: - Private properties
 
     private let myIdentityStore: any MyIdentityStoreProtocol
-    private let providersFactory: BackupRestoreProvidersFactory
+    private let providersFactory: DataBackupProvidersFactory
     private let entityManager: EntityManager
     private let fileUtility: any FileUtilityProtocol
 
@@ -31,7 +31,7 @@ public final class BackupRestoreDataManager: BackupRestoreDataManagerProtocol {
         fileUtility: any FileUtilityProtocol
     ) {
         self.myIdentityStore = myIdentityStore
-        self.providersFactory = BackupRestoreProvidersFactory(
+        self.providersFactory = DataBackupProvidersFactory(
             makeProfileStore: makeProfileStore,
             userSettings: userSettings,
             entityManager: entityManager
@@ -57,7 +57,7 @@ public final class BackupRestoreDataManager: BackupRestoreDataManagerProtocol {
                     continuation: continuation
                 )
 
-                let restoreTask = BackupRestoreTask(password: password)
+                let restoreTask = DataBackupRestoreTask(password: password)
                 let dataRestore = DataRestore(
                     backupURL: url,
                     fileUtility: fileUtility,
@@ -104,12 +104,12 @@ public final class BackupRestoreDataManager: BackupRestoreDataManagerProtocol {
 private final class DataRestoreProgressDelegate: DataRestoreDelegate {
 
     private let myIdentityStore: any MyIdentityStoreProtocol
-    private let providersFactory: BackupRestoreProvidersFactory
+    private let providersFactory: DataBackupProvidersFactory
     private let continuation: AsyncThrowingStream<DataRestoreProgress, any Error>.Continuation
 
     init(
         myIdentityStore: any MyIdentityStoreProtocol,
-        providersFactory: BackupRestoreProvidersFactory,
+        providersFactory: DataBackupProvidersFactory,
         continuation: AsyncThrowingStream<DataRestoreProgress, any Error>.Continuation
     ) {
         self.myIdentityStore = myIdentityStore
@@ -134,7 +134,7 @@ private final class DataRestoreProgressDelegate: DataRestoreDelegate {
 
     func dataRestore(
         _ dataRestore: DataRestore,
-        didReceiveStateUpdate update: libthreemaSwift.BackupRestoreStateUpdate
+        didReceiveStateUpdate update: libthreemaSwift.DataBackupRestoreStateUpdate
     ) {
         continuation.yield(DataRestoreProgress(update))
     }

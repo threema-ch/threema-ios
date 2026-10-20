@@ -10,7 +10,7 @@ public final class BackupCreateManager: BackupCreateManagerProtocol {
     // MARK: Private properties
 
     private let myIdentityStore: any MyIdentityStoreProtocol
-    private let providersFactory: BackupRestoreProvidersFactory
+    private let providersFactory: DataBackupProvidersFactory
     private let fileUtility: any FileUtilityProtocol
     private let encryptionKeyService: any BackupEncryptionKeyServiceProtocol
     private let userDefaults: any UserDefaultsService
@@ -56,7 +56,7 @@ public final class BackupCreateManager: BackupCreateManagerProtocol {
         dateProvider: @escaping () -> Date
     ) {
         self.myIdentityStore = myIdentityStore
-        self.providersFactory = BackupRestoreProvidersFactory(
+        self.providersFactory = DataBackupProvidersFactory(
             // Built from the ID `makeDataBackup` validated, so the store can't end up on a different one than the
             // backup is written for — and its singletons stay out of initialization until a backup runs.
             makeProfileStore: { ProfileStore(myIdentity: $0) },
@@ -170,22 +170,13 @@ public final class BackupCreateManager: BackupCreateManagerProtocol {
             cspServerGroup: cspServerGroup
         )
 
-        let providers = providersFactory.make(identity: identity)
-
-        let context = BackupCreateContextInit(
+        let context = DataBackupCreateInit(
             password: password,
             identityData: identityData,
-            userProfile: providers.userProfile,
-            settings: providers.settings,
-            cspNonces: providers.cspNonces,
-            contacts: providers.contacts,
-            groups: providers.groups,
-            distributionLists: providers.distributionLists,
-            polls: providers.polls,
-            conversations: providers.conversations
+            providers: providersFactory.make(identity: identity)
         )
 
-        let createTask = try BackupCreateTask(init: context)
+        let createTask = try DataBackupCreateTask(init: context)
 
         return DataBackup(
             backupURL: url,

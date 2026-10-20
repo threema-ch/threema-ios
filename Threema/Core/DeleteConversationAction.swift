@@ -27,11 +27,13 @@ enum DeleteConversationAction {
     /// - Parameters:
     ///   - conversation: Conversation to Delete
     ///   - owner: ViewController to Display Alert
-    ///   - handler: Handler to execute when action Completes
+    ///   - anchorView: Anchor view of potential confirmation alerts
+    ///   - singleFunction: Single function to execute
+    ///   - onCompletion: Handler to execute when action completes
     static func execute(
         for conversation: ConversationEntity,
         owner: UIViewController,
-        cell: UITableViewCell? = nil,
+        anchorView: UIView,
         singleFunction: SingleFunction = .double,
         onCompletion: @escaping (Bool) -> Void
     ) {
@@ -47,7 +49,7 @@ enum DeleteConversationAction {
                 for: conversation,
                 group: group,
                 owner: owner,
-                cell: cell,
+                anchorView: anchorView,
                 singleFunction: singleFunction,
                 handler: onCompletion
             )
@@ -70,7 +72,7 @@ enum DeleteConversationAction {
             
             UIAlertTemplate.showSheet(
                 owner: owner,
-                popOverSource: cell ?? owner.view,
+                popOverSource: anchorView,
                 title: sheetTitle,
                 message: sheetMessage,
                 actions: actions
@@ -94,7 +96,7 @@ enum DeleteConversationAction {
             
             UIAlertTemplate.showSheet(
                 owner: owner,
-                popOverSource: cell ?? owner.view,
+                popOverSource: anchorView,
                 title: sheetTitle,
                 message: sheetMessage,
                 actions: actions
@@ -105,7 +107,7 @@ enum DeleteConversationAction {
                 for: conversation,
                 group: group,
                 owner: owner,
-                cell: cell,
+                anchorView: anchorView,
                 singleFunction: singleFunction,
                 handler: onCompletion
             )
@@ -118,14 +120,14 @@ enum DeleteConversationAction {
     /// - Parameters:
     ///   - conversation: Conversation to Delete
     ///   - owner: ViewController to Display Alert
-    ///   - cell: Cell to handle the popover action on iPads
+    ///   - anchorView: Anchor view to attach the popover action to
     ///   - singleFunction: If function should only do a single function
     ///   - handler: Handler to execute when action Completes
     private static func handleGroupDeletion(
         for conversation: ConversationEntity,
         group: Group?,
         owner: UIViewController,
-        cell: UITableViewCell?,
+        anchorView: UIView,
         singleFunction: SingleFunction,
         handler: @escaping (Bool) -> Void
     ) {
@@ -230,7 +232,7 @@ enum DeleteConversationAction {
         
         UIAlertTemplate.showSheet(
             owner: owner,
-            popOverSource: cell ?? owner.view,
+            popOverSource: anchorView,
             title: sheetTitle,
             message: sheetMessage,
             actions: actions

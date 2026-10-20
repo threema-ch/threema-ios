@@ -1,9 +1,53 @@
 import AudioSessionManager
 import AVFoundation
 import CocoaLumberjackSwift
+import CoreData
 import DSWaveformImage
 import SwiftUI
 import ThreemaFramework
+
+// MARK: - VoiceMessageAudioRecorder
+
+/// The part of `AVAudioRecorder` the view model uses, so tests can record without a microphone
+protocol VoiceMessageAudioRecorder: AnyObject {
+    var url: URL { get }
+    var delegate: (any AVAudioRecorderDelegate)? { get set }
+    var isMeteringEnabled: Bool { get set }
+    var deviceCurrentTime: TimeInterval { get }
+
+    func record() -> Bool
+    func pause()
+    func stop()
+    func updateMeters()
+    func averagePower(forChannel channelNumber: Int) -> Float
+}
+
+// MARK: - AVAudioRecorder + VoiceMessageAudioRecorder
+
+extension AVAudioRecorder: VoiceMessageAudioRecorder { }
+
+// MARK: - VoiceMessageRecorderDependencies
+
+/// Everything the view model cannot use in tests. The defaults are the production implementations.
+struct VoiceMessageRecorderDependencies {
+    var makeRecorder: @MainActor (_ url: URL, _ settings: [String: Any]) throws -> any VoiceMessageAudioRecorder = {
+        try AVAudioRecorder(url: $0, settings: $1)
+    }
+
+    var sendBlobMessage: @MainActor (_ item: URLSenderItem, _ conversationObjectID: NSManagedObjectID) async throws
+        -> Void = {
+            try await BusinessInjector.ui.messageSender.sendBlobMessage(
+                for: $0,
+                in: $1,
+                correlationID: nil,
+                webRequestID: nil
+            )
+        }
+
+    var presentNotification: @MainActor (_ type: NotificationPresenterType) -> Void = {
+        NotificationPresenterWrapper.shared.present(type: $0)
+    }
+}
 
 // MARK: - VoiceMessageRecorderViewModel
 
@@ -37,6 +81,8 @@ final class VoiceMessageRecorderViewModel: NSObject, ObservableObject {
     private let conversation: ConversationEntity
     
     private let playSentMessageSound: (() -> Void)?
+
+    private let dependencies: VoiceMessageRecorderDependencies
 
     /// Called when recording never got going, so the owner can take its UI away again.
     private let onStartFailed: (() -> Void)?
@@ -75,7 +121,7 @@ final class VoiceMessageRecorderViewModel: NSObject, ObservableObject {
 
     // Info: Due to file access limitations, we cannot have a recorder and a player accessing the same url at the same time.
     // Both must call stop before the other accesses file at the url (i.e. is initialized).
-    private var currentRecorder: AVAudioRecorder?
+    private var currentRecorder: (any VoiceMessageAudioRecorder)?
     private var currentPlayer: AVAudioPlayer?
 
     private let audioSessionManager: any AudioSessionManagerProtocol
@@ -83,6 +129,9 @@ final class VoiceMessageRecorderViewModel: NSObject, ObservableObject {
     private var audioSessionEventTask: Task<Void, Never>?
 
     private var sendingInProgress = false
+
+    /// Set by `willDismissView()`, so a recorder that finishes starting after that is stopped again
+    private var isDismissed = false
     
     // MARK: - Lifecycle
 
@@ -92,10 +141,12 @@ final class VoiceMessageRecorderViewModel: NSObject, ObservableObject {
         draftAudioURL: URL? = nil,
         playSentMessageSound: (() -> Void)? = nil,
         onStartFailed: (() -> Void)? = nil,
-        audioSessionManager: any AudioSessionManagerProtocol
+        audioSessionManager: any AudioSessionManagerProtocol,
+        dependencies: VoiceMessageRecorderDependencies = VoiceMessageRecorderDependencies()
     ) throws {
 
         self.conversation = conversation
+        self.dependencies = dependencies
         self.playSentMessageSound = playSentMessageSound
         self.onStartFailed = onStartFailed
         self.audioSessionManager = audioSessionManager
@@ -118,7 +169,9 @@ final class VoiceMessageRecorderViewModel: NSObject, ObservableObject {
                 }
             }
             catch {
-                throw VoiceMessageError.recordingStartFailed
+                DDLogError("[Voice Recorder] Failed to start: \(error).")
+                dependencies.presentNotification(.recordingFailed)
+                reportStartFailedIfNothingRecorded()
             }
         }
     }
@@ -129,6 +182,12 @@ final class VoiceMessageRecorderViewModel: NSObject, ObservableObject {
         // Copied into locals: the `Task` outlives this object, so it must not capture `self`.
         let manager = audioSessionManager
         let claim = audioSessionClaim
+
+        // Drafts are copies in the documents dir, so the temp files are not needed by anyone else
+        if let combinedRecordings {
+            MediaManager.cleanupFile(combinedRecordings.url)
+        }
+        MediaManager.cleanupFile(recordingURL)
 
         Task { @MainActor in
             UIDevice.current.isProximityMonitoringEnabled = false
@@ -184,7 +243,7 @@ final class VoiceMessageRecorderViewModel: NSObject, ObservableObject {
         case .ready, .stopped, .paused:
             break
         case .recording:
-            NotificationPresenterWrapper.shared.present(type: .recordingPaused)
+            dependencies.presentNotification(.recordingPaused)
             await stopRecording()
         case .playing:
             pause()
@@ -262,10 +321,10 @@ final class VoiceMessageRecorderViewModel: NSObject, ObservableObject {
     // MARK: - Recording
 
     @MainActor
-    private func createRecorder() throws -> AVAudioRecorder {
+    private func createRecorder() throws -> any VoiceMessageAudioRecorder {
         // We create a new recorder with a new URL
         let url = MediaManager.newRecordingAudioURL()
-        let recorder = try AVAudioRecorder(url: url, settings: recordSettings)
+        let recorder = try dependencies.makeRecorder(url, recordSettings)
         recordingURL = url
         recorder.delegate = self
         recorder.isMeteringEnabled = true
@@ -298,12 +357,11 @@ final class VoiceMessageRecorderViewModel: NSObject, ObservableObject {
                     let urls = [existingRecording.url, recordingURL]
                     let asset = try await MediaManager.concatenateRecordingsAndSave(combine: urls, to: combinedURL)
                     combinedRecordings = (asset, combinedURL)
-                    recordingURL = MediaManager.newRecordingAudioURL()
                     completion?()
                 }
                 catch {
                     DDLogError("[Voice Recorder] Failed to combine recordings: \(error).")
-                    NotificationPresenterWrapper.shared.present(type: .recordingFailed)
+                    dependencies.presentNotification(.recordingFailed)
                 }
             }
         }
@@ -317,7 +375,7 @@ final class VoiceMessageRecorderViewModel: NSObject, ObservableObject {
     private func startRecording() async throws {
         // We disallow recording when in a call
         guard !NavigationBarPromptHandler.isCallActiveInBackground, !NavigationBarPromptHandler.isGroupCallActive else {
-            NotificationPresenterWrapper.shared.present(type: .recordingCallRunning)
+            dependencies.presentNotification(.recordingCallRunning)
 
             recordingState = .stopped
             reportStartFailedIfNothingRecorded()
@@ -325,7 +383,7 @@ final class VoiceMessageRecorderViewModel: NSObject, ObservableObject {
         }
         
         guard await totalRecordingDuration <= recordingMaxDuration else {
-            NotificationPresenterWrapper.shared.present(type: .recordingTooLong)
+            dependencies.presentNotification(.recordingTooLong)
             return
         }
         
@@ -339,21 +397,44 @@ final class VoiceMessageRecorderViewModel: NSObject, ObservableObject {
             try await claimAudioSession(for: .recording)
         }
         catch AudioSessionError.busyWithCall {
-            NotificationPresenterWrapper.shared.present(type: .recordingCallRunning)
+            dependencies.presentNotification(.recordingCallRunning)
             recordingState = .stopped
             reportStartFailedIfNothingRecorded()
             return
         }
 
         // We check if we need to create a new recorder (not needed when only pausing but not playing).
-        let recorder: AVAudioRecorder
+        let recorder: any VoiceMessageAudioRecorder
+        let isNewRecorder: Bool
         if let currentRecorder {
             recorder = currentRecorder
+            isNewRecorder = false
         }
         else {
             recorder = try createRecorder()
-            currentRecorder = recorder
+            isNewRecorder = true
         }
+
+        // E.g. another app holds the microphone. A paused recorder is kept, it still holds the recorded part.
+        let didStart = await Self.record(with: recorder)
+
+        // Dismissed while starting
+        guard !isDismissed else {
+            recorder.stop()
+            MediaManager.cleanupFile(recorder.url)
+            return
+        }
+
+        guard didStart else {
+            DDLogError("[Voice Recorder] Recorder failed to start recording.")
+            if isNewRecorder {
+                MediaManager.cleanupFile(recorder.url)
+            }
+            dependencies.presentNotification(.recordingFailed)
+            reportStartFailedIfNothingRecorded()
+            return
+        }
+        currentRecorder = recorder
 
         // Disable proximity monitoring for voice-over during the recording process
         if UIAccessibility.isVoiceOverRunning {
@@ -361,9 +442,14 @@ final class VoiceMessageRecorderViewModel: NSObject, ObservableObject {
         }
 
         recordingState = .recording
-        recorder.record()
         recorderStartTimeInterval = recorder.deviceCurrentTime
         startRecordTimer()
+    }
+
+    /// `record()` activates the audio session, which can block for a while. Called off the main actor to keep the UI
+    /// responsive.
+    private nonisolated static func record(with recorder: any VoiceMessageAudioRecorder) async -> Bool {
+        recorder.record()
     }
 
     /// Only when nothing has been recorded yet.
@@ -385,7 +471,7 @@ final class VoiceMessageRecorderViewModel: NSObject, ObservableObject {
         }
         catch {
             DDLogError("[Voice Recorder] Failed to continue recording: \(error).")
-            NotificationPresenterWrapper.shared.present(type: .recordingFailed)
+            dependencies.presentNotification(.recordingFailed)
         }
     }
 
@@ -439,24 +525,28 @@ final class VoiceMessageRecorderViewModel: NSObject, ObservableObject {
         }
         sendingInProgress = true
         
-        guard let senderItem = URLSenderItem(
-            url: recordingURL,
-            type: UTType.audio.identifier,
-            renderType: 1,
-            sendAsFile: true
-        ) else {
-            sendingFailed()
-            return
-        }
-        
         Task {
-            do {
-                try await BusinessInjector.ui.messageSender.sendBlobMessage(
-                    for: senderItem,
-                    in: conversation.objectID,
-                    correlationID: nil,
-                    webRequestID: nil
+            // `combinedRecordings` holds the complete recording (see `terminateRecorder(completion:)`). Without this
+            // check a missing or empty file would be sent as an empty voice message, or fail after the recording
+            // was discarded.
+            guard
+                let url = combinedRecordings?.url,
+                FileManager.default.fileExists(atPath: url.path),
+                await assetDuration > 0,
+                let senderItem = URLSenderItem(
+                    url: url,
+                    type: UTType.audio.identifier,
+                    renderType: 1,
+                    sendAsFile: true
                 )
+            else {
+                DDLogError("[Voice Recorder] Recording to send is missing or empty.")
+                sendingFailed()
+                return
+            }
+
+            do {
+                try await dependencies.sendBlobMessage(senderItem, conversation.objectID)
                 self.sendingCompleted()
             }
             catch let error as BlobManagerError {
@@ -484,7 +574,7 @@ final class VoiceMessageRecorderViewModel: NSObject, ObservableObject {
     }
     
     private func sendingFailed() {
-        NotificationPresenterWrapper.shared.present(type: .sendingError)
+        dependencies.presentNotification(.sendingError)
         recordingState = .stopped
         sendingInProgress = false
     }
@@ -535,7 +625,7 @@ final class VoiceMessageRecorderViewModel: NSObject, ObservableObject {
     private func startPlaying() async {
         // We disallow play when in a call
         guard !NavigationBarPromptHandler.isCallActiveInBackground, !NavigationBarPromptHandler.isGroupCallActive else {
-            NotificationPresenterWrapper.shared.present(type: .recordingCallRunning)
+            dependencies.presentNotification(.recordingCallRunning)
             return
         }
         
@@ -550,7 +640,7 @@ final class VoiceMessageRecorderViewModel: NSObject, ObservableObject {
             }
             catch {
                 DDLogError("[Voice Recorder] Failed to start playing: \(error).")
-                NotificationPresenterWrapper.shared.present(type: .recordingPlayingFailed)
+                dependencies.presentNotification(.recordingPlayingFailed)
                 return
             }
         }
@@ -628,7 +718,7 @@ final class VoiceMessageRecorderViewModel: NSObject, ObservableObject {
             duration = total
             if total >= recordingMaxDuration {
                 await stopRecording()
-                NotificationPresenterWrapper.shared.present(type: .recordingTooLong)
+                dependencies.presentNotification(.recordingTooLong)
             }
         }
     }
@@ -682,6 +772,7 @@ final class VoiceMessageRecorderViewModel: NSObject, ObservableObject {
     }
     
     func willDismissView() {
+        isDismissed = true
         stopRecordTimer()
         terminatePlayer()
         cleanupFiles()
@@ -692,8 +783,20 @@ final class VoiceMessageRecorderViewModel: NSObject, ObservableObject {
     }
     
     func saveVoiceMessageRecordingAsDraft() {
+        let wasRecording = recordingState == .recording
         terminateRecorder {
-            // Moves recording file from tmp to documents folder for draft or the recording file will be deleted
+            // The recorder is stopped now. The view might stay visible (e.g. when a profile is pushed on top of the
+            // chat), so it must show that and keep a recording it can play, continue and send.
+            if wasRecording {
+                self.recordingState = .stopped
+                Task { @MainActor in
+                    self.recordedDuration = await self.assetDuration
+                    self.duration = self.recordedDuration
+                }
+            }
+
+            // Copies recording file from tmp to documents folder for draft. The tmp file stays with this recorder and
+            // is removed when it is dismissed.
             guard
                 !RemoteSecretProvider.isRemoteSecretEnabled,
                 let combinedRecordings = self.combinedRecordings
@@ -702,7 +805,7 @@ final class VoiceMessageRecorderViewModel: NSObject, ObservableObject {
                 return
             }
             do {
-                let documentsURL = try MediaManager.moveToDocumentsDir(from: combinedRecordings.url)
+                let documentsURL = try MediaManager.copyToDocumentsDir(from: combinedRecordings.url)
                 MessageDraftStore.shared.saveDraft(.audio(documentsURL), for: self.conversation)
             }
             catch {

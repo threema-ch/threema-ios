@@ -134,7 +134,10 @@
     
     // Check for erroneous HTTP status code (NSURLSession does not report server-side errors in error object!)
     if (((NSHTTPURLResponse*)response).statusCode >= 400) {
-        NSError *httpError = [NSError errorWithDomain:NSURLErrorDomain code:((NSHTTPURLResponse*)response).statusCode userInfo:nil];
+        NSInteger statusCode = ((NSHTTPURLResponse*)response).statusCode;
+        NSString *responseBody = data.length > 0 ? [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding] : nil;
+        NSDictionary *userInfo = (responseBody != nil && responseBody.length > 0) ? @{NSLocalizedDescriptionKey: responseBody} : nil;
+        NSError *httpError = [NSError errorWithDomain:NSURLErrorDomain code:statusCode userInfo:userInfo];
         onError(httpError);
         return;
     }

@@ -1,7 +1,6 @@
 //! Task for beginning a transaction.
 use core::mem;
 
-use const_format::formatcp;
 use libthreema_macros::{DebugVariantNames, Name, VariantNames};
 use prost::Message as _;
 use tracing::{debug, info, warn};
@@ -10,7 +9,7 @@ use super::commit::{CommitTransactionResponse, CommitTransactionSubtask};
 use crate::{
     common::{D2xDeviceId, keys::DeviceGroupTransactionScopeCipher, task::TaskLoop},
     crypto::aead::AeadRandomNonceAhead as _,
-    csp_e2e::{CspE2eProtocolError, CspE2eProtocolInternalErrorCause, D2xContext},
+    csp_e2e::{CspE2eProtocolError, D2xContext},
     protobuf,
     utils::{debug::Name as _, time::Duration},
 };
@@ -119,7 +118,7 @@ enum State {
 }
 impl State {
     fn poll_init_or_transaction_rejected(
-        context: &D2xContext,
+        context: &mut D2xContext,
         state: InitOrTransactionRejectedState,
     ) -> Result<(Self, BeginTransactionLoop), CspE2eProtocolError> {
         // The transaction is either being started for the first time or another transaction
@@ -135,24 +134,8 @@ impl State {
             },
         }
 
-        // Encrypt the scope
-        //
-        // Note: We don't care if the scope is replayed, so not storing the nonce here.
-        let encrypted_scope = {
-            let mut scope = protobuf::d2d::TransactionScope {
-                scope: state.scope.into(),
-            }
-            .encode_to_vec();
-            let _ = context
-                .device_group_key
-                .transaction_scope_key()
-                .0
-                .encrypt_in_place_random_nonce_ahead(b"", &mut scope)
-                .map_err(|_| CspE2eProtocolInternalErrorCause::EncryptionFailed {
-                    name: protobuf::d2d::TransactionScope::NAME,
-                })?;
-            scope
-        };
+        // The precondition was fulfilled, register the transaction.
+        let encrypted_scope = context.transaction_manager.register(state.scope)?;
 
         // Begin the transaction
         info!("Beginning transaction");
@@ -175,14 +158,14 @@ impl State {
     }
 
     fn poll_begin_transaction(
-        context: &D2xContext,
+        context: &mut D2xContext,
         state: BeginTransactionState,
     ) -> Result<(Self, BeginTransactionLoop), CspE2eProtocolError> {
         // Ensure the caller provided the reply
         let Some(reply) = state.reply else {
-            return Err(CspE2eProtocolError::InvalidState(formatcp!(
+            return Err(CspE2eProtocolError::ContractViolation(format!(
                 "BeginTransactionAck/TransactionRejected reply was not provided for '{}' state",
-                State::BEGIN_TRANSACTION,
+                Self::BEGIN_TRANSACTION,
             )));
         };
 
@@ -205,7 +188,7 @@ impl State {
                     PreconditionVerdict::Abort => {
                         info!("Committing obsolete transaction due to precondition abort");
                         let (commit_transaction_task, commit_transaction_instruction) =
-                            CommitTransactionSubtask::new(vec![]);
+                            CommitTransactionSubtask::new(context, vec![], state.scope)?;
                         (
                             Self::AbortTransaction(AbortTransactionState {
                                 commit_transaction_task,
@@ -257,12 +240,14 @@ impl State {
                     }
                 }
 
-                // Try to decrypt and decode the scope and go back to the initial state
+                // Try to decrypt and decode the scope, unregister the transaction and go back to the initial
+                // state.
                 let other_device_id = D2xDeviceId(transaction_rejected.device_id);
                 let other_scope = decrypt_and_decode_transaction_scope(
                     &context.device_group_key.transaction_scope_key(),
                     transaction_rejected.encrypted_scope,
                 );
+                context.transaction_manager.unregister(state.scope)?;
                 info!(
                     ?other_device_id,
                     ?other_scope,
@@ -281,9 +266,12 @@ impl State {
     }
 
     fn poll_abort_transaction(
+        context: &mut D2xContext,
         state: AbortTransactionState,
     ) -> Result<(Self, BeginTransactionLoop), CspE2eProtocolError> {
-        state.commit_transaction_task.poll()?;
+        state
+            .commit_transaction_task
+            .poll(&mut context.transaction_manager)?;
         Ok((
             Self::Done,
             BeginTransactionLoop::Done(BeginTransactionResult::TransactionAborted),
@@ -312,12 +300,15 @@ impl BeginTransactionSubtask {
     }
 
     #[tracing::instrument(skip_all, fields(?self))]
-    pub(crate) fn poll(&mut self, context: &D2xContext) -> Result<BeginTransactionLoop, CspE2eProtocolError> {
+    pub(crate) fn poll(
+        &mut self,
+        context: &mut D2xContext,
+    ) -> Result<BeginTransactionLoop, CspE2eProtocolError> {
         let result = match mem::replace(
             &mut self.state,
-            State::Error(CspE2eProtocolError::InvalidState(formatcp!(
+            State::Error(CspE2eProtocolError::ContractViolation(format!(
                 "{} in a transitional state",
-                BeginTransactionSubtask::NAME
+                Self::NAME
             ))),
         ) {
             State::Error(error) => Err(error),
@@ -325,10 +316,10 @@ impl BeginTransactionSubtask {
                 State::poll_init_or_transaction_rejected(context, state)
             },
             State::BeginTransaction(state) => State::poll_begin_transaction(context, state),
-            State::AbortTransaction(state) => State::poll_abort_transaction(state),
-            State::Done => Err(CspE2eProtocolError::InvalidState(formatcp!(
+            State::AbortTransaction(state) => State::poll_abort_transaction(context, state),
+            State::Done => Err(CspE2eProtocolError::ContractViolation(format!(
                 "{} already done",
-                BeginTransactionSubtask::NAME
+                Self::NAME
             ))),
         };
         match result {
@@ -350,7 +341,7 @@ impl BeginTransactionSubtask {
         match response {
             BeginTransactionResponse::BeginTransactionReply(reply) => {
                 let State::BeginTransaction(state) = &mut self.state else {
-                    return Err(CspE2eProtocolError::InvalidState(formatcp!(
+                    return Err(CspE2eProtocolError::ContractViolation(format!(
                         "Must be in '{}' state",
                         State::BEGIN_TRANSACTION
                     )));
@@ -360,7 +351,7 @@ impl BeginTransactionSubtask {
             },
             BeginTransactionResponse::AbortTransactionResponse(response) => {
                 let State::AbortTransaction(state) = &mut self.state else {
-                    return Err(CspE2eProtocolError::InvalidState(formatcp!(
+                    return Err(CspE2eProtocolError::ContractViolation(format!(
                         "Must be in '{}' state",
                         State::ABORT_TRANSACTION
                     )));
@@ -372,5 +363,174 @@ impl BeginTransactionSubtask {
                 Ok(())
             },
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use assert_matches::assert_matches;
+    use libthreema_dependencies::data_encoding::HEXLOWER_PERMISSIVE;
+
+    use super::*;
+    use crate::csp_e2e::transaction::tests::d2x_context;
+
+    #[test]
+    fn init_transaction_ack() -> anyhow::Result<()> {
+        let mut context = d2x_context();
+        // Make sure no transaction is currently running.
+        assert_eq!(context.transaction_manager.running_transaction(), None);
+
+        let state = InitOrTransactionRejectedState {
+            precondition: Box::new(|| Ok(PreconditionVerdict::Continue)),
+            scope: protobuf::d2d::transaction_scope::Scope::ContactSync,
+            time_to_live: None,
+        };
+
+        let (state, instruction) = State::poll_init_or_transaction_rejected(&mut context, state)?;
+
+        assert_matches!(state, State::BeginTransaction(_));
+        assert_matches!(
+            instruction,
+            BeginTransactionLoop::Instruction(BeginTransactionInstruction::BeginTransaction { .. })
+        );
+
+        // Check that the transaction is registered.
+        assert_matches!(context.transaction_manager.running_transaction(), Some(transaction)
+            => assert_matches!(transaction, protobuf::d2d::transaction_scope::Scope::ContactSync));
+
+        Ok(())
+    }
+
+    #[test]
+    fn init_transaction_precondition_rejected() -> anyhow::Result<()> {
+        let mut context = d2x_context();
+        // Make sure no transaction is currently running.
+        assert_eq!(context.transaction_manager.running_transaction(), None);
+
+        let state = InitOrTransactionRejectedState {
+            precondition: Box::new(|| Ok(PreconditionVerdict::Abort)),
+            scope: protobuf::d2d::transaction_scope::Scope::ContactSync,
+            time_to_live: None,
+        };
+
+        let (state, instruction) = State::poll_init_or_transaction_rejected(&mut context, state)?;
+        assert_matches!(state, State::Done);
+        assert_matches!(
+            instruction,
+            BeginTransactionLoop::Done(BeginTransactionResult::TransactionAborted)
+        );
+
+        assert_eq!(context.transaction_manager.running_transaction(), None);
+
+        Ok(())
+    }
+
+    #[test]
+    fn begin_transaction_rejected() -> anyhow::Result<()> {
+        let mut context = d2x_context();
+        // Register a transaction mocking what would have happened in the init state.
+        let _ = context
+            .transaction_manager
+            .register(protobuf::d2d::transaction_scope::Scope::ContactSync)?;
+        context
+            .transaction_manager
+            .ensure_transaction_running(protobuf::d2d::transaction_scope::Scope::ContactSync)?;
+
+        let encrypted_group_sync_scope = HEXLOWER_PERMISSIVE.decode(
+            "226440e3e7279f7d02ba7ffd876be495873748b1451728c97c49c23dea7d8671460ccd444cd82afc1001".as_bytes(),
+        )?;
+        let state = BeginTransactionState {
+            precondition: Box::new(|| Ok(PreconditionVerdict::Continue)),
+            scope: protobuf::d2d::transaction_scope::Scope::ContactSync,
+            time_to_live: None,
+            reply: Some(BeginTransactionReply::TransactionRejected(
+                protobuf::d2m::TransactionRejected {
+                    device_id: 0x02,
+                    encrypted_scope: encrypted_group_sync_scope,
+                },
+            )),
+        };
+        let (state, instruction) = State::poll_begin_transaction(&mut context, state)?;
+        assert_matches!(state, State::InitOrTransactionRejected(_));
+        assert_matches!(
+            instruction,
+            BeginTransactionLoop::Instruction(BeginTransactionInstruction::TransactionRejected)
+        );
+
+        // Assert that the transaction was unregistered.
+        assert_eq!(context.transaction_manager.running_transaction(), None);
+
+        Ok(())
+    }
+
+    #[test]
+    fn begin_transaction_precondition_rejected() -> anyhow::Result<()> {
+        let mut context = d2x_context();
+        // Register a transaction mocking what would have happened in the init state.
+        let _ = context
+            .transaction_manager
+            .register(protobuf::d2d::transaction_scope::Scope::ContactSync)?;
+        context
+            .transaction_manager
+            .ensure_transaction_running(protobuf::d2d::transaction_scope::Scope::ContactSync)?;
+
+        let state = BeginTransactionState {
+            precondition: Box::new(|| Ok(PreconditionVerdict::Abort)),
+            scope: protobuf::d2d::transaction_scope::Scope::ContactSync,
+            time_to_live: None,
+            reply: Some(BeginTransactionReply::BeginTransactionAck(
+                protobuf::d2m::BeginTransactionAck {},
+            )),
+        };
+        let (state, instruction) = State::poll_begin_transaction(&mut context, state)?;
+        assert_matches!(state, State::AbortTransaction(_));
+        assert_matches!(
+            instruction,
+            BeginTransactionLoop::Instruction(BeginTransactionInstruction::AbortTransaction { .. })
+        );
+
+        // The transaction is still registered.
+        assert_matches!(context.transaction_manager.running_transaction(), Some(transaction)
+            => assert_eq!(transaction, protobuf::d2d::transaction_scope::Scope::ContactSync));
+
+        Ok(())
+    }
+
+    #[test]
+    fn abort_unregister_transaction() -> anyhow::Result<()> {
+        let mut context = d2x_context();
+        let _ = context
+            .transaction_manager
+            .register(protobuf::d2d::transaction_scope::Scope::ContactSync)?;
+        context
+            .transaction_manager
+            .ensure_transaction_running(protobuf::d2d::transaction_scope::Scope::ContactSync)?;
+
+        let (mut commit_transaction_task, _) = CommitTransactionSubtask::new(
+            &mut context,
+            vec![],
+            protobuf::d2d::transaction_scope::Scope::ContactSync,
+        )?;
+        // Provide a response to the commit transaction task to advance its state.
+        commit_transaction_task.response(CommitTransactionResponse {
+            acknowledged_reflect_ids: vec![],
+            commit_transaction_ack: protobuf::d2m::CommitTransactionAck {},
+        });
+
+        let state = AbortTransactionState {
+            commit_transaction_task,
+        };
+
+        let (state, instruction) = State::poll_abort_transaction(&mut context, state)?;
+        assert_matches!(state, State::Done);
+        assert_matches!(
+            instruction,
+            BeginTransactionLoop::Done(BeginTransactionResult::TransactionAborted)
+        );
+
+        // The transaction should now be unregistered.
+        assert_matches!(context.transaction_manager.running_transaction(), None);
+
+        Ok(())
     }
 }

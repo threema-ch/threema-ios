@@ -68,7 +68,6 @@
 #import <ThreemaFramework/MDMSetup.h>
 #import <ThreemaFramework/MyIdentityStore.h>
 #import <ThreemaFramework/ProtocolDefines.h>
-#import <ThreemaFramework/PushPayloadDecryptor.h>
 #import <ThreemaFramework/QuotedMessageProtocol.h>
 #import <ThreemaFramework/ReceiptType.h>
 #import <ThreemaFramework/ServerAPIConnector.h>

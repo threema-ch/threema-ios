@@ -31,6 +31,7 @@ protocol SafeConfigManagerProtocol {
 }
 
 #if DEBUG
+    import ThreemaMacros
 
     final class MockSafeConfigManager: SafeConfigManagerProtocol {
         var mockGetKey: [UInt8]?
@@ -80,43 +81,34 @@ protocol SafeConfigManagerProtocol {
     }
 
     extension SafeConfigManagerProtocol where Self == MockSafeConfigManager {
+        typealias Unit = Measurement<UnitInformationStorage>
         static var mock: Self { backupSucceeded }
+
+        static var noBackup: Self {
+            MockSafeConfigManager()
+        }
 
         static var backupSucceeded: Self {
             let m = MockSafeConfigManager()
             m.mockGetKey = Array(repeating: UInt8(ascii: "A"), count: 64)
-            m
-                .mockGetMaxBackupBytes = Int(
-                    Measurement<UnitInformationStorage>(value: 1024.0, unit: .kilobytes)
-                        .converted(to: .bytes).value
-                )
+            m.mockGetMaxBackupBytes = Int(Unit(value: 1024.0, unit: .kilobytes).converted(to: .bytes).value)
             m.mockGetRetentionDays = 10
-            m.mockGetLastResult = "Successful"
+            m.mockGetLastResult = #localize("safe_successful")
             m.mockGetLastBackup = Date(timeIntervalSince1970: 1_234_567_890)
-            m
-                .mockGetBackupSize = Int64(
-                    Measurement<UnitInformationStorage>(value: 5, unit: .kilobytes)
-                        .converted(to: .bytes).value
-                )
+            m.mockGetBackupSize = Int64(
+                Unit(value: 5, unit: .kilobytes).converted(to: .bytes).value
+            )
             return m
         }
 
         static var backupFailed: Self {
             let m = MockSafeConfigManager()
             m.mockGetKey = Array(repeating: UInt8(ascii: "A"), count: 64)
-            m
-                .mockGetMaxBackupBytes = Int(
-                    Measurement<UnitInformationStorage>(value: 1024.0, unit: .kilobytes)
-                        .converted(to: .bytes).value
-                )
+            m.mockGetMaxBackupBytes = Int(Unit(value: 1024.0, unit: .kilobytes).converted(to: .bytes).value)
             m.mockGetRetentionDays = 10
             m.mockGetLastResult = "Failing error message."
             m.mockGetLastBackup = Date(timeIntervalSince1970: 1_234_567_890)
-            m
-                .mockGetBackupSize = Int64(
-                    Measurement<UnitInformationStorage>(value: 5, unit: .kilobytes)
-                        .converted(to: .bytes).value
-                )
+            m.mockGetBackupSize = Int64(Unit(value: 5, unit: .kilobytes).converted(to: .bytes).value)
             return m
         }
     }

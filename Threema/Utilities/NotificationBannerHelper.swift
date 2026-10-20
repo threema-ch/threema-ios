@@ -124,9 +124,12 @@ enum NotificationBannerHelper {
                 banner.bannerQueue.removeAll()
             }
             let shadowEdgeInsets = UIEdgeInsets(top: 8, left: 2, bottom: 0, right: 2)
+            let topViewController = SceneDelegate.current?.keyWindowCurrentTopViewController
+            let edgeInsets = bannerEdgeInsets(in: topViewController?.view)
             if Colors.theme == .dark {
                 banner.show(
-                    on: SceneDelegate.current?.keyWindowCurrentTopViewController,
+                    on: topViewController,
+                    edgeInsets: edgeInsets,
                     shadowColor: Colors.shadowNotification,
                     shadowOpacity: 0.5,
                     shadowBlurRadius: 7,
@@ -135,7 +138,8 @@ enum NotificationBannerHelper {
             }
             else {
                 banner.show(
-                    on: SceneDelegate.current?.keyWindowCurrentTopViewController,
+                    on: topViewController,
+                    edgeInsets: edgeInsets,
                     shadowColor: Colors.shadowNotification,
                     shadowOpacity: 1.0,
                     shadowBlurRadius: 10,
@@ -143,6 +147,28 @@ enum NotificationBannerHelper {
                 )
             }
         }
+    }
+
+    /// Edge insets for `FloatingNotificationBanner.show(…)`, starting from the library's default of 8 on each side
+    ///
+    /// On iOS 27 `UIApplication.shared.statusBarOrientation` no longer reports portrait, so NotificationBanner's
+    /// `shouldAdjustForDynamicIsland()` / `shouldAdjustForNotchFeaturedIphone()` are always false and it falls back to
+    /// its 10 pt top spacer instead of 44 pt (Dynamic Island) or 40 pt (notch). This puts the banner under the status
+    /// bar, so we add the skipped difference ourselves, using the same inset thresholds as the library's
+    /// `hasDynamicIsland()` / `isNotchFeaturedIPhone()` and a regular vertical size class instead of portrait.
+    /// - Parameter view: View the banner is added to (the parent view controller's view or the window)
+    private static func bannerEdgeInsets(in view: UIView?) -> UIEdgeInsets {
+        var edgeInsets = UIEdgeInsets(top: 8, left: 8, bottom: 8, right: 8)
+        if #available(iOS 27.0, *), let view, view.traitCollection.verticalSizeClass == .regular {
+            let libraryDefaultSpacerHeight: CGFloat = 10
+            if view.safeAreaInsets.top > 50 {
+                edgeInsets.top += 44 - libraryDefaultSpacerHeight
+            }
+            else if view.safeAreaInsets.bottom > 0 {
+                edgeInsets.top += 40 - libraryDefaultSpacerHeight
+            }
+        }
+        return edgeInsets
     }
 
     private static func getThumbnailAudio() -> UIImageView? {
@@ -237,8 +263,11 @@ enum NotificationBannerHelper {
             banner.bannerQueue.removeAll()
         }
         let shadowEdgeInsets = UIEdgeInsets(top: 8, left: 2, bottom: 0, right: 2)
+        // Without a parent view controller the banner is added to the window
+        let edgeInsets = bannerEdgeInsets(in: SceneDelegate.current?.window)
         if Colors.theme == .dark {
             banner.show(
+                edgeInsets: edgeInsets,
                 shadowColor: Colors.shadowNotification,
                 shadowOpacity: 0.5,
                 shadowBlurRadius: 7,
@@ -247,6 +276,7 @@ enum NotificationBannerHelper {
         }
         else {
             banner.show(
+                edgeInsets: edgeInsets,
                 shadowColor: Colors.shadowNotification,
                 shadowOpacity: 1.0,
                 shadowBlurRadius: 10,

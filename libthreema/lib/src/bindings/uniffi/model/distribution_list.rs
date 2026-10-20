@@ -17,7 +17,7 @@ pub struct DistributionList {
     pub name: String,
     pub created_at: u64,
     pub last_update_at: u64,
-    pub members: Vec<ThreemaId>,
+    pub members: HashSet<ThreemaId>,
     pub conversation_category: protobuf::d2d_sync::ConversationCategory,
     pub conversation_visibility: protobuf::d2d_sync::ConversationVisibility,
 }
@@ -64,7 +64,7 @@ impl From<distribution_list::DistributionList> for DistributionList {
 pub trait DistributionListProvider: Send + Sync {
     fn add(&self, distribution_lists: Vec<DistributionList>) -> Result<(), ProviderError>;
     fn get(&self, id: DistributionListId) -> Result<Option<DistributionList>, ProviderError>;
-    fn get_ids(&self) -> Result<Vec<DistributionListId>, ProviderError>;
+    fn get_ids(&self) -> Result<HashSet<DistributionListId>, ProviderError>;
 }
 impl<T: DistributionListProvider + ?Sized> distribution_list::DistributionListProvider for Arc<T> {
     fn add(
@@ -84,14 +84,12 @@ impl<T: DistributionListProvider + ?Sized> distribution_list::DistributionListPr
         &self,
         id: DistributionListId,
     ) -> Result<Option<distribution_list::DistributionList>, ProviderError> {
-        DistributionListProvider::get(self.as_ref(), id)?
-            .map(|distribution_list| Ok(distribution_list::DistributionList::try_from(distribution_list)?))
-            .transpose()
+        Ok(DistributionListProvider::get(self.as_ref(), id)?
+            .map(distribution_list::DistributionList::try_from)
+            .transpose()?)
     }
 
     fn get_ids(&self) -> Result<HashSet<DistributionListId>, ProviderError> {
-        Ok(DistributionListProvider::get_ids(self.as_ref())?
-            .into_iter()
-            .collect())
+        DistributionListProvider::get_ids(self.as_ref())
     }
 }

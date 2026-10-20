@@ -106,6 +106,12 @@ final class OnboardingCoordinator: Coordinator {
     /// weakly.
     private var localBackupFilePicker: LocalBackupFilePicker?
 
+    /// What a finished local backup restore still needs to complete onboarding with.
+    private var localBackupOnboardingCompletion: (
+        remoteSecretManager: any RemoteSecretManagerProtocol,
+        keychainManager: any KeychainManagerProtocol
+    )?
+
     // MARK: - Initialization
     
     init(
@@ -1062,7 +1068,7 @@ extension OnboardingCoordinator {
                 return
             }
 
-            try await performLocalBackupRestore(
+            localBackupOnboardingCompletion = try await performLocalBackupRestore(
                 backupURL: backupURL,
                 recoveryKey: recoveryKey,
                 onProgress: onProgress
@@ -1081,6 +1087,36 @@ extension OnboardingCoordinator {
             splash?.navigateBackToRestoreOptionBackupViewController()
         }
 
+        model.onContinueButtonTapped = { [weak self, weak model] in
+            guard let self, let completion = localBackupOnboardingCompletion else {
+                return
+            }
+
+            // Taken rather than read, so a second tap while the completion runs does nothing.
+            localBackupOnboardingCompletion = nil
+
+            Task { [weak self] in
+                guard let self else {
+                    return
+                }
+                do {
+                    try await completeOnboarding(
+                        remoteSecretManager: completion.remoteSecretManager,
+                        keychainManager: completion.keychainManager
+                    )
+                }
+                catch {
+                    DDLogError("[LocalBackupRestore] Completing onboarding failed: \(error)")
+
+                    model?.state = .failed
+                    model?.restoreError = (
+                        title: #localize("safe_restore_failed"),
+                        content: error.localizedDescription
+                    )
+                }
+            }
+        }
+
         let restoreViewController = OnboardingHostingController(
             rootView: LocalBackupRestoreView(model: model)
         ) {
@@ -1091,17 +1127,24 @@ extension OnboardingCoordinator {
         splash.navigate(to: restoreViewController)
     }
 
-    /// Sequences the two passes of a local backup restore around the remote secret, and completes onboarding.
+    /// Sequences the two passes of a local backup restore around the remote secret.
     ///
     /// The identity lives *inside* the backup and the remote secret cannot be resolved without it —
     /// `resolveRemoteSecret()` ends in `syncKeychain(with:)`, which throws `noIdentityFound` when the identity is in
     /// neither the store nor the keychain. `OnboardingRestoreLocalBackupManager` therefore hands the identity over
     /// first, and reads the rest of the backup in once the app stands on the secret resolved for it.
+    ///
+    /// - Returns: What `completeOnboarding(remoteSecretManager:keychainManager:)` needs. Onboarding is deliberately
+    ///   not completed here: that would drop the user into the chats the moment the restore finishes, instead of
+    ///   leaving the restore screen up until they tap "Continue to Chats".
     private func performLocalBackupRestore(
         backupURL: URL,
         recoveryKey: String,
         onProgress: @escaping LocalBackupRestoreViewModel.ProgressHandler
-    ) async throws {
+    ) async throws -> (
+        remoteSecretManager: any RemoteSecretManagerProtocol,
+        keychainManager: any KeychainManagerProtocol
+    ) {
         _ = try await restoreLocalBackupManager.restoreIdentity(from: backupURL, recoveryKey: recoveryKey)
 
         let (remoteSecretManager, keychainManager) = try await resolveRemoteSecret()
@@ -1121,9 +1164,6 @@ extension OnboardingCoordinator {
             }
         }
 
-        try await completeOnboarding(
-            remoteSecretManager: remoteSecretManager,
-            keychainManager: keychainManager
-        )
+        return (remoteSecretManager, keychainManager)
     }
 }

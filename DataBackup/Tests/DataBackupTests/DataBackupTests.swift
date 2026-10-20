@@ -21,25 +21,24 @@ struct DataBackupTests {
         deleteFile(at: backupURL)
         defer { deleteFile(at: backupURL) }
 
-        let createTask = BackupCreateTaskMock()
+        let createTask = DataBackupCreateTaskMock()
         createTask.mockPoll(
             returning: .success(
                 [
-                    .stateUpdateInstruction(state: .initialState),
                     .writeAtInstruction(count: 10),
-                    .stateUpdateInstruction(state: .contacts(10)),
+                    .stateUpdateInstruction(state: .contacts),
                     .writeAppendInstruction(count: 20),
-                    .stateUpdateInstruction(state: .cspNonces(20)),
+                    .stateUpdateInstruction(state: .cspNonces),
                     .writeAppendInstruction(count: 30),
-                    .stateUpdateInstruction(state: .distributionLists(30)),
+                    .stateUpdateInstruction(state: .distributionLists),
                     .writeAppendInstruction(count: 40),
-                    .stateUpdateInstruction(state: .groups(40)),
+                    .stateUpdateInstruction(state: .groups),
                     .writeAppendInstruction(count: 50),
-                    .stateUpdateInstruction(state: .messages(50)),
+                    .stateUpdateInstruction(state: .messages),
                     .writeAppendInstruction(count: 60),
-                    .stateUpdateInstruction(state: .polls(60)),
-                    .stateUpdateInstruction(state: .finalizeState),
-                    .done(210)
+                    .stateUpdateInstruction(state: .polls),
+                    .stateUpdateInstruction(state: .finalize),
+                    .done
                 ]
             )
         )
@@ -60,21 +59,22 @@ struct DataBackupTests {
         #expect(writtenData.count == 210)
         #expect(writtenData == Data(repeating: 1, count: 210))
 
-        #expect(createTask.calls == Array(repeating: .poll, count: 15))
+        #expect(createTask.calls == Array(repeating: .poll, count: 14))
     }
 
-    @Test func `Perform throws when the reported total bytes mismatch the actual bytes written`() async throws {
+    @Test func `Perform deletes the incomplete backup file when the backup fails`() async throws {
         let backupURL = testBackupURL()
 
-        try Data().write(to: backupURL) // 0 bytes actual in the file
+        try Data().write(to: backupURL)
         defer { deleteFile(at: backupURL) }
 
         let fileUtilityMock = FileUtilityMock()
         fileUtilityMock.mockCreateFileHandleForWriting = { try FileHandle(forWritingTo: $0) }
         fileUtilityMock.mockCloseFileHandle = { try $0.close() }
 
-        let createTask = BackupCreateTaskMock()
-        createTask.mockPoll = { .done(210) } // No bytes are written, but the task reports a total of 210.
+        // The backup never reaches `.done`, so the file it left behind is incomplete.
+        let createTask = DataBackupCreateTaskMock()
+        createTask.mockPoll = { throw DataBackupCreateTaskError.pollError }
 
         let sut = makeSUT(
             backupURL: backupURL,
@@ -82,7 +82,7 @@ struct DataBackupTests {
             createTask: createTask
         )
 
-        await #expect(throws: DataBackupError.backupCreateFileWrittenBytesMismatch(actual: 0, expected: 210)) {
+        await #expect(throws: DataBackupCreateTaskError.pollError) {
             try await sut.perform()
         }
 
@@ -93,7 +93,7 @@ struct DataBackupTests {
     @Test func `Perform logs when clean up cannot delete the incomplete backup file`() async throws {
         let backupURL = testBackupURL()
 
-        try Data().write(to: backupURL) // 0 bytes actual in the file
+        try Data().write(to: backupURL)
         defer { deleteFile(at: backupURL) }
 
         let fileUtilityMock = FileUtilityMock()
@@ -101,8 +101,9 @@ struct DataBackupTests {
         fileUtilityMock.mockCloseFileHandle = { try $0.close() }
         fileUtilityMock.mockDeleteAtURL = { _ in throw FileUtilityMockError.deleteAtURLFailed } // The delete fails.
 
-        let createTask = BackupCreateTaskMock()
-        createTask.mockPoll = { .done(210) } // Byte mismatch cleanUpIfNeeded() runs
+        // The backup never reaches `.done`, so cleanUpIfNeeded() runs.
+        let createTask = DataBackupCreateTaskMock()
+        createTask.mockPoll = { throw DataBackupCreateTaskError.pollError }
 
         let sut = makeSUT(
             backupURL: backupURL,
@@ -110,7 +111,7 @@ struct DataBackupTests {
             createTask: createTask
         )
 
-        await #expect(throws: DataBackupError.backupCreateFileWrittenBytesMismatch(actual: 0, expected: 210)) {
+        await #expect(throws: DataBackupCreateTaskError.pollError) {
             try await sut.perform()
         }
 
@@ -136,8 +137,8 @@ struct DataBackupTests {
         // Fail to close file
         fileUtilityMock.mockCloseFileHandle = { _ in throw FileUtilityMockError.closeFileHandleFailed }
 
-        let createTask = BackupCreateTaskMock()
-        createTask.mockPoll = { .done(0) }
+        let createTask = DataBackupCreateTaskMock()
+        createTask.mockPoll = { .done }
 
         let sut = makeSUT(
             backupURL: backupURL,
@@ -199,32 +200,15 @@ struct DataBackupTests {
     }
 
     @Test func `Perform throws when the poll task throws an error`() async throws {
-        let createTask = BackupCreateTaskMock()
-        createTask.mockPoll = { throw BackupCreateTaskError.pollError }
+        let createTask = DataBackupCreateTaskMock()
+        createTask.mockPoll = { throw DataBackupCreateTaskError.pollError }
 
         let sut = makeSUT(
             backupURL: testBackupURL(),
             createTask: createTask
         )
 
-        await #expect(throws: BackupCreateTaskError.pollError) {
-            try await sut.perform()
-        }
-    }
-
-    @Test func `Perform throws when the poll task returns a remote instruction`() async throws {
-        let createTask = BackupCreateTaskMock()
-        createTask.mockPoll(returning: .success([
-            .writeRemoteInstruction(),
-            .done(0),
-        ]))
-
-        let sut = makeSUT(
-            backupURL: testBackupURL(),
-            createTask: createTask
-        )
-
-        await #expect(throws: DataBackupError.remoteBackupNotSupported) {
+        await #expect(throws: DataBackupCreateTaskError.pollError) {
             try await sut.perform()
         }
     }
@@ -233,10 +217,10 @@ struct DataBackupTests {
         let fileUtilityMock = FileUtilityMock()
         fileUtilityMock.mockWriteToHandle = { _, _, _, _ in throw FileUtilityMockError.writeFailed }
 
-        let createTask = BackupCreateTaskMock()
+        let createTask = DataBackupCreateTaskMock()
         createTask.mockPoll(returning: .success([
             .writeAtInstruction(count: 10),
-            .done(0),
+            .done,
         ]))
 
         let sut = makeSUT(
@@ -254,10 +238,10 @@ struct DataBackupTests {
         let fileUtilityMock = FileUtilityMock()
         fileUtilityMock.mockWriteToHandle = { _, _, _, _ in throw FileUtilityMockError.writeFailed }
 
-        let createTask = BackupCreateTaskMock()
+        let createTask = DataBackupCreateTaskMock()
         createTask.mockPoll(returning: .success([
             .writeAppendInstruction(count: 10),
-            .done(0),
+            .done,
         ]))
 
         let sut = makeSUT(
@@ -277,26 +261,25 @@ struct DataBackupTests {
         deleteFile(at: backupURL)
         defer { deleteFile(at: backupURL) }
 
-        let createTask = BackupCreateTaskMock()
+        let createTask = DataBackupCreateTaskMock()
 
         createTask.mockPoll(
             returning: .success(
                 [
-                    .stateUpdateInstruction(state: .initialState),
                     .writeAtInstruction(count: 10),
-                    .stateUpdateInstruction(state: .contacts(10)),
+                    .stateUpdateInstruction(state: .contacts),
                     .writeAppendInstruction(count: 20),
-                    .stateUpdateInstruction(state: .cspNonces(20)),
+                    .stateUpdateInstruction(state: .cspNonces),
                     .writeAppendInstruction(count: 30),
-                    .stateUpdateInstruction(state: .distributionLists(30)),
+                    .stateUpdateInstruction(state: .distributionLists),
                     .writeAppendInstruction(count: 40),
-                    .stateUpdateInstruction(state: .groups(40)),
+                    .stateUpdateInstruction(state: .groups),
                     .writeAppendInstruction(count: 50),
-                    .stateUpdateInstruction(state: .messages(50)),
+                    .stateUpdateInstruction(state: .messages),
                     .writeAppendInstruction(count: 60),
-                    .stateUpdateInstruction(state: .polls(60)),
-                    .stateUpdateInstruction(state: .finalizeState),
-                    .done(210)
+                    .stateUpdateInstruction(state: .polls),
+                    .stateUpdateInstruction(state: .finalize),
+                    .done
                 ]
             )
         )
@@ -313,13 +296,12 @@ struct DataBackupTests {
         try await sut.perform()
 
         #expect(recorder.recorded == [
-            DataBackupProgress(phase: .initializing),
-            DataBackupProgress(phase: .contacts, itemsProcessed: 10),
-            DataBackupProgress(phase: .cspNonces, itemsProcessed: 20),
-            DataBackupProgress(phase: .distributionLists, itemsProcessed: 30),
-            DataBackupProgress(phase: .groups, itemsProcessed: 40),
-            DataBackupProgress(phase: .messages, itemsProcessed: 50),
-            DataBackupProgress(phase: .polls, itemsProcessed: 60),
+            DataBackupProgress(phase: .contacts),
+            DataBackupProgress(phase: .cspNonces),
+            DataBackupProgress(phase: .distributionLists),
+            DataBackupProgress(phase: .groups),
+            DataBackupProgress(phase: .messages),
+            DataBackupProgress(phase: .polls),
             DataBackupProgress(phase: .finalizing),
         ])
     }
@@ -330,11 +312,11 @@ struct DataBackupTests {
         deleteFile(at: backupURL)
         defer { deleteFile(at: backupURL) }
 
-        let createTask = BackupCreateTaskMock()
+        let createTask = DataBackupCreateTaskMock()
         createTask.mockPoll(returning: .success([
             .writeAtInstruction(count: 10),
             .writeAppendInstruction(count: 20),
-            .done(30),
+            .done,
         ]))
 
         let recorder = ProgressRecorder()
@@ -357,16 +339,16 @@ struct DataBackupTests {
         deleteFile(at: backupURL)
         defer { deleteFile(at: backupURL) }
 
-        let createTask = BackupCreateTaskMock()
+        let createTask = DataBackupCreateTaskMock()
 
         // Within a phase only the item count moves, and the backup task reports it once per written item.
         createTask.mockPoll(returning: .success([
-            .stateUpdateInstruction(state: .contacts(1)),
-            .stateUpdateInstruction(state: .contacts(2)),
-            .stateUpdateInstruction(state: .contacts(3)),
-            .stateUpdateInstruction(state: .groups(1)),
-            .stateUpdateInstruction(state: .groups(2)),
-            .done(0),
+            .stateUpdateInstruction(state: .contacts),
+            .stateUpdateInstruction(state: .contacts),
+            .stateUpdateInstruction(state: .contacts),
+            .stateUpdateInstruction(state: .groups),
+            .stateUpdateInstruction(state: .groups),
+            .done,
         ]))
 
         let recorder = ProgressRecorder()
@@ -383,47 +365,47 @@ struct DataBackupTests {
 
         // A phase change is always reported, the counts in between are dropped.
         #expect(recorder.recorded == [
-            DataBackupProgress(phase: .contacts, itemsProcessed: 1),
-            DataBackupProgress(phase: .groups, itemsProcessed: 1),
+            DataBackupProgress(phase: .contacts),
+            DataBackupProgress(phase: .groups),
         ])
     }
 
     @Test(arguments: [
         (
-            BackupCreateStateUpdate.initialState,
-            DataBackupProgress(phase: .initializing)
+            DataBackupCreateStateUpdate.userData,
+            DataBackupProgress(phase: .userData)
         ),
         (
-            .contacts(1),
-            DataBackupProgress(phase: .contacts, itemsProcessed: 1)
+            .contacts,
+            DataBackupProgress(phase: .contacts)
         ),
         (
-            .distributionLists(2),
-            DataBackupProgress(phase: .distributionLists, itemsProcessed: 2)
+            .distributionLists,
+            DataBackupProgress(phase: .distributionLists)
         ),
         (
-            .groups(3),
-            DataBackupProgress(phase: .groups, itemsProcessed: 3)
+            .groups,
+            DataBackupProgress(phase: .groups)
         ),
         (
-            .cspNonces(4),
-            DataBackupProgress(phase: .cspNonces, itemsProcessed: 4)
+            .cspNonces,
+            DataBackupProgress(phase: .cspNonces)
         ),
         (
-            .polls(5),
-            DataBackupProgress(phase: .polls, itemsProcessed: 5)
+            .polls,
+            DataBackupProgress(phase: .polls)
         ),
         (
-            .messages(6),
-            DataBackupProgress(phase: .messages, itemsProcessed: 6)
+            .messages,
+            DataBackupProgress(phase: .messages)
         ),
         (
-            .finalizeState,
+            .finalize,
             DataBackupProgress(phase: .finalizing)
         ),
     ])
     func `Progress maps a state update of the backup task`(
-        stateUpdate: BackupCreateStateUpdate,
+        stateUpdate: DataBackupCreateStateUpdate,
         expected: DataBackupProgress
     ) {
         #expect(DataBackupProgress(stateUpdate) == expected)
@@ -433,7 +415,7 @@ struct DataBackupTests {
         let phases = DataBackupProgress.Phase.allCases
 
         #expect(phases == [
-            .initializing, .contacts, .distributionLists, .groups, .cspNonces, .polls, .messages, .finalizing,
+            .userData, .contacts, .distributionLists, .groups, .cspNonces, .polls, .messages, .finalizing,
         ])
         #expect(zip(phases, phases.dropFirst()).allSatisfy(<))
     }
@@ -450,7 +432,7 @@ struct DataBackupTests {
         let fileUtilityMock = FileUtilityMock()
         fileUtilityMock.mockCreateFileHandleForWriting = { _ in fileHandle }
 
-        let createTask = BackupCreateTaskMock()
+        let createTask = DataBackupCreateTaskMock()
 
         let sut = makeSUT(
             backupURL: backupURL,
@@ -490,7 +472,7 @@ struct DataBackupTests {
             createTask: .failingOnPoll
         )
 
-        await #expect(throws: BackupCreateTaskError.pollError) {
+        await #expect(throws: DataBackupCreateTaskError.pollError) {
             try await sut.perform()
         }
 
@@ -519,7 +501,7 @@ struct DataBackupTests {
     private func makeSUT(
         backupURL: URL,
         fileUtility: sending any FileUtilityProtocol = FileUtilityMock(),
-        createTask: any BackupCreateTaskProtocol = BackupCreateTaskMock(),
+        createTask: any DataBackupCreateTaskProtocol = DataBackupCreateTaskMock(),
         progressInterval: Duration = .zero,
         onProgress: DataBackup.ProgressHandler? = nil
     ) -> DataBackup {

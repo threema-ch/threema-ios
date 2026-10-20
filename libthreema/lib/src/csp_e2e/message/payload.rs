@@ -167,7 +167,7 @@ impl TryFrom<MessageWithMetadataBox> for IncomingMessageWithMetadataBox {
 /// An error occurred while encoding an outgoing message payload.
 #[derive(Debug, thiserror::Error)]
 pub(crate) enum OutgoingMessagePayloadError {
-    /// Decoding the message failed.
+    /// Encoding the message failed.
     #[error("Encoding message failed: {0}")]
     EncodingFailed(#[from] ByteWriterError),
 

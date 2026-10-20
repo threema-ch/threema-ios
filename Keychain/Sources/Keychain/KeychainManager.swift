@@ -514,6 +514,37 @@ public final class KeychainManager: NSObject, KeychainManagerProtocol {
         try keychainProvider.delete(.dataBackupRecoveryKey())
     }
 
+    // MARK: - Push Notification Encryption Key
+
+    @available(
+        swift,
+        obsoleted: 1.0,
+        renamed: "loadPushNotificationEncryptionKey()",
+        message: "Only use from Objective-C"
+    )
+    @objc public static func loadPushNotificationEncryptionKeyObjC() -> Data? {
+        do {
+            return try loadPushNotificationEncryptionKey()
+        }
+        catch {
+            DDLogError("Unable to load push notification encryption key: \(error)")
+            return nil
+        }
+    }
+
+    public static func loadPushNotificationEncryptionKey() throws -> Data? {
+        try KeychainProvider().load(.pushNotificationEncryptionKey())?.password
+    }
+
+    public static func storePushNotificationEncryptionKey(_ key: Data) throws {
+        let item = KeychainItem.pushNotificationEncryptionKey()
+        try KeychainProvider().store(
+            item,
+            account: item.label,
+            password: key
+        )
+    }
+
     // MARK: - Migrate Keychain
 
     public func migrateToDowngrade() throws {

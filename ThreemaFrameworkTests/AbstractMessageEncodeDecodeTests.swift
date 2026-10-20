@@ -954,6 +954,7 @@ final class AbstractMessageEncodeDecodeTests: XCTestCase {
         msg.groupID = expectedGroupID
         msg.groupCreator = expectedGroupCreator
         msg.decoded = expectedGroupCallStartMessage
+        msg.callEnded = true
 
         let result: GroupCallStartMessage? = try encodeDecode(message: msg)
 
@@ -962,6 +963,7 @@ final class AbstractMessageEncodeDecodeTests: XCTestCase {
         XCTAssertTrue(expectedGroupID.elementsEqual((result?.groupID)!))
         XCTAssertEqual(expectedGroupCreator, result?.groupCreator)
         XCTAssertEqual(expectedGroupCallStartMessage, result?.decoded)
+        XCTAssertTrue(try XCTUnwrap(result).callEnded)
 
         XCTAssertEqual(expectedFromIdentity, result?.fromIdentity)
         XCTAssertEqual(expectedToIdentity, result?.toIdentity)

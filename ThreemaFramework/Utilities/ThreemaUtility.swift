@@ -37,7 +37,7 @@ public final class ThreemaUtility: NSObject {
             return "Unknown"
         }
         
-        return "\(version)\(suffix)b\(build)\(ThreemaEnvironment.env().shortDescription)"
+        return "\(version)\(suffix)b\(build)\(EnvironmentType.current.shortDescription)"
     }()
     
     /// Format: 4.7 (2687)
@@ -52,7 +52,7 @@ public final class ThreemaUtility: NSObject {
         let suffix = mainBundle.object(forInfoDictionaryKey: "ThreemaVersionSuffix") as! String
         let build = mainBundle.object(forInfoDictionaryKey: kCFBundleVersionKey as String) as! String
         
-        return "\(version)\(suffix) (\(build)\(ThreemaEnvironment.env().shortDescription))"
+        return "\(version)\(suffix) (\(build)\(EnvironmentType.current.shortDescription))"
     }()
     
     private static let locale: String = {

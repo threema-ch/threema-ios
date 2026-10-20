@@ -336,6 +336,33 @@ properties:
         minimum: 1
         maximum: 65535
 
+  calls:
+    description: Configuration for calls.
+    type: object
+    required:
+      - conferenceUrl
+    properties:
+      conferenceUrl:
+        description: |-
+          URL to the Threema Conference Call endpoint (protocol: `https://`, no
+          parameters, no fragment).
+
+          If not present, conference calls will be unavailable.
+
+          IMPORTANT 1: This endpoint must serve the website hosting the fallback
+          URL and the (optional) client for external participation.
+
+          IMPORTANT 2: This URL should remain stable, since this acts as an
+          identifier to detect conference calls within the clients. Changing it
+          will render all conference calls under the old URL unusable from
+          within the clients. If a change is not preventable, it should be
+          ensured that all clients apply the OPPF containing the new URL before
+          creating new conference call URLs.
+        type: string
+        pattern: '^https://'
+        examples:
+          - https://threemaonprem.example.com/conference/join
+
   rendezvous:
     description: |-
       Configuration for the rendezvous server.

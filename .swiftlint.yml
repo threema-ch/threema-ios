@@ -18,6 +18,7 @@ excluded:
   - build
   - DerivedData
   - .build
+  - SourcePackages
 
 custom_rules:
   audio_session_ownership:

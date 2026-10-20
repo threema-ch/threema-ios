@@ -65,7 +65,7 @@ impl State {
     ) -> Result<(Self, RemoteSecretDeleteLoop), RemoteSecretSetupError> {
         // Ensure the caller provided the response.
         let Some(response) = state.response else {
-            return Err(RemoteSecretSetupError::InvalidState(formatcp!(
+            return Err(RemoteSecretSetupError::ContractViolation(formatcp!(
                 "{} result was not provided for '{}' state",
                 RemoteSecretSetupResponse::NAME,
                 State::CHALLENGE,
@@ -94,7 +94,7 @@ impl State {
     fn poll_delete(state: DeleteState) -> Result<(Self, RemoteSecretDeleteLoop), RemoteSecretSetupError> {
         // Ensure the caller provided the response.
         let Some(response) = state.response else {
-            return Err(RemoteSecretSetupError::InvalidState(formatcp!(
+            return Err(RemoteSecretSetupError::ContractViolation(formatcp!(
                 "{} result was not provided for '{}' state",
                 RemoteSecretSetupResponse::NAME,
                 State::DELETE,
@@ -140,7 +140,7 @@ impl RemoteSecretDeleteTask {
     pub fn poll(&mut self) -> Result<RemoteSecretDeleteLoop, RemoteSecretSetupError> {
         let result = match mem::replace(
             &mut self.state,
-            State::Error(RemoteSecretSetupError::InvalidState(formatcp!(
+            State::Error(RemoteSecretSetupError::ContractViolation(formatcp!(
                 "{} in a transitional state",
                 RemoteSecretDeleteTask::NAME
             ))),
@@ -149,7 +149,7 @@ impl RemoteSecretDeleteTask {
             State::Init(state) => Ok(State::poll_init(&self.context, state)),
             State::Challenge(state) => State::poll_challenge(&self.context, state),
             State::Delete(state) => State::poll_delete(state),
-            State::Done => Err(RemoteSecretSetupError::InvalidState(formatcp!(
+            State::Done => Err(RemoteSecretSetupError::ContractViolation(formatcp!(
                 "{} already done",
                 RemoteSecretDeleteTask::NAME
             ))),
@@ -184,7 +184,7 @@ impl RemoteSecretDeleteTask {
                 let _ = state.response.insert(response);
                 Ok(())
             },
-            _ => Err(RemoteSecretSetupError::InvalidState(formatcp!(
+            _ => Err(RemoteSecretSetupError::ContractViolation(formatcp!(
                 "Must be in '{}' or '{}' state",
                 State::CHALLENGE,
                 State::DELETE,
@@ -224,7 +224,7 @@ mod tests {
         };
 
         let result = State::poll_challenge(&context, state);
-        assert_matches!(result, Err(RemoteSecretSetupError::InvalidState(_)));
+        assert_matches!(result, Err(RemoteSecretSetupError::ContractViolation(_)));
     }
 
     #[test]
@@ -277,7 +277,7 @@ mod tests {
         let state = DeleteState { response: None };
 
         let result = State::poll_delete(state);
-        assert_matches!(result, Err(RemoteSecretSetupError::InvalidState(_)));
+        assert_matches!(result, Err(RemoteSecretSetupError::ContractViolation(_)));
     }
 
     #[test]
@@ -322,7 +322,7 @@ mod tests {
         let result = task.response(RemoteSecretSetupResponse {
             result: Err(crate::https::HttpsError::Timeout("isso".to_owned())),
         });
-        assert_matches!(result, Err(RemoteSecretSetupError::InvalidState(_)));
+        assert_matches!(result, Err(RemoteSecretSetupError::ContractViolation(_)));
     }
 
     #[test]
@@ -342,7 +342,7 @@ mod tests {
             state: State::Done,
         };
         let result = task.poll();
-        assert_matches!(result, Err(RemoteSecretSetupError::InvalidState(_)));
+        assert_matches!(result, Err(RemoteSecretSetupError::ContractViolation(_)));
     }
 
     #[test]

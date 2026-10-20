@@ -47,19 +47,11 @@ struct StorageManagementChatExportView: View {
                 .font(.headline.bold())
                 .padding(.bottom, 15)
             
-            if #available(iOS 18.0, *) {
-                Image(systemName: "ellipsis")
-                    .imageScale(.large)
-                    .symbolEffect(.breathe)
-                    .font(.body)
-                    .padding(.bottom)
-            }
-            else {
-                Image(systemName: "ellipsis")
-                    .imageScale(.large)
-                    .font(.body)
-                    .padding(.bottom)
-            }
+            Image(systemName: "ellipsis")
+                .imageScale(.large)
+                .symbolEffect(.breathe)
+                .font(.body)
+                .padding(.bottom)
         }
     }
     

@@ -50,10 +50,9 @@ pub(crate) trait ByteWriter {
     /// # Error
     ///
     /// Returns any [`ByteWriterError`] returned by the operation.
-    fn run<T, F: FnOnce(&mut Self::RunWriter<'_>) -> Result<T, ByteWriterError>>(
-        &mut self,
-        op: F,
-    ) -> Result<T, ByteWriterError>;
+    fn run<T, F>(&mut self, op: F) -> Result<T, ByteWriterError>
+    where
+        F: FnOnce(&mut Self::RunWriter<'_>) -> Result<T, ByteWriterError>;
 
     /// Run an arbitrary operation on the writer at a relative offset to the current offset in a
     /// child reader instance. The parent reader will maintain the current offset.
@@ -67,11 +66,9 @@ pub(crate) trait ByteWriter {
     /// underlying buffer boundary.
     ///
     /// Returns any [`ByteWriterError`] returned by the operation.
-    fn run_at<T, F: FnOnce(Self::RunAtWriter<'_>) -> Result<T, ByteWriterError>>(
-        &mut self,
-        relative_offset: isize,
-        op: F,
-    ) -> Result<T, ByteWriterError>;
+    fn run_at<T, F>(&mut self, relative_offset: isize, op: F) -> Result<T, ByteWriterError>
+    where
+        F: FnOnce(Self::RunAtWriter<'_>) -> Result<T, ByteWriterError>;
 
     /// Write a sequence of bytes.
     ///
@@ -201,19 +198,18 @@ impl ByteWriter for ByteWriterContainer<buffer_type> {
     }
 
     #[inline]
-    fn run<T, F: FnOnce(&mut Self::RunWriter<'_>) -> Result<T, ByteWriterError>>(
-        &mut self,
-        op: F,
-    ) -> Result<T, ByteWriterError> {
+    fn run<T, F>(&mut self, op: F) -> Result<T, ByteWriterError>
+    where
+        F: FnOnce(&mut Self::RunWriter<'_>) -> Result<T, ByteWriterError>,
+    {
         op(self)
     }
 
     #[inline]
-    fn run_at<T, F: FnOnce(Self::RunAtWriter<'_>) -> Result<T, ByteWriterError>>(
-        &mut self,
-        relative_offset: isize,
-        op: F,
-    ) -> Result<T, ByteWriterError> {
+    fn run_at<T, F>(&mut self, relative_offset: isize, op: F) -> Result<T, ByteWriterError>
+    where
+        F: FnOnce(Self::RunAtWriter<'_>) -> Result<T, ByteWriterError>,
+    {
         let invalid_offset = || ByteWriterError::InvalidRelativeOffset {
             relative_offset,
             offset: self.offset,
@@ -336,19 +332,18 @@ impl ByteWriter for ByteWriterContainer<buffer_type> {
     }
 
     #[inline]
-    fn run<T, F: FnOnce(&mut Self::RunWriter<'_>) -> Result<T, ByteWriterError>>(
-        &mut self,
-        op: F,
-    ) -> Result<T, ByteWriterError> {
+    fn run<T, F>(&mut self, op: F) -> Result<T, ByteWriterError>
+    where
+        F: FnOnce(&mut Self::RunWriter<'_>) -> Result<T, ByteWriterError>,
+    {
         op(self)
     }
 
     #[inline]
-    fn run_at<T, F: FnOnce(Self::RunAtWriter<'_>) -> Result<T, ByteWriterError>>(
-        &mut self,
-        relative_offset: isize,
-        op: F,
-    ) -> Result<T, ByteWriterError> {
+    fn run_at<T, F>(&mut self, relative_offset: isize, op: F) -> Result<T, ByteWriterError>
+    where
+        F: FnOnce(Self::RunAtWriter<'_>) -> Result<T, ByteWriterError>,
+    {
         let invalid_offset = || ByteWriterError::InvalidRelativeOffset {
             relative_offset,
             offset: self.offset,
@@ -369,6 +364,8 @@ impl ByteWriter for ByteWriterContainer<buffer_type> {
 
         // Run
         op(Self::RunAtWriter {
+            #[expect(clippy::allow_attributes, reason = "duplicate shenanigans")]
+            #[allow(clippy::mut_mut, reason = "Direct coercion of double mut")]
             buffer: &mut self.buffer,
             offset: updated_offset,
         })
@@ -454,11 +451,11 @@ mod tests {
     /// space.
     ///
     /// The tests fail if the passed writer is not zero-filled initially.
-    fn test_byte_writer<TWriter: ByteWriter, TUnwrapFn: Fn(&TWriter) -> &[u8]>(
-        mut writer: TWriter,
-        extendable: bool,
-        inner: TUnwrapFn,
-    ) {
+    fn test_byte_writer<TWriter, TUnwrapFn>(mut writer: TWriter, extendable: bool, inner: TUnwrapFn)
+    where
+        TWriter: ByteWriter,
+        TUnwrapFn: Fn(&TWriter) -> &[u8],
+    {
         {
             // Sanity check: The passed writer is zero-filled
             let buffer = inner(&writer);

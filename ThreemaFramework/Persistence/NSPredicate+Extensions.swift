@@ -390,3 +390,19 @@ extension NSPredicate {
         NSPredicate(format: "conversation != nil AND conversation.distributionList == nil")
     }
 }
+
+extension NSPredicate {
+    static var baseMessageIsGroup: NSPredicate {
+        NSPredicate(
+            format: "%K != nil",
+            #keyPath(BaseMessageEntity.conversation.groupID)
+        )
+    }
+
+    static var baseMessageIsOneToOne: NSPredicate {
+        NSPredicate(
+            format: "%K == nil",
+            #keyPath(BaseMessageEntity.conversation.groupID)
+        )
+    }
+}

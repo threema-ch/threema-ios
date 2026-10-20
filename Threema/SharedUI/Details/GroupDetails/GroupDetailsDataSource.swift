@@ -71,7 +71,7 @@ final class GroupDetailsDataSource: UITableViewDiffableDataSource<GroupDetails.S
     // Keep track of debug info taps and configure threshold after how many taps to show debug info
     private let showDebugInfoThreshold = 5
     private var showDebugInfo: Bool {
-        showDebugInfoTapCounter >= showDebugInfoThreshold || ThreemaEnvironment.env() == .xcode
+        showDebugInfoTapCounter >= showDebugInfoThreshold || EnvironmentType.current == .xcode
     }
     
     // MARK: - Lifecycle
@@ -242,6 +242,9 @@ final class GroupDetailsDataSource: UITableViewDiffableDataSource<GroupDetails.S
         
         if showDebugInfo {
             snapshot.appendSections([.debugInfo])
+            if let resetSpamDetectionState {
+                snapshot.appendItems(resetSpamDetectionState)
+            }
             snapshot.appendItems(fsDebugMembers)
         }
         
@@ -293,6 +296,9 @@ final class GroupDetailsDataSource: UITableViewDiffableDataSource<GroupDetails.S
                 localSnapshot.appendItems(wallpaperActions, toSection: .wallpaper)
             case .debugInfo:
                 if showDebugInfo {
+                    if let resetSpamDetectionState {
+                        localSnapshot.appendItems(resetSpamDetectionState, toSection: .debugInfo)
+                    }
                     localSnapshot.appendItems(fsDebugMembers, toSection: .debugInfo)
                 }
                 else {
@@ -880,7 +886,7 @@ extension GroupDetailsDataSource {
                 DeleteConversationAction.execute(
                     for: strongSelf.group.conversation,
                     owner: strongGroupDetailsViewController,
-                    cell: cell,
+                    anchorView: cell ?? strongGroupDetailsViewController.view,
                     singleFunction: .leaveDissolve
                 ) { _ in
                     DDLogVerbose("Left group")
@@ -908,7 +914,7 @@ extension GroupDetailsDataSource {
                 DeleteConversationAction.execute(
                     for: strongSelf.group.conversation,
                     owner: strongGroupDetailsViewController,
-                    cell: cell,
+                    anchorView: cell ?? strongGroupDetailsViewController.view,
                     singleFunction: .leaveDissolve
                 ) { _ in
                     DDLogVerbose("Group was deleted")
@@ -936,7 +942,7 @@ extension GroupDetailsDataSource {
             DeleteConversationAction.execute(
                 for: strongSelf.group.conversation,
                 owner: strongGroupDetailsViewController,
-                cell: cell,
+                anchorView: cell ?? strongGroupDetailsViewController.view,
                 singleFunction: .delete
             ) { _ in
                 DDLogVerbose("Group was deleted")
@@ -994,6 +1000,32 @@ extension GroupDetailsDataSource {
         }
         
         return rows
+    }
+
+    private var resetSpamDetectionState: [GroupDetails.Row]? {
+        guard displayMode == .conversation else {
+            return nil
+        }
+        let conversationObjectID = conversation.objectID
+
+        let resetAction = Details.Action(
+            title: "Reset Spam Detection State",
+            destructive: true
+        ) { [weak self] _ in
+            guard let self else {
+                return
+            }
+
+            self.businessInjector.entityManager.performAndWaitSave { [weak self] in
+                let entityFetcher = self?.businessInjector.entityManager.entityFetcher
+                let conversationEntity = entityFetcher?.conversationEntity(
+                    with: conversationObjectID
+                )
+                conversationEntity?.spamReportingState = .open
+            }
+        }
+
+        return [.action(resetAction)]
     }
 }
 

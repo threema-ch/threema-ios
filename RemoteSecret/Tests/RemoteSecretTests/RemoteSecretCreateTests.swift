@@ -124,7 +124,7 @@ struct RemoteSecretCreateTests {
     @Test(
         "Poll with retry",
         arguments: [
-            RemoteSecretSetupError.InvalidState(message: ""),
+            RemoteSecretSetupError.ContractViolation(message: ""),
             .NetworkError(message: ""),
             .ServerError(message: ""),
             .RateLimitExceeded(message: ""),
@@ -186,7 +186,7 @@ struct RemoteSecretCreateTests {
         // Prepare
         
         let remoteSecretCreateTaskResolver = TestingRemoteSecretCreateTaskResolver(
-            answer: .failure(RemoteSecretSetupError.InvalidParameter(message: ""))
+            answer: .failure(RemoteSecretSetupError.ConversionError(message: ""))
         )
         
         let sut = RemoteSecretCreate(
@@ -197,7 +197,7 @@ struct RemoteSecretCreateTests {
         )
         
         // Run & validate
-        await #expect(throws: RemoteSecretManagerError.invalidParameter) {
+        await #expect(throws: RemoteSecretManagerError.conversionError) {
             _ = try await sut.run(
                 workServerBaseURL: testURLString,
                 licenseUsername: "",
@@ -211,8 +211,9 @@ struct RemoteSecretCreateTests {
     @Test(
         "Error mapping",
         arguments: [
-            (RemoteSecretSetupError.InvalidParameter(message: ""), RemoteSecretManagerError.invalidParameter),
-            (.InvalidState(message: ""), .invalidState),
+            (RemoteSecretSetupError.ConversionError(message: ""), RemoteSecretManagerError.conversionError),
+            (.ContractViolation(message: ""), .contractViolation),
+            (.InternalError(message: ""), .internalError),
             (.NetworkError(message: ""), .networkError),
             (.ServerError(message: ""), .serverError),
             (.InvalidCredentials(message: ""), .invalidCredentials),

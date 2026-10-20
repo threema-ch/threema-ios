@@ -264,6 +264,18 @@ struct UserProfileProviderTests {
         #expect(profileStore.savedProfile?.workAvailabilityStatus == nil)
     }
 
+    @Test func setUserProfileAlwaysSetsWorkAvailabilityStatus() throws {
+        let profileStore = ProfileStoreMock()
+        let sut = makeSUT(profileStore: profileStore)
+
+        let expectedText = "Vacation"
+
+        try sut.set(userProfile: .testProfile(workAvailabilityStatus: .busy(expectedText)))
+
+        #expect(profileStore.savedProfile?.workAvailabilityStatus?.category == .busy)
+        #expect(profileStore.savedProfile?.workAvailabilityStatus?.text == expectedText)
+    }
+
     // MARK: - Private methods
 
     private func makeSUT(

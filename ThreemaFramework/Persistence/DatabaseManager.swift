@@ -144,7 +144,7 @@ public final class DatabaseManager: NSObject, DatabaseManagerProtocol {
 
     static let databaseModelName = "ThreemaData"
     static let databaseEncryptedModelName = "ThreemaDataEncrypted"
-    static let databaseModelVersion = 56
+    static let databaseModelVersion = 57
 
     // MARK: - Private properties
 

@@ -166,12 +166,13 @@ public final class EntityFetcher: NSObject {
     ///   - offset: The number of initial entities to skip. Used for pagination.
     ///   - limit: The maximum number of entities to return. A value of `0` means no limit.
     /// - Returns: An optional array of `NonceEntity` objects. Returns `nil` if the fetch fails.
-    public func nonceEntities(offset: Int, limit: Int) -> [NonceEntity]? {
+    /// - Throws: `EntityCreatorError.missingData` or fetch errors
+    public func nonceEntities(offset: Int, limit: Int) throws -> [NonceEntity]? {
         let sortDescriptors = [
             NSSortDescriptor(key: "nonce", ascending: true),
         ]
 
-        return fetchEntities(entityName: "Nonce", sortDescriptors: sortDescriptors, offset: offset, limit: limit)
+        return try fetchEntities(entityName: "Nonce", sortDescriptors: sortDescriptors, offset: offset, limit: limit)
     }
 
     /// Performs a batch lookup to determine which of the provided nonce values
@@ -396,15 +397,35 @@ public final class EntityFetcher: NSObject {
         
         return fetchedEntity
     }
-    
+
+    func fetchEntities<Entity: NSManagedObject>(
+        entityName: String,
+        predicate: NSPredicate? = nil,
+        sortDescriptors: [NSSortDescriptor]? = nil
+    ) -> [Entity]? {
+        do {
+            return try fetchEntities(
+                entityName: entityName,
+                predicate: predicate,
+                sortDescriptors: sortDescriptors,
+                offset: 0,
+                limit: 0
+            )
+        }
+        catch {
+            DDLogError("[EntityFetcher] Failed to fetch entities of type \(entityName). Error: \(error)")
+            return nil
+        }
+    }
+
     func fetchEntities<Entity: NSManagedObject>(
         entityName: String,
         predicate: NSPredicate? = nil,
         sortDescriptors: [NSSortDescriptor]? = nil,
         offset: Int = 0,
         limit: Int = 0 // 0 means no limit
-    ) -> [Entity]? {
-        
+    ) throws -> [Entity] {
+
         let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: entityName)
 
         fetchRequest.fetchOffset = offset
@@ -417,14 +438,11 @@ public final class EntityFetcher: NSObject {
             fetchRequest.sortDescriptors = sortDescriptors
         }
        
-        return managedObjectContext.performAndWait {
-            do {
-                return try fetchRequest.execute() as? [Entity]
+        return try managedObjectContext.performAndWait {
+            guard let entities = try fetchRequest.execute() as? [Entity] else {
+                throw EntityCreatorError.missingData
             }
-            catch {
-                DDLogError("[EntityFetcher] Failed to fetch entities of type \(entityName). Error: \(error)")
-                return nil
-            }
+            return entities
         }
     }
     

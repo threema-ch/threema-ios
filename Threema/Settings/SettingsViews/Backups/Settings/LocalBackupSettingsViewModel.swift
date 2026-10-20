@@ -19,20 +19,22 @@ final class LocalBackupSettingsViewModel {
 
     // MARK: Public properties
 
+    let checkmarkIconName = "checkmark.circle.fill"
+    let disclosureIconName = "chevron.right"
     let includedMessagesSubtitle = #localize("backup_local_settings_messages_description")
     let includedMessagesTitle = #localize("messages")
     let includedSectionFooter = #localize("backup_local_settings_included_section_footer")
-    let includedSectionHeader = #localize("backup_local_settings_included_section_header").uppercased()
+    let includedSectionHeader = #localize("backup_local_settings_included_section_header")
     let includeMediaSubtitle = #localize("backup_local_settings_included_media_subtitle")
     let includeMediaTitle = #localize("backup_local_settings_include_media_title")
     let mediaSectionFooter = #localize("backup_local_settings_media_section_footer")
-    let mediaSectionHeader = #localize("media").uppercased()
-    let recoveryKeyLabel = #localize("recovery_key")
-    let recoveryKeySectionHeader = #localize("encrypting_with_dots").uppercased()
-    let symbolName = "gearshape.fill"
-    let whatsIncludedLabel = #localize("backup_local_settings_whats_included_label").uppercased()
+    let mediaSectionHeader = #localize("media")
+    let recoveryKeyLabel = #localize("Recovery_Key")
+    let recoveryKeySectionHeader = #localize("encrypting_with")
+    let headerIconName = "gearshape"
 
     @ObservationIgnored var onStartButtonTapped: () -> Void = { /* no-op */ }
+    @ObservationIgnored var onRecoveryKeyDetailsButtonTapped: () -> Void = { /* no-op */ }
 
     private let manager: any BackupCreateManagerProtocol
 
@@ -45,7 +47,7 @@ final class LocalBackupSettingsViewModel {
         }
     }
 
-    var headerDescription: String {
+    var headerSubtitle: String {
         if isDefaultKey {
             #localize("backup_local_settings_reuse_description")
         }
@@ -67,8 +69,7 @@ final class LocalBackupSettingsViewModel {
     }
 
     var recoveryKeyTrimmed: String {
-        let key = manager.currentRecoveryKey.rawValue
-        return String("\(key.prefix(4))...\(key.suffix(4))")
+        manager.currentRecoveryKey.trimmedValue
     }
 
     let mediaItems: [MediaItem] = [
@@ -145,6 +146,6 @@ final class LocalBackupSettingsViewModel {
     }
 
     func recoveryKeyDetailsButtonTapped() {
-        // TODO: - Add implementation
+        onRecoveryKeyDetailsButtonTapped()
     }
 }

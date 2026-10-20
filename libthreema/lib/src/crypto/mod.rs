@@ -68,10 +68,13 @@ pub(crate) mod aead {
         /// let plaintext = b"Top secret message, handle with care";
         /// let ciphertext = cipher.encrypt_random_nonce_ahead(plaintext);
         /// ```
-        fn encrypt_random_nonce_ahead<'message, 'aad, TPlaintext: Into<Payload<'message, 'aad>>>(
+        fn encrypt_random_nonce_ahead<'message, 'aad, TPlaintext>(
             &self,
             plaintext: TPlaintext,
-        ) -> Result<(Nonce<Self>, Vec<u8>)> {
+        ) -> Result<(Nonce<Self>, Vec<u8>)>
+        where
+            TPlaintext: Into<Payload<'message, 'aad>>,
+        {
             let payload: Payload<'message, 'aad> = plaintext.into();
             let mut buffer = payload.msg.to_vec();
             let nonce = self.encrypt_in_place_random_nonce_ahead(payload.aad, &mut buffer)?;
@@ -91,10 +94,13 @@ pub(crate) mod aead {
         /// let plaintext = cipher.decrypt_random_nonce_ahead(ciphertext)?;
         /// ```
         #[cfg(test)]
-        fn decrypt_random_nonce_ahead<'message, 'aad, TCiphertext: Into<Payload<'message, 'aad>>>(
+        fn decrypt_random_nonce_ahead<'message, 'aad, TCiphertext>(
             &self,
             ciphertext: TCiphertext,
-        ) -> Result<(Nonce<Self>, Vec<u8>)> {
+        ) -> Result<(Nonce<Self>, Vec<u8>)>
+        where
+            TCiphertext: Into<Payload<'message, 'aad>>,
+        {
             let payload: Payload<'message, 'aad> = ciphertext.into();
             let mut buffer = payload.msg.to_vec();
             let nonce = self.decrypt_in_place_random_nonce_ahead(payload.aad, &mut buffer)?;
@@ -123,9 +129,10 @@ pub(crate) mod aead {
         #[case(XSalsa20Poly1305::new_from_slice(&[1; 32]).unwrap())]
         #[case(XChaCha20Poly1305::new_from_slice(&[1; 32]).unwrap())]
         #[case(ChaCha20Poly1305::new_from_slice(&[1; 32]).unwrap())]
-        fn encrypt_nonce_in_place_ahead<TCipher: AeadRandomNonceAhead>(
-            #[case] cipher: TCipher,
-        ) -> anyhow::Result<()> {
+        fn encrypt_nonce_in_place_ahead<TCipher>(#[case] cipher: TCipher) -> anyhow::Result<()>
+        where
+            TCipher: AeadRandomNonceAhead,
+        {
             let mut buffer = vec![1_u8; 300];
             let data_length = buffer.len();
             let nonce = cipher
@@ -148,7 +155,10 @@ pub(crate) mod aead {
         #[case(XSalsa20Poly1305::new_from_slice(&[1; 32]).unwrap())]
         #[case(XChaCha20Poly1305::new_from_slice(&[1; 32]).unwrap())]
         #[case(ChaCha20Poly1305::new_from_slice(&[1; 32]).unwrap())]
-        fn encrypt_nonce_ahead<TCipher: AeadRandomNonceAhead>(#[case] cipher: TCipher) -> anyhow::Result<()> {
+        fn encrypt_nonce_ahead<TCipher>(#[case] cipher: TCipher) -> anyhow::Result<()>
+        where
+            TCipher: AeadRandomNonceAhead,
+        {
             let data = vec![1_u8; 300];
             let (nonce, encrypted_data) = cipher.encrypt_random_nonce_ahead(data.as_slice())?;
 
@@ -168,7 +178,10 @@ pub(crate) mod aead {
         #[case(XSalsa20Poly1305::new_from_slice(&[1; 32]).unwrap())]
         #[case(XChaCha20Poly1305::new_from_slice(&[1; 32]).unwrap())]
         #[case(ChaCha20Poly1305::new_from_slice(&[1; 32]).unwrap())]
-        fn decrypt_nonce_ahead_nonce_fail_too_small<TCipher: AeadRandomNonceAhead>(#[case] cipher: TCipher) {
+        fn decrypt_nonce_ahead_nonce_fail_too_small<TCipher>(#[case] cipher: TCipher)
+        where
+            TCipher: AeadRandomNonceAhead,
+        {
             let mut buffer = vec![1_u8; 3];
 
             assert!(
@@ -182,7 +195,10 @@ pub(crate) mod aead {
         #[case(XSalsa20Poly1305::new_from_slice(&[1; 32]).unwrap())]
         #[case(XChaCha20Poly1305::new_from_slice(&[1; 32]).unwrap())]
         #[case(ChaCha20Poly1305::new_from_slice(&[1; 32]).unwrap())]
-        fn decrypt_in_place_nonce_ahead_fail_tag<TCipher: AeadRandomNonceAhead>(#[case] cipher: TCipher) {
+        fn decrypt_in_place_nonce_ahead_fail_tag<TCipher>(#[case] cipher: TCipher)
+        where
+            TCipher: AeadRandomNonceAhead,
+        {
             let mut buffer = vec![1_u8; 128];
             let error = cipher.decrypt_in_place_random_nonce_ahead(b"", &mut buffer);
             assert_matches!(error, Err(_));
@@ -195,9 +211,10 @@ pub(crate) mod aead {
         #[case(XSalsa20Poly1305::new_from_slice(&[1; 32]).unwrap())]
         #[case(XChaCha20Poly1305::new_from_slice(&[1; 32]).unwrap())]
         #[case(ChaCha20Poly1305::new_from_slice(&[1; 32]).unwrap())]
-        fn decrypt_in_place_nonce_ahead_valid<TCipher: AeadRandomNonceAhead>(
-            #[case] cipher: TCipher,
-        ) -> anyhow::Result<()> {
+        fn decrypt_in_place_nonce_ahead_valid<TCipher>(#[case] cipher: TCipher) -> anyhow::Result<()>
+        where
+            TCipher: AeadRandomNonceAhead,
+        {
             let mut buffer = vec![1_u8; 300];
             let decrypted_data = buffer.clone();
             let nonce = cipher
@@ -221,9 +238,10 @@ pub(crate) mod aead {
         #[case(XSalsa20Poly1305::new_from_slice(&[1; 32]).unwrap())]
         #[case(XChaCha20Poly1305::new_from_slice(&[1; 32]).unwrap())]
         #[case(ChaCha20Poly1305::new_from_slice(&[1; 32]).unwrap())]
-        fn decrypt_nonce_ahead_valid<TCipher: AeadRandomNonceAhead>(
-            #[case] cipher: TCipher,
-        ) -> anyhow::Result<()> {
+        fn decrypt_nonce_ahead_valid<TCipher>(#[case] cipher: TCipher) -> anyhow::Result<()>
+        where
+            TCipher: AeadRandomNonceAhead,
+        {
             let mut buffer = vec![1_u8; 300];
             let original_data = buffer.clone();
             let nonce = cipher
@@ -245,9 +263,10 @@ pub(crate) mod aead {
         #[case(XSalsa20Poly1305::new_from_slice(&[1; 32]).unwrap())]
         #[case(XChaCha20Poly1305::new_from_slice(&[1; 32]).unwrap())]
         #[case(ChaCha20Poly1305::new_from_slice(&[1; 32]).unwrap())]
-        fn check_nonce_randomness_in_place<TCipher: AeadRandomNonceAhead>(
-            #[case] cipher: TCipher,
-        ) -> anyhow::Result<()> {
+        fn check_nonce_randomness_in_place<TCipher>(#[case] cipher: TCipher) -> anyhow::Result<()>
+        where
+            TCipher: AeadRandomNonceAhead,
+        {
             let mut first_buffer = vec![1_u8; 300];
             let mut second_buffer = first_buffer.clone();
             let first_nonce = cipher
@@ -268,9 +287,10 @@ pub(crate) mod aead {
         #[case(XSalsa20Poly1305::new_from_slice(&[1; 32]).unwrap())]
         #[case(XChaCha20Poly1305::new_from_slice(&[1; 32]).unwrap())]
         #[case(ChaCha20Poly1305::new_from_slice(&[1; 32]).unwrap())]
-        fn check_nonce_randomness<TCipher: AeadRandomNonceAhead>(
-            #[case] cipher: TCipher,
-        ) -> anyhow::Result<()> {
+        fn check_nonce_randomness<TCipher>(#[case] cipher: TCipher) -> anyhow::Result<()>
+        where
+            TCipher: AeadRandomNonceAhead,
+        {
             let data = vec![1_u8; 300];
             let (first_nonce, first_encrypted_data) = cipher.encrypt_random_nonce_ahead(data.as_slice())?;
 
@@ -286,9 +306,10 @@ pub(crate) mod aead {
         #[case(XSalsa20Poly1305::new_from_slice(&[1; 32]).unwrap())]
         #[case(XChaCha20Poly1305::new_from_slice(&[1; 32]).unwrap())]
         #[case(ChaCha20Poly1305::new_from_slice(&[1; 32]).unwrap())]
-        fn nonce_ahead_encryption_compatibility<TCipher: AeadRandomNonceAhead>(
-            #[case] cipher: TCipher,
-        ) -> anyhow::Result<()> {
+        fn nonce_ahead_encryption_compatibility<TCipher>(#[case] cipher: TCipher) -> anyhow::Result<()>
+        where
+            TCipher: AeadRandomNonceAhead,
+        {
             let mut buffer = vec![1_u8; 12];
             let data = buffer.clone();
             let nonce = cipher.encrypt_in_place_random_nonce_ahead(b"", &mut buffer)?;
@@ -305,9 +326,10 @@ pub(crate) mod aead {
         #[case(XSalsa20Poly1305::new_from_slice(&[1; 32]).unwrap())]
         #[case(XChaCha20Poly1305::new_from_slice(&[1; 32]).unwrap())]
         #[case(ChaCha20Poly1305::new_from_slice(&[1; 32]).unwrap())]
-        fn nonce_ahead_decryption_compatibility<TCipher: AeadRandomNonceAhead>(
-            #[case] cipher: TCipher,
-        ) -> anyhow::Result<()> {
+        fn nonce_ahead_decryption_compatibility<TCipher>(#[case] cipher: TCipher) -> anyhow::Result<()>
+        where
+            TCipher: AeadRandomNonceAhead,
+        {
             let mut buffer = vec![1_u8; 300];
             let nonce = TCipher::generate_nonce(rand::thread_rng());
             let data = buffer.clone();

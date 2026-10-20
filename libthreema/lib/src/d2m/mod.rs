@@ -97,13 +97,13 @@ pub enum D2mProtocolDecodingErrorSource {
 #[derive(Clone, Debug, thiserror::Error)]
 #[cfg_attr(feature = "uniffi", derive(uniffi::Error), uniffi(flat_error))]
 pub enum D2mProtocolError {
-    /// Invalid parameter provided by the caller.
-    #[error("Invalid parameter: {0}")]
-    InvalidParameter(&'static str),
+    /// Some provided parameter could not be converted into the required internal representation.
+    #[error("Conversion error: {0}")]
+    ConversionError(&'static str),
 
-    /// Invalid state for the requested operation.
-    #[error("Invalid state: {0}")]
-    InvalidState(&'static str),
+    /// A contract violation occurred.
+    #[error("Contract violation: {0}")]
+    ContractViolation(&'static str),
 
     /// An internal error happened.
     #[error("Internal error: {0}")]
@@ -502,7 +502,7 @@ impl D2mProtocol {
     pub fn poll(&mut self) -> Result<Option<D2mProtocolInstruction>, D2mProtocolError> {
         let poll_result = match mem::replace(
             &mut self.state,
-            State::Error(D2mProtocolError::InvalidState(formatcp!(
+            State::Error(D2mProtocolError::ContractViolation(formatcp!(
                 "{} in a transitional state",
                 D2mProtocol::NAME
             ))),
@@ -532,7 +532,7 @@ impl D2mProtocol {
     ///
     /// # Errors
     ///
-    /// Returns [`D2mProtocolError::InvalidState`] if the protocol is in the error state.
+    /// Returns [`D2mProtocolError::ContractViolation`] if the protocol is in the error state.
     #[tracing::instrument(skip_all, fields(
         datagrams_byte_length = datagrams.iter().map(Vec::len).sum::<usize>(),
     ))]
@@ -551,7 +551,7 @@ impl D2mProtocol {
             State::Error(error) => {
                 let message = "Cannot add datagram in error state";
                 error!(?error, message);
-                return Err(D2mProtocolError::InvalidState(message));
+                return Err(D2mProtocolError::ContractViolation(message));
             },
         }
         Ok(())
@@ -561,7 +561,7 @@ impl D2mProtocol {
     ///
     /// # Errors
     ///
-    /// Returns [`D2mProtocolError::InvalidState`] if the protocol is not in the post-handshake state.
+    /// Returns [`D2mProtocolError::ContractViolation`] if the protocol is not in the post-handshake state.
     #[tracing::instrument(skip_all, fields(?self))]
     pub fn create_payload(
         &mut self,
@@ -579,12 +579,12 @@ impl D2mProtocol {
             (State::Error(error), _) => {
                 let message = "Cannot create an outgoing payload in the error state";
                 error!(?error, message);
-                return Err(D2mProtocolError::InvalidState(message));
+                return Err(D2mProtocolError::ContractViolation(message));
             },
             (_, _) => {
                 let message = "Creating an outgoing (non-proxy) payload requires the post-handshake state";
                 error!(message);
-                return Err(D2mProtocolError::InvalidState(message));
+                return Err(D2mProtocolError::ContractViolation(message));
             },
         }
 

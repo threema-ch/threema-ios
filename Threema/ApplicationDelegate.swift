@@ -116,23 +116,6 @@ final class ApplicationDelegate: UIResponder, UIApplicationDelegate {
         
         return configuration
     }
-
-    /// Tells the delegate that the user closed one or more of the app’s scenes from the app switcher
-    ///
-    /// - When the user removes a scene from the app switcher, UIKit calls this method
-    /// - UIKit also calls this method to discard scenes that it can no longer display
-    /// - If your app isn’t running, UIKit calls this method the _next time your app launches_ [shortly after
-    ///   `application(_:didFinishLaunchingWithOptions:)`]
-    /// - Use this method to update your app’s data structures and to release any resources associated with the scene
-    /// - UIKit calls this method only when dismissing scenes permanently. It doesn’t call it when the system
-    ///   disconnects a scene to free up memory. Memory reclamation deletes the scene objects, but preserves the
-    ///   sessions associated with those scenes
-    ///
-    /// <https://developer.apple.com/documentation/uikit/uiapplicationdelegate/application(_:diddiscardscenesessions:)>
-    // Currently not needed as we don't store anything that is just related to one specific scene
-//    func application(_ application: UIApplication, didDiscardSceneSessions sceneSessions: Set<UISceneSession>) {
-//        DDLogNotice(#function)
-//    }
     
     // MARK: - Responding to app life-cycle events
     
@@ -195,66 +178,6 @@ final class ApplicationDelegate: UIResponder, UIApplicationDelegate {
         DDLogNotice(#function)
     }
     
-    // MARK: - Managing app state restoration
-    
-    // This methods might become relevant if we add state restoration
-    
-    /// Asks the delegate whether to securely preserve the app’s state
-    ///
-    /// - Apps must implement both this method and [the next one] for state preservation to occur
-    /// - This method supersedes `application(_:shouldSaveApplicationState:)`
-//    func application(_ application: UIApplication, shouldSaveSecureApplicationState coder: NSCoder) -> Bool {
-//        DDLogNotice(#function)
-//        return false
-//    }
-    
-    /// Asks the delegate whether to restore the app’s saved state
-    ///
-    /// - This method supersedes `application(_:shouldRestoreApplicationState:)`
-//    func application(_ application: UIApplication, shouldRestoreSecureApplicationState coder: NSCoder) -> Bool {
-//        DDLogNotice(#function)
-//        // Doesn't seem to be called if no state is saved
-//        return false
-//    }
-    
-    /// Asks the delegate to provide the specified view controller
-//    func application(
-//        _ application: UIApplication,
-//        viewControllerWithRestorationIdentifierPath identifierComponents: [String],
-//        coder: NSCoder
-//    ) -> UIViewController? {
-//        DDLogNotice(#function)
-//        return nil
-//    }
-    
-    /// Tells your delegate to save any high-level state information at the beginning of the state preservation process
-//    func application(_ application: UIApplication, willEncodeRestorableStateWith coder: NSCoder) {
-//        DDLogNotice(#function)
-//    }
-    
-    /// Tells your delegate to restore any high-level state information as part of the state restoration process
-//    func application(_ application: UIApplication, didDecodeRestorableStateWith coder: NSCoder) {
-//        DDLogNotice(#function)
-//    }
-    
-    // MARK: - Downloading data in the background
-    
-    /// Tells the delegate that events related to a URL session are waiting to be processed
-    ///
-    /// - `identifier`: If your app was just launched, you can use this identifier to create a new `URLSession` object
-    ///   that can receive the events
-    /// - The app also calls this method if authentication is required for one or more transfers
-    /// - There also exists an async version of this
-    /// - For more details see the [documentation](https://developer.apple.com/documentation/uikit/uiapplicationdelegate/application(_:handleeventsforbackgroundurlsession:completionhandler:))
-//    func application(
-//        _ application: UIApplication,
-//        handleEventsForBackgroundURLSession identifier: String,
-//        completionHandler: @escaping () -> Void
-//    ) {
-//        DDLogNotice("\(#function): \(identifier)")
-//        completionHandler()
-//    }
-    
     // MARK: - Handling remote notification registration
     
     /// Tells the delegate that the app successfully registered with Apple Push Notification service (APNs)
@@ -281,14 +204,6 @@ final class ApplicationDelegate: UIResponder, UIApplicationDelegate {
     ) {
         DDLogError("APNS registration failed: \(error)")
     }
-    
-    // Omitted `application(_:didReceiveRemoteNotification:fetchCompletionHandler:)`, because we implement a
-    // `UNUserNotificationCenterDelegate`
-    
-    // MARK: - More methods
-    
-    // "Interacting with WatchKit", "Interacting with HealthKit", "Disallowing specified app extension types",
-    // "Handling SiriKit intents", "Localizing keyboard shortcuts" and "Managing interface geometry" skipped
 }
 
 // MARK: - App specific helpers

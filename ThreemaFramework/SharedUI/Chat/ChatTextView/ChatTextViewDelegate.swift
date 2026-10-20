@@ -3,8 +3,6 @@ public protocol ChatTextViewDelegate: AnyObject {
     func chatTextViewDidChange(_ textView: ChatTextView)
     func checkIfPastedStringIsMedia() -> Bool
     func didEndEditing()
-
-    @available(iOS 18.0, *)
     func processAndSendGlyph(_ glyph: NSAdaptiveImageGlyph)
 
     func sendText()

@@ -147,6 +147,8 @@ public final class Contact: NSObject {
         return displayName
     }
     
+    public let createdAt: Date? // TODO: (IOS-6024) Currently optional. This should be changed for data backup
+    
     public var hasGatewayID: Bool {
         identity.isGatewayID
     }
@@ -275,6 +277,7 @@ public final class Contact: NSObject {
         self.jobTitle = contactEntity.jobTitle
         self.department = contactEntity.department
         self.verificationLevel = contactEntity.contactVerificationLevel
+        self.createdAt = contactEntity.createdAt
         self.state = contactEntity.contactState
         self.isHidden = contactEntity.isHidden
         self.isWorkContact = contactEntity.isWorkContact

@@ -23,7 +23,6 @@ class CoreDataContactListProvider<Entity: NSObject, BusinessEntity: NSObject>: N
     init(
         entityFetcher: EntityFetcher = BusinessInjector.ui.entityManager.entityFetcher,
         userSettings: UserSettings = UserSettings.shared(),
-        settingsStore: any SettingsStoreProtocol = BusinessInjector.ui.settingsStore,
         fetchedResultsController makeFetchedResultsController: @escaping () -> NSFetchedResultsController<
             NSFetchRequestResult
         >,
@@ -37,17 +36,6 @@ class CoreDataContactListProvider<Entity: NSObject, BusinessEntity: NSObject>: N
         super.init()
         fetchedResultsController.delegate = self
         try? fetchedResultsController.performFetch()
-
-        settingsStore
-            .blacklist
-            .publisher
-            .sink(receiveValue: { [weak self] _ in
-                guard let self else {
-                    return
-                }
-                try? fetchedResultsController.performFetch()
-            })
-            .store(in: &subscriptions)
 
         Publishers.Merge(
             userSettings.publisher(for: \.hideStaleContacts).dropFirst().map { _ in () },

@@ -13,7 +13,7 @@ struct ContactProviderTests {
 
         let (contactProvider, _, _, _, _, _) = try makeSUT(myIdentityStoreMock: myIdentityStore)
 
-        let expectedError = ProviderError.InvalidParameter(
+        let expectedError = ProviderError.ConversionError(
             "Identity must not be the user's own identity."
         )
 
@@ -199,6 +199,8 @@ struct ContactProviderTests {
         let expectedActivityState2: LibthreemaActivityState = .inactive
         let expectedFeatureMask2: UInt64 = 2
         let expectedSyncState2: LibthreemaSyncState = .imported
+        let expectedWorkLastFullSyncAt2 = Date()
+        let expectedWorkAvailabilityStatus2: LibthreemaWorkAvailabilityStatus = .unavailable("Holiday")
         let expectedReadReceiptPolicyOverride2: LibthreemaReadReceiptPolicy = .sendReadReceipt
         let expectedTypingIndicatorPolicyOverride2: LibthreemaTypingIndicatorPolicy = .sendTypingIndicator
         let expectedNotificationTriggerPolicyOverride2 = LibthreemaContactNotificationTriggerPolicyOverride(
@@ -247,8 +249,8 @@ struct ContactProviderTests {
                 activityState: expectedActivityState2,
                 featureMask: expectedFeatureMask2,
                 syncState: expectedSyncState2,
-                workLastFullSyncAt: nil,
-                workAvailabilityStatus: nil,
+                workLastFullSyncAt: expectedWorkLastFullSyncAt2.millisecondsSince1970.littleEndian,
+                workAvailabilityStatus: expectedWorkAvailabilityStatus2,
                 readReceiptPolicyOverride: expectedReadReceiptPolicyOverride2,
                 typingIndicatorPolicyOverride: expectedTypingIndicatorPolicyOverride2,
                 notificationTriggerPolicyOverride: expectedNotificationTriggerPolicyOverride2,
@@ -285,6 +287,8 @@ struct ContactProviderTests {
         #expect(contactEntity1.contactState == ContactEntity.ContactState(expectedActivityState1))
         #expect(contactEntity1.featureMask.uint64Value == expectedFeatureMask1)
         #expect(contactEntity1.contactImportStatus == ContactEntity.ImportStatus(expectedSyncState1))
+        #expect(contactEntity1.workLastFullSyncAt == nil)
+        #expect(contactEntity1.workAvailabilityStatus == nil)
         #expect(contactEntity1.readReceipt == ContactEntity.ReadReceipt(expectedReadReceiptPolicyOverride1))
         #expect(contactEntity1.typingIndicator == ContactEntity.TypingIndicator(expectedTypingIndicatorPolicyOverride1))
         // Notification policy override
@@ -328,6 +332,13 @@ struct ContactProviderTests {
         #expect(contactEntity2.contactState == ContactEntity.ContactState(expectedActivityState2))
         #expect(contactEntity2.featureMask.uint64Value == expectedFeatureMask2)
         #expect(contactEntity2.contactImportStatus == ContactEntity.ImportStatus(expectedSyncState2))
+        #expect(
+            contactEntity2.workLastFullSyncAt?.millisecondsSince1970.littleEndian == expectedWorkLastFullSyncAt2.millisecondsSince1970.littleEndian
+        )
+        #expect(
+            contactEntity2.workAvailabilityStatus?.value.intValue == ThreemaFramework.WorkAvailabilityStatus.Category.unavailable.rawValue
+        )
+        #expect(contactEntity2.workAvailabilityStatus?.text == "Holiday")
         #expect(contactEntity2.readReceipt == ContactEntity.ReadReceipt(expectedReadReceiptPolicyOverride2))
         #expect(contactEntity2.typingIndicator == ContactEntity.TypingIndicator(expectedTypingIndicatorPolicyOverride2))
         // Notification policy override
@@ -406,7 +417,7 @@ struct ContactProviderTests {
         // Act
 
         let expectedErrorMessage = "Identities must not contain the user's own identity."
-        #expect(throws: ProviderError.InvalidParameter(expectedErrorMessage)) {
+        #expect(throws: ProviderError.ConversionError(expectedErrorMessage)) {
             try contactProvider.add(contacts: [contact])
         }
 
@@ -430,7 +441,7 @@ struct ContactProviderTests {
         // Act
 
         let expectedErrorMessage = "Some contacts are already existing"
-        #expect(throws: ProviderError.InvalidState(expectedErrorMessage)) {
+        #expect(throws: ProviderError.ContractViolation(expectedErrorMessage)) {
             try contactProvider.add(contacts: [contact])
         }
 
@@ -549,7 +560,7 @@ struct ContactProviderTests {
         // Act
 
         let expectedErrorMessage = "Identities must not contain the user\'s own identity."
-        #expect(throws: ProviderError.InvalidParameter(expectedErrorMessage)) {
+        #expect(throws: ProviderError.ConversionError(expectedErrorMessage)) {
             try contactProvider.update(updates: [updateContact])
         }
 
@@ -567,7 +578,7 @@ struct ContactProviderTests {
         // Act
 
         let expectedErrorMessage = "Contact TESTID01 not exists"
-        #expect(throws: ProviderError.InvalidState(expectedErrorMessage)) {
+        #expect(throws: ProviderError.ContractViolation(expectedErrorMessage)) {
             try contactProvider.update(updates: [updateContact])
         }
 
@@ -582,7 +593,7 @@ struct ContactProviderTests {
 
         let (contactProvider, _, _, _, _, _) = try makeSUT(myIdentityStoreMock: myIdentityStore)
 
-        #expect(throws: ProviderError.InvalidParameter("Identity must not be the user's own identity.")) {
+        #expect(throws: ProviderError.ConversionError("Identity must not be the user's own identity.")) {
             try contactProvider.setContactDefinedProfilePicture(identity: "AAAAAAAA", profilePicture: nil)
         }
     }
@@ -590,7 +601,7 @@ struct ContactProviderTests {
     @Test func `set contact defined profile picture throws invalid state when contact not found`() throws {
         let (contactProvider, _, _, _, _, _) = try makeSUT()
 
-        #expect(throws: ProviderError.InvalidState("Contact not found for identity")) {
+        #expect(throws: ProviderError.ContractViolation("Contact not found for identity")) {
             try contactProvider.setContactDefinedProfilePicture(identity: "TESTID01", profilePicture: nil)
         }
     }
@@ -672,7 +683,7 @@ struct ContactProviderTests {
 
         let (contactProvider, _, _, _, _, _) = try makeSUT(myIdentityStoreMock: myIdentityStore)
 
-        #expect(throws: ProviderError.InvalidParameter("Identity must not be the user's own identity.")) {
+        #expect(throws: ProviderError.ConversionError("Identity must not be the user's own identity.")) {
             try contactProvider.setUserDefinedProfilePicture(identity: "AAAAAAAA", profilePicture: nil)
         }
     }
@@ -680,7 +691,7 @@ struct ContactProviderTests {
     @Test func `set user defined profile picture throws invalid state when contact not found`() throws {
         let (contactProvider, _, _, _, _, _) = try makeSUT()
 
-        #expect(throws: ProviderError.InvalidState("Contact not found for identity")) {
+        #expect(throws: ProviderError.ContractViolation("Contact not found for identity")) {
             try contactProvider.setUserDefinedProfilePicture(identity: "TESTID01", profilePicture: nil)
         }
     }

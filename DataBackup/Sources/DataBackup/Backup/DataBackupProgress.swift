@@ -7,7 +7,7 @@ public struct DataBackupProgress: Equatable, Hashable, Sendable {
 
     /// The phases a backup creation moves through, in the order they are reported in.
     public enum Phase: Int, CaseIterable, Comparable, Sendable {
-        case initializing
+        case userData
         case contacts
         case distributionLists
         case groups
@@ -26,40 +26,36 @@ public struct DataBackupProgress: Equatable, Hashable, Sendable {
     /// The phase the backup is currently in.
     public let phase: Phase
 
-    /// Number of items written in ``phase`` so far, cumulative within the phase and restarting for each phase.
-    public let itemsProcessed: UInt64
-
     // MARK: - Lifecycle
 
-    init(phase: Phase, itemsProcessed: UInt64 = 0) {
+    init(phase: Phase) {
         self.phase = phase
-        self.itemsProcessed = itemsProcessed
     }
 
-    init(_ stateUpdate: BackupCreateStateUpdate) {
+    init(_ stateUpdate: DataBackupCreateStateUpdate) {
         switch stateUpdate {
-        case .initialState:
-            self.init(phase: .initializing)
+        case .userData:
+            self.init(phase: .userData)
 
-        case let .contacts(count):
-            self.init(phase: .contacts, itemsProcessed: count)
+        case .contacts:
+            self.init(phase: .contacts)
 
-        case let .distributionLists(count):
-            self.init(phase: .distributionLists, itemsProcessed: count)
+        case .distributionLists:
+            self.init(phase: .distributionLists)
 
-        case let .groups(count):
-            self.init(phase: .groups, itemsProcessed: count)
+        case .groups:
+            self.init(phase: .groups)
 
-        case let .cspNonces(count):
-            self.init(phase: .cspNonces, itemsProcessed: count)
+        case .cspNonces:
+            self.init(phase: .cspNonces)
 
-        case let .polls(count):
-            self.init(phase: .polls, itemsProcessed: count)
+        case .polls:
+            self.init(phase: .polls)
 
-        case let .messages(count):
-            self.init(phase: .messages, itemsProcessed: count)
+        case .messages:
+            self.init(phase: .messages)
 
-        case .finalizeState:
+        case .finalize:
             self.init(phase: .finalizing)
         }
     }
@@ -67,19 +63,19 @@ public struct DataBackupProgress: Equatable, Hashable, Sendable {
 
 #if DEBUG
     extension DataBackupProgress {
-        public static func mock(phase: Phase, itemsProcessed: UInt64 = 0) -> Self {
-            DataBackupProgress(phase: phase, itemsProcessed: itemsProcessed)
+        public static func mock(phase: Phase) -> Self {
+            DataBackupProgress(phase: phase)
         }
 
         public static var mockRun: [DataBackupProgress] {
             [
-                DataBackupProgress(phase: .initializing),
-                DataBackupProgress(phase: .contacts, itemsProcessed: 412),
-                DataBackupProgress(phase: .distributionLists, itemsProcessed: 7),
-                DataBackupProgress(phase: .groups, itemsProcessed: 38),
-                DataBackupProgress(phase: .cspNonces, itemsProcessed: 12904),
-                DataBackupProgress(phase: .polls, itemsProcessed: 3),
-                DataBackupProgress(phase: .messages, itemsProcessed: 84120),
+                DataBackupProgress(phase: .userData),
+                DataBackupProgress(phase: .contacts),
+                DataBackupProgress(phase: .distributionLists),
+                DataBackupProgress(phase: .groups),
+                DataBackupProgress(phase: .cspNonces),
+                DataBackupProgress(phase: .polls),
+                DataBackupProgress(phase: .messages),
                 DataBackupProgress(phase: .finalizing),
             ]
         }

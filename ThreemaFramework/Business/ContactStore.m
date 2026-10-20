@@ -1425,32 +1425,17 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
         return;
     }
 
-    if (@available(iOS 18.0, *)) {
-        CNAuthorizationStatus currentStatus = [CNContactStore authorizationStatusForEntityType:CNEntityTypeContacts];
-        if (currentStatus != CNAuthorizationStatusAuthorized && currentStatus != CNAuthorizationStatusLimited) {
-            [cnAddressBook requestAccessForEntityType:CNEntityTypeContacts completionHandler:^(BOOL granted, NSError * _Nullable error) {
-                if (granted == YES) {
-                    [self synchronizeAddressBookForceFullSync:forceFullSync onCompletion:onCompletion onError:onError];
-                } else {
-                    DDLogInfo(@"Address book access has NOT been granted: %@", error);
-                    [self processStatusUpdateOnlyWithFullServerSync:forceFullSync ignoreMinimumInterval:ignoreMinimumInterval onCompletion:onCompletion onError:onError];
-                }
-            }];
-            return;
-        }
-    }
-    else {
-        if ([CNContactStore authorizationStatusForEntityType:CNEntityTypeContacts] != CNAuthorizationStatusAuthorized) {
-            [cnAddressBook requestAccessForEntityType:CNEntityTypeContacts completionHandler:^(BOOL granted, NSError * _Nullable error) {
-                if (granted == YES) {
-                    [self synchronizeAddressBookForceFullSync:forceFullSync onCompletion:onCompletion onError:onError];
-                } else {
-                    DDLogInfo(@"Address book access has NOT been granted: %@", error);
-                    [self processStatusUpdateOnlyWithFullServerSync:forceFullSync ignoreMinimumInterval:ignoreMinimumInterval onCompletion:onCompletion onError:onError];
-                }
-            }];
-            return;
-        }
+    CNAuthorizationStatus currentStatus = [CNContactStore authorizationStatusForEntityType:CNEntityTypeContacts];
+    if (currentStatus != CNAuthorizationStatusAuthorized && currentStatus != CNAuthorizationStatusLimited) {
+        [cnAddressBook requestAccessForEntityType:CNEntityTypeContacts completionHandler:^(BOOL granted, NSError * _Nullable error) {
+            if (granted == YES) {
+                [self synchronizeAddressBookForceFullSync:forceFullSync onCompletion:onCompletion onError:onError];
+            } else {
+                DDLogInfo(@"Address book access has NOT been granted: %@", error);
+                [self processStatusUpdateOnlyWithFullServerSync:forceFullSync ignoreMinimumInterval:ignoreMinimumInterval onCompletion:onCompletion onError:onError];
+            }
+        }];
+        return;
     }
 
     dispatch_async(_syncContactsQueue, ^{

@@ -74,7 +74,7 @@ struct NamedFieldsWithInnerUnnamedArrayField {
 }
 
 #[cfg(test)]
-mod test {
+mod tests {
     use libthreema_dependencies::crypto::subtle::ConstantTimeEq as _;
     use rstest::rstest;
 

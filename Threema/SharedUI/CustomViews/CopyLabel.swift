@@ -58,7 +58,7 @@ final class CopyLabel: UILabel, UIEditMenuInteractionDelegate {
         suggestedActions: [UIMenuElement]
     ) -> UIMenu? {
         let copy = UIAction(
-            title: #localize("copy"),
+            title: #localize("Copy"),
             image: UIImage(systemName: "doc.on.doc")
         ) { [textForCopying, text] _ in
             UIPasteboard.general.string = textForCopying ?? text

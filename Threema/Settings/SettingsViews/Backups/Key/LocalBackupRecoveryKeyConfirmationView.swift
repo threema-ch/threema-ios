@@ -2,27 +2,48 @@ import SwiftUI
 import ThreemaFramework
 
 struct LocalBackupRecoveryKeyConfirmationView: View {
+    private static let keyInputFieldID = "keyInputField"
+
     @Bindable var model: LocalBackupRecoveryKeyConfirmationViewModel
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.verticalSizeClass) private var verticalSizeClass
     @FocusState private var isTextFieldFocused: Bool
+    @ScaledMetric private var scaledMetric: CGFloat = 1.0
 
-    private static let keyInputFieldID = "keyInputField"
+    private let headerHeight = DotHeaderView.defaultHeight
+    private let headerOverlap = DotHeaderView.defaultOverlap
 
     var body: some View {
         ScrollViewReader { proxy in
-            List {
-                HeaderView(model: model)
+            ScrollView {
+                VStack(spacing: 0) {
+                    DotHeaderView(
+                        icon: DotHeaderView.Icon(name: model.headerIconName, color: .accentColor),
+                        dotColor: .accentColor.opacity(0.3),
+                        height: headerHeight
+                    )
 
-                KeyInputFieldView(
-                    model: model,
-                    isTextFieldFocused: $isTextFieldFocused
-                )
-                .id(Self.keyInputFieldID)
+                    VStack(spacing: 10 * scaledMetric) {
+                        BackupHeaderView(
+                            step: model.stepLabel,
+                            title: model.headerTitle,
+                            subtitle: model.headerSubtitle,
+                            backdrop: Color.listsBackgroundColor
+                        )
+                        .padding(.bottom, 20 * scaledMetric)
 
-                BottomView(model: model, isVisible: isBottomViewInlined)
+                        KeyInputFieldView(model: model, isTextFieldFocused: $isTextFieldFocused)
+                            .id(Self.keyInputFieldID)
+
+                        BottomView(model: model, isVisible: isBottomViewInlined)
+                    }
+                    .safeAreaPadding(.horizontal, 20)
+                    .padding(.top, -headerHeight * headerOverlap / scaledMetric)
+                }
             }
+            .background(Color.listsBackgroundColor.ignoresSafeArea())
+            .ignoresSafeArea(edges: .top)
             .scrollBounceBehavior(.basedOnSize)
             .scrollIndicators(.hidden)
             .listSectionSpacing(.compact)
@@ -48,8 +69,8 @@ struct LocalBackupRecoveryKeyConfirmationView: View {
 
     private func scrollToInputField(using proxy: ScrollViewProxy, delay: Int = 100) {
         Task {
-            // Wait for SwiftUI to finish the relayout the size-class change triggers before scrolling, otherwise
-            // `scrollTo` runs against the stale layout and doesn't reach the bottom view.
+            // Wait for SwiftUI to finish the relayout the size-class change triggers before scrolling,
+            // otherwise `scrollTo` runs against the stale layout and doesn't reach the bottom view.
             try? await Task.sleep(for: .milliseconds(delay))
             withAnimation {
                 proxy.scrollTo(Self.keyInputFieldID, anchor: .bottom)
@@ -57,49 +78,49 @@ struct LocalBackupRecoveryKeyConfirmationView: View {
         }
     }
 
-    private struct HeaderView: View {
-        let model: LocalBackupRecoveryKeyConfirmationViewModel
-
-        var body: some View {
-            BackupHeaderView(
-                icon: .init(symbolName: model.symbolName, color: .blue, rotationDegrees: 30),
-                step: model.stepLabel,
-                title: model.keyTitle,
-                subtitle: model.keyDescription
-            )
-            .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 10, trailing: 0))
-            .listRowBackground(Color.clear)
-            .listRowSeparator(.hidden)
-            .frame(maxWidth: .infinity)
-        }
-    }
-
     private struct KeyInputFieldView: View {
         @Bindable var model: LocalBackupRecoveryKeyConfirmationViewModel
-        @ScaledMetric private var scaledMetric: CGFloat = 1.0
         @FocusState.Binding var isTextFieldFocused: Bool
 
         var body: some View {
-            Section {
-                VStack(alignment: .leading, spacing: 10 * scaledMetric) {
-                    Text(model.recoveryKeyHeader)
-                        .font(.body)
-                        .foregroundStyle(.secondary)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-
+            SectionCard {
+                HStack {
                     TextField("", text: $model.enteredLastDigits, prompt: Text(model.prompt))
-                        .font(.body)
+                        .font(.body.weight(.medium))
                         .textInputAutocapitalization(.characters)
                         .autocorrectionDisabled()
                         .focused($isTextFieldFocused)
-                        .frame(maxWidth: .infinity, minHeight: 80 * scaledMetric, alignment: .topLeading)
-                        .padding(10 * scaledMetric)
-                        .background(Color(.systemGroupedBackground))
-                        .clipShape(RoundedRectangle(cornerRadius: 12 * scaledMetric))
-                        .contentShape(RoundedRectangle(cornerRadius: 12 * scaledMetric))
+                        .frame(maxWidth: .infinity)
 
-                    MessageView(message: model.message)
+                    IconView(message: model.message)
                 }
+            } header: {
+                Text(model.recoveryKeyHeader)
+            } footer: {
+                MessageView(message: model.message)
+            }
+        }
+
+        private struct IconView: View {
+            let message: LocalBackupRecoveryKeyConfirmationViewModel.MessageType
+
+            var body: some View {
+                switch message {
+                case .none:
+                    EmptyView()
+
+                case .error:
+                    icon(systemName: "xmark.circle.fill", color: .red)
+
+                case .success:
+                    icon(systemName: "checkmark.circle.fill", color: .green)
+                }
+            }
+
+            private func icon(systemName: String, color: Color) -> some View {
+                Image(systemName: systemName)
+                    .font(.body)
+                    .foregroundStyle(color)
             }
         }
 
@@ -108,13 +129,8 @@ struct LocalBackupRecoveryKeyConfirmationView: View {
 
             var body: some View {
                 switch message {
-                case .none:
+                case .none, .success:
                     EmptyView()
-
-                case let .success(text):
-                    Text(text)
-                        .font(.callout)
-                        .foregroundStyle(.green)
 
                 case let .error(text):
                     Text(text)
@@ -140,8 +156,6 @@ struct LocalBackupRecoveryKeyConfirmationView: View {
                 }
                 .disabled(model.isContinueButtonDisabled)
                 .frame(maxWidth: .infinity)
-                .listRowInsets(EdgeInsets())
-                .listRowBackground(Color.clear)
             }
         }
     }
@@ -206,14 +220,16 @@ struct LocalBackupRecoveryKeyConfirmationView: View {
                 case .inputMatches:
                     PushedPreview {
                         LocalBackupRecoveryKeyConfirmationView(
-                            model: makeModel(lastDigits: "C3D4") // <--- Correct last digits input
+                            model: makeModel(
+                                lastDigits: String(BackupEncryptionKey.mockGeneratedKey.rawValue.suffix(4))
+                            )
                         )
                     }
 
                 case .inputNotMatching:
                     PushedPreview {
                         LocalBackupRecoveryKeyConfirmationView(
-                            model: makeModel(lastDigits: "1234") // <--- Wrong last digits input
+                            model: makeModel(lastDigits: "1234")
                         )
                     }
                 }

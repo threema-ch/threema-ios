@@ -12,6 +12,6 @@ final class UserProfileProviderMock: libthreemaSwift.UserProfileProvider {
     }
     
     func set(userProfile: libthreemaSwift.UserProfile) throws {
-        throw ProviderError.InvalidState("Not implemented yet")
+        throw ProviderError.ContractViolation("Not implemented yet")
     }
 }

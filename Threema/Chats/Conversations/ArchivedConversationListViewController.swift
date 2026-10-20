@@ -334,7 +334,7 @@ extension ArchivedConversationListViewController {
             DeleteConversationAction.execute(
                 for: conversation,
                 owner: self,
-                cell: cell,
+                anchorView: cell ?? view,
                 onCompletion: handler
             )
         }

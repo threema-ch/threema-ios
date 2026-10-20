@@ -37,7 +37,7 @@ import UIKit
 ///
 /// ## iOS 26 and later
 ///
-/// Similar to before (iOS 17 & 18) we set the profile view to a fixed size, but because with Liquid Glass the back
+/// Similar to before (iOS 18) we set the profile view to a fixed size, but because with Liquid Glass the back
 /// button is bigger it varies if there is any unread message or none.  (`combinedLeadingAndTrailingOffset` &
 /// `combinedLeadingAndTrailingOffsetWithUnreadMessages` in `ChatViewConfiguration.Profile`)
 ///

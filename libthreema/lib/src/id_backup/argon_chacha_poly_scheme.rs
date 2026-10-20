@@ -29,7 +29,7 @@ const ENCRYPTED_DATA_LENGTH: usize = IdentityBackupData::LENGTH + TAG_LENGTH;
 const ENCRYPTED_LENGTH: usize = ASSOCIATED_DATA_LENGTH + ENCRYPTED_DATA_LENGTH;
 
 /// Derive the symmetric backup encryption key.
-fn derive_key(password: &str, salt: Salt) -> Result<BackupKey, IdentityBackupError> {
+fn derive_key(password: &str, salt: Salt) -> BackupKey {
     let mut key = [0; BackupKey::LENGTH];
     argon2::Argon2::new(
         argon2::Argon2id,
@@ -40,11 +40,11 @@ fn derive_key(password: &str, salt: Salt) -> Result<BackupKey, IdentityBackupErr
             1,                       // No parallelization
             Some(BackupKey::LENGTH), // Output length
         )
-        .map_err(|_| IdentityBackupError::KdfFailed)?,
+        .expect("Parameters are within required bounds"),
     )
     .hash_password_into(password.as_bytes(), &salt.0, &mut key)
-    .map_err(|_| IdentityBackupError::KdfFailed)?;
-    Ok(BackupKey(key))
+    .expect("Argon2id does not fail with controlled inputs");
+    BackupKey(key)
 }
 
 #[cfg(all(test, feature = "slow_tests"))]
@@ -57,7 +57,7 @@ pub(super) fn encrypt(
 
     // Encrypt backup data
     let salt = Salt::random();
-    let key = derive_key(password, salt)?;
+    let key = derive_key(password, salt);
     let cipher = chacha20::ChaCha20Poly1305::new(&key.0.into());
     let associated_data: [u8; ASSOCIATED_DATA_LENGTH] =
         concat_fixed_bytes!([BackupVersion::ArgonChachaPolyV1 as u8], salt.0);
@@ -98,7 +98,7 @@ pub(super) fn decrypt(
                     .get(size_of::<BackupVersion>()..)
                     .expect("Unable to extract salt from associated data"),
             )?,
-        )?;
+        );
         chacha20::ChaCha20Poly1305::new(&key.0.into())
             .decrypt_in_place(&NONCE.into(), &associated_data, &mut encrypted_data)
             .map_err(|_| IdentityBackupError::DecryptionFailed)?;

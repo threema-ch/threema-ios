@@ -47,7 +47,9 @@ pub(crate) trait CspMessageDecoder: Sized {
 /// Encoder for CSP messages.
 pub(crate) trait CspMessageEncoder {
     /// Encode a message as a CSP E2E message into a `writer`.
-    fn encode_into<TWriter: ByteWriter>(&self, writer: &mut TWriter) -> Result<(), ByteWriterError>;
+    fn encode_into<TWriter>(&self, writer: &mut TWriter) -> Result<(), ByteWriterError>
+    where
+        TWriter: ByteWriter;
 }
 
 trait InternalCspMessageDecoder: Sized {
@@ -434,7 +436,10 @@ impl InternalCspMessageEncoder for DistributionListMessage {
 }
 
 impl CspMessageEncoder for OutgoingMessageBody {
-    fn encode_into<TWriter: ByteWriter>(&self, writer: &mut TWriter) -> Result<(), ByteWriterError> {
+    fn encode_into<TWriter>(&self, writer: &mut TWriter) -> Result<(), ByteWriterError>
+    where
+        TWriter: ByteWriter,
+    {
         // Encode type.
         writer.write_u8(self.message_type() as u8)?;
 

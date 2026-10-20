@@ -58,7 +58,6 @@
 
 #define kPushNotificationDeviceToken @"PushNotificationDeviceToken"
 #define kVoIPPushNotificationDeviceToken @"VoIPPushNotificationDeviceToken"
-#define kPushNotificationEncryptionKey @"PushNotificationEncryptionKey"
 
 #define kNotificationServerMessage @"ThreemaServerMessage"
 #define kNotificationErrorConnectionFailed @"ThreemaErrorConnectionFailed"

@@ -15,6 +15,10 @@ extension UserSettings {
         AppGroup.userDefaults().removeObject(forKey: "recentEmojis")
         AppGroup.userDefaults().removeObject(forKey: "emojiVariantPreference")
     }
+
+    @objc public var environmentType: EnvironmentType {
+        EnvironmentType.current
+    }
 }
 
 extension UserSettingsProtocol where Self == UserSettingsMock {

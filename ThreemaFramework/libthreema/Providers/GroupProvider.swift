@@ -41,19 +41,23 @@ final class GroupProvider: libthreemaSwift.GroupProvider {
         }
     }
     
-    func getIdentities() throws -> [LibthreemaGroupIdentity] {
+    func get(identity: LibthreemaGroupIdentity) throws -> libthreemaSwift.Group? {
+        throw ProviderError.ContractViolation("Not implemented yet")
+    }
+
+    func getIdentities() throws -> Set<LibthreemaGroupIdentity> {
         try entityManager.performAndWait {
             guard let groupEntities = self.entityManager.entityFetcher.allGroupEntities() else {
                 throw GroupProviderError.loadGroupEntitiesFailed
             }
 
-            return try groupEntities.map {
+            return try Set(groupEntities.map {
                 try LibthreemaGroupIdentity(
                     // swiftformat:disable:next acronyms
                     groupId: $0.groupID.littleEndian(),
                     creatorIdentity: LibthreemaThreemaID($0.groupCreator ?? self.userIdentity.rawValue)
                 )
-            }
+            })
         }
     }
     
@@ -93,6 +97,10 @@ final class GroupProvider: libthreemaSwift.GroupProvider {
         }
     }
     
+    func has(identity: LibthreemaGroupIdentity) throws -> Bool {
+        throw ProviderError.ContractViolation("Not implemented yet")
+    }
+
     func addWithProfilePicture(groups: [libthreemaSwift.GroupWithProfilePicture]) throws {
         do {
             try entityManager.performAndWaitSave {
@@ -107,7 +115,7 @@ final class GroupProvider: libthreemaSwift.GroupProvider {
                         for: groupIdentity,
                         myIdentity: self.userIdentity.rawValue
                     ) == nil else {
-                        throw ProviderError.InvalidState("Group already exists")
+                        throw ProviderError.ContractViolation("Group already exists")
                     }
 
                     var creator: ContactEntity?
@@ -118,7 +126,7 @@ final class GroupProvider: libthreemaSwift.GroupProvider {
                         guard let contactEntity = self.entityManager.entityFetcher.contactEntity(
                             for: group.identity.creatorIdentity
                         ) else {
-                            throw ProviderError.InvalidState("Unknown group creator")
+                            throw ProviderError.ContractViolation("Unknown group creator")
                         }
 
                         creator = contactEntity
@@ -131,7 +139,7 @@ final class GroupProvider: libthreemaSwift.GroupProvider {
                     guard group.members.allSatisfy(
                         { $0 != self.userIdentity.rawValue && allContactIdentities.contains($0) }
                     ) else {
-                        throw ProviderError.InvalidState("Not all members known contacts")
+                        throw ProviderError.ContractViolation("Not all members known contacts")
                     }
 
                     // 2. For each group of groups:
@@ -161,14 +169,14 @@ final class GroupProvider: libthreemaSwift.GroupProvider {
                     for: groupIdentity,
                     myIdentity: self.userIdentity.rawValue
                 ) != nil else {
-                    throw ProviderError.InvalidState("Group not found")
+                    throw ProviderError.ContractViolation("Group not found")
                 }
 
                 guard let conversationEntity = self.entityManager.entityFetcher.conversationEntity(
                     for: groupIdentity,
                     myIdentity: self.userIdentity.rawValue
                 ) else {
-                    throw ProviderError.InvalidState("Conversation for group not found")
+                    throw ProviderError.ContractViolation("Conversation for group not found")
                 }
 
                 // 3. Set the profile picture associated to group to profile_picture.²
@@ -186,6 +194,10 @@ final class GroupProvider: libthreemaSwift.GroupProvider {
             entityManager.rollback()
             throw error
         }
+    }
+
+    func update(updates: [libthreemaSwift.GroupUpdate]) throws {
+        throw ProviderError.ContractViolation("Not implemented yet")
     }
 
     // MARK: Private functions
@@ -214,11 +226,24 @@ final class GroupProvider: libthreemaSwift.GroupProvider {
 
         for member in group.members {
             guard let contactEntity = self.entityManager.entityFetcher.contactEntity(for: member) else {
-                throw ProviderError.InvalidState("Contact for member \(member) not found")
+                throw ProviderError.ContractViolation("Contact for member \(member) not found")
             }
 
             conversationEntity.members?.insert(contactEntity)
         }
+
+        conversationEntity.groupName = group.name
+        if let lastUpdateAt = group.lastUpdateAt {
+            conversationEntity.lastUpdate = lastUpdateAt.date
+        }
+
+        conversationEntity.category = ConversationEntity.Category(group.conversationCategory)?.rawValue as? NSNumber ?? NSNumber(
+            integerLiteral: ConversationEntity.Category.default.rawValue
+        )
+
+        conversationEntity.visibility = ConversationEntity.Visibility(group.conversationVisibility)?.rawValue as? NSNumber ?? NSNumber(
+            integerLiteral: ConversationEntity.Visibility.default.rawValue
+        )
 
         if let imageData = profilePicture?.data {
             conversationEntity.groupImage = try self.imageDataEntity(for: imageData)

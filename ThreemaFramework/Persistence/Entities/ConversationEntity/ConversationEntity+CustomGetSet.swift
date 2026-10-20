@@ -10,6 +10,16 @@ extension ConversationEntity {
         Visibility(rawValue: Int(truncating: visibility))!
     }
     
+    public var spamReportingState: SpamReportingState {
+        get {
+            SpamReportingState(rawValue: spamReportingStateRawValue.intValue)!
+        }
+        
+        set {
+            spamReportingStateRawValue = NSNumber(value: newValue.rawValue)
+        }
+    }
+    
     public func changeCategory(to category: Category) {
         let categoryKey = "category"
         willChangeValue(forKey: categoryKey)

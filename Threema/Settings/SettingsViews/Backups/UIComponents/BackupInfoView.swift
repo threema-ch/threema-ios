@@ -10,13 +10,14 @@ struct BackupInfoView: View {
     let textFont: Font
     let iconName: String
     let iconColor: Color
+    let backgroundColor: Color
 
     var body: some View {
         if title != nil || content != nil {
             HStack(alignment: .top, spacing: 4) {
                 if !dynamicTypeSize.isAccessibilitySize {
                     Image(systemName: iconName)
-                        .fontWeight(.semibold)
+                        .fontWeight(.medium)
                         .foregroundStyle(iconColor)
                 }
 
@@ -39,46 +40,50 @@ struct BackupInfoView: View {
                 }
                 .foregroundStyle(textColor)
             }
-            .padding(10 * scaledMetric)
-            .background(iconColor.opacity(0.2))
-            .clipShape(RoundedRectangle(cornerRadius: 12 * scaledMetric))
-            .listRowBackground(Color.clear)
+            .padding(16 * scaledMetric)
+            .background(backgroundColor)
+            .clipShape(RoundedRectangle(cornerRadius: 26))
         }
     }
 }
 
 #if DEBUG
     #Preview {
-        VStack {
-            BackupInfoView(
-                title: nil,
-                content: "**Important**: This is an important information",
-                textColor: Color.accentColor,
-                textFont: .callout,
-                iconName: "info.circle",
-                iconColor: Color.accentColor,
-            )
-            .padding()
+        ScrollView {
+            VStack {
+                BackupInfoView(
+                    title: nil,
+                    content: "Important: This is an important information",
+                    textColor: Color.accentColor,
+                    textFont: .callout,
+                    iconName: "info.circle",
+                    iconColor: Color.accentColor,
+                    backgroundColor: Color(UIColor.secondary)
+                )
+                .padding()
 
-            BackupInfoView(
-                title: "Title of the reason",
-                content: "~Description~ of the reason",
-                textColor: Color.red,
-                textFont: .callout,
-                iconName: "exclamationmark.circle",
-                iconColor: Color.red
-            )
-            .padding()
+                BackupInfoView(
+                    title: "Title of the reason",
+                    content: "~Description~ of the reason",
+                    textColor: Color.red,
+                    textFont: .callout,
+                    iconName: "exclamationmark.circle",
+                    iconColor: Color.red,
+                    backgroundColor: Color.red.opacity(0.2)
+                )
+                .padding()
 
-            BackupInfoView(
-                title: "Never share this key with anyone",
-                content: "Anyone with it can restore your encrypted backup and read your messages",
-                textColor: Color.primary,
-                textFont: .callout,
-                iconName: "info.circle",
-                iconColor: Color.accentColor
-            )
-            .padding()
+                BackupInfoView(
+                    title: "Never share this key with anyone",
+                    content: "Anyone with it can restore your encrypted backup and read your messages",
+                    textColor: Color.primary,
+                    textFont: .callout,
+                    iconName: "info.circle",
+                    iconColor: Color.accentColor,
+                    backgroundColor: Color.red.opacity(0.2)
+                )
+                .padding()
+            }
         }
     }
 #endif

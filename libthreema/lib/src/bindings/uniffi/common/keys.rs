@@ -1,5 +1,5 @@
 //! Binding version of [`keys`].
-use libthreema_macros::UniffiNewType;
+use libthreema_macros::{Name, UniffiNewType};
 
 use crate::{bindings::uniffi::ConversionError, common::keys, utils::debug::Name as _};
 
@@ -56,3 +56,39 @@ impl TryFrom<PublicKey> for keys::PublicKey {
             })
     }
 }
+
+/// Binding version of [`keys::RemoteSecret`].
+///
+/// # Contract
+///
+/// Must be exactly 32 bytes.
+#[derive(Name, UniffiNewType)]
+#[uniffi_new_type(fixed_size_bytes = keys::RemoteSecret)]
+pub struct RemoteSecret(pub Vec<u8>);
+
+/// Binding version of [`keys::RemoteSecretHash`].
+///
+/// # Contract
+///
+/// Must be exactly 32 bytes.
+#[derive(Name, UniffiNewType)]
+#[uniffi_new_type(fixed_size_bytes = keys::RemoteSecretHash)]
+pub struct RemoteSecretHash(pub Vec<u8>);
+
+/// Binding version of [`keys::RemoteSecretHashForIdentity`].
+///
+/// # Contract
+///
+/// Must be exactly 32 bytes.
+#[derive(Name, UniffiNewType)]
+#[uniffi_new_type(fixed_size_bytes = keys::RemoteSecretHashForIdentity)]
+pub struct RemoteSecretHashForIdentity(pub Vec<u8>);
+
+/// Binding version of [`keys::RemoteSecretAuthenticationToken`].
+///
+/// # Contract
+///
+/// Must be exactly 32 bytes.
+#[derive(Name, UniffiNewType)]
+#[uniffi_new_type(fixed_size_bytes = keys::RemoteSecretAuthenticationToken)]
+pub struct RemoteSecretAuthenticationToken(pub Vec<u8>);

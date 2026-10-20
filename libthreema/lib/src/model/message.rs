@@ -2,12 +2,12 @@
 use core::str;
 
 use educe::Educe;
-use libthreema_macros::VariantNames;
+use libthreema_macros::{Name, VariantNames};
 #[cfg(any(test, feature = "cli"))]
 use tracing::debug;
 
 use crate::{
-    common::{ConversationId, MessageId, ThreemaId},
+    common::{ConversationId, MessageId, MessageOverrides, ThreemaId},
     csp_e2e::message::LegacyReactionType,
     model::poll::PollId,
     utils::debug::debug_slice_length,
@@ -107,6 +107,25 @@ pub struct PollClose {
     pub id: PollId,
 }
 
+/// A deleted message state.
+#[derive(Clone, Debug)]
+#[cfg_attr(test, derive(PartialEq))]
+#[cfg_attr(feature = "uniffi", derive(uniffi::Record))]
+pub struct DeletedMessageState {
+    /// The message type of the original message that has been deleted.
+    ///
+    /// Note: If the previous type is unknown, flag it as [`MessageStateBodyType::Deleted`]. If, however, the
+    /// information is necessary for modelling reasons and the type is [`MessageStateBodyType::Deleted`],
+    /// convert it to a [`MessageStateBodyType`] of your choosing.
+    /// Rationale: Depending on the client, the information may or may not be present and a _deleted_ type
+    /// may or may not be implemented. Handling it the way described above retains as much information as
+    /// possible.
+    pub previous_message_type: MessageStateBodyType,
+
+    /// Unix-ish timestamp in milliseconds when this message was deleted.
+    pub deleted_at: u64,
+}
+
 /// An emoji part of a [`MessageReaction`].
 #[derive(Clone, Debug)]
 #[cfg_attr(any(feature = "cli", test), derive(PartialEq))]
@@ -135,6 +154,7 @@ impl From<LegacyReactionType> for EmojiReaction {
 /// A reaction to a message.
 #[derive(Clone, Educe)]
 #[educe(Debug)]
+#[cfg_attr(test, derive(PartialEq))]
 pub struct MessageReaction {
     /// The creator of this reaction.
     pub creator_identity: ThreemaId,
@@ -212,8 +232,8 @@ pub enum MessageStateBody {
     /// A message indicating the closing of a poll.
     PollClose(PollClose),
 
-    /// A deleted message, containing the previously contained type.
-    Deleted(MessageStateBodyType),
+    /// A message indicating that the original message was deleted.
+    Deleted(DeletedMessageState),
 }
 #[cfg(any(test, feature = "cli"))]
 impl MessageStateBody {
@@ -243,14 +263,19 @@ impl MessageStateBody {
 
 /// Directional data associated to an incoming message.
 #[derive(Clone, Copy, Debug)]
+#[cfg_attr(test, derive(PartialEq))]
 #[cfg_attr(feature = "uniffi", derive(uniffi::Record))]
 pub struct IncomingMessageDirection {
     /// Unix-ish timestamp in milliseconds for when the message has been received.
     pub received_at: u64,
+
+    /// Message behaviour overrides.
+    pub overrides: MessageOverrides,
 }
 
 /// Directional data associated to an outgoing message.
 #[derive(Clone, Copy, Debug)]
+#[cfg_attr(test, derive(PartialEq))]
 #[cfg_attr(feature = "uniffi", derive(uniffi::Record))]
 pub struct OutgoingMessageDirection {
     /// Optional Unix-ish timestamp in milliseconds for when the message has been sent.
@@ -262,6 +287,7 @@ pub struct OutgoingMessageDirection {
 
 /// Direction with directional data associated to a message.
 #[derive(Clone, Debug, Copy, VariantNames)]
+#[cfg_attr(test, derive(PartialEq))]
 #[cfg_attr(feature = "uniffi", derive(uniffi::Enum))]
 pub enum MessageDirection {
     /// Incoming.
@@ -288,7 +314,8 @@ pub struct MessageStateMetadata {
 
 /// A stateful message.
 // TODO(LIB-161): Add forward security mode
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Name)]
+#[cfg_attr(test, derive(PartialEq))]
 pub struct MessageState {
     /// The ID of the conversation this message state belongs to.
     pub conversation_id: ConversationId,
@@ -346,10 +373,6 @@ impl MessageState {
 #[derive(Debug, Clone)]
 pub struct UserSentTimestamp(pub u64);
 
-/// Unix-ish timestamp in milliseconds for when the outgoing message has been read.
-#[derive(Clone, Debug)]
-pub struct UserReadTimestamp(pub u64);
-
 /// A delivery receipt update by another contact.
 #[derive(Clone, Debug, VariantNames)]
 #[cfg_attr(feature = "uniffi", derive(uniffi::Enum))]
@@ -361,9 +384,13 @@ pub enum ContactDeliveryUpdate {
     Read(u64),
 }
 
-/// Marks a message as deleted.
-#[derive(Debug, Clone)]
-pub struct DeleteMarker;
+/// Unix-ish timestamp in milliseconds for when the incoming message has been read.
+#[derive(Clone, Debug)]
+pub struct UserReadTimestamp(pub u64);
+
+/// Unix-ish timestamp in milliseconds for when the message has been deleted.
+#[derive(Clone, Debug)]
+pub struct DeletedTimestamp(pub u64);
 
 /// The intent when updating a message with a reaction.
 #[derive(Clone, Debug)]
@@ -403,21 +430,21 @@ pub struct MessageReactionUpdate {
 pub enum MessageStateBodyUpdate {
     /// Mark an outgoing message as _sent_ by the user.
     ///
-    /// 1. If `update-creator` is not the user, return [`crate::provider::ProviderError::InvalidState`].
-    /// 2. If `message.creator` is not the user, return [`crate::provider::ProviderError::InvalidState`].
+    /// 1. If `update-creator` is not the user, return [`crate::provider::ProviderError::ContractViolation`].
+    /// 2. If `message.creator` is not the user, return [`crate::provider::ProviderError::ContractViolation`].
     /// 3. If `message.direction` is not [`MessageDirection::Outgoing`], return
-    ///    [`crate::provider::ProviderError::InvalidState`].
+    ///    [`crate::provider::ProviderError::ContractViolation`].
     /// 4. Apply the enclosed value of `body` to `message.direction.sent_at`.
     UserSent(UserSentTimestamp),
 
     /// Apply a delivery receipt from another contact to an outgoing message.
     ///
     /// 1. If `conversation` is not a 1:1 contact conversation, return
-    ///    [`crate::provider::ProviderError::InvalidState`].
-    /// 2. If `update-creator` is the user, return [`crate::provider::ProviderError::InvalidState`].
-    /// 3. If `message.creator` is not the user, return [`crate::provider::ProviderError::InvalidState`].
+    ///    [`crate::provider::ProviderError::ContractViolation`].
+    /// 2. If `update-creator` is the user, return [`crate::provider::ProviderError::ContractViolation`].
+    /// 3. If `message.creator` is not the user, return [`crate::provider::ProviderError::ContractViolation`].
     /// 4. If `message.direction` is not [`MessageDirection::Outgoing`], return
-    ///    [`crate::provider::ProviderError::InvalidState`].
+    ///    [`crate::provider::ProviderError::ContractViolation`].
     /// 5. If `update.body` is [`ContactDeliveryUpdate::Delivered`], apply the enclosed timestamp to
     ///    `message.direction.delivered_at`.
     /// 6. If `update.body` is [`ContactDeliveryUpdate::Read`], apply the enclosed timestamp to
@@ -425,54 +452,61 @@ pub enum MessageStateBodyUpdate {
     /// 7. (Unreachable).
     ContactDeliveryReceipt(ContactDeliveryUpdate),
 
-    /// Mark an outgoing message as _read_ by the user.
+    /// Mark an incoming message as _read_ by the user.
     ///
     /// 1. If `conversation` is not a 1:1 contact conversation, return
-    ///    [`crate::provider::ProviderError::InvalidState`].
-    /// 4. If `update-creator` is not the user, return [`crate::provider::ProviderError::InvalidState`].
-    /// 3. If `message.creator` is the user, return [`crate::provider::ProviderError::InvalidState`].
+    ///    [`crate::provider::ProviderError::ContractViolation`].
+    /// 4. If `update-creator` is not the user, return [`crate::provider::ProviderError::ContractViolation`].
+    /// 3. If `message.creator` is the user, return [`crate::provider::ProviderError::ContractViolation`].
     /// 5. If `message.direction` is not [`MessageDirection::Incoming`], return
-    ///    [`crate::provider::ProviderError::InvalidState`].
+    ///    [`crate::provider::ProviderError::ContractViolation`].
     /// 6. Apply the enclosed timestamp to `message.read_at`.
     UserRead(UserReadTimestamp),
 
     /// Update the star marker of a message.
     ///
-    /// 1. If the `update-creator` is not the user, return [`crate::provider::ProviderError::InvalidState`].
+    /// 1. If the `update-creator` is not the user, return
+    ///    [`crate::provider::ProviderError::ContractViolation`].
     /// 2. Apply the enclosed marker to `message.star_marker`.
     StarMarker(MessageStarMarker),
 
     /// Apply an edit revision to a message.
     ///
-    /// 1. If `conversation` is a distribution list, return [`crate::provider::ProviderError::InvalidState`].
+    /// 1. If `conversation` is a distribution list, return
+    ///    [`crate::provider::ProviderError::ContractViolation`].
     /// 2. If `update-creator` does not equal `message.creator`, return
-    ///    [`crate::provider::ProviderError::InvalidState`].
+    ///    [`crate::provider::ProviderError::ContractViolation`].
     /// 3. If `message` has been [_deleted_][`crate::model::message::MessageStateBody::Deleted`], return
-    ///    [`crate::provider::ProviderError::InvalidState`].
-    /// 4. If `message` is not eligible for editing, return [`crate::provider::ProviderError::InvalidState`].
+    ///    [`crate::provider::ProviderError::ContractViolation`].
+    /// 4. If `message` is not eligible for editing, return
+    ///    [`crate::provider::ProviderError::ContractViolation`].
     /// 5. Add the enclosed text revision to `message.body` as the most recent revision.
     Edit(MessageTextRevision),
 
     /// Mark a message as deleted, replacing its content with a placeholder and removing most of its visible
     /// properties.
     ///
-    /// 1. If `conversation` is a distribution list, return [`crate::provider::ProviderError::InvalidState`].
+    /// 1. If `conversation` is a distribution list, return
+    ///    [`crate::provider::ProviderError::ContractViolation`].
     /// 2. If `update-creator` does not equal `message.creator`, return
-    ///    [`crate::provider::ProviderError::InvalidState`].
+    ///    [`crate::provider::ProviderError::ContractViolation`].
     /// 3. If `message` has been [_deleted_][`crate::model::message::MessageStateBody::Deleted`], return
-    ///    [`crate::provider::ProviderError::InvalidState`].
-    /// 4. If `message` is not eligible for deletion, return [`crate::provider::ProviderError::InvalidState`].
+    ///    [`crate::provider::ProviderError::ContractViolation`].
+    /// 4. If `message` is not eligible for deletion, return
+    ///    [`crate::provider::ProviderError::ContractViolation`].
     /// 5. Remove all reactions from `message`.
-    /// 6. Set `message.body` to [`MessageStateBody::Deleted`].
-    Delete(DeleteMarker),
+    /// 6. Set `message.body` to [`MessageStateBody::Deleted`] using the enclosed timestamp and the type of
+    ///    `message`.
+    Delete(DeletedTimestamp),
 
     /// Update the reactions of a message.
     ///
-    /// 1. If `conversation` is a distribution list, return [`crate::provider::ProviderError::InvalidState`].
+    /// 1. If `conversation` is a distribution list, return
+    ///    [`crate::provider::ProviderError::ContractViolation`].
     /// 2. If `message` has been [_deleted_][`crate::model::message::MessageStateBody::Deleted`], return
-    ///    [`crate::provider::ProviderError::InvalidState`].
+    ///    [`crate::provider::ProviderError::ContractViolation`].
     /// 3. If `message` is not eligible for reactions, return
-    ///    [`crate::provider::ProviderError::InvalidState`].
+    ///    [`crate::provider::ProviderError::ContractViolation`].
     /// 4. Let `update` be the enclosed [`MessageReactionUpdate`].
     /// 5. If `update.intent` is [`MessageReactionUpdateIntent::Apply`]:
     ///    1. Look up a reaction from the `update-creator` matching `update.emoji` and let `existing` be the
@@ -532,19 +566,19 @@ impl TryApply<MessageStateUpdateApplyFrom<UserSentTimestamp>> for MessageState {
     ) -> Result<(), Self::Error> {
         // Ensure that the user is the creator of the update.
         if update_context.creator_identity != update_context.user_identity {
-            return Err(ProviderError::InvalidState(
+            return Err(ProviderError::ContractViolation(
                 "Only the user can update sent timestamps".to_owned(),
             ));
         }
 
         // Ensure that the message is outgoing.
         if self.creator_identity != update_context.user_identity {
-            return Err(ProviderError::InvalidState(
+            return Err(ProviderError::ContractViolation(
                 "Cannot apply a sent timestamp to an incoming message".to_owned(),
             ));
         }
         let MessageDirection::Outgoing(direction) = &mut self.direction else {
-            return Err(ProviderError::InvalidState(
+            return Err(ProviderError::ContractViolation(
                 "Inconsistent direction when attempting to apply an incoming message update".to_owned(),
             ));
         };
@@ -564,7 +598,7 @@ impl TryApply<MessageStateUpdateApplyFrom<ContactDeliveryUpdate>> for MessageSta
     ) -> Result<(), Self::Error> {
         // Ensure the update does only update 1:1 conversations.
         if !matches!(self.conversation_id, ConversationId::Contact(_)) {
-            return Err(ProviderError::InvalidState(format!(
+            return Err(ProviderError::ContractViolation(format!(
                 "Unsupported conversation {} for incoming delivery update",
                 self.conversation_id.variant_name()
             )));
@@ -572,19 +606,19 @@ impl TryApply<MessageStateUpdateApplyFrom<ContactDeliveryUpdate>> for MessageSta
 
         // Ensure that the update creator is not the user.
         if update_context.creator_identity == update_context.user_identity {
-            return Err(ProviderError::InvalidState(
+            return Err(ProviderError::ContractViolation(
                 "Cannot apply an incoming delivery update from the user".to_owned(),
             ));
         }
 
         // Ensure the message is outgoing.
         if self.creator_identity != update_context.user_identity {
-            return Err(ProviderError::InvalidState(
+            return Err(ProviderError::ContractViolation(
                 "Cannot apply a sent timestamp to an incoming message".to_owned(),
             ));
         }
         let MessageDirection::Outgoing(direction) = &mut self.direction else {
-            return Err(ProviderError::InvalidState(
+            return Err(ProviderError::ContractViolation(
                 "Inconsistent direction when attempting to apply an incoming message update".to_owned(),
             ));
         };
@@ -607,28 +641,28 @@ impl TryApply<MessageStateUpdateApplyFrom<UserReadTimestamp>> for MessageState {
     ) -> Result<(), Self::Error> {
         // Ensure the update does only update 1:1 conversations.
         if !matches!(self.conversation_id, ConversationId::Contact(_)) {
-            return Err(ProviderError::InvalidState(format!(
+            return Err(ProviderError::ContractViolation(format!(
                 "Unsupported conversation {} for applying the user's read timestamp",
                 self.conversation_id.variant_name()
             )));
         }
 
-        // Ensure that the update creator is not the user.
-        if update_context.creator_identity != update_context.user_identity {
-            return Err(ProviderError::InvalidState(
-                "Only the user can update the read timestamp of an outgoing message".to_owned(),
-            ));
-        }
-
-        // Ensure the message is incoming.
+        // Ensure that the original message is incoming.
         if self.creator_identity == update_context.user_identity {
-            return Err(ProviderError::InvalidState(
-                "Cannot apply an outgoing read timestamp to an outgoing message".to_owned(),
+            return Err(ProviderError::ContractViolation(
+                "Cannot apply an incoming read timestamp to an outgoing message".to_owned(),
             ));
         }
         if !matches!(self.direction, MessageDirection::Incoming(_)) {
-            return Err(ProviderError::InvalidState(
-                "Inconsistent direction when attempting to apply an outgoing message update".to_owned(),
+            return Err(ProviderError::ContractViolation(
+                "Inconsistent direction when attempting to apply the user-read timestamp".to_owned(),
+            ));
+        }
+
+        // Ensure that the update creator is the user.
+        if update_context.creator_identity != update_context.user_identity {
+            return Err(ProviderError::ContractViolation(
+                "Only the user can update the read timestamp of an incoming message".to_owned(),
             ));
         }
 
@@ -647,7 +681,7 @@ impl TryApply<MessageStateUpdateApplyFrom<MessageStarMarker>> for MessageState {
     ) -> Result<(), Self::Error> {
         // Ensure the update creator is the user.
         if update_context.creator_identity != update_context.user_identity {
-            return Err(ProviderError::InvalidState(format!(
+            return Err(ProviderError::ContractViolation(format!(
                 "Cannot apply a message star marker from non-user origin {}",
                 update_context.creator_identity,
             )));
@@ -668,7 +702,7 @@ impl TryApply<MessageStateUpdateApplyFrom<MessageTextRevision>> for MessageState
     ) -> Result<(), Self::Error> {
         // Ensure the update does not target a distribution list.
         if matches!(self.conversation_id, ConversationId::DistributionList(_)) {
-            return Err(ProviderError::InvalidState(format!(
+            return Err(ProviderError::ContractViolation(format!(
                 "Unsupported conversation {} for editing",
                 self.conversation_id.variant_name()
             )));
@@ -676,7 +710,7 @@ impl TryApply<MessageStateUpdateApplyFrom<MessageTextRevision>> for MessageState
 
         // Ensure the update creator is the original creator of the message.
         if update_context.creator_identity != self.creator_identity {
-            return Err(ProviderError::InvalidState(
+            return Err(ProviderError::ContractViolation(
                 "Message can only be edited by its creator".to_owned(),
             ));
         }
@@ -686,7 +720,7 @@ impl TryApply<MessageStateUpdateApplyFrom<MessageTextRevision>> for MessageState
         // Note: When a text revision is yielded, we have implicitly ensured that the message has not been
         // deleted.
         let Some(text_revisions) = self.body.text_revisions() else {
-            return Err(ProviderError::InvalidState(format!(
+            return Err(ProviderError::ContractViolation(format!(
                 "Message {} is not eligible for editing",
                 self.body.variant_name()
             )));
@@ -698,16 +732,16 @@ impl TryApply<MessageStateUpdateApplyFrom<MessageTextRevision>> for MessageState
     }
 }
 #[cfg(any(test, feature = "cli"))]
-impl TryApply<MessageStateUpdateApplyFrom<DeleteMarker>> for MessageState {
+impl TryApply<MessageStateUpdateApplyFrom<DeletedTimestamp>> for MessageState {
     type Error = ProviderError;
 
     fn try_apply(
         &mut self,
-        update_context: MessageStateUpdateApplyFrom<DeleteMarker>,
+        update_context: MessageStateUpdateApplyFrom<DeletedTimestamp>,
     ) -> Result<(), Self::Error> {
         // Ensure the update does not target a distribution list.
         if matches!(self.conversation_id, ConversationId::DistributionList(_)) {
-            return Err(ProviderError::InvalidState(format!(
+            return Err(ProviderError::ContractViolation(format!(
                 "Unsupported conversation {} for deletion",
                 self.conversation_id.variant_name()
             )));
@@ -715,7 +749,7 @@ impl TryApply<MessageStateUpdateApplyFrom<DeleteMarker>> for MessageState {
 
         // Ensure the update creator is the original creator of the message.
         if update_context.creator_identity != self.creator_identity {
-            return Err(ProviderError::InvalidState(
+            return Err(ProviderError::ContractViolation(
                 "Message can only be deleted by its creator".to_owned(),
             ));
         }
@@ -725,7 +759,7 @@ impl TryApply<MessageStateUpdateApplyFrom<DeleteMarker>> for MessageState {
         // Note: This implicitly checks if the message has already been deleted.
         let message_type = self.body.message_type();
         if !message_type.is_deletable() {
-            return Err(ProviderError::InvalidState(format!(
+            return Err(ProviderError::ContractViolation(format!(
                 "Message {} is not eligible for deletion",
                 self.body.variant_name()
             )));
@@ -733,7 +767,10 @@ impl TryApply<MessageStateUpdateApplyFrom<DeleteMarker>> for MessageState {
 
         // Purge reactions and replace with a _deleted_ message.
         self.reactions = vec![];
-        self.body = MessageStateBody::Deleted(message_type);
+        self.body = MessageStateBody::Deleted(DeletedMessageState {
+            previous_message_type: message_type,
+            deleted_at: update_context.update.0,
+        });
         Ok(())
     }
 }
@@ -747,7 +784,7 @@ impl TryApply<MessageStateUpdateApplyFrom<MessageReactionUpdate>> for MessageSta
     ) -> Result<(), Self::Error> {
         // Ensure the update does not target a distribution list.
         if matches!(self.conversation_id, ConversationId::DistributionList(_)) {
-            return Err(ProviderError::InvalidState(format!(
+            return Err(ProviderError::ContractViolation(format!(
                 "Unsupported conversation {} for reactions",
                 self.conversation_id.variant_name()
             )));
@@ -757,7 +794,7 @@ impl TryApply<MessageStateUpdateApplyFrom<MessageReactionUpdate>> for MessageSta
         //
         // Note: This implicitly checks if the message has already been deleted.
         let Some(reactions) = self.reactions() else {
-            return Err(ProviderError::InvalidState(format!(
+            return Err(ProviderError::ContractViolation(format!(
                 "Message {} is not eligible for reactions",
                 self.body.variant_name()
             )));
@@ -839,7 +876,7 @@ impl TryApply<MessageStateUpdateApplyContext> for MessageState {
     ) -> Result<(), Self::Error> {
         // Ensure the update is applied to a matching message.
         if !(self.conversation_id == update.conversation_id && self.message_id == update.message_id) {
-            return Err(ProviderError::InvalidState(
+            return Err(ProviderError::ContractViolation(
                 "Message update does not match message".to_owned(),
             ));
         }
@@ -870,10 +907,10 @@ impl TryApply<MessageStateUpdateApplyContext> for MessageState {
                 creator_identity: update.creator_identity,
                 update: text_revision,
             }),
-            MessageStateBodyUpdate::Delete(delete_marker) => self.try_apply(MessageStateUpdateApplyFrom {
+            MessageStateBodyUpdate::Delete(deleted) => self.try_apply(MessageStateUpdateApplyFrom {
                 user_identity,
                 creator_identity: update.creator_identity,
-                update: delete_marker,
+                update: deleted,
             }),
             MessageStateBodyUpdate::StarMarker(star_marker) => self.try_apply(MessageStateUpdateApplyFrom {
                 user_identity,

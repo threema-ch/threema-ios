@@ -3,7 +3,6 @@ import Foundation
 import UIKit
 
 protocol MarkupParsingTextStorageDelegate: NSObject {
-    @available(iOS 18.0, *)
     func didInsertAdaptiveGlyph(glyph: NSAdaptiveImageGlyph)
 }
 
@@ -92,8 +91,8 @@ final class MarkupParsingTextStorage: NSTextStorage {
     override func setAttributes(_ attrs: [NSAttributedString.Key: Any]?, range: NSRange) {
         
         // We remove memoji, genmoji and stickers and handle them seperately
-        var attrs = attrs
-        if #available(iOS 18.0, *), var attrs, attrs.keys.contains(.adaptiveImageGlyph),
+        if var attrs,
+           attrs.keys.contains(.adaptiveImageGlyph),
            let glyph = removeAdaptiveGlyph(from: &attrs, range: range) {
             markupParsingTextStorageDelegate?.didInsertAdaptiveGlyph(glyph: glyph)
         }
@@ -279,7 +278,6 @@ final class MarkupParsingTextStorage: NSTextStorage {
         return currentReplacementRange
     }
     
-    @available(iOS 18.0, *)
     private func removeAdaptiveGlyph(
         from attributes: inout [NSAttributedString.Key: Any],
         range: NSRange

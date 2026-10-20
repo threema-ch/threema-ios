@@ -3,16 +3,38 @@ import Foundation
 import ThreemaEssentials
 import TrustKit
 
+enum SSLCAHelperError: Error {
+    case authenticationChallengeNotHandeld
+}
+
 final class SSLCAHelper: NSObject, SSLCAHelperProtocol {
 
+    /// Validation of a certificate chain against the systems trust store
+    typealias SystemTrustEvaluation = (_ trust: SecTrust, _ domain: String) -> Bool
+
+    private let serverInfoProvider: ServerInfoProvider
+    private let systemTrustEvaluation: SystemTrustEvaluation
+
     private var cachedTrustKit: TrustKit?
-    private var cachedConfiguredDomains: [String]?
 
     // MARK: - Lifecycle
-    
-    override init() {
+
+    override convenience init() {
+        self.init(serverInfoProvider: ServerInfoProviderFactory.makeServerInfoProvider())
+    }
+
+    /// - Parameters:
+    ///   - serverInfoProvider: Provides the pinning configuration (e.g. from the OPPF for OnPrem)
+    ///   - systemTrustEvaluation: Validation for domains without pins
+    init(
+        serverInfoProvider: ServerInfoProvider,
+        systemTrustEvaluation: @escaping SystemTrustEvaluation = SSLCAHelper.evaluateWithSystemTrustStore
+    ) {
+        self.serverInfoProvider = serverInfoProvider
+        self.systemTrustEvaluation = systemTrustEvaluation
+
         super.init()
-        
+
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(resetCache),
@@ -36,7 +58,7 @@ final class SSLCAHelper: NSObject, SSLCAHelperProtocol {
     @objc func handle(challenge: URLAuthenticationChallenge) async throws
         -> (disposition: URLSession.AuthChallengeDisposition, credential: URLCredential?) {
 
-        let (trustKit, _) = try await initTrustKit()
+        let trustKit = try await initTrustKit()
 
         return try await withCheckedThrowingContinuation { continuation in
             // Pass the authentication challenge to the validator; if the validation fails, the connection will be
@@ -48,7 +70,6 @@ final class SSLCAHelper: NSObject, SSLCAHelperProtocol {
                         challenge.sender?.use(credential, for: challenge)
                     }
                     else {
-                        // TOCHECK:
                         challenge.sender?.continueWithoutCredential(for: challenge)
                     }
                 case .performDefaultHandling:
@@ -57,8 +78,6 @@ final class SSLCAHelper: NSObject, SSLCAHelperProtocol {
                     challenge.sender?.cancel(challenge)
                 case .rejectProtectionSpace:
                     challenge.sender?.rejectProtectionSpaceAndContinue?(with: challenge)
-                @unknown default:
-                    challenge.sender?.continueWithoutCredential(for: challenge)
                 }
 
                 continuation.resume(returning: (disposition, credential))
@@ -66,6 +85,7 @@ final class SSLCAHelper: NSObject, SSLCAHelperProtocol {
 
             if !isSuccessfullyHandled {
                 DDLogWarn("The challenge could not be handled because it was not for server certificate validation.")
+                continuation.resume(throwing: SSLCAHelperError.authenticationChallengeNotHandeld)
             }
         }
     }
@@ -86,42 +106,71 @@ final class SSLCAHelper: NSObject, SSLCAHelperProtocol {
     /// - trust: Server trust
     /// - domain: Hostname of the server
     /// - Returns: True means connection is allowed
+    ///
+    /// This is the only trust evaluation for connections using a custom cert pinner (i.e. the mediator web socket).
+    /// Such a pinner replaces the systems own chain validation, thus every case that is not pinned must still be
+    /// validated here.
     func evaluate(trust: SecTrust, domain: String) async -> Bool {
         do {
-            let (trustKit, configuredDomains) = try await initTrustKit()
+            let trustKit = try await initTrustKit()
 
-            if trustKit.pinningValidator.evaluateTrust(trust, forHostname: domain) != .shouldAllowConnection {
-                // Check is domain configured, if not than allow anyway
-                return !configuredDomains.contains(domain)
+            let trustDecision = trustKit.pinningValidator.evaluateTrust(trust, forHostname: domain)
+
+            switch trustDecision {
+            case .shouldAllowConnection:
+                return true
+
+            case .domainNotPinned:
+                // Pinning is optional (e.g. for OnPrem), so a domain without pins must not be rejected. It still needs
+                // standard system validation, because no one else does it for us.
+                return systemTrustEvaluation(trust, domain)
+
+            case .shouldBlockConnection:
+                DDLogError("Pinning validation of domain \(domain) failed")
+                return false
+
+            @unknown default:
+                DDLogError("Unknown trust decision for domain \(domain)")
+                return false
             }
-
-            return true
         }
         catch {
             DDLogError("Evaluate of trust failed \(error)")
             return false
         }
     }
-    
+
+    /// Standard system validation of the certificate chain, including the hostname.
+    /// - Returns: True if the chain is valid for this hostname
+    static func evaluateWithSystemTrustStore(trust: SecTrust, domain: String) -> Bool {
+        SecTrustSetPolicies(trust, SecPolicyCreateSSL(true, domain as CFString))
+
+        var error: CFError?
+        let isValidChain = SecTrustEvaluateWithError(trust, &error)
+        if !isValidChain {
+            DDLogError("Standard trust evaluation of unpinned domain \(domain) failed: \(String(describing: error))")
+        }
+
+        return isValidChain
+    }
+
     // MARK: - Private helper
-    
+
     /// Reset cache to pick up most recent pins from OPPF if needed
     @objc private func resetCache() {
         cachedTrustKit = nil
-        cachedConfiguredDomains = nil
     }
 
     /// Loads TrustKit with SSL cert pinning config for Public or OnPrem server
-    private func initTrustKit() async throws -> (trustKit: TrustKit, configuredDomains: [String]) {
-        if let cachedTrustKit, let cachedConfiguredDomains {
-            return (cachedTrustKit, cachedConfiguredDomains)
+    private func initTrustKit() async throws -> TrustKit {
+        if let cachedTrustKit {
+            return cachedTrustKit
         }
 
-        let result: (
-            trustKit: TrustKit,
-            configuredDomains: [String]
-        ) = try await withCheckedThrowingContinuation { continuation in
-            ServerInfoProviderFactory.makeServerInfoProvider().domains { domains, error in
+        let provider = serverInfoProvider
+
+        let trustKit: TrustKit = try await withCheckedThrowingContinuation { continuation in
+            provider.domains { domains, error in
                 if let error {
                     return continuation.resume(throwing: error)
                 }
@@ -135,7 +184,6 @@ final class SSLCAHelper: NSObject, SSLCAHelperProtocol {
                 trustKitConfig[kTSKSwizzleNetworkDelegates] = false
 
                 var pinnedDomains = [String: Any]()
-                var configuredDomains = [String]()
 
                 for rule in domains {
                     guard !rule.spkis.isEmpty else {
@@ -155,10 +203,6 @@ final class SSLCAHelper: NSObject, SSLCAHelperProtocol {
                     pinnedDomain[kTSKIncludeSubdomains] = rule.matchMode == .includeSubdomains
 
                     var publicKeyHashes: [String] = rule.spkis.map(\.keys.first!)
-                    // Test with wrong keys
-                    // var publicKeyHashes: [String] = [
-                    //    BytesUtility.generateRandomBytes(length: 32)!.base64EncodedString()
-                    // ]
 
                     // TrustKit must have min. 2 pins! Adding fake pin if only one configured
                     if publicKeyHashes.count == 1 {
@@ -174,18 +218,16 @@ final class SSLCAHelper: NSObject, SSLCAHelperProtocol {
                     }
 
                     pinnedDomains[rule.domain] = pinnedDomain
-                    configuredDomains.append(rule.domain)
                 }
 
                 trustKitConfig[kTSKPinnedDomains] = pinnedDomains
 
-                continuation.resume(returning: (TrustKit(configuration: trustKitConfig), configuredDomains))
+                continuation.resume(returning: TrustKit(configuration: trustKitConfig))
             }
         }
 
-        cachedTrustKit = result.trustKit
-        cachedConfiguredDomains = result.configuredDomains
+        cachedTrustKit = trustKit
 
-        return (result.trustKit, result.configuredDomains)
+        return trustKit
     }
 }

@@ -1,6 +1,8 @@
 //! In-memory providers for the CLI.
 
 use core::cell::RefCell;
+#[cfg(all(test, feature = "slow_tests"))]
+use std::sync::MutexGuard;
 use std::{
     collections::{BTreeMap, BTreeSet, HashMap, HashSet},
     rc::Rc,
@@ -18,11 +20,12 @@ use crate::{
         ThreemaId,
     },
     csp_e2e::CspE2eProtocolProviders,
+    data_backup::task::DataBackupProviders,
     model::{
         contact::{Contact, ContactProvider, ContactUpdate, ContactWithProfilePictures},
         conversation::ConversationProvider,
         distribution_list::{DistributionList, DistributionListProvider},
-        group::{Group, GroupMembershipFilter, GroupProvider, GroupWithProfilePicture},
+        group::{Group, GroupMembershipFilter, GroupProvider, GroupUpdate, GroupWithProfilePicture},
         message::{MessageState, MessageStateMetadata, MessageStateUpdate, MessageStateUpdateApplyContext},
         poll::{Poll, PollId, PollProvider, PollVotes},
         profile::ProfilePicture,
@@ -32,14 +35,14 @@ use crate::{
     protobuf,
     provider::{NonceProvider, ProviderError, ShortcutProvider},
     utils::{
-        sync::MutexIgnorePoison as _,
+        sync::MutexPoisonPanic as _,
         update::{Apply as _, TryApply as _},
     },
 };
 
+#[cfg_attr(test, derive(Debug))]
 pub(crate) struct InMemoryDbStorage {
     pub(crate) user_identity: ThreemaId,
-    #[expect(dead_code, reason = "TODO(LIB-94): Use for backups")]
     pub(crate) user_profile: UserProfile,
     pub(crate) csp_e2e_nonce_storage: BTreeSet<HashedNonce>,
     pub(crate) d2x_nonce_storage: BTreeSet<HashedNonce>,
@@ -48,8 +51,24 @@ pub(crate) struct InMemoryDbStorage {
     pub(crate) distribution_lists: InMemoryDbDistributionLists,
     pub(crate) groups: InMemoryDbGroups,
     pub(crate) conversations: InMemoryDbConversations,
-    #[expect(dead_code, reason = "TODO(LIB-94): Use for backups")]
     pub(crate) polls: InMemoryDbPolls,
+}
+
+impl InMemoryDbStorage {
+    #[cfg(all(test, feature = "slow_tests"))]
+    #[expect(clippy::missing_assert_message, reason = "False positive in test code")]
+    fn assert_eq(&self, other: &MutexGuard<Self>) {
+        assert_eq!(self.user_identity, other.user_identity);
+        assert_eq!(self.user_profile, other.user_profile);
+        assert_eq!(self.csp_e2e_nonce_storage, other.csp_e2e_nonce_storage);
+        assert_eq!(self.d2x_nonce_storage, other.d2x_nonce_storage);
+        assert_eq!(self.settings, other.settings);
+        assert_eq!(self.contacts, other.contacts);
+        assert_eq!(self.distribution_lists, other.distribution_lists);
+        assert_eq!(self.groups, other.groups);
+        assert_eq!(self.conversations, other.conversations);
+        assert_eq!(self.polls, other.polls);
+    }
 }
 
 /// Default shortcut provider, applying reasonable shortcut defaults.
@@ -76,13 +95,13 @@ pub struct InMemoryDbD2xNonceProvider(Arc<Mutex<InMemoryDbStorage>>);
 )]
 impl NonceProvider for struct_name {
     fn add_many(&mut self, hashed_nonces: Vec<HashedNonce>) -> Result<(), ProviderError> {
-        let mut storage = self.0.lock_ignore_poison();
+        let mut storage = self.0.lock_unwrap();
         storage.nonce_storage.extend(hashed_nonces);
         Ok(())
     }
 
     fn get_many(&self, batch_index: usize) -> Result<Vec<HashedNonce>, ProviderError> {
-        let overflow_error = || ProviderError::InvalidParameter("'batch_index' exceeds maximum".to_owned());
+        let overflow_error = || ProviderError::ConversionError("'batch_index' exceeds maximum".to_owned());
         let range = batch_index
             .checked_mul(NONCES_PER_BATCH)
             .ok_or(overflow_error())?
@@ -91,12 +110,12 @@ impl NonceProvider for struct_name {
                 .ok_or(overflow_error())?
                 .checked_mul(NONCES_PER_BATCH)
                 .ok_or(overflow_error())?;
-        let storage = self.0.lock_ignore_poison();
+        let storage = self.0.lock_unwrap();
         Ok(storage.nonce_storage.iter().get(range).cloned().collect())
     }
 
     fn has(&self, hashed_nonce: &HashedNonce) -> Result<bool, ProviderError> {
-        let storage = self.0.lock_ignore_poison();
+        let storage = self.0.lock_unwrap();
         Ok(storage.nonce_storage.contains(hashed_nonce))
     }
 }
@@ -105,36 +124,35 @@ impl NonceProvider for struct_name {
 pub(crate) struct InMemoryDbSettingsProvider(Arc<Mutex<InMemoryDbStorage>>);
 impl SettingsProvider for InMemoryDbSettingsProvider {
     fn set(&mut self, settings: Settings) -> Result<(), ProviderError> {
-        let mut storage = self.0.lock_ignore_poison();
+        let mut storage = self.0.lock_unwrap();
         storage.settings = settings;
         Ok(())
     }
 
     fn update(&mut self, update: SettingsUpdate) -> Result<(), ProviderError> {
-        let mut storage = self.0.lock_ignore_poison();
+        let mut storage = self.0.lock_unwrap();
         storage.settings.apply(update);
         Ok(())
     }
 
     fn get(&self) -> Result<Settings, ProviderError> {
-        let storage = self.0.lock_ignore_poison();
+        let storage = self.0.lock_unwrap();
         Ok(storage.settings.clone())
     }
 }
 
 /// In-memory user profile provider.
-#[expect(dead_code, reason = "TODO(LIB-94): Use for backups")]
 #[derive(Clone)]
 pub(crate) struct InMemoryDbUserProfileProvider(Arc<Mutex<InMemoryDbStorage>>);
 impl UserProfileProvider for InMemoryDbUserProfileProvider {
     fn set(&mut self, user_profile: UserProfile) -> Result<(), ProviderError> {
-        let mut storage = self.0.lock_ignore_poison();
+        let mut storage = self.0.lock_unwrap();
         storage.user_profile = user_profile;
         Ok(())
     }
 
     fn get(&self) -> Result<UserProfile, ProviderError> {
-        let storage = self.0.lock_ignore_poison();
+        let storage = self.0.lock_unwrap();
         Ok(storage.user_profile.clone())
     }
 }
@@ -151,7 +169,7 @@ impl InMemoryDbContactProvider {
         identity: ThreemaId,
     ) -> Result<(), ProviderError> {
         if identity == storage.user_identity {
-            Err(ProviderError::InvalidState(
+            Err(ProviderError::ContractViolation(
                 "Unexpected encounter of user's identity in contact provider".to_owned(),
             ))
         } else {
@@ -159,11 +177,14 @@ impl InMemoryDbContactProvider {
         }
     }
 
-    fn with<TResult, TContactFn: FnOnce(Option<&mut ContactWithProfilePictures>) -> TResult>(
+    fn with<TResult, TContactFn>(
         storage: &mut InMemoryDbStorage,
         identity: ThreemaId,
         contact_fn: TContactFn,
-    ) -> Result<TResult, ProviderError> {
+    ) -> Result<TResult, ProviderError>
+    where
+        TContactFn: FnOnce(Option<&mut ContactWithProfilePictures>) -> TResult,
+    {
         // Bail if identity is the user's identity.
         Self::ensure_not_user_identity(storage, identity)?;
 
@@ -197,12 +218,12 @@ impl ContactProvider for InMemoryDbContactProvider {
         &mut self,
         contacts: Vec<ContactWithProfilePictures>,
     ) -> Result<(), ProviderError> {
-        let mut storage = self.0.lock_ignore_poison();
+        let mut storage = self.0.lock_unwrap();
 
         for contact in &contacts {
             // Bail if the contact's identity is the user's identity or the contact already exists.
             if Self::has(&storage, contact.contact.identity)? {
-                return Err(ProviderError::InvalidState(format!(
+                return Err(ProviderError::ContractViolation(format!(
                     "Contact {} to be added already exists",
                     contact.contact.identity
                 )));
@@ -224,7 +245,7 @@ impl ContactProvider for InMemoryDbContactProvider {
         identity: ThreemaId,
         profile_picture: Option<ProfilePicture>,
     ) -> Result<(), ProviderError> {
-        let mut storage = self.0.lock_ignore_poison();
+        let mut storage = self.0.lock_unwrap();
 
         // Bail if identity is the user's identity or the contact does not exist.
         Self::with(&mut storage, identity, |contact| {
@@ -234,7 +255,7 @@ impl ContactProvider for InMemoryDbContactProvider {
             })
         })?
         .ok_or_else(|| {
-            ProviderError::InvalidState(format!(
+            ProviderError::ContractViolation(format!(
                 "Contact {identity} to set the contact-defined profile picture for does not exist"
             ))
         })
@@ -245,7 +266,7 @@ impl ContactProvider for InMemoryDbContactProvider {
         identity: ThreemaId,
         profile_picture: Option<ProfilePicture>,
     ) -> Result<(), ProviderError> {
-        let mut storage = self.0.lock_ignore_poison();
+        let mut storage = self.0.lock_unwrap();
 
         // Bail if identity is the user's identity or the contact does not exist.
         Self::with(&mut storage, identity, |contact| {
@@ -255,19 +276,19 @@ impl ContactProvider for InMemoryDbContactProvider {
             })
         })?
         .ok_or_else(|| {
-            ProviderError::InvalidState(format!(
+            ProviderError::ContractViolation(format!(
                 "Contact {identity} to set the user-defined profile picture for does not exist"
             ))
         })
     }
 
     fn update(&mut self, updates: Vec<ContactUpdate>) -> Result<(), ProviderError> {
-        let mut storage = self.0.lock_ignore_poison();
+        let mut storage = self.0.lock_unwrap();
 
         for update in &updates {
             // Bail if the contact's identity is the user's identity or the contact does not exist.
             if !Self::has(&storage, update.identity)? {
-                return Err(ProviderError::InvalidState(format!(
+                return Err(ProviderError::ContractViolation(format!(
                     "Contact {} to be updated does not exist",
                     update.identity
                 )));
@@ -288,7 +309,7 @@ impl ContactProvider for InMemoryDbContactProvider {
     }
 
     fn count_existing(&self, identities: &[ThreemaId]) -> Result<usize, ProviderError> {
-        let storage = self.0.lock_ignore_poison();
+        let storage = self.0.lock_unwrap();
         identities.iter().try_fold(0_usize, |n_identities, identity| {
             // Bail if identity is the user's identity and increase count if a contact for identity exists.
             if Self::has(&storage, *identity)? {
@@ -300,7 +321,7 @@ impl ContactProvider for InMemoryDbContactProvider {
     }
 
     fn get(&self, identity: ThreemaId) -> Result<Option<Contact>, ProviderError> {
-        let mut storage = self.0.lock_ignore_poison();
+        let mut storage = self.0.lock_unwrap();
 
         // Bail if identity is the user's identity and get a snapshot of the contact (if it exists).
         Self::with(&mut storage, identity, |contact| {
@@ -309,7 +330,7 @@ impl ContactProvider for InMemoryDbContactProvider {
     }
 
     fn get_identities(&self) -> Result<HashSet<ThreemaId>, ProviderError> {
-        let storage = self.0.lock_ignore_poison();
+        let storage = self.0.lock_unwrap();
         Ok(storage.contacts.keys().copied().collect())
     }
 
@@ -317,7 +338,7 @@ impl ContactProvider for InMemoryDbContactProvider {
         &self,
         identity: ThreemaId,
     ) -> Result<Option<ContactWithProfilePictures>, ProviderError> {
-        let mut storage = self.0.lock_ignore_poison();
+        let mut storage = self.0.lock_unwrap();
 
         // Bail if identity is the user's identity and get a snapshot of the contact with its user profile (if
         // it exists).
@@ -326,12 +347,12 @@ impl ContactProvider for InMemoryDbContactProvider {
     }
 
     fn has(&self, identity: ThreemaId) -> Result<bool, ProviderError> {
-        let storage = self.0.lock_ignore_poison();
+        let storage = self.0.lock_unwrap();
         Self::has(&storage, identity)
     }
 
     fn is_explicitly_blocked(&self, identity: ThreemaId) -> Result<bool, ProviderError> {
-        let storage = self.0.lock_ignore_poison();
+        let storage = self.0.lock_unwrap();
 
         // Bail if identity is the user's identity.
         Self::ensure_not_user_identity(&storage, identity)?;
@@ -342,18 +363,17 @@ impl ContactProvider for InMemoryDbContactProvider {
 }
 
 /// In-memory distribution list provider.
-#[expect(dead_code, reason = "TODO(LIB-94): Use for backups")]
 pub(crate) struct InMemoryDbDistributionListProvider(Arc<Mutex<InMemoryDbStorage>>);
 impl DistributionListProvider for InMemoryDbDistributionListProvider {
     fn add(&mut self, distribution_lists: Vec<DistributionList>) -> Result<(), ProviderError> {
-        let mut storage = self.0.lock_ignore_poison();
+        let mut storage = self.0.lock_unwrap();
 
         for distribution_list in &distribution_lists {
             let distribution_list_id = distribution_list.identity;
 
             // Bail if distribution list already exists.
             if storage.distribution_lists.contains_key(&distribution_list_id) {
-                return Err(ProviderError::InvalidState(format!(
+                return Err(ProviderError::ContractViolation(format!(
                     "Distribution list {distribution_list_id} already exists"
                 )));
             }
@@ -361,12 +381,12 @@ impl DistributionListProvider for InMemoryDbDistributionListProvider {
             // Bail if a member's identity is the user's identity or refers to an unknown contact.
             for member in &distribution_list.members {
                 if *member == storage.user_identity {
-                    return Err(ProviderError::InvalidState(format!(
+                    return Err(ProviderError::ContractViolation(format!(
                         "Distribution list {distribution_list_id} references user in members",
                     )));
                 }
                 if !storage.contacts.contains_key(member) {
-                    return Err(ProviderError::InvalidState(format!(
+                    return Err(ProviderError::ContractViolation(format!(
                         "Distribution list {distribution_list_id} references unknown member {member}"
                     )));
                 }
@@ -384,12 +404,12 @@ impl DistributionListProvider for InMemoryDbDistributionListProvider {
     }
 
     fn get(&self, id: DistributionListId) -> Result<Option<DistributionList>, ProviderError> {
-        let storage = self.0.lock_ignore_poison();
+        let storage = self.0.lock_unwrap();
         Ok(storage.distribution_lists.get(&id).cloned())
     }
 
     fn get_ids(&self) -> Result<HashSet<DistributionListId>, ProviderError> {
-        let storage = self.0.lock_ignore_poison();
+        let storage = self.0.lock_unwrap();
         Ok(storage.distribution_lists.keys().copied().collect())
     }
 }
@@ -401,12 +421,12 @@ impl GroupProvider for InMemoryDbGroupProvider {
         &mut self,
         mut groups: Vec<GroupWithProfilePicture>,
     ) -> Result<(), ProviderError> {
-        let mut storage = self.0.lock_ignore_poison();
+        let mut storage = self.0.lock_unwrap();
 
         for group in &mut groups {
             // Bail if the group already exists.
             if storage.groups.contains_key(&group.group.identity) {
-                return Err(ProviderError::InvalidState(format!(
+                return Err(ProviderError::ContractViolation(format!(
                     "Group {} already exists",
                     group.group.identity
                 )));
@@ -418,22 +438,29 @@ impl GroupProvider for InMemoryDbGroupProvider {
                     .contacts
                     .contains_key(&group.group.identity.creator_identity)
             {
-                return Err(ProviderError::InvalidState(format!(
+                return Err(ProviderError::ContractViolation(format!(
                     "Group {} creator is unknown",
                     group.group.identity
                 )));
             }
 
-            // Bail if a member's identity is the user's identity or refers to an unknown contact.
+            // Bail if the creator is in the member's list, a member's identity is the user's identity or
+            // refers to an unknown contact.
             for member in &group.group.members {
+                if *member == group.group.identity.creator_identity {
+                    return Err(ProviderError::ContractViolation(format!(
+                        "Group {} references creator in members",
+                        group.group.identity
+                    )));
+                }
                 if *member == storage.user_identity {
-                    return Err(ProviderError::InvalidState(format!(
+                    return Err(ProviderError::ContractViolation(format!(
                         "Group {} references user in members",
                         group.group.identity
                     )));
                 }
                 if !storage.contacts.contains_key(member) {
-                    return Err(ProviderError::InvalidState(format!(
+                    return Err(ProviderError::ContractViolation(format!(
                         "Group {} references unknown member {member}",
                         group.group.identity
                     )));
@@ -454,11 +481,13 @@ impl GroupProvider for InMemoryDbGroupProvider {
         identity: GroupIdentity,
         profile_picture: Option<ProfilePicture>,
     ) -> Result<(), ProviderError> {
-        let mut storage = self.0.lock_ignore_poison();
+        let mut storage = self.0.lock_unwrap();
 
         // Ensure that the group exists.
         let Some(group) = storage.groups.get_mut(&identity) else {
-            return Err(ProviderError::InvalidState(format!("Unknown group {identity}")));
+            return Err(ProviderError::ContractViolation(format!(
+                "Unknown group {identity}"
+            )));
         };
 
         // Set profile picture.
@@ -467,8 +496,64 @@ impl GroupProvider for InMemoryDbGroupProvider {
         Ok(())
     }
 
+    fn update(&mut self, updates: Vec<GroupUpdate>) -> Result<(), ProviderError> {
+        let mut storage = self.0.lock_unwrap();
+
+        // Ensure all groups to be updated exist.
+        for update in &updates {
+            let group_identity = update.identity;
+            if !storage.groups.contains_key(&group_identity) {
+                return Err(ProviderError::ContractViolation(format!(
+                    "Group {group_identity} to be updated does not exist",
+                )));
+            }
+
+            // Bail if the creator is in the member's list, a member's identity is the user's identity or
+            // refers to an unknown contact.
+            if let Some(members) = &update.members {
+                for member in members {
+                    if *member == update.identity.creator_identity {
+                        return Err(ProviderError::ContractViolation(format!(
+                            "Group update to {} references creator in members",
+                            update.identity
+                        )));
+                    }
+                    if *member == storage.user_identity {
+                        return Err(ProviderError::ContractViolation(format!(
+                            "Group update to {} references user in members",
+                            update.identity
+                        )));
+                    }
+                    if !storage.contacts.contains_key(member) {
+                        return Err(ProviderError::ContractViolation(format!(
+                            "Group update to {} references unknown member {member}",
+                            update.identity
+                        )));
+                    }
+                }
+            }
+        }
+
+        // Apply all updates.
+        for update in updates {
+            storage
+                .groups
+                .get_mut(&update.identity)
+                .expect("group exists after the existence check above")
+                .group
+                .try_apply(update)?;
+        }
+
+        Ok(())
+    }
+
+    fn get(&self, identity: GroupIdentity) -> Result<Option<Group>, ProviderError> {
+        let storage = self.0.lock_unwrap();
+        Ok(storage.groups.get(&identity).map(|group| group.group.clone()))
+    }
+
     fn get_identities(&self) -> Result<HashSet<GroupIdentity>, ProviderError> {
-        let storage = self.0.lock_ignore_poison();
+        let storage = self.0.lock_unwrap();
         Ok(storage.groups.keys().copied().collect())
     }
 
@@ -476,8 +561,13 @@ impl GroupProvider for InMemoryDbGroupProvider {
         &self,
         identity: GroupIdentity,
     ) -> Result<Option<GroupWithProfilePicture>, ProviderError> {
-        let storage = self.0.lock_ignore_poison();
+        let storage = self.0.lock_unwrap();
         Ok(storage.groups.get(&identity).cloned())
+    }
+
+    fn has(&self, identity: GroupIdentity) -> Result<bool, ProviderError> {
+        let storage = self.0.lock_unwrap();
+        Ok(storage.groups.contains_key(&identity))
     }
 
     #[expect(unused_variables, reason = "TODO(LIB-16): Implement groups")]
@@ -486,11 +576,11 @@ impl GroupProvider for InMemoryDbGroupProvider {
         identity: ThreemaId,
         filter: GroupMembershipFilter,
     ) -> Result<bool, ProviderError> {
-        let storage = self.0.lock_ignore_poison();
+        let storage = self.0.lock_unwrap();
 
         // Bail if identity is the user's identity.
         if identity == storage.user_identity {
-            return Err(ProviderError::InvalidState(
+            return Err(ProviderError::ContractViolation(
                 "Unexpected encounter of user's identity when checking for group membership".to_owned(),
             ));
         }
@@ -515,21 +605,21 @@ impl InMemoryDbConversationProvider {
         match conversation_id {
             ConversationId::Contact(identity) => {
                 if !storage.contacts.contains_key(identity) {
-                    return Err(ProviderError::InvalidState(format!(
+                    return Err(ProviderError::ContractViolation(format!(
                         "Contact {identity} does not exist",
                     )));
                 }
             },
             ConversationId::DistributionList(distribution_list_id) => {
                 if !storage.distribution_lists.contains_key(distribution_list_id) {
-                    return Err(ProviderError::InvalidState(format!(
+                    return Err(ProviderError::ContractViolation(format!(
                         "Distribution list {distribution_list_id} does not exist",
                     )));
                 }
             },
             ConversationId::Group(group_identity) => {
                 if !storage.groups.contains_key(group_identity) {
-                    return Err(ProviderError::InvalidState(format!(
+                    return Err(ProviderError::ContractViolation(format!(
                         "Group {group_identity} does not exist",
                     )));
                 }
@@ -540,35 +630,35 @@ impl InMemoryDbConversationProvider {
 }
 impl ConversationProvider for InMemoryDbConversationProvider {
     fn add_messages(&mut self, messages: Vec<MessageState>) -> Result<(), ProviderError> {
-        let mut storage = self.0.lock_ignore_poison();
+        let mut storage = self.0.lock_unwrap();
 
         for message in &messages {
             // Check whether the referred contact/distribution list/group exists and is in the expected state.
             match &message.conversation_id {
                 ConversationId::Contact(identity) => {
                     let Some(contact) = storage.contacts.get(identity) else {
-                        return Err(ProviderError::InvalidState(format!(
+                        return Err(ProviderError::ContractViolation(format!(
                             "Contact {identity} does not exist",
                         )));
                     };
                     if contact.contact.acquaintance_level
                         != protobuf::d2d_sync::contact::AcquaintanceLevel::Direct
                     {
-                        return Err(ProviderError::InvalidState(format!(
+                        return Err(ProviderError::ContractViolation(format!(
                             "Contact {identity} does not have acquaintance level direct",
                         )));
                     }
                 },
                 ConversationId::DistributionList(distribution_list_id) => {
                     if !storage.distribution_lists.contains_key(distribution_list_id) {
-                        return Err(ProviderError::InvalidState(format!(
+                        return Err(ProviderError::ContractViolation(format!(
                             "Distribution list {distribution_list_id} does not exist",
                         )));
                     }
                 },
                 ConversationId::Group(group_identity) => {
                     if !storage.groups.contains_key(group_identity) {
-                        return Err(ProviderError::InvalidState(format!(
+                        return Err(ProviderError::ContractViolation(format!(
                             "Group {group_identity} does not exist",
                         )));
                     }
@@ -581,7 +671,7 @@ impl ConversationProvider for InMemoryDbConversationProvider {
                 .get(&message.conversation_id)
                 .is_some_and(|messages| messages.contains_key(&message.message_id))
             {
-                return Err(ProviderError::InvalidState(format!(
+                return Err(ProviderError::ContractViolation(format!(
                     "Message {} already exists in conversation {}",
                     message.message_id, message.conversation_id,
                 )));
@@ -602,11 +692,11 @@ impl ConversationProvider for InMemoryDbConversationProvider {
         sender_identity: ThreemaId,
         _is_typing: bool,
     ) -> Result<(), ProviderError> {
-        let storage = self.0.lock_ignore_poison();
+        let storage = self.0.lock_unwrap();
 
         // Ensure the referred 1:1 conversation (i.e. the contact) exists.
         if !storage.contacts.contains_key(&sender_identity) {
-            return Err(ProviderError::InvalidState(format!(
+            return Err(ProviderError::ContractViolation(format!(
                 "Contact {sender_identity} does not exist",
             )));
         }
@@ -616,7 +706,7 @@ impl ConversationProvider for InMemoryDbConversationProvider {
     }
 
     fn update_messages(&mut self, updates: Vec<MessageStateUpdate>) -> Result<(), ProviderError> {
-        let mut storage = self.0.lock_ignore_poison();
+        let mut storage = self.0.lock_unwrap();
 
         for update in &updates {
             // Check whether the referred contact/distribution list/group exists.
@@ -628,7 +718,7 @@ impl ConversationProvider for InMemoryDbConversationProvider {
                 .get(&update.conversation_id)
                 .is_some_and(|conversation| conversation.contains_key(&update.message_id))
             {
-                return Err(ProviderError::InvalidState(format!(
+                return Err(ProviderError::ContractViolation(format!(
                     "Discarding message update because message {} does not exist in conversation {}",
                     update.message_id, update.conversation_id
                 )));
@@ -658,7 +748,7 @@ impl ConversationProvider for InMemoryDbConversationProvider {
         conversation_type: ConversationType,
         batch_index: usize,
     ) -> Result<Vec<MessageState>, ProviderError> {
-        let overflow_error = || ProviderError::InvalidParameter("'batch_index' exceeds maximum".to_owned());
+        let overflow_error = || ProviderError::ConversionError("'batch_index' exceeds maximum".to_owned());
 
         // Compute range.
         let range = batch_index
@@ -671,7 +761,7 @@ impl ConversationProvider for InMemoryDbConversationProvider {
                 .ok_or(overflow_error())?;
 
         // Return all messages in range.
-        let storage = self.0.lock_ignore_poison();
+        let storage = self.0.lock_unwrap();
         Ok(storage
             .conversations
             .iter()
@@ -693,7 +783,7 @@ impl ConversationProvider for InMemoryDbConversationProvider {
         conversation_id: ConversationId,
         message_ids: &[MessageId],
     ) -> Result<Vec<MessageStateMetadata>, ProviderError> {
-        let storage = self.0.lock_ignore_poison();
+        let storage = self.0.lock_unwrap();
 
         // Check whether the referred contact/distribution list/group exists.
         Self::ensure_conversation_exists(&storage, &conversation_id)?;
@@ -713,7 +803,7 @@ impl ConversationProvider for InMemoryDbConversationProvider {
         sender_identity: ThreemaId,
         message_id: MessageId,
     ) -> Result<bool, ProviderError> {
-        let storage = self.0.lock_ignore_poison();
+        let storage = self.0.lock_unwrap();
 
         // TODO(LIB-16): This is pretty expensive. We'll have to figure this out.
         for conversation in storage.conversations.values() {
@@ -728,36 +818,34 @@ impl ConversationProvider for InMemoryDbConversationProvider {
 type InMemoryDbPolls = BTreeMap<(ConversationId, PollId), Poll>;
 
 /// In-memory poll provider.
-#[expect(dead_code, reason = "TODO(LIB-94): Use for backups")]
 pub(crate) struct InMemoryDbPollProvider(Arc<Mutex<InMemoryDbStorage>>);
 impl InMemoryDbPollProvider {
-    #[expect(dead_code, reason = "TODO(LIB-94): Use for backups")]
     const POLLS_PER_BATCH: usize = 100;
 }
 impl PollProvider for InMemoryDbPollProvider {
     fn add(&mut self, polls: Vec<Poll>) -> Result<(), ProviderError> {
-        let mut storage = self.0.lock_ignore_poison();
+        let mut storage = self.0.lock_unwrap();
 
         for poll in &polls {
             // Check whether referred contact/group does not exists and bail if it's a distribution list.
             match poll.conversation {
                 ConversationId::Contact(identity) => {
                     if !storage.contacts.contains_key(&identity) {
-                        return Err(ProviderError::InvalidState(format!(
+                        return Err(ProviderError::ContractViolation(format!(
                             "Contact {identity} does not exist",
                         )));
                     }
                 },
 
                 ConversationId::DistributionList(_) => {
-                    return Err(ProviderError::InvalidState(
+                    return Err(ProviderError::ContractViolation(
                         "Distribution lists are not supported by polls".to_owned(),
                     ));
                 },
 
                 ConversationId::Group(group_identity) => {
                     if !storage.groups.contains_key(&group_identity) {
-                        return Err(ProviderError::InvalidState(format!(
+                        return Err(ProviderError::ContractViolation(format!(
                             "Group {group_identity} does not exist",
                         )));
                     }
@@ -768,7 +856,7 @@ impl PollProvider for InMemoryDbPollProvider {
             if poll.creator_identity != storage.user_identity
                 && !storage.contacts.contains_key(&poll.creator_identity)
             {
-                return Err(ProviderError::InvalidState(format!(
+                return Err(ProviderError::ContractViolation(format!(
                     "Poll creator {} is unknown",
                     poll.creator_identity,
                 )));
@@ -776,7 +864,7 @@ impl PollProvider for InMemoryDbPollProvider {
 
             // Bail if the poll already exists.
             if storage.polls.contains_key(&(poll.conversation, poll.id)) {
-                return Err(ProviderError::InvalidState(format!(
+                return Err(ProviderError::ContractViolation(format!(
                     "Poll {} already exists",
                     poll.id
                 )));
@@ -786,7 +874,7 @@ impl PollProvider for InMemoryDbPollProvider {
             if let PollVotes::Votes(voters) = &poll.votes {
                 for voter in voters.keys() {
                     if *voter != storage.user_identity && !storage.contacts.contains_key(voter) {
-                        return Err(ProviderError::InvalidState(format!(
+                        return Err(ProviderError::ContractViolation(format!(
                             "Poll {} references unknown voter {voter}",
                             poll.id
                         )));
@@ -804,7 +892,7 @@ impl PollProvider for InMemoryDbPollProvider {
     }
 
     fn get_many(&self, batch_index: usize) -> Result<Vec<Poll>, ProviderError> {
-        let overflow_error = || ProviderError::InvalidParameter("'batch_index' exceeds maximum".to_owned());
+        let overflow_error = || ProviderError::ConversionError("'batch_index' exceeds maximum".to_owned());
 
         // Compute range.
         let range = batch_index
@@ -817,8 +905,68 @@ impl PollProvider for InMemoryDbPollProvider {
                 .ok_or(overflow_error())?;
 
         // Return all polls for range.
-        let storage = self.0.lock_ignore_poison();
+        let storage = self.0.lock_unwrap();
         Ok(storage.polls.values().get(range).cloned().collect())
+    }
+}
+
+// Test-only structural equality and debug rendering for the in-memory providers. Two providers are equal iff
+// the slice of storage they operate on is equal, enabling `assert_eq!(create_provider, restore_provider)` in
+// round-trip tests. The `Arc::ptr_eq` short-circuit both optimises the common case and avoids a re-entrant
+// lock when a provider is compared against itself.
+#[cfg(all(test, feature = "slow_tests"))]
+#[duplicate_item(
+    provider_type                          storage_field;
+    [ InMemoryDbContactProvider ]          [ contacts ];
+    [ InMemoryDbGroupProvider ]            [ groups ];
+    [ InMemoryDbDistributionListProvider ] [ distribution_lists ];
+    [ InMemoryDbSettingsProvider ]         [ settings ];
+    [ InMemoryDbUserProfileProvider ]      [ user_profile ];
+    [ InMemoryDbCspE2eNonceProvider ]      [ csp_e2e_nonce_storage ];
+    [ InMemoryDbPollProvider ]             [ polls ];
+    [ InMemoryDbConversationProvider ]     [ conversations ];
+)]
+impl PartialEq for provider_type {
+    fn eq(&self, other: &Self) -> bool {
+        Arc::ptr_eq(&self.0, &other.0)
+            || self.0.lock_unwrap().storage_field == other.0.lock_unwrap().storage_field
+    }
+}
+
+// Debug rendering for the different providers reports the number of stored items rather than their full
+// contents, keeping assertion failure output compact for large collections.
+#[cfg(all(test, feature = "slow_tests"))]
+#[duplicate_item(
+    provider_type                          storage_field             debug_value;
+    [ InMemoryDbContactProvider ]          [ contacts ]              [ &storage.contacts.len() ];
+    [ InMemoryDbGroupProvider ]            [ groups ]                [ &storage.groups.len() ];
+    [ InMemoryDbDistributionListProvider ] [ distribution_lists ]    [ &storage.distribution_lists.len() ];
+    [ InMemoryDbCspE2eNonceProvider ]      [ csp_e2e_nonce_storage ] [ &storage.csp_e2e_nonce_storage.len() ];
+    [ InMemoryDbPollProvider ]             [ polls ]                 [ &storage.polls.len() ];
+    [ InMemoryDbSettingsProvider ]         [ settings ]              [ &storage.settings ];
+    [ InMemoryDbUserProfileProvider ]      [ user_profile ]          [ &storage.user_profile ];
+)]
+impl core::fmt::Debug for provider_type {
+    fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        let storage = self.0.lock_unwrap();
+        formatter
+            .debug_struct(stringify!(provider_type))
+            .field(stringify!(storage_field), debug_value)
+            .finish()
+    }
+}
+
+// `conversations` is nested (messages grouped by conversation), so it reports two counts and stays separate.
+#[cfg(all(test, feature = "slow_tests"))]
+impl core::fmt::Debug for InMemoryDbConversationProvider {
+    fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        let storage = self.0.lock_unwrap();
+        let messages: usize = storage.conversations.values().map(BTreeMap::len).sum();
+        formatter
+            .debug_struct("InMemoryDbConversationProvider")
+            .field("conversations", &storage.conversations.len())
+            .field("messages", &messages)
+            .finish()
     }
 }
 
@@ -841,14 +989,28 @@ pub struct InMemoryDbInit {
     pub distribution_lists: Vec<DistributionList>,
 
     /// Initial groups.
-    pub groups: Vec<Group>,
+    pub groups: Vec<GroupWithProfilePicture>,
+
+    /// Initial CSP E2E nonces.
+    pub csp_nonces: Vec<HashedNonce>,
+
+    /// Initial polls.
+    pub polls: Vec<Poll>,
+
+    /// Initial messages.
+    pub messages: Vec<MessageState>,
 }
 
 /// In-memory database.
+#[cfg_attr(test, derive(Debug))]
 pub struct InMemoryDb {
     pub(crate) storage: Arc<Mutex<InMemoryDbStorage>>,
 }
 impl From<InMemoryDbInit> for InMemoryDb {
+    /// Create `InMemoryDb` from `InMemoryDbInit`.
+    ///
+    /// No sanity checks are performed and it's up to the caller to ensure
+    /// that group members reference valid contacts.
     fn from(init: InMemoryDbInit) -> Self {
         Self {
             storage: Arc::new(Mutex::new(InMemoryDbStorage {
@@ -856,7 +1018,7 @@ impl From<InMemoryDbInit> for InMemoryDb {
 
                 user_profile: init.user_profile,
 
-                csp_e2e_nonce_storage: BTreeSet::new(),
+                csp_e2e_nonce_storage: init.csp_nonces.into_iter().collect(),
 
                 d2x_nonce_storage: BTreeSet::new(),
 
@@ -886,25 +1048,47 @@ impl From<InMemoryDbInit> for InMemoryDb {
                 groups: init
                     .groups
                     .into_iter()
-                    .map(|group| {
-                        (
-                            group.identity,
-                            GroupWithProfilePicture {
-                                group,
-                                profile_picture: None,
-                            },
-                        )
-                    })
+                    .map(|group| (group.group.identity, group))
                     .collect(),
 
-                conversations: BTreeMap::new(),
+                conversations: init
+                    .messages
+                    .into_iter()
+                    .fold(BTreeMap::new(), |mut map, message| {
+                        let _ = map
+                            .entry(message.conversation_id)
+                            .or_default()
+                            .insert(message.message_id, message);
+                        map
+                    }),
 
-                polls: BTreeMap::new(),
+                polls: init
+                    .polls
+                    .into_iter()
+                    .map(|poll| ((poll.conversation, poll.id), poll))
+                    .collect(),
             })),
         }
     }
 }
 impl InMemoryDb {
+    /// Create a new in-memory database not containing any data beyond default user profile and settings.
+    #[must_use]
+    pub fn new(user_identity: ThreemaId) -> Self {
+        InMemoryDbInit {
+            user_identity,
+            user_profile: UserProfile::default(),
+            settings: Settings::default(),
+            contacts: Vec::new(),
+            distribution_lists: Vec::new(),
+            groups: Vec::new(),
+            csp_nonces: Vec::new(),
+            polls: Vec::new(),
+            messages: Vec::new(),
+        }
+        .into()
+    }
+
     /// CSP E2E protocol providers.
     #[must_use]
     pub fn csp_e2e_protocol_providers(&mut self) -> CspE2eProtocolProviders {
@@ -924,9 +1108,39 @@ impl InMemoryDb {
         }
     }
 
+    /// Data backup providers.
+    #[must_use]
+    pub fn data_backup_providers(&mut self) -> DataBackupProviders {
+        DataBackupProviders {
+            user_profile: Arc::new(Mutex::new(InMemoryDbUserProfileProvider(Arc::clone(
+                &self.storage,
+            )))),
+            settings: Arc::new(Mutex::new(InMemoryDbSettingsProvider(Arc::clone(&self.storage)))),
+            contacts: Arc::new(Mutex::new(InMemoryDbContactProvider(Arc::clone(&self.storage)))),
+            groups: Arc::new(Mutex::new(InMemoryDbGroupProvider(Arc::clone(&self.storage)))),
+            distribution_lists: Arc::new(Mutex::new(InMemoryDbDistributionListProvider(Arc::clone(
+                &self.storage,
+            )))),
+            csp_nonces: Arc::new(Mutex::new(InMemoryDbCspE2eNonceProvider(Arc::clone(
+                &self.storage,
+            )))),
+            polls: Arc::new(Mutex::new(InMemoryDbPollProvider(Arc::clone(&self.storage)))),
+            conversations: Arc::new(Mutex::new(InMemoryDbConversationProvider(Arc::clone(
+                &self.storage,
+            )))),
+        }
+    }
+
     /// D2D nonce provider.
     #[must_use]
     pub fn d2d_nonce_provider(&mut self) -> InMemoryDbD2xNonceProvider {
         InMemoryDbD2xNonceProvider(Arc::clone(&self.storage))
+    }
+
+    #[cfg(all(test, feature = "slow_tests"))]
+    pub(crate) fn assert_eq(&self, other: &Self) {
+        if !Arc::ptr_eq(&self.storage, &other.storage) {
+            self.storage.lock_unwrap().assert_eq(&other.storage.lock_unwrap());
+        }
     }
 }

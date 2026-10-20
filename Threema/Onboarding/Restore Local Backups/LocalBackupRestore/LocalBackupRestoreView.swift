@@ -5,27 +5,57 @@ struct LocalBackupRestoreView: View {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.verticalSizeClass) private var verticalSizeClass
+    @ScaledMetric private var scaledMetric: CGFloat = 1.0
+
+    private let headerHeight = DotHeaderView.defaultHeight
+    private let headerOverlap = DotHeaderView.defaultOverlap
 
     let model: LocalBackupRestoreViewModel
 
     var body: some View {
-        List {
-            HeaderView(model: model)
-            RestoreItemsView(model: model)
+        ScrollView {
+            VStack(spacing: 0) {
+                DotHeaderView(
+                    icon: DotHeaderView.Icon(
+                        name: model.state.headerIconName,
+                        color: {
+                            switch model.state {
+                            case .inProgress: .accentColor
+                            case .complete: .green
+                            case .failed: .red
+                            }
+                        }()
+                    ),
+                    dotColor: {
+                        switch model.state {
+                        case .failed:
+                            .red.opacity(0.3)
+                        default:
+                            .accentColor.opacity(0.3)
+                        }
+                    }(),
+                    height: headerHeight
+                )
 
-            BackupInfoView(
-                title: model.restoreError?.title,
-                content: model.restoreError?.content,
-                textColor: Color.red,
-                textFont: .footnote,
-                iconName: model.errorIconName,
-                iconColor: Color.red
-            )
+                VStack(spacing: 10 * scaledMetric) {
+                    BackupHeaderView(
+                        step: nil,
+                        title: model.headerTitle,
+                        subtitle: model.headerSubtitle,
+                        backdrop: Color.listsBackgroundColor
+                    )
+                    .padding(.bottom, 20 * scaledMetric)
 
-            BottomView(model: model, isVisible: isBottomViewInlined)
+                    RestoreItemsView(model: model)
+                    BottomView(model: model, isVisible: isBottomViewInlined)
+                }
+                .safeAreaPadding(.horizontal, 20)
+                .padding(.top, -headerHeight * headerOverlap / scaledMetric)
+            }
         }
+        .background(Color.listsBackgroundColor.ignoresSafeArea())
+        .ignoresSafeArea(edges: .top)
         .scrollBounceBehavior(.basedOnSize)
-        .listSectionSpacing(.compact)
         .contentMargins(.top, 0, for: .scrollContent)
         .safeAreaInset(edge: .bottom) {
             BottomView(model: model, isVisible: !isBottomViewInlined)
@@ -53,33 +83,6 @@ struct LocalBackupRestoreView: View {
 
         default:
             return true
-        }
-    }
-
-    private struct HeaderView: View {
-        let model: LocalBackupRestoreViewModel
-
-        var body: some View {
-            BackupHeaderView(
-                icon: .init(
-                    symbolName: model.state.iconSymbolName,
-                    color: {
-                        switch model.state {
-                        case .inProgress: .blue
-                        case .complete: .green
-                        case .failed: .red
-                        }
-                    }()
-                ),
-                step: nil,
-                title: model.headerTitle,
-                subtitle: model.headerSubtitle
-            )
-            .padding(.bottom)
-            .listRowBackground(Color.clear)
-            .listRowInsets(EdgeInsets())
-            .listRowSeparator(.hidden)
-            .frame(maxWidth: .infinity)
         }
     }
 
@@ -135,12 +138,7 @@ struct LocalBackupRestoreView: View {
                         .font(.system(size: scaledMetric * 15 / 32, weight: .bold))
                         .foregroundStyle(foregroundColor)
                         .apply { image in
-                            if #available(iOS 18.0, *) {
-                                image.symbolEffect(.rotate, isActive: state == .inProgress)
-                            }
-                            else {
-                                image
-                            }
+                            image.symbolEffect(.rotate, isActive: state == .inProgress)
                         }
                         .id(state) // needed for animation state
                         .frame(width: scaledMetric, height: scaledMetric)
@@ -173,26 +171,40 @@ struct LocalBackupRestoreView: View {
         let isVisible: Bool
 
         var body: some View {
-            if isVisible, model.state == .failed {
-                VStack {
+            if isVisible {
+                switch model.state {
+                case .inProgress:
                     ThreemaButton(
-                        title: model.tryAgainButtonTitle,
+                        title: model.cancelButtonTitle,
+                        style: .bordered,
+                        size: .fullWidth,
+                        action: model.cancelButtonTapped
+                    )
+                case .complete:
+                    ThreemaButton(
+                        title: model.continueButtonTitle,
                         style: .borderedProminent,
                         size: .fullWidth,
-                        action: model.tryAgainButtonTapped
+                        action: model.continueButtonTapped
                     )
+                case .failed:
+                    VStack {
+                        ThreemaButton(
+                            title: model.tryAgainButtonTitle,
+                            style: .borderedProminent,
+                            size: .fullWidth,
+                            action: model.tryAgainButtonTapped
+                        )
 
-                    ThreemaButton(
-                        title: model.dismissButtonTitle,
-                        style: .borderless,
-                        size: .fullWidth,
-                        action: model.dimissButtonTapped
-                    )
+                        ThreemaButton(
+                            title: model.contactButtonTitle,
+                            style: .bordered,
+                            size: .fullWidth,
+                            action: model.dimissButtonTapped
+                        )
+                    }
+                    .frame(maxWidth: .infinity)
                 }
-                .listRowBackground(Color.clear)
-                .listRowInsets(EdgeInsets())
-                .listRowSeparator(.hidden)
-                .frame(maxWidth: .infinity)
             }
         }
     }
@@ -213,18 +225,18 @@ struct LocalBackupRestoreView: View {
         LocalBackupRestoreView.Stance.failed.view
     }
 
-    /// A restore that keeps advancing, to see the steps move.
     #Preview("Restoring Backup - Running") {
-        LocalBackupRestoreView(
-            model: LocalBackupRestoreViewModel(state: .inProgress) { onProgress in
-                for progress in DataRestoreProgress.mockRun.dropFirst() {
-                    try await Task.sleep(for: .milliseconds(2000))
-                    onProgress(progress)
+        PushedPreview(rootTitle: "Enter Recovery Key") {
+            LocalBackupRestoreView(
+                model: LocalBackupRestoreViewModel(state: .inProgress) { onProgress in
+                    for progress in DataRestoreProgress.mockRun.dropFirst() {
+                        try await Task.sleep(for: .milliseconds(2000))
+                        onProgress(progress)
+                    }
+                    try await Task.sleep(for: .seconds(60 * 60))
                 }
-
-                try await Task.sleep(for: .seconds(60 * 60))
-            }
-        )
+            )
+        }
     }
 
     extension LocalBackupRestoreView {
@@ -242,7 +254,9 @@ struct LocalBackupRestoreView: View {
             }
 
             @MainActor var view: some View {
-                LocalBackupRestoreView(model: makeModel())
+                PushedPreview(rootTitle: "Enter Recovery Key") {
+                    LocalBackupRestoreView(model: makeModel())
+                }
             }
 
             // MARK: - Helpers

@@ -441,7 +441,9 @@ final class RemoteSecretResolver: RemoteSecretResolving {
             serverGroup: ServerGroup(serverGroup)
         )
 
-        try keychainManager.storeIdentity(myIdentity, thisDeviceOnly: true)
+        // Keep the user's Easy Device Switch choice; a new identity (no keychain item yet) defaults to this device only
+        let thisDeviceOnly = (try? keychainManager.isIdentityThisDeviceOnly()) ?? true
+        try keychainManager.storeIdentity(myIdentity, thisDeviceOnly: thisDeviceOnly)
 
         // We could already be further in the process when coming from a safe restore.
         if AppSetup.state.rawValue < AppSetupState.identityAdded.rawValue {

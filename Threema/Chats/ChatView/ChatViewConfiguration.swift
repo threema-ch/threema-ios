@@ -29,6 +29,16 @@ enum ChatViewConfiguration {
             ChatBubble.defaultGroupTopBottomInset + (ChatBubble.defaultLeadingTrailingInset / 2)
         }
     
+    /// Deciding whether a voice draft must be saved after the chat disappeared (see
+    /// `ChatViewController.saveDraftIfChatWasLeft()`)
+    enum VoiceDraft {
+        /// Delay before checking whether the chat is back on screen. Leaves time to the navigation router to put it
+        /// into its new navigation controller after a split view collapse or expand.
+        static let checkInterval: TimeInterval = 0.3
+        /// Longest wait for a running view transition to end
+        static let transitionTimeout: TimeInterval = 3
+    }
+    
     /// Profile on the top in the navigation bar
     enum Profile {
         

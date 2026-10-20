@@ -1,4 +1,6 @@
 //! Protobuf utilities and extensions.
+use core::num::TryFromIntError;
+
 use duplicate::duplicate_item;
 use libthreema_dependencies::rand::{self, Rng as _};
 
@@ -30,12 +32,15 @@ impl PaddingConstraint {
 }
 
 #[inline]
-fn encode_to_vec_padded_internal<TMessage: prost::Message>(
+fn encode_to_vec_padded_internal<TMessage>(
     message: &TMessage,
     padding_tag: u32,
     constraint: &PaddingConstraint,
     mut padding_length: u16,
-) -> Vec<u8> {
+) -> Vec<u8>
+where
+    TMessage: prost::Message,
+{
     // Ensure the minimum total length is always reached when encoding the message.
     let message_length = message.encoded_len();
     if message_length
@@ -91,11 +96,14 @@ fn encode_to_vec_padded_internal<TMessage: prost::Message>(
 ///
 /// IMPORTANT: If another field with `padding_tag` exists that was encoded into the buffer, the resulting
 /// message may either be deserialized into one or the other depending on the implementation.
-fn encode_to_vec_padded<TMessage: prost::Message>(
+fn encode_to_vec_padded<TMessage>(
     message: &TMessage,
     padding_tag: u32,
     constraint: &PaddingConstraint,
-) -> Vec<u8> {
+) -> Vec<u8>
+where
+    TMessage: prost::Message,
+{
     // Generate random padding length based on the maximum padding length.
     let padding_length: u16 = rand::thread_rng().gen_range(0..constraint.maximum_padding_length);
 
@@ -178,6 +186,30 @@ impl PaddedMessage for struct_name {
             reason = "Should not be directly accessed, but we need to access it for testing purposes"
         )]
         &mut self.padding
+    }
+}
+
+pub(crate) trait DelimitedMessageU32LittleEndian: prost::Message + Sized {
+    fn encode_u32_le_delimited_to_vec(&self) -> Result<Vec<u8>, TryFromIntError>;
+}
+impl<TMessage: prost::Message> DelimitedMessageU32LittleEndian for TMessage {
+    fn encode_u32_le_delimited_to_vec(&self) -> Result<Vec<u8>, TryFromIntError> {
+        // Pre-allocate buffer with required length.
+        let length = self.encoded_len();
+        let encoded_length = u32::try_from(length)?.to_le_bytes();
+        let mut buffer = Vec::with_capacity(
+            length
+                .checked_add(encoded_length.len())
+                .expect("message length + delimiter should not blow up a usize"),
+        );
+
+        // Encode length.
+        buffer.extend_from_slice(&encoded_length);
+
+        // Encode the message.
+        self.encode_raw(&mut buffer);
+
+        Ok(buffer)
     }
 }
 

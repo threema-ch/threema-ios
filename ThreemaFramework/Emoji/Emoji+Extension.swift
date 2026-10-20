@@ -65,10 +65,7 @@ extension Emoji {
     
     public var isAvailable: Bool {
         // All pre iOS 17 are available due to our minimum target
-        if version < 15.1 {
-            true
-        }
-        else if version == 15.1, #available(iOS 17.4, *) {
+        if version <= 15.1 {
             true
         }
         else if version == 16.0, #available(iOS 18.4, *) {

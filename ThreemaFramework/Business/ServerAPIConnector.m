@@ -20,6 +20,23 @@
 #else
   static const DDLogLevel ddLogLevel = DDLogLevelInfo;
 #endif
+
+/// Redacts personal info for logging, same format as `-[MDMSetup checkIsPersonalInfoAndLog:value:]`
+static NSString *redactedPersonalInfo(NSString *value) {
+    if (value == nil) {
+        return @"(null)";
+    }
+    else if ([value length] == 0) {
+        return @"[empty]";
+    }
+    else if ([value length] <= 2) {
+        return [NSString stringWithFormat:@"%@***", [value substringToIndex:value.length - 1]];
+    }
+    else {
+        return [NSString stringWithFormat:@"%@***", [value substringToIndex:2]];
+    }
+}
+
 @implementation ServerAPIConnector
 
 - (void)createIdentityWithStore:(id<MyIdentityStoreProtocol>)identityStore onCompletion:(void(^)(MyIdentityStore *store))onCompletion onError:(void(^)(NSError *error))onError {
@@ -660,8 +677,7 @@
         return;
     }
     
-    DDLogWarn(@"Send update work info with\nfirstName: %@\nlastName: %@\ncsi: %@\njobTitle: %@\ndepartment: %@\ncategory: %@", identityStore.firstName, identityStore.lastName, identityStore.csi, identityStore.jobTitle, identityStore.department, identityStore.category);
-
+    DDLogWarn(@"Send update work info with\nfirstName: %@\nlastName: %@\ncsi: %@\njobTitle: %@\ndepartment: %@\ncategory: %@", redactedPersonalInfo(identityStore.firstName), redactedPersonalInfo(identityStore.lastName), redactedPersonalInfo(identityStore.csi), redactedPersonalInfo(identityStore.jobTitle), redactedPersonalInfo(identityStore.department), redactedPersonalInfo(identityStore.category));
     
     [self sendSignedRequest:request toApiPath:@"identity/update_work_info" forStore:identityStore onCompletion:^(id jsonObject) {
         if ([jsonObject[@"success"] boolValue]) {
@@ -751,32 +767,77 @@
     } onError:onError];
 }
 
-- (void)reportSpamForSenderWithIdentity:(nonnull NSString *)senderIdentity andNickname:(nullable NSString *)senderNickname withStore:(nonnull id<MyIdentityStoreProtocol>)identityStore onCompletion:(void(^_Nonnull)(void))onCompletion onError:(void(^_Nonnull)( NSError * _Nullable error))onError {
+- (void)reportSpamForIdentity:(nonnull NSString *)peerIdentity andNickname:(nullable NSString *)peerNickname withStore:(nonnull id<MyIdentityStoreProtocol>)identityStore onCompletion:(void(^_Nonnull)(void))onCompletion onError:(void(^_Nonnull)( NSError * _Nullable error))onError {
      if (identityStore.identity == nil) {
          onError([ThreemaError threemaError:@"No identity"]);
          return;
      }
      
      NSMutableDictionary *request = [[NSMutableDictionary alloc] initWithDictionary: @{
-        @"identity": identityStore.identity,
-        @"senderIdentity": senderIdentity,
+        @"reporter_identity": identityStore.identity,
+        @"peer_identity": peerIdentity,
      }];
      
-     if (senderNickname != nil || senderNickname.length > 0) {
-         [request setObject:senderNickname forKey:@"senderNickname"];
+     // Send an explicit null (not an empty string and not an omitted key) when no nickname was set
+     if (peerNickname != nil && peerNickname.length > 0) {
+         [request setObject:peerNickname forKey:@"peer_nickname"];
+     } else {
+         [request setObject:[NSNull null] forKey:@"peer_nickname"];
      }
-     
-     [self sendSignedRequest:request toApiPath:@"identity/report_junk" forStore:identityStore onCompletion:^(NSDictionary *jsonObject) {
-         if ([jsonObject[@"success"] boolValue]) {
+
+     [self sendSignedRequest:request toApiPath:@"identity/report_identity" forStore:identityStore onCompletion:^(NSDictionary *jsonObject) {
+         if ([self isReportSuccessResponse:jsonObject]) {
              onCompletion();
          }
          else {
-             onError([ThreemaError threemaError:jsonObject[@"error"]]);
+             onError([self reportErrorFromResponse:jsonObject]);
+         }
+     } onError:onError];
+}
+
+- (void)reportSpamForGroupWithGroupID:(uint64_t)groupID adminIdentity:(nonnull NSString *)groupAdminIdentity adminNickname:(nullable NSString *)groupAdminNickname memberCount:(NSInteger)memberCount withStore:(nonnull id<MyIdentityStoreProtocol>)identityStore onCompletion:(void(^_Nonnull)(void))onCompletion onError:(void(^_Nonnull)( NSError * _Nullable error))onError {
+     if (identityStore.identity == nil) {
+         onError([ThreemaError threemaError:@"No identity"]);
+         return;
+     }
+
+     NSMutableDictionary *request = [[NSMutableDictionary alloc] initWithDictionary: @{
+        @"reporter_identity": identityStore.identity,
+        @"group_creator_identity": groupAdminIdentity,
+        @"group_name": [NSNull null],
+        @"group_id": [NSString stringWithFormat:@"%llu", groupID],
+        @"group_member_count": @(memberCount),
+     }];
+
+     // Send an explicit null (not an empty string and not an omitted key) when no nickname was set
+     if (groupAdminNickname != nil && groupAdminNickname.length > 0) {
+         [request setObject:groupAdminNickname forKey:@"group_creator_nickname"];
+     } else {
+         [request setObject:[NSNull null] forKey:@"group_creator_nickname"];
+     }
+
+     [self sendSignedRequest:request toApiPath:@"identity/report_group" forStore:identityStore onCompletion:^(NSDictionary *jsonObject) {
+         if ([self isReportSuccessResponse:jsonObject]) {
+             onCompletion();
+         }
+         else {
+             onError([self reportErrorFromResponse:jsonObject]);
          }
      } onError:onError];
 }
 
 #pragma mark - Private helpers
+
+- (BOOL)isReportSuccessResponse:(NSDictionary *)jsonObject {
+    id status = jsonObject[@"status"];
+    return [status isKindOfClass:[NSString class]] && [status isEqualToString:@"success"];
+}
+
+- (NSError *)reportErrorFromResponse:(NSDictionary *)jsonObject {
+    NSData *jsonData = [NSJSONSerialization isValidJSONObject:jsonObject] ? [NSJSONSerialization dataWithJSONObject:jsonObject options:0 error:nil] : nil;
+    NSString *message = jsonData != nil ? [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding] : [jsonObject description];
+    return [ThreemaError threemaError:message];
+}
 
 - (void)sendSignedRequest:(NSDictionary*)request toApiPath:(NSString*)apiPath forStore:(id<MyIdentityStoreProtocol>)identityStore onCompletion:(void(^)(NSDictionary *response))onCompletion onError:(void(^)(NSError *error))onError {
     [self sendSignedRequestPhase1:request toApiPath:apiPath onCompletion:^(NSDictionary *response) {

@@ -126,6 +126,24 @@ extension ProfileStore.Profile {
                 nil
             }
 
+        var workAvailabilityStatus: WorkAvailabilityStatus?
+        if let status = profile.workAvailabilityStatus {
+            switch status {
+            case let .busy(text):
+                workAvailabilityStatus = WorkAvailabilityStatus(
+                    category: .busy,
+                    text: text.isEmpty ? nil : text
+                )
+            case let .unavailable(text):
+                workAvailabilityStatus = WorkAvailabilityStatus(
+                    category: .unavailable,
+                    text: text.isEmpty ? nil : text
+                )
+            case .none:
+                break
+            }
+        }
+
         // Note: Some values have a fallback default when restoring a data backup.
 
         self.init(
@@ -138,7 +156,7 @@ extension ProfileStore.Profile {
             isLinkMobileNoPending: false,
             email: email,
             isLinkEmailPending: false,
-            workAvailabilityStatus: nil
+            workAvailabilityStatus: workAvailabilityStatus
         )
     }
 }

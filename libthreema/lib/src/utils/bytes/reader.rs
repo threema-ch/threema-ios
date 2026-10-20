@@ -80,10 +80,9 @@ pub(crate) trait ByteReader {
     /// # Error
     ///
     /// Returns any [`ByteReaderError`] returned by the operation.
-    fn run<T, F: FnOnce(&mut Self::RunReader<'_>) -> Result<T, ByteReaderError>>(
-        &mut self,
-        op: F,
-    ) -> Result<T, ByteReaderError>;
+    fn run<T, F>(&mut self, op: F) -> Result<T, ByteReaderError>
+    where
+        F: FnOnce(&mut Self::RunReader<'_>) -> Result<T, ByteReaderError>;
 
     /// Run an arbitrary operation on the reader and take it.
     ///
@@ -94,10 +93,9 @@ pub(crate) trait ByteReader {
     /// # Error
     ///
     /// Returns any [`ByteReaderError`] returned by the operation.
-    fn run_owned<T, F: FnOnce(Self::RunReader<'_>) -> Result<T, ByteReaderError>>(
-        self,
-        op: F,
-    ) -> Result<T, ByteReaderError>;
+    fn run_owned<T, F>(self, op: F) -> Result<T, ByteReaderError>
+    where
+        F: FnOnce(Self::RunReader<'_>) -> Result<T, ByteReaderError>;
 
     /// Run an arbitrary operation on the reader at a relative offset to the current offset in a
     /// child reader instance. The parent reader will maintain the current offset.
@@ -108,11 +106,9 @@ pub(crate) trait ByteReader {
     /// underlying data boundary.
     ///
     /// Returns any [`ByteReaderError`] returned by the operation.
-    fn run_at<T, F: FnOnce(Self::RunAtReader<'_>) -> Result<T, ByteReaderError>>(
-        &mut self,
-        relative_offset: isize,
-        op: F,
-    ) -> Result<T, ByteReaderError>;
+    fn run_at<T, F>(&mut self, relative_offset: isize, op: F) -> Result<T, ByteReaderError>
+    where
+        F: FnOnce(Self::RunAtReader<'_>) -> Result<T, ByteReaderError>;
 
     /// Expect the reader to have consumed all data (i.e. [`Self::remaining`] is `0`), returning the
     /// underlying buffer.
@@ -325,27 +321,26 @@ impl<'buffer> ByteReader for ByteReaderContainer<&'buffer [u8]> {
     }
 
     #[inline]
-    fn run<T, F: FnOnce(&mut Self::RunReader<'_>) -> Result<T, ByteReaderError>>(
-        &mut self,
-        op: F,
-    ) -> Result<T, ByteReaderError> {
+    fn run<T, F>(&mut self, op: F) -> Result<T, ByteReaderError>
+    where
+        F: FnOnce(&mut Self::RunReader<'_>) -> Result<T, ByteReaderError>,
+    {
         op(self)
     }
 
     #[inline]
-    fn run_owned<T, F: FnOnce(Self) -> Result<T, ByteReaderError>>(
-        self,
-        op: F,
-    ) -> Result<T, ByteReaderError> {
+    fn run_owned<T, F>(self, op: F) -> Result<T, ByteReaderError>
+    where
+        F: FnOnce(Self) -> Result<T, ByteReaderError>,
+    {
         op(self)
     }
 
     #[inline]
-    fn run_at<T, F: FnOnce(Self::RunAtReader<'_>) -> Result<T, ByteReaderError>>(
-        &mut self,
-        relative_offset: isize,
-        op: F,
-    ) -> Result<T, ByteReaderError> {
+    fn run_at<T, F>(&mut self, relative_offset: isize, op: F) -> Result<T, ByteReaderError>
+    where
+        F: FnOnce(Self::RunAtReader<'_>) -> Result<T, ByteReaderError>,
+    {
         let invalid_offset = || ByteReaderError::InvalidRelativeOffset {
             relative_offset,
             offset: self.offset,
@@ -511,27 +506,26 @@ impl<'buffer> ByteReader for ByteReaderContainer<buffer_type> {
     }
 
     #[inline]
-    fn run<T, F: FnOnce(&mut Self::RunReader<'_>) -> Result<T, ByteReaderError>>(
-        &mut self,
-        op: F,
-    ) -> Result<T, ByteReaderError> {
+    fn run<T, F>(&mut self, op: F) -> Result<T, ByteReaderError>
+    where
+        F: FnOnce(&mut Self::RunReader<'_>) -> Result<T, ByteReaderError>,
+    {
         op(self)
     }
 
     #[inline]
-    fn run_owned<T, F: FnOnce(Self) -> Result<T, ByteReaderError>>(
-        self,
-        op: F,
-    ) -> Result<T, ByteReaderError> {
+    fn run_owned<T, F>(self, op: F) -> Result<T, ByteReaderError>
+    where
+        F: FnOnce(Self) -> Result<T, ByteReaderError>,
+    {
         op(self)
     }
 
     #[inline]
-    fn run_at<T, F: FnOnce(Self::RunAtReader<'_>) -> Result<T, ByteReaderError>>(
-        &mut self,
-        relative_offset: isize,
-        op: F,
-    ) -> Result<T, ByteReaderError> {
+    fn run_at<T, F>(&mut self, relative_offset: isize, op: F) -> Result<T, ByteReaderError>
+    where
+        F: FnOnce(Self::RunAtReader<'_>) -> Result<T, ByteReaderError>,
+    {
         let invalid_offset = || ByteReaderError::InvalidRelativeOffset {
             relative_offset,
             offset: self.offset,

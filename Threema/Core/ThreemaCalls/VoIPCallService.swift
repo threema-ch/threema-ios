@@ -1109,12 +1109,8 @@ final class VoIPCallService {
                     isThreemaVideoCallAvailable: threemaVideoCallAvailable,
                     videoActive: false,
                     receivingVideo: false,
-                    viewWasHidden: false,
-                    completion: completion
+                    viewWasHidden: false
                 )
-            }
-            else {
-                completion()
             }
         }
         else {

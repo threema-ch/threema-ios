@@ -9,24 +9,24 @@ final class BackupCenterViewModel {
     // MARK: - Properties
 
     let screenTitle = #localize("backup_center")
-    let onlineSectionHeader = #localize("online").uppercased()
+    let onlineSectionHeader = #localize("online")
     let onlineSubHeadline = #localize("backup_center_threema_safe_description")
-    let offlineSectionHeader = #localize("backup_center_offline_section_header_title").uppercased()
+    let offlineSectionHeader = #localize("backup_center_offline_section_header_title")
     let offlineTitle = #localize("backup_center_local_backup_title")
     let offlineSubHeadline = #localize("backup_center_local_backup_description")
-
+    let noBackupStatus = #localize("backup_local_backup_center_status_unavailable")
     let learnMoreButtonTitle = #localize("learn_more")
-
-    var safeStatusLabel: String {
-        isActivated ? #localize("on") : #localize("off")
-    }
+    let statusIconName = "circle.fill"
 
     var onlineTitle: String {
         String.localizedStringWithFormat(#localize("threema_safe_flavored"), appFlavor.appName)
     }
 
-    var offlineBackupStatus = ""
-    var hasLastBackup: Bool = false
+    var safeStatusLabel = ""
+    var hasSafeBackup: Bool = false
+
+    var localBackupStatus = ""
+    var hasLocalBackup: Bool = false
 
     @ObservationIgnored var onSafeLearnMoreButtonTapped: () -> Void = { /* no-op */ }
     @ObservationIgnored var onLocalDataBackupLearnMoreButtonTapped: () -> Void = { /* no-op */ }
@@ -35,21 +35,25 @@ final class BackupCenterViewModel {
 
     // MARK: - Private properties
 
-    private let appFlavor: any AppFlavorServiceProtocol
-    private let manager: any BackupCreateManagerProtocol
-    private let safeManager: SafeManagerProtocol
     private var isActivated = false
+
+    private let appFlavor: any AppFlavorServiceProtocol
+    private let backupManager: any BackupCreateManagerProtocol
+    private let safeManager: any SafeManagerProtocol
+    private let safeConfigManager: any SafeConfigManagerProtocol
 
     // MARK: - Lifecycle
 
     init(
         appFlavor: any AppFlavorServiceProtocol,
-        manager: any BackupCreateManagerProtocol,
-        safeManager: SafeManagerProtocol
+        backupManager: any BackupCreateManagerProtocol,
+        safeManager: any SafeManagerProtocol,
+        safeConfigManager: any SafeConfigManagerProtocol
     ) {
         self.appFlavor = appFlavor
-        self.manager = manager
+        self.backupManager = backupManager
         self.safeManager = safeManager
+        self.safeConfigManager = safeConfigManager
     }
 
     func onAppear() {
@@ -76,17 +80,29 @@ final class BackupCenterViewModel {
 
     private func refresh() {
         isActivated = safeManager.isActivated
-        hasLastBackup = manager.lastBackup != nil
+        hasSafeBackup = safeConfigManager.getLastBackup() != nil
 
-        offlineBackupStatus =
-            if let date = manager.lastBackup?.date {
+        safeStatusLabel =
+            if let date = safeConfigManager.getLastBackup() {
                 String.localizedStringWithFormat(
-                    #localize("backup_local_backup_center_status_available"),
+                    #localize("backup_status_availability_label"),
                     DateFormatter.accessibilityRelativeDayTime(date)
                 )
             }
             else {
-                #localize("backup_local_backup_center_status_unavailable")
+                noBackupStatus
+            }
+
+        hasLocalBackup = backupManager.lastBackup != nil
+        localBackupStatus =
+            if let date = backupManager.lastBackup?.date {
+                String.localizedStringWithFormat(
+                    #localize("backup_status_availability_label"),
+                    DateFormatter.accessibilityRelativeDayTime(date)
+                )
+            }
+            else {
+                noBackupStatus
             }
     }
 }

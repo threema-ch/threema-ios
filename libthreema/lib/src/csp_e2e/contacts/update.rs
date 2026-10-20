@@ -4,7 +4,6 @@
 use core::mem;
 use std::rc::Rc;
 
-use const_format::formatcp;
 use itertools::Itertools as _;
 use libthreema_macros::{DebugVariantNames, Name, VariantNames};
 use tracing::{debug, error, info};
@@ -171,9 +170,13 @@ impl State {
             .map_ok(|(payload, nonce)| (payload, nonce.hash_with(context.csp_e2e.user_identity)))
             .collect::<Result<_, _>>()?;
 
-        // Reflect and commit the transaction
+        // Reflect and commit the transaction.
         d2x_context.nonce_provider.borrow_mut().add_many(nonces)?;
-        let (transaction_state, commit_instruction) = CommitTransactionSubtask::new(reflect_messages);
+        let (transaction_state, commit_instruction) = CommitTransactionSubtask::new(
+            d2x_context,
+            reflect_messages,
+            protobuf::d2d::transaction_scope::Scope::ContactSync,
+        )?;
         Ok((
             Self::ReflectAndCommitTransaction(ReflectAndCommitTransactionState {
                 contacts: state.contacts,
@@ -186,11 +189,20 @@ impl State {
     }
 
     fn poll_reflect_and_commit_transaction(
-        context: &CspE2eProtocolContext,
+        context: &mut CspE2eProtocolContext,
         state: ReflectAndCommitTransactionState,
     ) -> Result<(Self, UpdateContactsLoop), CspE2eProtocolError> {
-        // Fulfill the transaction
-        state.transaction_task.poll()?;
+        // Ensure MD is enabled.
+        let Some(d2x_context) = context.d2x.as_mut() else {
+            let message = "D2X context missing";
+            error!(message);
+            return Err(CspE2eProtocolError::InternalError(message.into()));
+        };
+
+        // Fulfill the transaction.
+        state
+            .transaction_task
+            .poll(&mut d2x_context.transaction_manager)?;
 
         // Update contacts
         Self::update_contacts(&mut *context.providers.contacts.borrow_mut(), state.contacts)?;
@@ -235,9 +247,9 @@ impl UpdateContactsTask {
     ) -> Result<UpdateContactsLoop, CspE2eProtocolError> {
         let result = match mem::replace(
             &mut self.state,
-            State::Error(CspE2eProtocolError::InvalidState(formatcp!(
+            State::Error(CspE2eProtocolError::ContractViolation(format!(
                 "{} in a transitional state",
-                UpdateContactsTask::NAME
+                Self::NAME
             ))),
         ) {
             State::Error(error) => Err(error),
@@ -246,9 +258,9 @@ impl UpdateContactsTask {
             State::ReflectAndCommitTransaction(state) => {
                 State::poll_reflect_and_commit_transaction(context, state)
             },
-            State::Done => Err(CspE2eProtocolError::InvalidState(formatcp!(
+            State::Done => Err(CspE2eProtocolError::ContractViolation(format!(
                 "{} already done",
-                UpdateContactsTask::NAME
+                Self::NAME
             ))),
         };
         match result {
@@ -275,7 +287,7 @@ impl UpdateContactsTask {
         match response {
             UpdateContactsResponse::BeginTransactionResponse(response) => {
                 let State::BeginTransaction(state) = &mut self.state else {
-                    return Err(CspE2eProtocolError::InvalidState(formatcp!(
+                    return Err(CspE2eProtocolError::ContractViolation(format!(
                         "Must be in '{}' state",
                         State::BEGIN_TRANSACTION
                     )));
@@ -284,7 +296,7 @@ impl UpdateContactsTask {
             },
             UpdateContactsResponse::CommitTransactionResponse(response) => {
                 let State::ReflectAndCommitTransaction(state) = &mut self.state else {
-                    return Err(CspE2eProtocolError::InvalidState(formatcp!(
+                    return Err(CspE2eProtocolError::ContractViolation(format!(
                         "Must be in '{}' state",
                         State::REFLECT_AND_COMMIT_TRANSACTION
                     )));

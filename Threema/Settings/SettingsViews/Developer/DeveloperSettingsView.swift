@@ -1,4 +1,5 @@
 import CocoaLumberjackSwift
+import DataBackup
 import FileUtility
 import Intents
 import Keychain
@@ -14,6 +15,11 @@ struct DeveloperSettingsView: View {
     /// `SettingsCoordinator` so the demo pushes onto the settings tab's shared
     /// navigation path (see `SettingsCoordinatorDemo`).
     let onStartCoordinatorDemo: () -> Void
+
+    let appFlavorService: any AppFlavorServiceProtocol = AppFlavorService()
+
+    // Local Backups
+    @State var localBackupDebugRecoveryKeyEnabled = UserSettings.shared().localBackupDebugRecoveryKeyEnabled
 
     // Multi-Device
     @State var allowSeveralDevices = UserSettings.shared().allowSeveralLinkedDevices
@@ -53,6 +59,25 @@ struct DeveloperSettingsView: View {
             }
             header: {
                 Text(verbatim: "Feature Flags")
+            }
+
+            if appFlavorService.isSandbox || EnvironmentType.current == .testFlight {
+                Section {
+                    Toggle(isOn: $localBackupDebugRecoveryKeyEnabled) {
+                        Text(verbatim: "Generate same backup password")
+                    }
+                    .onChange(of: localBackupDebugRecoveryKeyEnabled) {
+                        UserSettings.shared().localBackupDebugRecoveryKeyEnabled = localBackupDebugRecoveryKeyEnabled
+                    }
+                }
+                header: {
+                    Text(verbatim: "Local Backups")
+                }
+                footer: {
+                    Text(
+                        verbatim: "Uses \(DebugBackupEncryptionKeyService.key.prefix(8))… (\(DebugBackupEncryptionKeyService.key.count) times 1) as the recovery key instead of random one. Takes effect after the next app start."
+                    )
+                }
             }
 
             Section {
@@ -199,7 +224,7 @@ struct DeveloperSettingsView: View {
             header: {
                 Text(verbatim: "Group Calls")
             }
-            
+
             Section {
                 Button {
                     let businessInjector = BusinessInjector.ui
@@ -239,7 +264,7 @@ struct DeveloperSettingsView: View {
             }
             
             // Add this option to testflight for green and blue apps
-            if ThreemaEnvironment.env() == .xcode || ThreemaEnvironment.env() == .testFlight {
+            if EnvironmentType.current == .xcode || EnvironmentType.current == .testFlight {
                 Section {
                     Button {
                         showDeleteKeychainItemsConfirmation = true
@@ -252,7 +277,7 @@ struct DeveloperSettingsView: View {
                         titleVisibility: .visible
                     ) {
                         Button {
-                            if ThreemaEnvironment.env() == .xcode {
+                            if EnvironmentType.current == .xcode {
                                 try? KeychainManager.deleteAllThisDeviceOnlyItems()
                                 
                                 exit(1)

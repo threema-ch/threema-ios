@@ -103,7 +103,7 @@ final class GroupListViewController: ContactListBaseViewController {
             DeleteConversationAction.execute(
                 for: conversation,
                 owner: self,
-                cell: cell,
+                anchorView: cell,
             ) { didDelete in
                 if didDelete {
                     tableView.reloadData()

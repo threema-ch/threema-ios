@@ -8,7 +8,10 @@ use tracing::level_filters::LevelFilter;
 /// # Panics
 ///
 /// Panics if called more than once.
-pub fn init_stderr_logging<TFilter: Into<LevelFilter>>(filter: TFilter) {
+pub fn init_stderr_logging<TFilter>(filter: TFilter)
+where
+    TFilter: Into<LevelFilter>,
+{
     let subscriber = tracing_subscriber::FmtSubscriber::builder()
         .with_max_level(filter)
         .with_target(false)

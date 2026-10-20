@@ -2,17 +2,13 @@
 use std::sync::{Arc, Mutex};
 
 use crate::{
-    bindings::uniffi::{
-        common::config::{ConfigEnvironment, ConfigError},
-        https::HttpsResult,
-    },
+    bindings::uniffi::{ConversionError, common::config::ConfigEnvironment, https::HttpsResult},
     common::{
         ClientInfo,
         config::{self, Flavor},
     },
     csp_e2e::{CspE2eProtocolError, identity::create},
     https::HttpsRequest,
-    utils::sync::MutexIgnorePoison as _,
 };
 
 /// Binding version [`create::CreateIdentityContext`].
@@ -28,7 +24,7 @@ pub struct CreateIdentityContext {
     pub flavor: Flavor,
 }
 impl TryFrom<CreateIdentityContext> for create::CreateIdentityContext {
-    type Error = ConfigError;
+    type Error = ConversionError;
 
     fn try_from(context: CreateIdentityContext) -> Result<Self, Self::Error> {
         let config = {
@@ -86,24 +82,6 @@ impl From<create::CreateIdentityLoop> for CreateIdentityLoop {
     }
 }
 
-/// Binding version of a [`create::CreateIdentityTask::poll`] result.
-#[derive(uniffi::Enum)]
-pub enum CreateIdentityPollResult {
-    #[expect(missing_docs, reason = "Binding version")]
-    CreateLoop(CreateIdentityLoop),
-
-    #[expect(missing_docs, reason = "Binding version")]
-    Error(CspE2eProtocolError),
-}
-impl From<Result<create::CreateIdentityLoop, CspE2eProtocolError>> for CreateIdentityPollResult {
-    fn from(result: Result<create::CreateIdentityLoop, CspE2eProtocolError>) -> Self {
-        match result {
-            Ok(create_loop) => Self::CreateLoop(create_loop.into()),
-            Err(error) => Self::Error(error),
-        }
-    }
-}
-
 /// Binding version of [`create::CreateIdentityTask`].
 #[derive(uniffi::Object)]
 pub struct CreateIdentityTask(Mutex<create::CreateIdentityTask>);
@@ -114,22 +92,23 @@ impl CreateIdentityTask {
     ///
     /// # Errors
     ///
-    /// Returns a [`CspE2eProtocolError::Foreign`] if `context` contains invalid parameters.
+    /// Returns a [`ConversionError`] if `context` contains an invalid config.
     #[uniffi::constructor]
-    pub fn new(context: CreateIdentityContext) -> Result<Self, ConfigError> {
+    pub fn new(context: CreateIdentityContext) -> Result<Self, ConversionError> {
         Ok(Self(Mutex::new(create::CreateIdentityTask::new(
             context.try_into()?,
         ))))
     }
 
     /// Binding version of [`create::CreateIdentityTask::poll`].
-    pub fn poll(&self) -> CreateIdentityPollResult {
-        self.0.lock_ignore_poison().poll().into()
+    #[expect(clippy::missing_errors_doc, reason = "Binding version")]
+    pub fn poll(&self) -> Result<CreateIdentityLoop, CspE2eProtocolError> {
+        Ok(self.0.lock()?.poll()?.into())
     }
 
     /// Binding version of [`create::CreateIdentityTask::response`].
     #[expect(clippy::missing_errors_doc, reason = "Binding version")]
     pub fn response(&self, response: HttpsResult) -> Result<(), CspE2eProtocolError> {
-        self.0.lock_ignore_poison().response(response.into())
+        self.0.lock()?.response(response.into())
     }
 }

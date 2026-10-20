@@ -14,8 +14,8 @@ struct LocalBackupDetailsViewModelTests {
         #expect(sut.screenTitle == "Data Backup")
         #expect(sut.shareActionTitle == "Share Backup")
         #expect(sut.shareActionIconName == "square.and.arrow.up")
-        #expect(sut.keyActionTitle == "Recovery Key")
-        #expect(sut.buttonTitle == "Create New Backup")
+        #expect(sut.keyActionTitle == "Recovery key")
+        #expect(sut.buttonTitle == "Create new backup")
 
         #expect(sut.detailItems.count == 5)
 

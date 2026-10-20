@@ -25,13 +25,7 @@ final class DocumentPicker: NSObject {
     
     func checkPermissionAndShowContactPicker() {
         let status = CNContactStore.authorizationStatus(for: .contacts)
-        let isAuthorizedOrLimited: Bool =
-            if #available(iOS 18.0, *) {
-                status == .authorized || status == .limited
-            }
-            else {
-                status == .authorized
-            }
+        let isAuthorizedOrLimited: Bool = status == .authorized || status == .limited
 
         if isAuthorizedOrLimited {
             showContactPicker()

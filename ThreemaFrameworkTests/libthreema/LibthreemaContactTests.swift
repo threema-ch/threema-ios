@@ -72,6 +72,8 @@ struct LibthreemaContactTests {
         #expect(contactEntity.contactImportStatus == .initial)
         #expect(contactEntity.readReceipt == .send)
         #expect(contactEntity.typingIndicator == .send)
+        #expect(contactEntity.workLastFullSyncAt == nil)
+        #expect(contactEntity.workAvailabilityStatus == nil)
 
         let conversationEntity = ConversationEntity(context: testDatabase.context.current, contact: contactEntity)
         try conversationEntity.update(with: contact)
@@ -124,6 +126,8 @@ struct LibthreemaContactTests {
         #expect(contact.notificationTriggerPolicyOverride == nil)
         #expect(contact.conversationCategory == .default)
         #expect(contact.conversationVisibility == .normal)
+        #expect(contact.workAvailabilityStatus == nil)
+        #expect(contact.workLastFullSyncAt == nil)
     }
 
     @Test func convertContactEntityAndConversationEntityToLibthreemaContact() async throws {
@@ -144,6 +148,9 @@ struct LibthreemaContactTests {
         let expectedReadReceipt: ContactEntity.ReadReceipt = .doNotSend
         let expectedTypingIndicator: ContactEntity.TypingIndicator = .doNotSend
         let expectedVerificationLevel: ContactEntity.VerificationLevel = .serverVerified
+        let expectedWorkAvailabilityStatus = ThreemaFramework.WorkAvailabilityStatus.Category.busy
+        let expectedWorkAvailabilityStatusText = "Holiday"
+        let expectedWorkLastFullSyncAt = Date()
 
         userSettingsMock.workIdentities = [expectedIdentity]
 
@@ -165,7 +172,15 @@ struct LibthreemaContactTests {
             readReceipts: NSNumber(integerLiteral: expectedReadReceipt.rawValue),
             typingIndicators: NSNumber(integerLiteral: expectedTypingIndicator.rawValue),
             verificationLevel: NSNumber(integerLiteral: expectedVerificationLevel.rawValue),
-            sortOrderFirstName: true
+            sortOrderFirstName: true,
+            workLastFullSyncAt: expectedWorkLastFullSyncAt
+        )
+
+        _ = WorkAvailabilityStatusEntity(
+            context: testDatabase.context.current,
+            value: expectedWorkAvailabilityStatus.rawValue,
+            text: expectedWorkAvailabilityStatusText,
+            contact: contactEntity
         )
 
         let conversationEntity = ConversationEntity(
@@ -203,6 +218,8 @@ struct LibthreemaContactTests {
         #expect(contact.notificationTriggerPolicyOverride == nil)
         #expect(contact.conversationCategory == .protected)
         #expect(contact.conversationVisibility == .pinned)
+        #expect(contact.workAvailabilityStatus == .busy(expectedWorkAvailabilityStatusText))
+        #expect(contact.workLastFullSyncAt == expectedWorkLastFullSyncAt.millisecondsSince1970.littleEndian)
     }
 
     @Test("Update ContactEntity with LibthreemaContactEntity", arguments: [
@@ -341,7 +358,7 @@ struct LibthreemaContactTests {
             typingIndicatorPolicyOverride: updatedTypingIndicatorPolicyOverride,
             notificationTriggerPolicyOverride: .unchanged,
             conversationCategory: updatedConversationCategory,
-            conversationVisibility: updatedConversationVisibility
+            conversationVisibility: updatedConversationVisibility,
         )
 
         // Act

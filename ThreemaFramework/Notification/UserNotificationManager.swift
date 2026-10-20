@@ -293,9 +293,17 @@ public final class UserNotificationManager: UserNotificationManagerProtocol {
         // AbstractMessage checks
         if let abstractMessage = pendingUserNotification.abstractMessage {
             
-            if abstractMessage is GroupCallStartMessage,
-               !BusinessInjector().settingsStore.enableThreemaGroupCalls {
-                return false
+            if let groupCallStartMessage = abstractMessage as? GroupCallStartMessage {
+                guard BusinessInjector().settingsStore.enableThreemaGroupCalls else {
+                    return false
+                }
+
+                // The call might have ended before we were able to process its start message, e.g. because we were
+                // offline for a while. Processing peeks the SFU, so by now we know if it did.
+                guard !groupCallStartMessage.callEnded else {
+                    DDLogNotice("[Push] Do not show a notification for a group call that is no longer running")
+                    return false
+                }
             }
 
             // Delete or edit message it self can't show notification, but can delete/edit existing notification

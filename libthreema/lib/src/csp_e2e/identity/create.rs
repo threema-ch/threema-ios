@@ -4,7 +4,6 @@
 use core::mem;
 use std::sync::Arc;
 
-use const_format::formatcp;
 use educe::Educe;
 use libthreema_macros::{DebugVariantNames, Name, VariantNames};
 use tracing::{debug, error, info};
@@ -121,10 +120,10 @@ impl State {
     ) -> Result<(Self, CreateIdentityLoop), CspE2eProtocolError> {
         // Ensure the caller provided the response
         let Some(response) = state.response else {
-            return Err(CspE2eProtocolError::InvalidState(formatcp!(
+            return Err(CspE2eProtocolError::ContractViolation(format!(
                 "{} result was not provided for '{}' state",
                 CreateIdentityResponse::NAME,
-                State::DIRECTORY_CHALLENGE,
+                Self::DIRECTORY_CHALLENGE,
             )));
         };
 
@@ -155,10 +154,10 @@ impl State {
     ) -> Result<(Self, CreateIdentityLoop), CspE2eProtocolError> {
         // Ensure the caller provided the response
         let Some(response) = state.response else {
-            return Err(CspE2eProtocolError::InvalidState(formatcp!(
+            return Err(CspE2eProtocolError::ContractViolation(format!(
                 "{} result was not provided for '{}' state",
                 CreateIdentityResponse::NAME,
-                State::DIRECTORY_CREATE,
+                Self::DIRECTORY_CREATE,
             )));
         };
 
@@ -206,10 +205,10 @@ impl State {
     ) -> Result<(Self, CreateIdentityLoop), CspE2eProtocolError> {
         // Ensure the caller provided the response
         let Some(response) = state.response else {
-            return Err(CspE2eProtocolError::InvalidState(formatcp!(
+            return Err(CspE2eProtocolError::ContractViolation(format!(
                 "{} result was not provided for '{}' state",
                 CreateIdentityResponse::NAME,
-                State::REGISTER_WORK_CHALLENGE,
+                Self::REGISTER_WORK_CHALLENGE,
             )));
         };
 
@@ -247,10 +246,10 @@ impl State {
     ) -> Result<(Self, CreateIdentityLoop), CspE2eProtocolError> {
         // Ensure the caller provided the response
         let Some(response) = state.response else {
-            return Err(CspE2eProtocolError::InvalidState(formatcp!(
+            return Err(CspE2eProtocolError::ContractViolation(format!(
                 "{} result was not provided for '{}' state",
                 CreateIdentityResponse::NAME,
-                State::REGISTER_WORK,
+                Self::REGISTER_WORK,
             )));
         };
 
@@ -297,9 +296,9 @@ impl CreateIdentityTask {
     pub fn poll(&mut self) -> Result<CreateIdentityLoop, CspE2eProtocolError> {
         let result = match mem::replace(
             &mut self.state,
-            State::Error(CspE2eProtocolError::InvalidState(formatcp!(
+            State::Error(CspE2eProtocolError::ContractViolation(format!(
                 "{} in a transitional state",
-                CreateIdentityTask::NAME
+                Self::NAME
             ))),
         ) {
             State::Error(error) => Err(error),
@@ -308,9 +307,9 @@ impl CreateIdentityTask {
             State::DirectoryCreate(state) => State::poll_directory_create(&self.context, state),
             State::RegisterWorkChallenge(state) => State::poll_register_work_challenge(&self.context, state),
             State::RegisterWork(state) => State::poll_register_work(state),
-            State::Done => Err(CspE2eProtocolError::InvalidState(formatcp!(
+            State::Done => Err(CspE2eProtocolError::ContractViolation(format!(
                 "{} already done",
-                CreateIdentityTask::NAME
+                Self::NAME
             ))),
         };
         match result {
@@ -351,7 +350,7 @@ impl CreateIdentityTask {
                 let _ = state.response.insert(response);
                 Ok(())
             },
-            _ => Err(CspE2eProtocolError::InvalidState(formatcp!(
+            _ => Err(CspE2eProtocolError::ContractViolation(format!(
                 "Must be in any of the following states: {}, {}, {}, {}",
                 State::DIRECTORY_CHALLENGE,
                 State::DIRECTORY_CREATE,

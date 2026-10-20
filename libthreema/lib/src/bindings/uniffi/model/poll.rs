@@ -7,44 +7,17 @@ use crate::{
         common::{ConversationId, ThreemaId},
     },
     common,
-    model::poll::{self, PollChoiceId, PollId},
+    model::poll::{self, PollId},
     protobuf,
     provider::ProviderError,
 };
-
-/// Binding version of [`poll::PollVote`].
-#[derive(uniffi::Record)]
-#[expect(missing_docs, reason = "Binding version")]
-pub struct PollVote {
-    pub choices: Vec<PollChoiceId>,
-    pub created_at: u64,
-    pub modified_at: Option<u64>,
-}
-impl From<poll::PollVote> for PollVote {
-    fn from(vote: poll::PollVote) -> Self {
-        Self {
-            choices: vote.choices.into_iter().collect(),
-            created_at: vote.created_at,
-            modified_at: vote.modified_at,
-        }
-    }
-}
-impl From<PollVote> for poll::PollVote {
-    fn from(vote: PollVote) -> Self {
-        Self {
-            choices: vote.choices.into_iter().collect(),
-            created_at: vote.created_at,
-            modified_at: vote.modified_at,
-        }
-    }
-}
 
 /// Binding version of [`poll::PollVotes`].
 #[derive(uniffi::Enum)]
 #[expect(missing_docs, reason = "Binding version")]
 pub enum PollVotes {
-    Votes(HashMap<ThreemaId, PollVote>),
-    Summary(HashMap<PollChoiceId, u16>),
+    Votes(HashMap<ThreemaId, poll::PollVote>),
+    Summary(poll::PollVotesSummary),
 }
 impl From<poll::PollVotes> for PollVotes {
     fn from(votes: poll::PollVotes) -> Self {
@@ -52,10 +25,10 @@ impl From<poll::PollVotes> for PollVotes {
             poll::PollVotes::Votes(votes) => Self::Votes(
                 votes
                     .into_iter()
-                    .map(|(voter, vote)| (ThreemaId::from(voter), PollVote::from(vote)))
+                    .map(|(voter, vote)| (ThreemaId::from(voter), vote))
                     .collect(),
             ),
-            poll::PollVotes::Summary(vote_counts) => Self::Summary(vote_counts),
+            poll::PollVotes::Summary(votes_summary) => Self::Summary(votes_summary),
         }
     }
 }
@@ -67,12 +40,7 @@ impl TryFrom<PollVotes> for poll::PollVotes {
             PollVotes::Votes(votes) => Self::Votes(
                 votes
                     .into_iter()
-                    .map(|(voter, vote)| {
-                        Ok::<_, Self::Error>((
-                            common::ThreemaId::try_from(voter)?,
-                            poll::PollVote::from(vote),
-                        ))
-                    })
+                    .map(|(voter, vote)| Ok::<_, Self::Error>((common::ThreemaId::try_from(voter)?, vote)))
                     .collect::<Result<_, _>>()?,
             ),
             PollVotes::Summary(vote_counts) => Self::Summary(vote_counts),

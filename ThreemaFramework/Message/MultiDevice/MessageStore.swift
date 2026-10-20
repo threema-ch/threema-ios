@@ -1316,13 +1316,17 @@ final class MessageStore: MessageStoreProtocol {
                 // correct here. This is because the content is derived from an abstract message, not a base message.
                 groupCallStartMessage.date = receiveDate
                 
-                await GlobalGroupCallManagerSingleton.shared.handleMessage(
+                let callMightBeRunning = await GlobalGroupCallManagerSingleton.shared.handleMessage(
                     rawMessage: decodedCallStartMessage,
                     from: fromIdentity,
                     in: conversationObjectID,
                     receiveDate: receiveDate
                 )
                 
+                // Handling the message peeks the SFU. Remember the verdict, it is used to suppress the user
+                // notification for a call that already ended.
+                groupCallStartMessage.callEnded = !callMightBeRunning
+
                 if !isOutgoing {
                     self.messageProcessorDelegate.incomingMessageFinished(groupCallStartMessage)
                 }

@@ -243,10 +243,8 @@ public final class MessageForwardingViewController: ThemedViewController {
     private func setupSearch() {
         navigationItem.searchController = searchController
         navigationItem.hidesSearchBarWhenScrolling = false
-
-        if #available(iOS 18.0, *) {
-            navigationItem.preferredSearchBarPlacement = .stacked
-        }
+        navigationItem.preferredSearchBarPlacement = .stacked
+        
         definesPresentationContext = true
     }
     

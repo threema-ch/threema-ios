@@ -1,6 +1,8 @@
 import CocoaLumberjackSwift
 import FileUtility
 import Foundation
+import Keychain
+import ThreemaEssentials
 import ThreemaFramework
 
 enum AppLaunchEvent {
@@ -76,7 +78,9 @@ final class AppLaunchTasks: AppLaunchTasksProtocol {
                 
                 // Reset MD setting if needed
                 businessInjector.multiDeviceManager.resetEnableMultiDeviceIfNeeded()
-                
+
+                createPushNotificationEncryptionKeyIfNeeded()
+
                 if AppLaunchTasks.lastLaunchedVersionChanged {
                     Task {
                         do {
@@ -117,6 +121,30 @@ final class AppLaunchTasks: AppLaunchTasksProtocol {
         }
     }
     
+    /// Create the key that the server uses to encrypt the payload of push notifications, if there is none
+    ///
+    /// Only the app may create it, because it is registered with the server when the push token is sent
+    /// (`ServerConnector`). The extensions just read it to decrypt an incoming push.
+    private func createPushNotificationEncryptionKeyIfNeeded() {
+        do {
+            guard try KeychainManager.loadPushNotificationEncryptionKey() == nil else {
+                return
+            }
+
+            guard let key = BytesUtility.generateRandomBytes(length: Int(kNaClCryptoSymmKeySize)) else {
+                DDLogError("Unable to create push notification encryption key")
+                return
+            }
+
+            try KeychainManager.storePushNotificationEncryptionKey(key)
+
+            DDLogNotice("Created push notification encryption key")
+        }
+        catch {
+            DDLogError("Unable to create push notification encryption key: \(error)")
+        }
+    }
+
     private static func updateLastLaunchedVersion() {
         guard AppLaunchTasks.lastLaunchedVersionChanged else {
             return

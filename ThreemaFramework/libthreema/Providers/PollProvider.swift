@@ -24,7 +24,7 @@ public final class PollProvider: libthreemaSwift.PollProvider {
         // 3. Return the batch at `batchIndex`. An empty batch signals that no further polls are available.
 
         guard batchIndex <= UInt64(Int.max / batchSize) else {
-            throw ProviderError.InvalidParameter("Invalid Parameter batchIndex too large for batchSize \(batchSize)")
+            throw ProviderError.ConversionError("Invalid Parameter batchIndex too large for batchSize \(batchSize)")
         }
 
         let start = Int(batchIndex) * batchSize
@@ -32,7 +32,7 @@ public final class PollProvider: libthreemaSwift.PollProvider {
         let entityFetcher = self.entityManager.entityFetcher
 
         return try entityManager.performAndWait {
-            let ballotEntities = entityFetcher
+            let ballotEntities = try entityFetcher
                 .ballotEntitiesInContactOrGroupConversations(
                     offset: start,
                     limit: self.batchSize
@@ -80,7 +80,7 @@ public final class PollProvider: libthreemaSwift.PollProvider {
     private func validateUniqueness(of poll: LibthreemaPoll) throws {
         // Catches both pre-existing ballots and in-batch duplicates (the fetch sees earlier pending inserts).
         if entityManager.entityFetcher.ballotEntity(for: poll.id.littleEndianData) != nil {
-            throw ProviderError.InvalidState("A poll with id \(poll.id) already exists")
+            throw ProviderError.ContractViolation("A poll with id \(poll.id) already exists")
         }
     }
 
@@ -91,7 +91,7 @@ public final class PollProvider: libthreemaSwift.PollProvider {
 
         for voter in votes.keys where voter != userIdentity.rawValue {
             if entityManager.entityFetcher.contactEntity(for: voter) == nil {
-                throw ProviderError.InvalidState("Voter \(voter) is not a known contact")
+                throw ProviderError.ContractViolation("Voter \(voter) is not a known contact")
             }
         }
     }
@@ -100,7 +100,7 @@ public final class PollProvider: libthreemaSwift.PollProvider {
         switch conversationID {
         case let .contact(identity):
             guard let conversation = entityManager.entityFetcher.conversationEntity(for: identity) else {
-                throw ProviderError.InvalidParameter("No conversation for contact \(identity)")
+                throw ProviderError.ConversionError("No conversation for contact \(identity)")
             }
             return conversation
 
@@ -110,12 +110,12 @@ public final class PollProvider: libthreemaSwift.PollProvider {
                 for: groupIdentity,
                 myIdentity: userIdentity.rawValue
             ) else {
-                throw ProviderError.InvalidParameter("No conversation for group \(groupIdentity)")
+                throw ProviderError.ConversionError("No conversation for group \(groupIdentity)")
             }
             return conversation
 
         case .distributionList:
-            throw ProviderError.InvalidParameter("Polls in distribution lists are not supported")
+            throw ProviderError.ConversionError("Polls in distribution lists are not supported")
         }
     }
 
@@ -140,9 +140,24 @@ public final class PollProvider: libthreemaSwift.PollProvider {
         }
 
         switch poll.votes {
-        case let .summary(summary):
-            for (choiceID, count) in summary {
+        case let .summary(votesSummary):
+            for (choiceID, count) in votesSummary.summary {
                 choicesByID[choiceID]?.totalVotes = NSNumber(value: count)
+            }
+
+            for choiceID in votesSummary.userChoices {
+                guard choicesByID.keys.contains(choiceID), let choice = choicesByID[choiceID] else {
+                    continue
+                }
+
+                let result = entityCreator.ballotResultEntity(
+                    participantID: userIdentity.rawValue,
+                    ballotChoiceEntity: choice
+                )
+                result.value = NSNumber(booleanLiteral: true)
+                // TODO: (IOS-6032) Check are this dates needed
+                result.createDate = .now
+                result.modifyDate = .now
             }
 
         case let .votes(votes):

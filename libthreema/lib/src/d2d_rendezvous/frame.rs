@@ -2,10 +2,7 @@
 use educe::Educe;
 use libthreema_macros::Name;
 
-use crate::utils::{
-    debug::debug_slice_length,
-    frame::{FrameDelimiter as _, U32LittleEndianDelimiter, VariableLengthFrameDecoder},
-};
+use crate::utils::{debug::debug_slice_length, frame::VariableLengthFrameDecoderU32LittleEndianDelimited};
 
 const HEADER_LENGTH: usize = 4;
 
@@ -15,8 +12,7 @@ const HEADER_LENGTH: usize = 4;
 pub struct RendezvousIncomingFrame(#[educe(Debug(method(debug_slice_length)))] pub Vec<u8>);
 
 /// Incoming frame decoder.
-pub(super) type FrameDecoder =
-    VariableLengthFrameDecoder<{ U32LittleEndianDelimiter::LENGTH }, U32LittleEndianDelimiter>;
+pub(super) type FrameDecoder = VariableLengthFrameDecoderU32LittleEndianDelimited;
 impl FrameDecoder {
     // During the handshake and before nomination, we don't expect frames larger than 16 KiB. After
     // the handshake, we don't expect frames larger than 100 MiB. (If we ever need larger frames

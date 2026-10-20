@@ -77,6 +77,14 @@ extension LibthreemaContact {
             throw MappingError.conversationVisibility
         }
 
+        let workAvailabilityStatus: LibthreemaWorkAvailabilityStatus? =
+            if let status = contactEntity.workAvailabilityStatus {
+                try LibthreemaWorkAvailabilityStatus(status)
+            }
+            else {
+                nil
+            }
+
         self.init(
             identity: LibthreemaThreemaID(contactEntity.identity),
             publicKey: PublicKey(contactEntity.publicKey),
@@ -92,8 +100,8 @@ extension LibthreemaContact {
             activityState: activityState,
             featureMask: contactEntity.featureMask.uint64Value,
             syncState: syncState,
-            workLastFullSyncAt: nil,
-            workAvailabilityStatus: nil,
+            workLastFullSyncAt: contactEntity.workLastFullSyncAt?.millisecondsSince1970.littleEndian,
+            workAvailabilityStatus: workAvailabilityStatus,
             readReceiptPolicyOverride: LibthreemaReadReceiptPolicy(contactEntity.readReceipt),
             typingIndicatorPolicyOverride: LibthreemaTypingIndicatorPolicy(contactEntity.typingIndicator),
             notificationTriggerPolicyOverride: notificationTriggerPolicyOverride,

@@ -53,7 +53,7 @@ pub(super) fn decrypt_server_challenge_response(
             temporary_client_key
                 .0
                 .diffie_hellman_hsalsa20(&permanent_server_key.0)
-                .ok_or(CspProtocolError::InvalidParameter(
+                .ok_or(CspProtocolError::ContractViolation(
                     "Non-contributory permanent public server key",
                 ))?
                 .as_bytes()
@@ -372,7 +372,7 @@ mod tests {
         );
         assert_eq!(
             result,
-            Err(CspProtocolError::InvalidParameter(
+            Err(CspProtocolError::ContractViolation(
                 "Non-contributory permanent public server key"
             ))
         );

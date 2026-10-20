@@ -3,72 +3,62 @@ import libthreemaSwift
 
 final class ContactProviderMock: libthreemaSwift.ContactProvider {
 
-    private let identities: [LibthreemaThreemaID]
+    private let identities: Set<LibthreemaThreemaID>
     private let contacts: [LibthreemaContact]
 
-    init(identities: [LibthreemaThreemaID], contacts: [LibthreemaContact]) {
+    init(identities: Set<LibthreemaThreemaID>, contacts: [LibthreemaContact]) {
         self.identities = identities
         self.contacts = contacts
     }
 
-    // swiftformat:disable:next acronyms
-    func isExplicitlyBlocked(identity: libthreemaSwift.ThreemaId) throws -> Bool {
-        throw ProviderError.InvalidState("Not implemented yet")
+    func isExplicitlyBlocked(identity: LibthreemaThreemaID) throws -> Bool {
+        throw ProviderError.ContractViolation("Not implemented yet")
     }
 
-    // swiftformat:disable:next acronyms
-    func getExplicitlyBlockedIdentities() throws -> [libthreemaSwift.ThreemaId] {
-        throw ProviderError.InvalidState("Not implemented yet")
+    func getExplicitlyBlockedIdentities() throws -> [LibthreemaThreemaID] {
+        throw ProviderError.ContractViolation("Not implemented yet")
     }
 
-    // swiftformat:disable:next acronyms
-    func addExplicitlyBlockedIdentities(identities: [libthreemaSwift.ThreemaId]) throws {
+    func addExplicitlyBlockedIdentities(identities: [LibthreemaThreemaID]) throws {
         // Not implemeted yet
     }
 
-    // swiftformat:disable:next acronyms
-    func getExcludeFromSyncIdentities() throws -> [libthreemaSwift.ThreemaId] {
-        throw ProviderError.InvalidState("Not implemented yet")
+    func getExcludeFromSyncIdentities() throws -> [LibthreemaThreemaID] {
+        throw ProviderError.ContractViolation("Not implemented yet")
     }
 
-    // swiftformat:disable:next acronyms
-    func addExcludeFromSyncIdentities(identities: [libthreemaSwift.ThreemaId]) throws {
+    func addExcludeFromSyncIdentities(identities: [LibthreemaThreemaID]) throws {
         // Not implemeted yet
     }
 
     func isPartOfAnyGroup(
-        // swiftformat:disable:next acronyms
-        identity: libthreemaSwift.ThreemaId,
+        identity: LibthreemaThreemaID,
         filter: libthreemaSwift.GroupMembershipFilter
     ) throws -> Bool {
-        throw ProviderError.InvalidState("Not implemented yet")
+        throw ProviderError.ContractViolation("Not implemented yet")
     }
 
     func has(identity: LibthreemaThreemaID) throws -> Bool {
-        throw ProviderError.InvalidState("Not implemented yet")
+        throw ProviderError.ContractViolation("Not implemented yet")
     }
 
-    // swiftformat:disable:next acronyms
-    func countExisting(identities: [libthreemaSwift.ThreemaId]) throws -> UInt32 {
-        throw ProviderError.InvalidState("Not implemented yet")
+    func countExisting(identities: [LibthreemaThreemaID]) throws -> UInt32 {
+        throw ProviderError.ContractViolation("Not implemented yet")
     }
 
-    // swiftformat:disable:next acronyms
-    func getIdentities() throws -> [libthreemaSwift.ThreemaId] {
+    func getIdentities() throws -> Set<LibthreemaThreemaID> {
         self.identities
     }
 
-    // swiftformat:disable:next acronyms
-    func get(identity: libthreemaSwift.ThreemaId) throws -> libthreemaSwift.Contact? {
-        throw ProviderError.InvalidState("Not implemented yet")
+    func get(identity: LibthreemaThreemaID) throws -> libthreemaSwift.Contact? {
+        throw ProviderError.ContractViolation("Not implemented yet")
     }
 
     func add(contacts: [libthreemaSwift.Contact]) throws {
         // Not implemeted yet
     }
 
-    // swiftformat:disable:next acronyms
-    func getWithProfilePictures(identity: libthreemaSwift.ThreemaId) throws -> libthreemaSwift
+    func getWithProfilePictures(identity: LibthreemaThreemaID) throws -> libthreemaSwift
         .ContactWithProfilePictures? {
         guard let contact = contacts.first(where: { $0.identity == identity }) else {
             return nil
@@ -89,29 +79,25 @@ final class ContactProviderMock: libthreemaSwift.ContactProvider {
         // Not implemeted yet
     }
 
-    // swiftformat:disable:next acronyms
-    func getContactDefinedProfilePicture(identity: libthreemaSwift.ThreemaId) throws -> libthreemaSwift
+    func getContactDefinedProfilePicture(identity: LibthreemaThreemaID) throws -> libthreemaSwift
         .ProfilePicture? {
-        throw ProviderError.InvalidState("Not implemented yet")
+        throw ProviderError.ContractViolation("Not implemented yet")
     }
 
     func setContactDefinedProfilePicture(
-        // swiftformat:disable:next acronyms
-        identity: libthreemaSwift.ThreemaId,
+        identity: LibthreemaThreemaID,
         profilePicture: libthreemaSwift.ProfilePicture?
     ) throws {
         // Not implemeted yet
     }
 
-    // swiftformat:disable:next acronyms
-    func getUserDefinedProfilePicture(identity: libthreemaSwift.ThreemaId) throws -> libthreemaSwift
+    func getUserDefinedProfilePicture(identity: LibthreemaThreemaID) throws -> libthreemaSwift
         .ProfilePicture? {
-        throw ProviderError.InvalidState("Not implemented yet")
+        throw ProviderError.ContractViolation("Not implemented yet")
     }
 
     func setUserDefinedProfilePicture(
-        // swiftformat:disable:next acronyms
-        identity: libthreemaSwift.ThreemaId,
+        identity: LibthreemaThreemaID,
         profilePicture: libthreemaSwift.ProfilePicture?
     ) throws {
         // Not implemeted yet

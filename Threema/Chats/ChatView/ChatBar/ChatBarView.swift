@@ -1213,7 +1213,6 @@ extension ChatBarView: ChatTextViewDelegate {
         chatBarViewDelegate?.checkIfPastedStringIsMedia() ?? false
     }
     
-    @available(iOS 18.0, *)
     func processAndSendGlyph(_ glyph: NSAdaptiveImageGlyph) {
         chatBarViewDelegate?.processAndSendGlyph(glyph)
     }
@@ -1315,7 +1314,7 @@ extension ChatBarView {
         if #available(iOS 26.0, *) {
             NSLayoutConstraint.activate([
                 recorderViewController.view.leadingAnchor.constraint(
-                    equalTo: leadingAnchor,
+                    equalTo: safeAreaLayoutGuide.leadingAnchor,
                     constant: Config.textInputButtonSpacing / 2
                 ),
                 recorderViewController.view.trailingAnchor.constraint(
@@ -1328,11 +1327,10 @@ extension ChatBarView {
         }
         else {
             NSLayoutConstraint.activate([
-                recorderViewController.view.leadingAnchor.constraint(equalTo: leadingAnchor),
-                recorderViewController.view.trailingAnchor.constraint(equalTo: trailingAnchor),
+                recorderViewController.view.leadingAnchor.constraint(equalTo: safeAreaLayoutGuide.leadingAnchor),
+                recorderViewController.view.trailingAnchor.constraint(equalTo: safeAreaLayoutGuide.trailingAnchor),
                 recorderViewController.view.topAnchor.constraint(equalTo: topAnchor),
                 recorderViewController.view.centerYAnchor.constraint(equalTo: centerYAnchor),
-                recorderViewController.view.widthAnchor.constraint(equalTo: widthAnchor),
             ])
         }
         

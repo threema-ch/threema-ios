@@ -17,16 +17,16 @@ struct LocalBackupRecoveryKeyViewModelTests {
         #expect(sut.copyIconName == "document.on.document")
         #expect(sut.deleteIconName == "trash")
         #expect(sut.errorIconName == "exclamationmark.circle")
-        #expect(sut.headerSymbolName == "key.fill")
+        #expect(sut.headerIconName == "key")
         #expect(sut.createKeyIconName == "chevron.forward")
         #expect(sut.warningIconName == "info.circle")
 
         #expect(sut.cancelButtonTitle == "Cancel")
         #expect(sut.copyLabel == "Copy")
-        #expect(sut.copiedLabel == "Copied!")
-        #expect(sut.createKeyLabel == "Create New Key")
+        #expect(sut.copiedLabel == "Copied")
+        #expect(sut.createKeyLabel == "Create new key")
         #expect(sut.createKeyDescription == "Generate a new key for future backups")
-        #expect(sut.currentKeyLabel == "Current Key")
+        #expect(sut.currentKeyLabel == "Recovery key")
         #expect(sut.deleteAlertTitle == "Remove recovery key from this device?")
         #expect(sut.deleteAlertMessage == """
             Before removing this key from the app, make sure you’ve saved it safely.
@@ -35,13 +35,13 @@ struct LocalBackupRecoveryKeyViewModelTests {
             
             Removing it here won’t invalidate the key and any saved copies will continue to work.
             """)
-        #expect(sut.deleteLabel == "Remove key")
-        #expect(sut.keyDescription == "This password will be used to encrypt your backup and to restore the backup.")
-        #expect(sut.keyTitle == "Recovery Key")
+        #expect(sut.deleteLabel == "Remove")
+        #expect(sut.headerTitle == "Recovery key")
+        #expect(sut.headerSubtitle == "This password will be used to encrypt your backup and to restore the backup.")
         #expect(sut.saveButtonTitle == "I’ve saved my key")
         #expect(sut.stepLabel == "STEP 1 OF 3")
         #expect(sut.warning == """
-            **Important**: This password cannot be recovered if lost. Store it securely in a \
+            Important: This password cannot be recovered if lost. Store it securely in a \
             password manager or write it down and keep it somewhere safe.
             """)
     }

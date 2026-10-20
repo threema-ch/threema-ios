@@ -152,6 +152,12 @@ final class CallViewController: UIViewController {
 
     func audioRouteChanged(to route: AudioSessionRouteSnapshot) {
         currentAudioRoute = route
+
+        // Might not be presented yet, `viewDidLoad` redraws if needed
+        guard isViewLoaded else {
+            return
+        }
+
         updateSpeakerButtonImage()
         checkAndHandleAvailableBluetoothDevices()
     }

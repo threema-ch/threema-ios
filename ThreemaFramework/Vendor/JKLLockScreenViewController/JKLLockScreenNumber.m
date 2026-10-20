@@ -20,8 +20,16 @@ static const CGFloat LSNContextSetLineWidth = 0.8f;
 // An empty implementation adversely affects performance during animation.
 - (void)drawRect:(CGRect)rect {
     // Drawing code
-    CGFloat height = CGRectGetHeight(rect);
-    CGRect  inset  = CGRectInset(CGRectMake(0, 0, height, height), 1, 1);
+    //------------------ Threema edit begin ---------------------------
+    // The circle used to be pinned to the left edge, which only looked centered because the nib
+    // made every key square. It is laid out by a stack view now, so center it on the actual bounds
+    CGFloat diameter = MIN(CGRectGetWidth(rect), CGRectGetHeight(rect));
+    CGRect  square   = CGRectMake(CGRectGetMidX(rect) - diameter / 2,
+                                  CGRectGetMidY(rect) - diameter / 2,
+                                  diameter,
+                                  diameter);
+    CGRect  inset    = CGRectInset(square, 1, 1);
+    //------------------ Threema edit end ---------------------------
 
     CGContextRef context = UIGraphicsGetCurrentContext();
     

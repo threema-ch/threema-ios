@@ -9,7 +9,7 @@ struct CopyLabelModifier: ViewModifier {
             Button(action: {
                 UIPasteboard.general.string = value ?? ""
             }) {
-                Text(#localize("copy"))
+                Text(#localize("Copy"))
                 Image(systemName: "doc.on.doc")
             }
         } label: {

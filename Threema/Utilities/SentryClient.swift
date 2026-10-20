@@ -81,7 +81,7 @@ final class SentryClient: NSObject, @unchecked Sendable {
 
             // Apply settings
             options.dsn = sentryDsn
-            options.environment = ThreemaEnvironment.env().description
+            options.environment = EnvironmentType.current.description
 
             // Disable/Configure certain tracking options
             options.enableAutoSessionTracking = false

@@ -82,20 +82,20 @@ final class NonceProvider: libthreemaSwift.NonceProvider {
     /// - Throws: `ProviderError` if `libthreema` provides invalid parameters.
     func getMany(batchIndex: UInt64) throws -> [HashedNonce] {
         guard batchIndex <= UInt64(Int.max / batchSize) else {
-            throw ProviderError.InvalidParameter("Invalid Parameter batchIndex too large")
+            throw ProviderError.ConversionError("Invalid Parameter batchIndex too large")
         }
 
         let start = Int(batchIndex) * batchSize
 
         return try entityManager.performAndWait {
-            let entities: [NonceEntity] = self.entityManager.entityFetcher.nonceEntities(
+            let entities: [NonceEntity] = try self.entityManager.entityFetcher.nonceEntities(
                 offset: start,
                 limit: self.batchSize
             ) ?? []
 
             // Defensive check (should never happen)
             guard entities.count <= self.batchSize else {
-                throw ProviderError.InvalidState("Fetcher returned more than batchSize")
+                throw ProviderError.ContractViolation("Fetcher returned more than batchSize")
             }
 
             return entities.map { HashedNonce($0.nonce) }

@@ -13,10 +13,10 @@ final class SettingsProviderMock: libthreemaSwift.SettingsProvider {
     }
 
     func set(settings: libthreemaSwift.Settings) throws {
-        throw ProviderError.InvalidState("Not implemented yet")
+        throw ProviderError.ContractViolation("Not implemented yet")
     }
 
     func update(update: libthreemaSwift.SettingsUpdate) throws {
-        throw ProviderError.InvalidState("Not implemented yet")
+        throw ProviderError.ContractViolation("Not implemented yet")
     }
 }

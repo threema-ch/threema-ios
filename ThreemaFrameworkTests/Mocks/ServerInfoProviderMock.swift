@@ -4,8 +4,25 @@ import Foundation
 final class ServerInfoProviderMock: ServerInfoProvider {
     let baseURLString: String
 
-    init(baseURLString: String) {
+    /// Returned by `domains(completionHandler:)`, if `nil` no additional domains are returned
+    var domainsConfig: [Domain]? {
+        get {
+            localConfig
+        }
+        set {
+            var config = Domain.defaultConfig
+            if let newValue, !newValue.isEmpty {
+                config.append(contentsOf: newValue)
+            }
+            self.localConfig = config
+        }
+    }
+
+    var localConfig: [Domain]?
+
+    init(baseURLString: String, domainsConfig: [Domain]? = nil) {
         self.baseURLString = baseURLString
+        self.domainsConfig = domainsConfig
     }
 
     func chatServer(ipv6: Bool, completionHandler: @escaping (ChatServerInfo?, Error?) -> Void) {
@@ -57,7 +74,7 @@ final class ServerInfoProviderMock: ServerInfoProvider {
     }
 
     func domains(completionHandler: @escaping ([Domain]?, Error?) -> Void) {
-        completionHandler(nil, nil)
+        completionHandler(localConfig, nil)
     }
     
     func mapsServer(completionHandler: @escaping (MapsServerInfo?, Error?) -> Void) {

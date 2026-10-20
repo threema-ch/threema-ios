@@ -55,7 +55,7 @@ struct GroupProviderTests {
 
         let userIdentity = LibthreemaThreemaID(myIdentityStoreMock.identity)
 
-        #expect(throws: ProviderError.InvalidParameter("Identity must not be the user's own identity.")) {
+        #expect(throws: ProviderError.ConversionError("Identity must not be the user's own identity.")) {
             try groupProvider.isPartOfAnyGroup(identity: userIdentity, filter: .any)
         }
     }
@@ -144,18 +144,30 @@ struct GroupProviderTests {
     }
 
     @Test(arguments: [
-        ([ThreemaIdentity("MEMBER01")], 1),
-        ([ThreemaIdentity("MEMBER01"), ThreemaIdentity("MEMBER01")], 1),
-        ([ThreemaIdentity("MEMBER01"), ThreemaIdentity("MEMBER02")], 2),
-        ([], 0),
+        (
+            [ThreemaIdentity("MEMBER01")],
+            1,
+            LibthreemaConversationCategory.default,
+            LibthreemaConversationVisibility.normal
+        ),
+        ([ThreemaIdentity("MEMBER01"), ThreemaIdentity("MEMBER01")], 1, .protected, .archived),
+        ([ThreemaIdentity("MEMBER01"), ThreemaIdentity("MEMBER02")], 2, .protected, .pinned),
+        ([], 0, .default, .normal),
     ])
-    func `addWithProfilePicture regular group`(expectedMembers: [ThreemaIdentity], expectedMembersCount: Int) throws {
+    func `addWithProfilePicture regular group`(
+        expectedMembers: [ThreemaIdentity],
+        expectedMembersCount: Int,
+        expectedConversationCategory: LibthreemaConversationCategory,
+        expectedConversationVisibility: LibthreemaConversationVisibility,
+    ) throws {
         let (groupProvider, myIdentityStoreMock, testDatabase) = try makeSUT()
 
         let expectedGroupIdentity = GroupIdentity(
             id: BytesUtility.generateGroupID(),
             creatorID: myIdentityStoreMock.identity
         )
+        let expectedGroupName = "Group name 123"
+        let expectedLastUpdateAt = Date()
 
         testDatabase.preparer.save {
             for expectedMember in Set(expectedMembers) {
@@ -164,7 +176,14 @@ struct GroupProviderTests {
         }
 
         let groupWithProfilePicture = try GroupWithProfilePicture(
-            group: getLibthreemaGroup(groupIdentity: expectedGroupIdentity, members: expectedMembers),
+            group: getLibthreemaGroup(
+                groupIdentity: expectedGroupIdentity,
+                members: expectedMembers,
+                name: expectedGroupName,
+                lastUpdateAt: expectedLastUpdateAt,
+                conversationCategory: expectedConversationCategory,
+                conversationVisibility: expectedConversationVisibility
+            ),
             profilePicture: nil
         )
 
@@ -182,6 +201,12 @@ struct GroupProviderTests {
         let members = try #require(conversationEntity.members)
         #expect(members.count == expectedMembersCount)
         #expect(members.isEmpty || members.contains(where: { expectedMembers.map(\.rawValue).contains($0.identity) }))
+        #expect(conversationEntity.groupName == expectedGroupName)
+        #expect(conversationEntity.lastUpdate?.millisecondsSince1970 == expectedLastUpdateAt.millisecondsSince1970)
+        #expect(conversationEntity.conversationCategory == ConversationEntity.Category(expectedConversationCategory))
+        #expect(
+            conversationEntity.conversationVisibility == ConversationEntity.Visibility(expectedConversationVisibility)
+        )
         #expect(conversationEntity.groupImage == nil)
         #expect(conversationEntity.groupImageSetDate == nil)
     }
@@ -208,7 +233,7 @@ struct GroupProviderTests {
             profilePicture: nil
         )
 
-        #expect(throws: ProviderError.InvalidState("Group already exists")) {
+        #expect(throws: ProviderError.ContractViolation("Group already exists")) {
             try groupProvider.addWithProfilePicture(groups: [groupWithProfilePicture])
         }
     }
@@ -226,7 +251,7 @@ struct GroupProviderTests {
             profilePicture: nil
         )
 
-        #expect(throws: ProviderError.InvalidState("Unknown group creator")) {
+        #expect(throws: ProviderError.ContractViolation("Unknown group creator")) {
             try groupProvider.addWithProfilePicture(groups: [groupWithProfilePicture])
         }
     }
@@ -291,7 +316,7 @@ struct GroupProviderTests {
             profilePicture: nil
         )
 
-        #expect(throws: ProviderError.InvalidState("Not all members known contacts")) {
+        #expect(throws: ProviderError.ContractViolation("Not all members known contacts")) {
             try groupProvider.addWithProfilePicture(groups: [groupWithProfilePicture])
         }
     }
@@ -427,7 +452,7 @@ struct GroupProviderTests {
             profilePicture: nil
         )
 
-        #expect(throws: ProviderError.InvalidState("Group already exists")) {
+        #expect(throws: ProviderError.ContractViolation("Group already exists")) {
             try groupProvider.addWithProfilePicture(groups: [groupWithProfilePicture, groupWithProfilePicture])
         }
     }
@@ -440,7 +465,7 @@ struct GroupProviderTests {
             creatorID: myIdentityStoreMock.identity
         )
 
-        #expect(throws: ProviderError.InvalidState("Group not found")) {
+        #expect(throws: ProviderError.ContractViolation("Group not found")) {
             try groupProvider.setProfilePicture(
                 identity: LibthreemaGroupIdentity(groupIdentity: groupIdentity),
                 profilePicture: nil
@@ -460,7 +485,7 @@ struct GroupProviderTests {
             testDatabase.preparer.createGroupEntity(groupID: groupIdentity.id, groupCreator: nil)
         }
 
-        #expect(throws: ProviderError.InvalidState("Conversation for group not found")) {
+        #expect(throws: ProviderError.ContractViolation("Conversation for group not found")) {
             try groupProvider.setProfilePicture(
                 identity: LibthreemaGroupIdentity(groupIdentity: groupIdentity),
                 profilePicture: nil
@@ -563,17 +588,26 @@ struct GroupProviderTests {
 
     // MARK: Private functions
 
-    private func getLibthreemaGroup(groupIdentity: ThreemaEssentials.GroupIdentity, members: [ThreemaIdentity]) throws -> LibthreemaGroup {
+    private func getLibthreemaGroup(
+        groupIdentity: ThreemaEssentials.GroupIdentity,
+        members: [ThreemaIdentity],
+        name: String = "Group name",
+        createdAt: Date = Date.now,
+        lastUpdateAt: Date? = nil,
+        notificationTriggerPolicyOverride: libthreemaSwift.GroupNotificationTriggerPolicyOverride? = nil,
+        conversationCategory: libthreemaSwift.ConversationCategory = .default,
+        conversationVisibility: libthreemaSwift.ConversationVisibility = .normal
+    ) throws -> LibthreemaGroup {
         try LibthreemaGroup(
             identity: LibthreemaGroupIdentity(groupIdentity: groupIdentity),
-            name: "Group name",
-            createdAt: Date.now.millisecondsSince1970,
-            lastUpdateAt: nil,
+            name: name,
+            createdAt: createdAt.millisecondsSince1970,
+            lastUpdateAt: lastUpdateAt?.millisecondsSince1970,
             userState: .member,
-            members: members.map(\.rawValue),
-            notificationTriggerPolicyOverride: nil,
-            conversationCategory: .default,
-            conversationVisibility: .normal
+            members: Set(members.map(\.rawValue)),
+            notificationTriggerPolicyOverride: notificationTriggerPolicyOverride,
+            conversationCategory: conversationCategory,
+            conversationVisibility: conversationVisibility
         )
     }
 

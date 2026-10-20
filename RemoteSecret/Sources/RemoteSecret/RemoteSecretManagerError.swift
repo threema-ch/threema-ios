@@ -1,7 +1,8 @@
 /// Public errors of RemoteSecret package
 public enum RemoteSecretManagerError: Error, CustomStringConvertible, Equatable {
-    case invalidParameter
-    case invalidState
+    case conversionError
+    case contractViolation
+    case internalError
     case serverError
     case timeout
     case remoteSecretNotFound
@@ -22,10 +23,12 @@ public enum RemoteSecretManagerError: Error, CustomStringConvertible, Equatable 
     
     public var description: String {
         switch self {
-        case .invalidParameter:
-            "Invalid parameter"
-        case .invalidState:
-            "Invalid state"
+        case .conversionError:
+            "Conversion error"
+        case .contractViolation:
+            "Contract violation"
+        case .internalError:
+            "Internal error"
         case .serverError:
             "Server error"
         case .timeout:

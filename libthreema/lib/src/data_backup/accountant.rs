@@ -2,7 +2,6 @@
 
 use std::collections::{HashMap, HashSet};
 
-use educe::Educe;
 use tracing::{trace, warn};
 
 use crate::{
@@ -10,13 +9,12 @@ use crate::{
     model::{
         contact::Contact,
         distribution_list::DistributionList,
-        group::Group,
+        group::GroupWithProfilePicture,
         message::{MessageState, MessageStateBody, PollClose, PollOpen},
         poll::{Poll, PollId},
         settings::Settings,
     },
     protobuf,
-    utils::debug::debug_collection_length,
 };
 
 #[derive(Default)]
@@ -42,136 +40,103 @@ pub(super) enum EncounteredPollCheck {
     Ok,
 }
 
-#[derive(Educe)]
-#[educe(Debug)]
-struct EncounteredPolls(
-    #[educe(Debug(method(debug_collection_length)))] HashMap<(ConversationId, PollId), EncounteredPoll>,
-);
+struct EncounteredPolls(HashMap<(ConversationId, PollId), EncounteredPoll>);
 impl EncounteredPolls {
     fn new() -> Self {
         Self(HashMap::new())
     }
 
-    /// Add the poll to the encountered polls and return whether it was newly inserted. That is:
-    /// - If the poll was not previously encountered, return `true`.
-    /// - If the poll was previously encountered, replace the previously associated data and return `false`.
-    fn insert(&mut self, poll_state: &Poll) -> bool {
-        self.0
-            .insert(
-                (poll_state.conversation, poll_state.id),
-                EncounteredPoll::default(),
-            )
-            .is_none()
+    fn check_and_add(&mut self, poll: &Poll) -> bool {
+        // Bail if the poll has been encountered before.
+        if self.0.contains_key(&(poll.conversation, poll.id)) {
+            return false;
+        }
+
+        // Add the poll.
+        let _ = self
+            .0
+            .insert((poll.conversation, poll.id), EncounteredPoll::default());
+        true
     }
 
     #[must_use]
     fn check_open(&mut self, conversation: ConversationId, poll_open: &PollOpen) -> EncounteredPollCheck {
-        // Check whether we know the poll.
+        // Bail if the referenced poll has not been encountered before.
         let Some(poll) = self.0.get_mut(&(conversation, poll_open.id)) else {
             return EncounteredPollCheck::Unknown;
         };
 
-        // Check whether we have encountered it before.
+        // Bail if the poll was already opened before.
         if poll.encountered_open {
             return EncounteredPollCheck::ReferencedBefore;
         }
 
+        // Mark the poll as opened and return Ok.
         poll.encountered_open = true;
         EncounteredPollCheck::Ok
     }
 
     #[must_use]
     fn check_close(&mut self, conversation: ConversationId, poll_close: &PollClose) -> EncounteredPollCheck {
-        // Check whether we know the poll.
+        // Bail if the referenced poll has not been encountered before.
         let Some(poll) = self.0.get_mut(&(conversation, poll_close.id)) else {
             return EncounteredPollCheck::Unknown;
         };
 
-        // Check whether we have encountered it before.
+        // Bail if the poll was already closed before.
         if poll.encountered_close {
             return EncounteredPollCheck::ReferencedBefore;
         }
 
+        // Mark the poll as closed and return Ok.
         poll.encountered_close = true;
         EncounteredPollCheck::Ok
     }
 }
 
-/// Tracks data encountered during backup creation or restoration to enforce protocol invariants.
-#[derive(Educe)]
-#[educe(Debug)]
+/// Tracks data encountered during backup creation or restoration to enforce protocol invariance.
 pub(super) struct BackupAccountant {
     user_identity: ThreemaId,
 
     /// A map of encountered contacts to their acquaintance level.
     ///
     /// Note: The public keys are stored separately for efficient lookup.
-    #[educe(Debug(method(debug_collection_length)))]
     contact_acquaintance_levels: HashMap<ThreemaId, protobuf::d2d_sync::contact::AcquaintanceLevel>,
 
     /// A set of all the encountered contact public keys.
     ///
     /// Note: This is used to efficiently check whether we have encountered a contact's public key before.
-    #[educe(Debug(method(debug_collection_length)))]
     contact_public_keys: HashSet<PublicKey>,
 
-    /// A list of all the user's groups with its members (not including the creator or the user).
-    #[educe(Debug(method(debug_collection_length)))]
-    groups: HashMap<GroupIdentity, HashSet<ThreemaId>>,
-
     /// A list of all the user's distribution lists with its members (not including the user).
-    #[educe(Debug(method(debug_collection_length)))]
     distribution_lists: HashMap<DistributionListId, HashSet<ThreemaId>>,
 
+    /// A list of all the user's groups with its members (not including the creator or the user).
+    groups: HashMap<GroupIdentity, HashSet<ThreemaId>>,
+
+    /// A set of poll events that have been encountered before.
     polls: EncounteredPolls,
 
-    #[educe(Debug(method(debug_collection_length)))]
     message_ids: HashSet<(ConversationId, MessageId)>,
 }
 impl BackupAccountant {
-    /// Create a new accountant for the given user identity.
     pub(super) fn new(user_identity: ThreemaId) -> Self {
         Self {
             user_identity,
             contact_acquaintance_levels: HashMap::new(),
             contact_public_keys: HashSet::new(),
-            groups: HashMap::new(),
             distribution_lists: HashMap::new(),
+            groups: HashMap::new(),
             polls: EncounteredPolls::new(),
             message_ids: HashSet::new(),
         }
     }
 
-    /// Return the number of contacts that have been added.
-    pub(super) fn number_of_contacts(&self) -> usize {
-        self.contact_acquaintance_levels.len()
-    }
-
-    /// Return the number of groups that have been added.
-    pub(super) fn number_of_groups(&self) -> usize {
-        self.groups.len()
-    }
-
-    /// Return the number of distribution lists that have been added.
-    pub(super) fn number_of_distribution_lists(&self) -> usize {
-        self.distribution_lists.len()
-    }
-
-    /// Return the number of polls that have been added.
-    pub(super) fn number_of_polls(&self) -> usize {
-        self.polls.0.len()
-    }
-
-    /// Return the number of messages that have been added.
-    pub(super) fn number_of_messages(&self) -> usize {
-        self.message_ids.len()
-    }
-
     /// Sanitize settings by removing any references to the user's own identity.
-    pub(super) fn sanitize_settings(&self, settings: &mut Settings) {
+    pub(super) fn sanitize_settings(&self, mut settings: Settings) -> Settings {
         settings.blocked_identities.retain(|identity| {
             if *identity == self.user_identity {
-                warn!("Skipping blocked identity with the user's identity");
+                warn!("Dropping the user's identity from blocked identities");
                 false
             } else {
                 true
@@ -179,23 +144,26 @@ impl BackupAccountant {
         });
         settings.exclude_from_sync_identities.retain(|identity| {
             if *identity == self.user_identity {
-                warn!("Skipping excluded from sync identity with the user's identity");
+                warn!("Dropping the user's identity from identities excluded from sync");
                 false
             } else {
                 true
             }
         });
+        settings
     }
 
     /// Check if the identity should be added.
     pub(super) fn check_and_add_contact(&mut self, contact: &Contact) -> bool {
         let identity = contact.identity;
+
+        // Bail if the contact has the user's identity.
         if identity == self.user_identity {
             warn!("Skipping contact with the user's identity");
             return false;
         }
 
-        // Check that the public key is unique.
+        // Bail if the public key already exists.
         if self.contact_public_keys.contains(&contact.public_key) {
             warn!(
                 ?identity,
@@ -204,7 +172,7 @@ impl BackupAccountant {
             return false;
         }
 
-        // Check if identity was not encountered before.
+        // Bail if the identity was encountered before.
         if self.contact_acquaintance_levels.contains_key(&identity) {
             warn!(?identity, "Skipping previously encountered contact");
             return false;
@@ -219,56 +187,11 @@ impl BackupAccountant {
         true
     }
 
-    /// Sanitize the group and check if it should be added.
-    pub(super) fn sanitize_and_add_group(&mut self, group: &mut Group) -> bool {
-        let group_identity = group.identity;
-        // Check if creator is known.
-        if !(group_identity.creator_identity == self.user_identity
-            || self
-                .contact_acquaintance_levels
-                .contains_key(&group_identity.creator_identity))
-        {
-            warn!(?group_identity, "Skipping group with unknown creator");
-            return false;
-        }
-
-        // Check that the members do neither contain the user nor the creator.
-        if group
-            .members
-            .iter()
-            .any(|member| member == &self.user_identity || member == &group_identity.creator_identity)
-        {
-            warn!(?group_identity, members = ?group.members, "Skipping group with creator or user in members");
-            return false;
-        }
-
-        // Remove unknown members.
-        group.members.retain(|member| {
-            if self.contact_acquaintance_levels.contains_key(member) {
-                true
-            } else {
-                warn!(?group_identity, ?member, "Removing unknown group member");
-                false
-            }
-        });
-
-        // Store group and return if identity was not encountered before.
-        if self.groups.contains_key(&group_identity) {
-            warn!(?group_identity, "Skipping previously encountered group");
-            return false;
-        }
-
-        // All checks passed.
-        let _ = self.groups.insert(group_identity, group.members.clone());
-        trace!(?group_identity, "Group passed all sanity checks");
-        true
-    }
-
-    /// Sanitize and check if the distribution list should be added.
+    /// Sanitize a distribution list and check if it should be added.
     pub(super) fn sanitize_and_add_distribution_list(
         &mut self,
-        distribution_list: &mut DistributionList,
-    ) -> bool {
+        mut distribution_list: DistributionList,
+    ) -> Option<DistributionList> {
         distribution_list.members.retain(|member| {
             // Remove user from members.
             if member == &self.user_identity {
@@ -292,85 +215,163 @@ impl BackupAccountant {
             }
         });
 
-        // Don't add distribution lists with empty member list.
+        // Bail if the member list is empty.
         if distribution_list.members.is_empty() {
             warn!(id = ?distribution_list.identity, "Skipping distribution list with empty member list");
-            return false;
+            return None;
         }
 
-        // Store distribution list and return if identity was not encountered before.
+        // Bail if the distribution list has been previously encountered.
         if self.distribution_lists.contains_key(&distribution_list.identity) {
             warn!(id = ?distribution_list.identity, "Skipping previously encountered distribution list");
-            return false;
+            return None;
         }
 
-        // All checks passed.
+        // All checks passed, add the distribution list.
         let _ = self
             .distribution_lists
             .insert(distribution_list.identity, distribution_list.members.clone());
         trace!(id = ?distribution_list.identity, "Distribution list passed all sanity checks");
-        true
+        Some(distribution_list)
+    }
+
+    /// Sanitize the group and check if it should be added.
+    ///
+    /// Note: We explicitly allow groups with an empty members list (a.k.a. _notes group_).
+    pub(super) fn sanitize_and_add_group(
+        &mut self,
+        mut group: GroupWithProfilePicture,
+    ) -> Option<GroupWithProfilePicture> {
+        let group_identity = group.group.identity;
+
+        // Bail if the creator is not known.
+        if !(group_identity.creator_identity == self.user_identity
+            || self
+                .contact_acquaintance_levels
+                .contains_key(&group_identity.creator_identity))
+        {
+            warn!(?group_identity, "Skipping group with unknown creator");
+            return None;
+        }
+
+        // Sanitize group members.
+        group.group.members.retain(|member| {
+            // Remove members equal to the creator.
+            if member == &group.group.identity.creator_identity {
+                warn!(?group_identity, "Removing creator from member list");
+                return false;
+            }
+
+            // Remove members equal to the user.
+            if member == &self.user_identity {
+                warn!(?group_identity, "Removing user from member list");
+                return false;
+            }
+
+            // Remove unknown members.
+            if !self.contact_acquaintance_levels.contains_key(member) {
+                warn!(?group_identity, ?member, "Removing unknown group member");
+                return false;
+            }
+
+            true
+        });
+
+        // Bail if the group was encountered before.
+        if self.groups.contains_key(&group_identity) {
+            warn!(?group_identity, "Skipping previously encountered group");
+            return None;
+        }
+
+        // All checks passed, add the group.
+        let _ = self.groups.insert(group_identity, group.group.members.clone());
+        trace!(?group_identity, "Group passed all sanity checks");
+        Some(group)
     }
 
     /// Check if the poll should be added.
-    #[tracing::instrument(skip_all, fields(?poll.id))]
     pub(super) fn check_and_add_poll(&mut self, poll: &Poll) -> bool {
-        // Check if we know the conversation.
-        match poll.conversation {
-            ConversationId::Contact(identity) => {
-                if !self.contact_acquaintance_levels.contains_key(&identity) {
-                    warn!(?identity, "Skipping poll in unknown 1:1 conversation");
+        let poll_id = poll.id;
+        let conversation = poll.conversation;
+
+        // Bail if the conversation is unknown.
+        match conversation {
+            ConversationId::Contact(contact) => {
+                if !self.contact_acquaintance_levels.contains_key(&contact) {
+                    warn!(
+                        ?poll_id,
+                        ?conversation,
+                        "Skipping poll in unknown 1:1 conversation"
+                    );
                     return false;
                 }
             },
-            ConversationId::DistributionList(distribution_list_id) => {
-                warn!("Skipping poll in distribution list {distribution_list_id} (this is not supported)");
+            ConversationId::DistributionList(_) => {
+                warn!(
+                    ?poll_id,
+                    ?conversation,
+                    "Skipping poll in distribution list (this is not supported)"
+                );
                 return false;
             },
             ConversationId::Group(group_identity) => {
                 if !self.groups.contains_key(&group_identity) {
-                    warn!(?group_identity, "Skipping poll in unknown group conversation");
+                    warn!(
+                        ?poll_id,
+                        ?conversation,
+                        "Skipping poll in unknown group conversation"
+                    );
                     return false;
                 }
             },
         }
 
-        // Check if we know the creator.
+        // Bail if the creator is neither the user nor a known contact.
         if !(poll.creator_identity == self.user_identity
             || self
                 .contact_acquaintance_levels
                 .contains_key(&poll.creator_identity))
         {
-            warn!(creator = ?&poll.creator_identity, "Skipping poll with unknown creator");
+            warn!(
+                ?poll_id,
+                ?conversation,
+                creator = ?&poll.creator_identity,
+                "Skipping poll with unknown creator"
+            );
             return false;
         }
 
-        // Check if we know all participants.
+        // Bail if any participant is unknown.
         if let Some(participants) = poll.participants() {
             for participant in participants {
                 if !(participant == self.user_identity
                     || self.contact_acquaintance_levels.contains_key(&participant))
                 {
-                    warn!(?participant, "Skipping poll with unknown participant");
+                    warn!(
+                        ?poll_id,
+                        ?conversation,
+                        ?participant,
+                        "Skipping poll with unknown participant"
+                    );
                     return false;
                 }
             }
         }
 
-        // Check if we have previously encountered the poll.
-        if !self.polls.insert(poll) {
-            warn!("Skipping previously encountered poll");
+        // Bail if the poll has been encountered before.
+        if !self.polls.check_and_add(poll) {
+            warn!(?poll_id, ?conversation, "Skipping previously encountered poll");
             return false;
         }
 
-        trace!("Poll passed all sanity checks");
+        trace!(?poll_id, ?conversation, "Poll passed all sanity checks");
         true
     }
 
     /// Sanitize and check if the message should be added, validating its conversation and reactions.
-    pub(super) fn sanitize_and_add_message(&mut self, message_state: &mut MessageState) -> bool {
-        let conversation_id = message_state.conversation_id;
-        let message_id = message_state.message_id;
+    pub(super) fn sanitize_and_add_message(&mut self, mut message: MessageState) -> Option<MessageState> {
+        let conversation_id = message.conversation_id;
+        let message_id = message.message_id;
 
         // Check if the conversation is valid.
         match conversation_id {
@@ -387,7 +388,7 @@ impl BackupAccountant {
                         ?conversation_id,
                         "Skipping message in unknown 1:1 conversation"
                     );
-                    return false;
+                    return None;
                 }
             },
             ConversationId::DistributionList(distribution_list) => {
@@ -397,7 +398,7 @@ impl BackupAccountant {
                         ?conversation_id,
                         "Skipping message in unknown distribution list"
                     );
-                    return false;
+                    return None;
                 }
             },
             ConversationId::Group(group_identity) => {
@@ -407,13 +408,13 @@ impl BackupAccountant {
                         ?conversation_id,
                         "Skipping message in unknown group conversation"
                     );
-                    return false;
+                    return None;
                 }
             },
         }
 
         // Sanitize reactions.
-        message_state.reactions.retain(|reaction| {
+        message.reactions.retain(|reaction| {
             if reaction.creator_identity == self.user_identity
                 || self
                     .contact_acquaintance_levels
@@ -421,34 +422,39 @@ impl BackupAccountant {
             {
                 true
             } else {
-                warn!(?message_id, ?reaction, "Removing reaction from unknown sender");
+                warn!(
+                    ?message_id,
+                    ?conversation_id,
+                    ?reaction,
+                    "Removing reaction from unknown sender"
+                );
                 false
             }
         });
 
-        // Check body specific stuff.
-        // TODO(LIB-117): Return group polls as well.
-        match &message_state.body {
-            // `PollOpen` messages.
+        // Run body-specific checks.
+        match &message.body {
             MessageStateBody::PollOpen(poll_open) => {
                 let poll_id = poll_open.id;
                 match self.polls.check_open(conversation_id, poll_open) {
                     EncounteredPollCheck::Unknown => {
                         warn!(
+                            ?message_id,
                             ?conversation_id,
                             ?poll_id,
                             "Skipping poll-open message for unknown poll state"
                         );
-                        return false;
+                        return None;
                     },
                     EncounteredPollCheck::ReferencedBefore => {
                         warn!(
+                            ?message_id,
                             ?conversation_id,
                             ?poll_id,
                             "Skipping poll-open message for a poll state that was already marked as opened \
                              before"
                         );
-                        return false;
+                        return None;
                     },
                     EncounteredPollCheck::Ok => {
                         // All fine, continue.
@@ -456,7 +462,6 @@ impl BackupAccountant {
                 }
             },
 
-            // `PollClose` messages.
             MessageStateBody::PollClose(poll_close) => {
                 let poll_id = poll_close.id;
 
@@ -468,36 +473,52 @@ impl BackupAccountant {
                     },
                     EncounteredPollCheck::ReferencedBefore => {
                         warn!(
+                            ?message_id,
                             ?conversation_id,
                             ?poll_id,
                             "Skipping poll-close message for a poll state that was already marked as closed \
                              before"
                         );
-                        return false;
+                        return None;
                     },
                     EncounteredPollCheck::Ok => {
-                        // TODO(LIB-97): @lgr: We could check that the corresponding [`Poll`] is closed.
-                        // But, this is quite some effort: We would need to keep track of all poll states, and
-                        // differentiate whether we are in creation or restoration phase.
-                        // (It makes only sense to close during restoration). Hence, I'm not sure whether it
-                        // is really worth the effort.
-                        //
                         // All fine, continue.
                     },
                 }
             },
-            MessageStateBody::Text(_) | MessageStateBody::Location(_) | MessageStateBody::Deleted(_) => {
-                // No checks for other message bodies.
+
+            MessageStateBody::Deleted(_) => {
+                if !message.reactions.is_empty() {
+                    warn!(
+                        ?message_id,
+                        ?conversation_id,
+                        "Removing all reactions from deleted message"
+                    );
+                    message.reactions.clear();
+                }
+            },
+
+            MessageStateBody::Text(_) | MessageStateBody::Location(_) => {
+                // No checks required.
             },
         }
 
-        // Check if the message ID was not encountered before.
+        // Bail if the message ID was encountered before.
         if !self.message_ids.insert((conversation_id, message_id)) {
-            warn!(?message_id, "Skipping already encountered message.");
-            return false;
+            warn!(
+                ?message_id,
+                ?conversation_id,
+                "Skipping already encountered message"
+            );
+            return None;
         }
 
         // Everything passed, return true.
-        true
+        trace!(
+            ?message_id,
+            ?conversation_id,
+            "Sanitized message passed all checks"
+        );
+        Some(message)
     }
 }

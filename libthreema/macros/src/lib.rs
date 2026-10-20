@@ -60,6 +60,7 @@ pub fn derive_name(input: TokenStream) -> TokenStream {
 /// ## Basic Usage
 ///
 /// ```nobuild
+/// /// This is my awesome struct.
 /// #[derive(UniffiNewType)]
 /// pub struct MyStruct(pub u64);
 /// ```
@@ -67,8 +68,13 @@ pub fn derive_name(input: TokenStream) -> TokenStream {
 /// The derive macro expands it to:
 ///
 /// ```nobuild
+/// /// This is my awesome struct.
 /// pub struct MyStruct(pub u64);
-/// uniffi::custom_newtype!(MyStruct, u64);
+/// uniffi::custom_newtype!(
+///     /// This is my awesome struct.
+///     MyStruct,
+///     u64
+/// );
 /// ```
 ///
 /// ## Fixed-Size Bytes
@@ -76,39 +82,95 @@ pub fn derive_name(input: TokenStream) -> TokenStream {
 /// One can specify conversion to and from fixed size bytes:
 ///
 /// ```nobuild
-/// pub struct MyKey(pub [u8; Self::LENGTH]);
-/// impl MyKey {
+/// pub struct MyFoo(pub [u8; Self::LENGTH]);
+/// impl MyFoo {
 ///     pub const LENGTH: usize = 32;
 /// }
 ///
-/// #[uniffi_new_type(fixed_size_bytes = MyKey)]
-/// pub struct MyKeyBindingVersion(pub Vec<u8>);
+/// /// Binding version of [`MyFoo`].
+/// #[uniffi_new_type(fixed_size_bytes = MyFoo)]
+/// pub struct MyFooBindingVersion(pub Vec<u8>);
 /// ```
 ///
 /// Note: The constant `LENGTH` must be present on the struct!
 ///
 /// The derive macro expands it to:
 /// ```nobuild
-/// pub struct MyKey(pub [u8; 32]);
-/// impl MyKey {
-///     pub const LENGTH: usize = 32;
-/// }
-///
-/// pub struct MyKeyBindingVersion(pub Vec<u8>);
-/// uniffi::custom_newtype!(MyKeyBindingVersion, Vec<u8>);
-/// impl From<MyKey> for MyKeyBindingVersion {
-///     fn from(value: MyKey) -> MyKeyBindingVersion {
-///         MyKeyBindingVersion(value.0.to_vec())
+/// /// Binding version of [`MyFoo`].
+/// pub struct MyFooBindingVersion(pub Vec<u8>);
+/// uniffi::custom_newtype!(
+///     /// Binding version of [`MyFoo`].
+///     MyFooBindingVersion,
+///     Vec<u8>
+/// );
+/// impl From<MyFoo> for MyFooBindingVersion {
+///     fn from(value: MyFoo) -> MyFooBindingVersion {
+///         MyFooBindingVersion(value.0.to_vec())
 ///     }
 /// }
-/// impl TryFrom<MyKeyBindingVersion> for MyKey {
+/// impl TryFrom<MyFooBindingVersion> for MyFoo {
 ///     type Error = crate::bindings::uniffi::ConversionError;
 ///
-///     fn try_from(value: MyKey) -> ::core::result::Result<Self, Self::Error> {
+///     fn try_from(value: MyFooBindingVersion) -> ::core::result::Result<Self, Self::Error> {
 ///         Self::try_from(value.0.as_slice()).map_err(|_| {
 ///             crate::bindings::uniffi::ConversionError::ContractViolation {
-///                 name: "MyKey".to_owned(),
+///                 name: "MyFoo".to_owned(),
 ///                 reason: format!("Must be {} bytes", Self::LENGTH),
+///             }
+///         })
+///     }
+/// }
+/// ```
+///
+/// ## String
+///
+/// One can specify conversion to and from a string:
+///
+/// ```nobuild
+/// pub struct MyFoo(String);
+/// impl MyFoo {
+///     pub fn as_str(&self) -> &str {
+///         &self.0
+///     }
+/// }
+/// impl TryFrom<String> for MyFoo {
+///     type Error = MyFooError;
+///
+///     fn try_from(value: String) -> Result<Self, Self::Error> {
+///         // Validate and construct ...
+///     }
+/// }
+///
+/// /// Binding version of [`MyFoo`].
+/// #[uniffi_new_type(string = MyFoo)]
+/// pub struct MyFooBindingVersion(pub String);
+/// ```
+///
+/// Note: `MyFoo` must expose an `as_str()` method and implement `TryFrom<String>` whose error implements
+/// [`ToString`].
+///
+/// The derive macro expands it to:
+/// ```nobuild
+/// /// Binding version of [`MyFoo`].
+/// pub struct MyFooBindingVersion(pub String);
+/// uniffi::custom_newtype!(
+///     /// Binding version of [`MyFoo`].
+///     MyFooBindingVersion,
+///     String
+/// );
+/// impl From<MyFoo> for MyFooBindingVersion {
+///     fn from(value: MyFoo) -> MyFooBindingVersion {
+///         MyFooBindingVersion(value.as_str().to_owned())
+///     }
+/// }
+/// impl TryFrom<MyFooBindingVersion> for MyFoo {
+///     type Error = crate::bindings::uniffi::ConversionError;
+///
+///     fn try_from(value: MyFooBindingVersion) -> ::core::result::Result<Self, Self::Error> {
+///         Self::try_from(value.0).map_err(|error| {
+///             crate::bindings::uniffi::ConversionError::ContractViolation {
+///                 name: "MyFoo".to_owned(),
+///                 reason: error.to_string(),
 ///             }
 ///         })
 ///     }
@@ -140,42 +202,76 @@ pub fn derive_uniffi_new_type(input: TokenStream) -> TokenStream {
         };
 
         // Declare the new type.
-        // TODO(LIB-159): Add docs once https://github.com/mozilla/uniffi-rs/issues/2850 is resolved.
-        let mut expanded = quote! { uniffi::custom_newtype!(#name, #inner_type); };
+        let mut expanded = {
+            let documentation = input
+                .attrs
+                .iter()
+                .filter(|attribute| attribute.path().is_ident("doc"))
+                .collect::<Vec<_>>();
+            quote! { uniffi::custom_newtype!(
+                #(#documentation)*
+                #name,
+                #inner_type
+            ); }
+        };
 
         // Extract the path of the new-type it should refer to.
         for attribute in input.attrs {
             #[expect(clippy::unimplemented, reason = "Unsupported attribute")]
             if attribute.path().is_ident("uniffi_new_type") {
                 attribute.parse_nested_meta(|meta| {
-                    if meta.path.is_ident("fixed_size_bytes") {
-                        // Implement conversion from/to the fixed size bytes newtype.
-                        let path = meta.value()?.parse::<syn::Path>()?;
-                        expanded.extend(quote! {
-                            impl From<#path> for #name {
-                                fn from(value: #path) -> Self {
-                                    Self(value.0.to_vec())
+                    let path = meta.value()?.parse::<syn::Path>()?;
+                    match meta.path.get_ident().map(ToString::to_string).as_deref() {
+                        Some("fixed_size_bytes") => {
+                            // Implement conversion from/to the fixed size bytes newtype.
+                            expanded.extend(quote! {
+                                impl From<#path> for #name {
+                                    fn from(value: #path) -> Self {
+                                        Self(value.0.to_vec())
+                                    }
                                 }
-                            }
 
-                            impl TryFrom<#name> for #path {
-                                type Error = crate::bindings::uniffi::ConversionError;
+                                impl TryFrom<#name> for #path {
+                                    type Error = crate::bindings::uniffi::ConversionError;
 
-                                fn try_from(value: #name) -> ::core::result::Result<Self, Self::Error> {
-                                    Self::try_from(value.0.as_slice()).map_err(|_| {
-                                        crate::bindings::uniffi::ConversionError::ContractViolation {
-                                            name: stringify!(#name).to_owned(),
-                                            reason: format!("Must be {} bytes", Self::LENGTH),
-                                        }
-                                    })
+                                    fn try_from(value: #name) -> ::core::result::Result<Self, Self::Error> {
+                                        Self::try_from(value.0.as_slice()).map_err(|_| {
+                                            crate::bindings::uniffi::ConversionError::ContractViolation {
+                                                name: stringify!(#name).to_owned(),
+                                                reason: format!("Must be {} bytes", Self::LENGTH),
+                                            }
+                                        })
+                                    }
                                 }
-                            }
-                        });
+                            });
+                        },
+                        Some("string") => {
+                            // Implement conversion from/to the String newtype.
+                            expanded.extend(quote! {
+                                impl From<#path> for #name {
+                                    fn from(value: #path) -> Self {
+                                        Self(value.as_str().to_owned())
+                                    }
+                                }
 
-                        Ok(())
-                    } else {
-                        unimplemented!()
+                                impl TryFrom<#name> for #path {
+                                    type Error = crate::bindings::uniffi::ConversionError;
+
+                                    fn try_from(value: #name) -> ::core::result::Result<Self, Self::Error> {
+                                        Self::try_from(value.0).map_err(|error| {
+                                            crate::bindings::uniffi::ConversionError::ContractViolation {
+                                                name: stringify!(#name).to_owned(),
+                                                reason: error.to_string(),
+                                            }
+                                        })
+                                    }
+                                }
+                            });
+                        },
+                        _ => unimplemented!(),
                     }
+
+                    Ok(())
                 })?;
             }
         }

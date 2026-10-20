@@ -205,6 +205,12 @@ extension SettingsWebViewViewController: WKNavigationDelegate {
         decisionHandler: @escaping (WKNavigationActionPolicy) -> Void
     ) {
         if navigationAction.navigationType == .linkActivated, let url = navigationAction.request.url {
+            // In-page anchor: let WebKit scroll to it natively
+            if url.fragment != nil, isSameDocument(url, as: webView.url) {
+                decisionHandler(.allow)
+                return
+            }
+
             if let scheme = url.scheme, scheme.hasPrefix("http") || scheme.hasPrefix("https") {
                 let config = SFSafariViewController.Configuration()
                 let safariView = SFSafariViewController(url: url, configuration: config)
@@ -216,9 +222,6 @@ extension SettingsWebViewViewController: WKNavigationDelegate {
                     query.hasPrefix("id=*SUPPORT") {
                 addSupportContactAndOpenChat()
             }
-            else if let anchorName = url.fragment {
-                webView.evaluateJavaScript(String(format: "window.location.hash='%@';", anchorName))
-            }
             else {
                 UIApplication.shared.open(url, options: [:], completionHandler: nil)
             }
@@ -229,6 +232,18 @@ extension SettingsWebViewViewController: WKNavigationDelegate {
         decisionHandler(.allow)
     }
     
+    /// Whether `url` points into the currently loaded document, i.e. only the fragment differs
+    private func isSameDocument(_ url: URL, as currentURL: URL?) -> Bool {
+        guard let currentURL,
+              var target = URLComponents(url: url, resolvingAgainstBaseURL: true),
+              var current = URLComponents(url: currentURL, resolvingAgainstBaseURL: true) else {
+            return false
+        }
+        target.fragment = nil
+        current.fragment = nil
+        return target == current
+    }
+
     func webView(_ webView: WKWebView, didFail navigation: WKNavigation?, withError error: Error) {
         loadingPresenter?.dismiss()
         NotificationPresenterWrapper.shared.present(type: .noConnection)

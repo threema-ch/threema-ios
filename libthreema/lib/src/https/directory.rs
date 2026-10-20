@@ -41,10 +41,13 @@ fn https_headers(mode: &Flavor) -> HttpsHeadersBuilder {
     }
 }
 
-fn handle_status<TStatusFn: FnOnce(u16) -> Option<HttpsEndpointError>>(
+fn handle_status<TStatusFn>(
     result: HttpsResult,
     unexpected_status_map_fn: TStatusFn,
-) -> Result<HttpsResponse, HttpsEndpointError> {
+) -> Result<HttpsResponse, HttpsEndpointError>
+where
+    TStatusFn: FnOnce(u16) -> Option<HttpsEndpointError>,
+{
     let response = result?;
     match response.status {
         200 | 204 => Ok(response),
@@ -71,10 +74,13 @@ enum AwkwardResponse {
     },
 }
 
-fn handle_status_and_awkward_response<TStatusFn: FnOnce(u16) -> Option<HttpsEndpointError>>(
+fn handle_status_and_awkward_response<TStatusFn>(
     result: HttpsResult,
     unexpected_status_map_fn: TStatusFn,
-) -> Result<HttpsResponse, HttpsEndpointError> {
+) -> Result<HttpsResponse, HttpsEndpointError>
+where
+    TStatusFn: FnOnce(u16) -> Option<HttpsEndpointError>,
+{
     let response = handle_status(result, unexpected_status_map_fn)?;
 
     // Handle the super-awkward response with the `success` field

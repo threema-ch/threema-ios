@@ -71,10 +71,12 @@ impl<T: ConversationProvider + ?Sized> conversation::ConversationProvider for Ar
         conversation_type: ConversationType,
         batch_index: usize,
     ) -> Result<Vec<model::message::MessageState>, ProviderError> {
-        ConversationProvider::get_many_messages(self.as_ref(), conversation_type, batch_index as u64)?
-            .into_iter()
-            .map(|message| Ok(model::message::MessageState::try_from(message)?))
-            .collect()
+        Ok(
+            ConversationProvider::get_many_messages(self.as_ref(), conversation_type, batch_index as u64)?
+                .into_iter()
+                .map(model::message::MessageState::try_from)
+                .collect::<Result<_, _>>()?,
+        )
     }
 
     fn get_messages_metadata(
@@ -82,14 +84,14 @@ impl<T: ConversationProvider + ?Sized> conversation::ConversationProvider for Ar
         conversation_id: common::ConversationId,
         message_ids: &[MessageId],
     ) -> Result<Vec<model::message::MessageStateMetadata>, ProviderError> {
-        ConversationProvider::get_messages_metadata(
+        Ok(ConversationProvider::get_messages_metadata(
             self.as_ref(),
             conversation_id.into(),
             message_ids.to_vec(),
         )?
         .into_iter()
-        .map(|metadata| Ok(model::message::MessageStateMetadata::try_from(metadata)?))
-        .collect()
+        .map(model::message::MessageStateMetadata::try_from)
+        .collect::<Result<_, _>>()?)
     }
 
     fn is_message_marked_used(

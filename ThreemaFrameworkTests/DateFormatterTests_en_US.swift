@@ -33,13 +33,7 @@ final class DateFormatterTests_en_US: XCTestCase {
     let expectedRelativeMediumDateThisYear_en_US = ", Jan 01"
     let expectedRelativeMediumDateLastCalendarYear_en_US = ", Dec 31, "
     let expectedRelativeMediumDateMoreThanAYearAgo_en_US = "Fri, Feb 01, 2019"
-    let expectedRelativeMediumDateAndShortTimeYesterday_en_US =
-        if #available(iOS 17.4, *) {
-            "Yesterday at "
-        }
-        else {
-            "Yesterday, "
-        }
+    let expectedRelativeMediumDateAndShortTimeYesterday_en_US = "Yesterday at "
 
     let expectedRelativeMediumDateAndShortTimeThisYear_en_US = ", Jan 01 at 1:14 PM"
     let expectedRelativeMediumDateAndShortTimeLastCalendarYear_start_en_US = ", Dec 31, "
@@ -50,31 +44,13 @@ final class DateFormatterTests_en_US: XCTestCase {
 
     let expectedRelativeTimeTodayAndMediumDateOtherwiseYesterday_en_US = "Yesterday"
     
-    let expectedRelativeLongStyleDateShortStyleTimeTomorrow_en_US =
-        if #available(iOS 17.4, *) {
-            "Tomorrow at 2:03 AM"
-        }
-        else {
-            "Tomorrow, 2:03 AM"
-        }
+    let expectedRelativeLongStyleDateShortStyleTimeTomorrow_en_US = "Tomorrow at 2:03 AM"
     
-    let expectedRelativeLongStyleDateShortStyleTimeToday_en_US =
-        if #available(iOS 17.4, *) {
-            "Today at 1:14 PM"
-        }
-        else {
-            "Today, 1:14 PM"
-        }
+    let expectedRelativeLongStyleDateShortStyleTimeToday_en_US = "Today at 1:14 PM"
     
     let expectedAccessibilityDateTime_en_US = "February 1, 2020 at 1:14 PM"
 
-    let expectedAccessibilityRelativeDayTime_en_US =
-        if #available(iOS 17.4, *) {
-            "February 1, 2020 at 1:14 PM"
-        }
-        else {
-            "February 1, 2020, 1:14 PM"
-        }
+    let expectedAccessibilityRelativeDayTime_en_US = "February 1, 2020 at 1:14 PM"
     
     // MARK: - Test formats provided by the system
     

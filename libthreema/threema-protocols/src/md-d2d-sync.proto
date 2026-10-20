@@ -220,9 +220,9 @@ message UserProfile {
 
   // Availability status of the user.
   //
-  // Shall not be present in the _Consumer_ flavour.
+  // Shall not be present in the _Consumer_ or _Green_ flavour.
   //
-  // Always optional in the _Work_ flavour.
+  // Always optional in the _Work_, _Blue_ or _OnPrem_ flavour.
   WorkAvailabilityStatus work_availability_status = 5;
 }
 
@@ -415,16 +415,16 @@ message Contact {
   // were applied) from a _Work Sync_, a _Work Contacts_, or a _Work Directory_
   // endpoint.
   //
-  // Shall not be present in the _Consumer_ flavour.
+  // Shall not be present in the _Consumer_ or _Green_ flavour.
   //
-  // Always optional in the _Work_ flavour.
+  // Always optional in the _Work_, _Blue_ or _OnPrem_ flavour.
   optional uint64 work_last_full_sync_at = 26;
 
   // Availability status of the contact.
   //
-  // Shall not be present in the _Consumer_ flavour.
+  // Shall not be present in the _Consumer_ or _Green_ flavour.
   //
-  // Always optional in the _Work_ flavour.
+  // Always optional in the _Work_, _Blue_ or _OnPrem_ flavour.
   WorkAvailabilityStatus work_availability_status = 27;
 
   // Conversation items
@@ -608,7 +608,7 @@ message Group {
   }
   NotificationTriggerPolicyOverride notification_trigger_policy_override = 9;
 
-  // Deprecated notification sound policy.
+  // Deprecated notification sound policy
   //
   // Required towards a new device and for a new group until the field has
   // been phased out. Optional for an existing group.
@@ -697,16 +697,17 @@ message DistributionList {
 // 1. For each setting that is being included by this message, run the
 //    associated steps of the setting and apply the modified setting.
 message Settings {
-  // Contact synchronisation policy
+  // Deprecated contact sync policy
   //
-  // Required towards a new device. Optional otherwise.
-  enum ContactSyncPolicy {
+  // Required towards a new device until the field has been phased out. Optional
+  // otherwise.
+  enum DeprecatedContactSyncPolicy {
     // Not synced
     NOT_SYNCED = 0;
     // Synced
     SYNC = 1;
   }
-  optional ContactSyncPolicy contact_sync_policy = 1;
+  optional DeprecatedContactSyncPolicy deprecated_contact_sync_policy = 1 [deprecated = true];
 
   // Unknown contacts policy
   //
@@ -789,8 +790,7 @@ message Settings {
   // Deprecated keyboard data collection policy (e.g. for personalised
   // suggestions)
   //
-  // Required towards a new device until the field has been phased out. Optional
-  // for an existing contact.
+  // Required towards a new device. Optional otherwise.
   enum DeprecatedKeyboardDataCollectionPolicy {
     // Allow keyboard input data to be collected
     ALLOW_DATA_COLLECTION = 0;

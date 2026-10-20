@@ -22,9 +22,6 @@ pub mod digest {
 
     /// Generic 256 bit MAC length in bytes (d'uh).
     pub const MAC_256_LENGTH: usize = 32;
-
-    /// Generic 512 bit MAC length in bytes (d'uh).
-    pub const MAC_512_LENGTH: usize = 32;
 }
 
 /// Minimal abstract interface for constant-time cryptographic implementations.
@@ -67,13 +64,16 @@ pub mod chacha20 {
     pub use chacha20::XChaCha20;
     pub use chacha20poly1305::{ChaCha20Poly1305, Key, XChaCha20Poly1305};
 
-    /// ChaCha20Poly1305 key length in bytes.
+    /// ChaCha20 and XChaCha20 key length in bytes.
     pub const KEY_LENGTH: usize = 32;
 
-    /// ChaCha20Poly1305 nonce length in bytes.
-    pub const NONCE_LENGTH: usize = 24;
+    /// ChaCha20 nonce length in bytes.
+    pub const STANDARD_NONCE_LENGTH: usize = 12;
 
-    /// ChaCha20Poly1305 tag length in bytes.
+    /// XChaCha20 nonce length in bytes.
+    pub const EXTENDED_NONCE_LENGTH: usize = 24;
+
+    /// ChaCha20 and XChaCha20 tag length in bytes.
     pub const TAG_LENGTH: usize = 16;
 }
 
@@ -82,13 +82,13 @@ pub mod salsa20 {
     pub use crypto_secretbox::{Key, XSalsa20Poly1305};
     pub use salsa20::XSalsa20;
 
-    /// Salsa20 key length in bytes.
+    /// Salsa20 and XSalsa20 key length in bytes.
     pub const KEY_LENGTH: usize = 32;
 
-    /// Salsa20 nonce length in bytes.
-    pub const NONCE_LENGTH: usize = 24;
+    /// XSalsa20 nonce length in bytes.
+    pub const EXTENDED_NONCE_LENGTH: usize = 24;
 
-    /// Salsa20 tag length in bytes.
+    /// Salsa20 and XSalsa20 tag length in bytes.
     pub const TAG_LENGTH: usize = 16;
 }
 

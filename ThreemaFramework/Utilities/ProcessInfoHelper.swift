@@ -14,6 +14,9 @@ public final class ProcessInfoHelper: NSObject {
     public static var isRunningForTests: Bool = ProcessInfo.processInfo.arguments
         .contains("-isRunningForTests")
 
+    public static var isRunningAsTestHost: Bool = ProcessInfo.processInfo
+        .environment["XCTestConfigurationFilePath"] != nil
+
     public static var isRunningForPreviews: Bool = ProcessInfo.processInfo
         .environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1"
 

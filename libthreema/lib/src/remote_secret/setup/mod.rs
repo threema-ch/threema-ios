@@ -1,4 +1,6 @@
 //! Remote Secret Setup protocol.
+use std::sync::PoisonError;
+
 use libthreema_macros::Name;
 
 use crate::{
@@ -8,10 +10,19 @@ use crate::{
         keys::ClientKey,
     },
     https::{HttpsRequest, HttpsResult, endpoint::HttpsEndpointError},
+    utils::serde::string,
 };
 
 pub mod create;
 pub mod delete;
+
+/// Cause of an internal error.
+#[derive(Clone, Debug, thiserror::Error)]
+pub enum RemoteSecretSetupInternalErrorCause {
+    /// Unable to obtain a lock.
+    #[error("Obtaining a lock failed")]
+    LockPoisoned,
+}
 
 /// An error occurred while setting up the remote secret.
 ///
@@ -38,14 +49,19 @@ pub mod delete;
     tsify(into_wasm_abi)
 )]
 pub enum RemoteSecretSetupError {
-    /// Invalid parameter provided by foreign code.
+    /// Some provided parameter could not be converted into the required internal representation.
     #[cfg(feature = "uniffi")]
-    #[error("Invalid parameter: {0}")]
-    InvalidParameter(&'static str),
+    #[error("Conversion error: {0}")]
+    ConversionError(String),
 
-    /// Invalid state for the requested operation.
-    #[error("Invalid state: {0}")]
-    InvalidState(&'static str),
+    /// A contract violation occurred.
+    #[error("Contract violation: {0}")]
+    ContractViolation(&'static str),
+
+    /// An internal error happened.
+    #[cfg_attr(feature = "wasm", serde(serialize_with = "string::to_string::serialize"))]
+    #[error("Internal error: {0}")]
+    InternalError(#[from] RemoteSecretSetupInternalErrorCause),
 
     /// An unrecoverable network error occurred while communicating with a server.
     #[error("Network error: {0}")]
@@ -83,6 +99,17 @@ impl From<HttpsEndpointError> for RemoteSecretSetupError {
             | HttpsEndpointError::DecodingFailed(_)
             | HttpsEndpointError::CustomPossiblyLocalizedError(_) => Self::ServerError(error.to_string()),
         }
+    }
+}
+#[cfg(feature = "uniffi")]
+impl From<crate::bindings::uniffi::ConversionError> for RemoteSecretSetupError {
+    fn from(error: crate::bindings::uniffi::ConversionError) -> Self {
+        Self::ConversionError(error.to_string())
+    }
+}
+impl<T> From<PoisonError<T>> for RemoteSecretSetupError {
+    fn from(_: PoisonError<T>) -> Self {
+        Self::InternalError(RemoteSecretSetupInternalErrorCause::LockPoisoned)
     }
 }
 

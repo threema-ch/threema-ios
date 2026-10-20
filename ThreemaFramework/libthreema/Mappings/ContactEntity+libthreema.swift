@@ -49,6 +49,36 @@ extension ContactEntity {
         self.typingIndicator = typingIndicator
         self.contactVerificationLevel = contactVerificationLevel
         workContact = NSNumber(booleanLiteral: WorkContact(contact.workVerificationLevel))
+
+        if let workLastFullSyncAt = contact.workLastFullSyncAt {
+            self.workLastFullSyncAt = workLastFullSyncAt.date
+        }
+
+        if let workAvailabilityStatus = contact.workAvailabilityStatus {
+            guard let managedObjectContext = self.managedObjectContext else {
+                assertionFailure()
+                return
+            }
+
+            switch workAvailabilityStatus {
+            case let .busy(text):
+                let status = WorkAvailabilityStatusEntity(
+                    context: managedObjectContext,
+                    value: WorkAvailabilityStatus.Category.busy.rawValue,
+                    contact: self
+                )
+                status.text = text
+            case .none:
+                break
+            case let .unavailable(text):
+                let status = WorkAvailabilityStatusEntity(
+                    context: managedObjectContext,
+                    value: WorkAvailabilityStatus.Category.unavailable.rawValue,
+                    contact: self
+                )
+                status.text = text
+            }
+        }
     }
 
     func update(

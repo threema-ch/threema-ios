@@ -61,10 +61,7 @@ struct ContactPreviewRepresentable<Fallback: View>: UIViewControllerRepresentabl
         controller.allowsEditing = false
         controller.allowsActions = !MDMSetup().disableShareMedia()
         controller.contactStore = CNContactStore()
-
-        if #unavailable(iOS 17.0) {
-            controller.edgesForExtendedLayout = []
-        }
+        controller.edgesForExtendedLayout = []
 
         return UINavigationController(rootViewController: controller)
     }

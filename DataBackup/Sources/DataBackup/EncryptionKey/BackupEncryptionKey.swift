@@ -30,6 +30,16 @@ public enum BackupEncryptionKey: Sendable {
         }
     }
 
+    public var trimmedValue: String {
+        let key = rawValue
+
+        guard key.count > 8 else {
+            return key
+        }
+
+        return "\(key.prefix(4))...\(key.suffix(4))"
+    }
+
     public var isDefault: Bool {
         switch self {
         case .default:
@@ -53,19 +63,19 @@ public enum BackupEncryptionKey: Sendable {
 
 #if DEBUG
     extension BackupEncryptionKey {
+        private static let key = "45S9KSPB6JVQZ12Y99BX8MS744Y4HNJSX19HQ7C4A7Q4WSZU722X789T745QT418"
+        private static let date = Date(timeIntervalSince1970: 1_234_567_890)
+
         public static var mockNone: Self {
             .none
         }
 
         public static var mockGeneratedKey: Self {
-            .generated(key: String(repeating: "A1B2C3D4", count: 8))
+            .generated(key: key)
         }
 
         public static var mockDefaultKey: Self {
-            .default(
-                key: String(repeating: "A1B2C3D4", count: 8),
-                lastBackupDate: Date(timeIntervalSince1970: 1_234_567_890)
-            )
+            .default(key: key, lastBackupDate: date)
         }
     }
 #endif

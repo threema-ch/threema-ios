@@ -1,6 +1,8 @@
 //! Binding version of [`group`].
 use std::{collections::HashSet, sync::Arc};
 
+use libthreema_macros::uniffi_define_delta;
+
 use crate::{
     bindings::uniffi::{
         ConversionError,
@@ -8,12 +10,17 @@ use crate::{
     },
     common,
     model::{
-        group::{self, GroupMembershipFilter, GroupNotificationTriggerPolicyOverride},
+        group::{self, GroupMembershipFilter},
         profile::ProfilePicture,
     },
     protobuf,
     provider::ProviderError,
 };
+
+uniffi_define_delta!(
+    group::GroupNotificationTriggerPolicyOverride,
+    DeltaGroupNotificationTriggerPolicyOverride
+);
 
 /// Binding version of [`group::Group`].
 #[derive(uniffi::Record)]
@@ -24,8 +31,8 @@ pub struct Group {
     pub created_at: u64,
     pub last_update_at: Option<u64>,
     pub user_state: protobuf::d2d_sync::group::UserState,
-    pub members: Vec<ThreemaId>,
-    pub notification_trigger_policy_override: Option<GroupNotificationTriggerPolicyOverride>,
+    pub members: HashSet<ThreemaId>,
+    pub notification_trigger_policy_override: Option<group::GroupNotificationTriggerPolicyOverride>,
     pub conversation_category: protobuf::d2d_sync::ConversationCategory,
     pub conversation_visibility: protobuf::d2d_sync::ConversationVisibility,
 }
@@ -62,6 +69,34 @@ impl From<group::Group> for Group {
             notification_trigger_policy_override: group.notification_trigger_policy_override,
             conversation_category: group.conversation_category,
             conversation_visibility: group.conversation_visibility,
+        }
+    }
+}
+
+/// Binding version of [`group::GroupUpdate`].
+#[derive(uniffi::Record)]
+#[expect(missing_docs, reason = "Binding version")]
+pub struct GroupUpdate {
+    pub identity: GroupIdentity,
+    pub name: Option<String>,
+    pub user_state: Option<protobuf::d2d_sync::group::UserState>,
+    pub members: Option<HashSet<ThreemaId>>,
+    pub notification_trigger_policy_override: DeltaGroupNotificationTriggerPolicyOverride,
+    pub conversation_category: Option<protobuf::d2d_sync::ConversationCategory>,
+    pub conversation_visibility: Option<protobuf::d2d_sync::ConversationVisibility>,
+}
+impl From<group::GroupUpdate> for GroupUpdate {
+    fn from(update: group::GroupUpdate) -> Self {
+        Self {
+            identity: update.identity.into(),
+            name: update.name,
+            user_state: update.user_state,
+            members: update
+                .members
+                .map(|members| members.into_iter().map(ThreemaId::from).collect()),
+            notification_trigger_policy_override: update.notification_trigger_policy_override.into(),
+            conversation_category: update.conversation_category,
+            conversation_visibility: update.conversation_visibility,
         }
     }
 }
@@ -104,12 +139,18 @@ pub trait GroupProvider: Send + Sync {
         profile_picture: Option<ProfilePicture>,
     ) -> Result<(), ProviderError>;
 
-    fn get_identities(&self) -> Result<Vec<GroupIdentity>, ProviderError>;
+    fn update(&self, updates: Vec<GroupUpdate>) -> Result<(), ProviderError>;
+
+    fn get(&self, identity: GroupIdentity) -> Result<Option<Group>, ProviderError>;
+
+    fn get_identities(&self) -> Result<HashSet<GroupIdentity>, ProviderError>;
 
     fn get_with_profile_picture(
         &self,
         identity: GroupIdentity,
     ) -> Result<Option<GroupWithProfilePicture>, ProviderError>;
+
+    fn has(&self, identity: GroupIdentity) -> Result<bool, ProviderError>;
 
     fn is_part_of_any_group(
         &self,
@@ -136,20 +177,39 @@ impl<T: GroupProvider + ?Sized> group::GroupProvider for Arc<T> {
         GroupProvider::set_profile_picture(self.as_ref(), identity.into(), profile_picture)
     }
 
+    fn update(&mut self, updates: Vec<group::GroupUpdate>) -> Result<(), ProviderError> {
+        GroupProvider::update(
+            self.as_ref(),
+            updates.into_iter().map(GroupUpdate::from).collect(),
+        )
+    }
+
+    fn get(&self, identity: common::GroupIdentity) -> Result<Option<group::Group>, ProviderError> {
+        Ok(GroupProvider::get(self.as_ref(), identity.into())?
+            .map(group::Group::try_from)
+            .transpose()?)
+    }
+
     fn get_identities(&self) -> Result<HashSet<common::GroupIdentity>, ProviderError> {
-        GroupProvider::get_identities(self.as_ref())?
+        Ok(GroupProvider::get_identities(self.as_ref())?
             .into_iter()
-            .map(|identity| Ok(common::GroupIdentity::try_from(identity)?))
-            .collect()
+            .map(common::GroupIdentity::try_from)
+            .collect::<Result<_, _>>()?)
     }
 
     fn get_with_profile_picture(
         &self,
         identity: common::GroupIdentity,
     ) -> Result<Option<group::GroupWithProfilePicture>, ProviderError> {
-        GroupProvider::get_with_profile_picture(self.as_ref(), identity.into())?
-            .map(|group| Ok(group::GroupWithProfilePicture::try_from(group)?))
-            .transpose()
+        Ok(
+            GroupProvider::get_with_profile_picture(self.as_ref(), identity.into())?
+                .map(group::GroupWithProfilePicture::try_from)
+                .transpose()?,
+        )
+    }
+
+    fn has(&self, identity: common::GroupIdentity) -> Result<bool, ProviderError> {
+        GroupProvider::has(self.as_ref(), identity.into())
     }
 
     fn is_part_of_any_group(

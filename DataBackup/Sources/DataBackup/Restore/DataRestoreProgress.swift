@@ -5,7 +5,7 @@ public struct DataRestoreProgress: Equatable, Hashable, Sendable {
     // MARK: - Public types
 
     public enum Phase: Int, CaseIterable, Comparable, Sendable {
-        case preparing
+        case userData
         case contacts
         case distributionLists
         case groups
@@ -28,8 +28,11 @@ public struct DataRestoreProgress: Equatable, Hashable, Sendable {
         self.phase = phase
     }
 
-    public init(_ stateUpdate: BackupRestoreStateUpdate) {
+    public init(_ stateUpdate: DataBackupRestoreStateUpdate) {
         switch stateUpdate {
+        case .userData:
+            self.init(phase: .userData)
+
         case .contacts:
             self.init(phase: .contacts)
 

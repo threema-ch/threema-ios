@@ -2,7 +2,6 @@
 use core::mem;
 use std::str;
 
-use const_format::formatcp;
 use libthreema_dependencies::crypto::aead::AeadInPlace as _;
 use libthreema_macros::{DebugVariantNames, Name, VariantNames};
 use prost::Message as _;
@@ -440,8 +439,8 @@ impl State {
             .as_ref()
             .is_some_and(|d2m_context| d2m_context.role != D2mRole::Leader)
         {
-            return Err(CspE2eProtocolError::InvalidState(
-                "D2M _leader_ role required to process an incoming message",
+            return Err(CspE2eProtocolError::ContractViolation(
+                "D2M _leader_ role required to process an incoming message".to_owned(),
             ));
         }
 
@@ -666,7 +665,7 @@ impl State {
         }
 
         // Apply special contact handling (right now, this is only `*3MAPUSH`)
-        if sender.inner().identity == PredefinedContact::_3MAPUSH_IDENTITY {
+        if sender.inner().identity == PredefinedContact::THREEMAPUSH_IDENTITY {
             // Only use case right now is the `web-session-resume` which we just forward
             let IncomingMessageBody::Contact(ContactMessageBody::WebSessionResume(web_session_resume)) =
                 message.inner.body
@@ -1186,9 +1185,9 @@ impl IncomingMessageTask {
     ) -> Result<IncomingMessageLoop, CspE2eProtocolError> {
         let result = match mem::replace(
             &mut self.state,
-            State::Error(CspE2eProtocolError::InvalidState(formatcp!(
+            State::Error(CspE2eProtocolError::ContractViolation(format!(
                 "{} in a transitional state",
-                IncomingMessageTask::NAME
+                Self::NAME
             ))),
         ) {
             State::Error(error) => Err(error),
@@ -1197,9 +1196,9 @@ impl IncomingMessageTask {
             State::CreateContact(state) => State::poll_create_contact(context, state),
             State::UpdateContact(state) => State::poll_update_contact(context, state),
             State::ReflectMessage(state) => State::poll_reflect_message(context, state),
-            State::Done => Err(CspE2eProtocolError::InvalidState(formatcp!(
+            State::Done => Err(CspE2eProtocolError::ContractViolation(format!(
                 "{} already done",
-                IncomingMessageTask::NAME
+                Self::NAME
             ))),
         };
         match result {
@@ -1226,7 +1225,7 @@ impl IncomingMessageTask {
         match response {
             IncomingMessageResponse::FetchSender(response) => {
                 let State::FetchSender(state) = &mut self.state else {
-                    return Err(CspE2eProtocolError::InvalidState(formatcp!(
+                    return Err(CspE2eProtocolError::ContractViolation(format!(
                         "Must be in '{}' state",
                         State::FETCH_SENDER
                     )));
@@ -1235,7 +1234,7 @@ impl IncomingMessageTask {
             },
             IncomingMessageResponse::CreateContact(response) => {
                 let State::CreateContact(state) = &mut self.state else {
-                    return Err(CspE2eProtocolError::InvalidState(formatcp!(
+                    return Err(CspE2eProtocolError::ContractViolation(format!(
                         "Must be in '{}' state",
                         State::CREATE_CONTACT
                     )));
@@ -1244,7 +1243,7 @@ impl IncomingMessageTask {
             },
             IncomingMessageResponse::UpdateContact(response) => {
                 let State::UpdateContact(state) = &mut self.state else {
-                    return Err(CspE2eProtocolError::InvalidState(formatcp!(
+                    return Err(CspE2eProtocolError::ContractViolation(format!(
                         "Must be in '{}' state",
                         State::UPDATE_CONTACT
                     )));
@@ -1253,7 +1252,7 @@ impl IncomingMessageTask {
             },
             IncomingMessageResponse::ReflectMessage(response) => {
                 let State::ReflectMessage(state) = &mut self.state else {
-                    return Err(CspE2eProtocolError::InvalidState(formatcp!(
+                    return Err(CspE2eProtocolError::ContractViolation(format!(
                         "Must be in '{}' state",
                         State::REFLECT_MESSAGE
                     )));
@@ -1279,7 +1278,8 @@ mod tests {
     use crate::{
         cli::provider::{InMemoryDb, InMemoryDbInit},
         common::{
-            ClientInfo, ConversationId, D2xDeviceId, FeatureMask, MessageFlags, MessageId, Nonce, ThreemaId,
+            ClientInfo, ConversationId, D2xDeviceId, FeatureMask, MessageFlags, MessageId,
+            MessageOverridesDeliveryReceiptPolicy, Nonce, ThreemaId,
             config::{Config, Flavor, WorkContext, WorkCredentials, WorkFlavor},
             keys::{ClientKey, DeviceGroupKey, PublicKey, RawClientKey},
         },
@@ -1300,7 +1300,7 @@ mod tests {
         },
         model::{
             contact::Contact,
-            group::Group,
+            group::{Group, GroupWithProfilePicture},
             message::{
                 IncomingMessageDirection, LocationMessageState, MessageDirection, MessageStarMarker,
                 MessageState, MessageStateBody, MessageText, OutgoingMessageDirection, TextMessageState,
@@ -1310,7 +1310,7 @@ mod tests {
         },
         protobuf::{self, d2d_sync::contact as protobuf_contact},
         provider::ShortcutProvider,
-        utils::{bytes::OwnedVecByteWriter, sync::MutexIgnorePoison as _, time::utc_now_ms},
+        utils::{bytes::OwnedVecByteWriter, sync::MutexPoisonPanic as _, time::utc_now_ms},
     };
 
     trait TestSender {
@@ -1437,6 +1437,7 @@ mod tests {
         expected_created_at: u64,
         expected_nonce: Nonce,
         expected_body_state: MessageStateBody,
+        expected_message_overrides: MessageOverrides,
     }
 
     struct StaticTestSender;
@@ -1471,6 +1472,40 @@ mod tests {
                     },
                     revisions: vec![],
                 }),
+                expected_message_overrides: MessageOverrides::default(),
+            }
+        }
+
+        fn static_text_message_with_disabled_delivery_receipt() -> StaticMessage {
+            let message = HEXLOWER_PERMISSIVE
+                .decode(
+                    b"304441354d453736304850543945574489aa9a7eaff77d96cb732768810034000000000000000000\
+                    000000000000000000000000000000000000000000000000439039d79074fa4a0d0961d651af57b9\
+                    4b7245c4c686733aab55b7f2b049fa3a8a5fec982eaa27d37557beaadd802cfc2703d849b2d718b0\
+                    db179e3e3bcdbf3c2be997490a0349f2e4fbaa43712e263aab0c2c4a920182f01f810df063363191\
+                    b26c2c6404c0e84e73a3e005e327589702878e259642e1cf3b29e36db1c6a258f55ea73c842fddaf\
+                    ffd76a3057c0c13b6881bccc6522a0edee793f586fcb9ec5b398eb3be0af1a8c6111fe463ed25d91\
+                    6e66bea54955ca3398e27cbae25bfb6c16e26f326ecf8a4ba81aef9312b59f612b9e3355de6c14c0\
+                    434dc195e0a03462fc95d836a7bca74bda61d59be8489a9fdd9e626e7cb7324ac0724b0a42168a5b\
+                    ea525eaef17d3bf13bbd8551ab8c85f5892fa6ba9c32e01343c3bc8ed2ad59f54411de089b193dca\
+                    452b9699dafe34d124dfe521a956cce4adf58902a4c7b8bcf3d4548848dd2f1bee",
+                )
+                .unwrap();
+            let message = MessageWithMetadataBox::try_from(message).unwrap();
+            StaticMessage {
+                message,
+                expected_id: MessageId::from_hex("89aa9a7eaff77d96").unwrap(),
+                expected_created_at: 1747416011868,
+                expected_nonce: Nonce::from_hex("b2d718b0db179e3e3bcdbf3c2be997490a0349f2e4fbaa43").unwrap(),
+                expected_body_state: MessageStateBody::Text(TextMessageState {
+                    original: MessageText {
+                        text: "Hi".to_owned(),
+                    },
+                    revisions: vec![],
+                }),
+                expected_message_overrides: MessageOverrides {
+                    delivery_receipt_policy: MessageOverridesDeliveryReceiptPolicy::DontSend,
+                },
             }
         }
 
@@ -1504,6 +1539,9 @@ mod tests {
                     name: "Pfäffikon SZ".to_owned(),
                     address: "Unknown address".to_owned(),
                 }),
+                expected_message_overrides: MessageOverrides {
+                    delivery_receipt_policy: MessageOverridesDeliveryReceiptPolicy::Default,
+                },
             }
         }
     }
@@ -1618,7 +1656,7 @@ mod tests {
     }
     impl TestSender for ThreemaPushTestSender {
         fn identity() -> ThreemaId {
-            PredefinedContact::_3MAPUSH_IDENTITY
+            PredefinedContact::THREEMAPUSH_IDENTITY
         }
 
         #[rustfmt::skip]
@@ -1748,6 +1786,12 @@ mod tests {
         database: InMemoryDb,
         web_session_resume_buffer: Rc<RefCell<Vec<Vec<u8>>>>,
         context: CspE2eProtocolContext,
+        created_at: u64,
+    }
+    impl Context {
+        fn assert_expected_received_at(&self, received_at: u64) {
+            assert!((self.created_at..=utc_now_ms()).contains(&received_at));
+        }
     }
     impl From<ContextInit> for Context {
         fn from(init: ContextInit) -> Self {
@@ -1757,9 +1801,19 @@ mod tests {
                 user_identity,
                 settings: init.settings,
                 contacts: init.contacts,
-                groups: init.groups,
+                groups: init
+                    .groups
+                    .into_iter()
+                    .map(|group| GroupWithProfilePicture {
+                        group,
+                        profile_picture: None,
+                    })
+                    .collect(),
                 distribution_lists: vec![],
                 user_profile: UserProfile::default(),
+                csp_nonces: vec![],
+                polls: vec![],
+                messages: vec![],
             });
 
             // Add predefined contacts
@@ -1797,6 +1851,7 @@ mod tests {
                 database,
                 web_session_resume_buffer,
                 context,
+                created_at: utc_now_ms(),
             };
 
             // Add cached contact results
@@ -1862,7 +1917,7 @@ mod tests {
         };
 
         let result = State::process_init_state(&mut context.context, state);
-        assert_matches!(result, Err(CspE2eProtocolError::InvalidState(_)));
+        assert_matches!(result, Err(CspE2eProtocolError::ContractViolation(_)));
 
         Ok(())
     }
@@ -2241,6 +2296,7 @@ mod tests {
                 created_at: utc_now_ms(),
                 direction: MessageDirection::Incoming(IncomingMessageDirection {
                     received_at: utc_now_ms(),
+                    overrides: MessageOverrides::default(),
                 }),
                 read_at: None,
                 star_marker: MessageStarMarker::None,
@@ -2429,7 +2485,7 @@ mod tests {
             vec![web_session_resume.push_payload]
         );
         {
-            let storage = context.database.storage.lock_ignore_poison();
+            let storage = context.database.storage.lock_unwrap();
             assert!(storage.contacts.is_empty());
             assert!(storage.conversations.is_empty());
         }
@@ -2481,7 +2537,7 @@ mod tests {
             }
         );
         {
-            let storage = context.database.storage.lock_ignore_poison();
+            let storage = context.database.storage.lock_unwrap();
             assert!(storage.contacts.is_empty());
             assert!(storage.conversations.is_empty());
         }
@@ -2580,6 +2636,7 @@ mod tests {
     // TODO(LIB-16): Add static messages for all other messages
     #[rstest]
     #[case(StaticTestSender::static_text_message())]
+    #[case(StaticTestSender::static_text_message_with_disabled_delivery_receipt())]
     #[case(StaticTestSender::static_location_message())]
     fn handle_valid_static_message(#[case] message: StaticMessage) -> anyhow::Result<()> {
         let mut context = Context::from(
@@ -2615,13 +2672,19 @@ mod tests {
                         message_id: message.expected_id,
                     })
                 );
-                assert_eq!(outgoing_message_task, Some(()));
+                assert_eq!(
+                    outgoing_message_task,
+                    match message.expected_message_overrides.delivery_receipt_policy {
+                        MessageOverridesDeliveryReceiptPolicy::Default => Some(()),
+                        MessageOverridesDeliveryReceiptPolicy::DontSend => None,
+                    }
+                );
             }
         );
 
         {
             // Ensure the contact exists and was updated to the correct acquaintance level and nickname
-            let storage = context.database.storage.lock_ignore_poison();
+            let storage = context.database.storage.lock_unwrap();
             let sender_contact = &storage.contacts.get(&StaticTestSender::IDENTITY).unwrap().contact;
             assert_eq!(
                 sender_contact.acquaintance_level,
@@ -2644,7 +2707,13 @@ mod tests {
             assert_eq!(message_state.creator_identity, StaticTestSender::IDENTITY);
             assert_eq!(message_state.message_id, message.expected_id);
             assert_eq!(message_state.created_at, message.expected_created_at);
-            assert_matches!(message_state.direction, MessageDirection::Incoming(_));
+            assert_matches!(
+                message_state.direction,
+                MessageDirection::Incoming(incoming_message_direction) => {
+                    context.assert_expected_received_at(incoming_message_direction.received_at);
+                    assert_eq!(incoming_message_direction.overrides, message.expected_message_overrides);
+                }
+            );
             assert_eq!(message_state.body, message.expected_body_state);
         }
 
@@ -2656,7 +2725,7 @@ mod tests {
     //
     // TODO(LIB-53): Add variants with the sender having acquaintance level _group_ and the group existing.
     #[rstest]
-    fn handle_valid_message<TSender: TestSender>(
+    fn handle_valid_message<TSender>(
         // Contacts, all of which should accept regular messages and be added to the contact list with the
         // respective acquaintance level and nickname if necessary.
         #[values(
@@ -2732,12 +2801,21 @@ mod tests {
              })),
         )]
         (outgoing_message_body, expected_message_body_state): (ContactMessageBody, MessageStateBody),
-    ) -> anyhow::Result<()> {
+
+        #[values(
+            MessageOverrides{ delivery_receipt_policy: MessageOverridesDeliveryReceiptPolicy::Default },
+            MessageOverrides{ delivery_receipt_policy: MessageOverridesDeliveryReceiptPolicy::DontSend }
+        )]
+        message_overrides: MessageOverrides,
+    ) -> anyhow::Result<()>
+    where
+        TSender: TestSender,
+    {
         let mut context = Context::from(context_builder.build()?);
 
         let outgoing_message = OutgoingMessage {
             message_id: MessageId::random(),
-            overrides: MessageOverrides::default(),
+            overrides: message_overrides,
             created_at: utc_now_ms(),
             body: OutgoingMessageBody::Contact(OutgoingContactMessage {
                 receiver_identity: context.context.csp_e2e.user_identity,
@@ -2775,12 +2853,18 @@ mod tests {
                         message_id,
                     })
                 );
-                assert_eq!(outgoing_message_task, Some(()));
+                assert_eq!(
+                    outgoing_message_task,
+                    match message_overrides.delivery_receipt_policy {
+                        MessageOverridesDeliveryReceiptPolicy::Default => Some(()),
+                        MessageOverridesDeliveryReceiptPolicy::DontSend => None,
+                    }
+                );
             }
         );
 
         {
-            let storage = context.database.storage.lock_ignore_poison();
+            let storage = context.database.storage.lock_unwrap();
             // Ensure the contact exists and was updated to the correct acquaintance level and nickname
             let sender_contact = &storage.contacts.get(&TSender::identity()).unwrap().contact;
             assert_eq!(
@@ -2801,7 +2885,13 @@ mod tests {
             assert_eq!(message_state.creator_identity, TSender::identity());
             assert_eq!(message_state.message_id, message_id);
             assert_eq!(message_state.created_at, outgoing_message.created_at);
-            assert_matches!(message_state.direction, MessageDirection::Incoming(_));
+            assert_matches!(
+                message_state.direction,
+                MessageDirection::Incoming(incoming_message_direction) => {
+                    context.assert_expected_received_at(incoming_message_direction.received_at);
+                    assert_eq!(incoming_message_direction.overrides, message_overrides);
+                }
+            );
             assert_eq!(message_state.body, expected_message_body_state);
         }
 
@@ -2873,7 +2963,7 @@ mod tests {
         assert_matches!(result, IncomingMessageLoop::Done(_));
 
         {
-            let storage = context.database.storage.lock_ignore_poison();
+            let storage = context.database.storage.lock_unwrap();
 
             // Ensure the contact exists and was updated to the correct nickname
             let sender_contact = &storage.contacts.get(&StaticTestSender::IDENTITY).unwrap().contact;
@@ -2992,7 +3082,7 @@ mod tests {
         assert_matches!(result, IncomingMessageLoop::Done(_));
 
         {
-            let storage = context.database.storage.lock_ignore_poison();
+            let storage = context.database.storage.lock_unwrap();
 
             // Ensure the contact exists and was updated to the correct nickname.
             let sender_contact = &storage.contacts.get(&StaticTestSender::IDENTITY).unwrap().contact;
@@ -3103,7 +3193,7 @@ mod tests {
         assert_matches!(result, IncomingMessageLoop::Done(_));
 
         {
-            let storage = context.database.storage.lock_ignore_poison();
+            let storage = context.database.storage.lock_unwrap();
 
             // Ensure the contact exists and was updated to the correct nickname
             let sender_contact = &storage.contacts.get(&StaticTestSender::IDENTITY).unwrap().contact;
@@ -3247,7 +3337,7 @@ mod tests {
         assert_matches!(result, IncomingMessageLoop::Done(_));
 
         {
-            let storage = context.database.storage.lock_ignore_poison();
+            let storage = context.database.storage.lock_unwrap();
 
             // Ensure the contact exists and was updated to the correct nickname
             let sender_contact = &storage.contacts.get(&StaticTestSender::IDENTITY).unwrap().contact;

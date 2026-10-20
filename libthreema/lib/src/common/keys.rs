@@ -12,7 +12,7 @@ use libthreema_dependencies::{
         salsa20, x25519,
     },
     data_encoding::HEXLOWER_PERMISSIVE,
-    rand::{self, Rng as _, distributions::DistString as _},
+    rand::{self, Rng as _},
 };
 use libthreema_macros::{ConstantTimeEq, Name, concat_fixed_bytes};
 use zeroize::ZeroizeOnDrop;
@@ -445,9 +445,11 @@ impl RemoteSecretHash {
         )
     }
 }
-impl From<[u8; Self::LENGTH]> for RemoteSecretHash {
-    fn from(bytes: [u8; Self::LENGTH]) -> Self {
-        Self(bytes)
+impl TryFrom<&[u8]> for RemoteSecretHash {
+    type Error = TryFromSliceError;
+
+    fn try_from(remote_secret_hash: &[u8]) -> Result<Self, Self::Error> {
+        Ok(Self(<[u8; Self::LENGTH]>::try_from(remote_secret_hash)?))
     }
 }
 impl fmt::Display for RemoteSecretHash {
@@ -471,9 +473,13 @@ impl RemoteSecretHashForIdentity {
     /// Byte length of the remote secret hash tied to an identity.
     pub const LENGTH: usize = 32;
 }
-impl From<[u8; Self::LENGTH]> for RemoteSecretHashForIdentity {
-    fn from(bytes: [u8; Self::LENGTH]) -> Self {
-        Self(bytes)
+impl TryFrom<&[u8]> for RemoteSecretHashForIdentity {
+    type Error = TryFromSliceError;
+
+    fn try_from(remote_secret_hash_for_identity: &[u8]) -> Result<Self, Self::Error> {
+        Ok(Self(<[u8; Self::LENGTH]>::try_from(
+            remote_secret_hash_for_identity,
+        )?))
     }
 }
 impl fmt::Display for RemoteSecretHashForIdentity {
@@ -514,7 +520,7 @@ impl RemoteSecret {
     pub fn random() -> Self {
         let mut remote_secret = [0_u8; Self::LENGTH];
         rand::thread_rng().fill(&mut remote_secret);
-        Self::from(remote_secret)
+        Self(remote_secret)
     }
 
     /// Derive the associated Remote Secret Hash (RSH).
@@ -541,9 +547,11 @@ impl RemoteSecret {
         )
     }
 }
-impl From<[u8; Self::LENGTH]> for RemoteSecret {
-    fn from(bytes: [u8; Self::LENGTH]) -> Self {
-        Self(bytes)
+impl TryFrom<&[u8]> for RemoteSecret {
+    type Error = TryFromSliceError;
+
+    fn try_from(remote_secret: &[u8]) -> Result<Self, Self::Error> {
+        Ok(Self(<[u8; Self::LENGTH]>::try_from(remote_secret)?))
     }
 }
 
@@ -582,14 +590,16 @@ impl RemoteSecretAuthenticationToken {
         Ok(Self(bytes))
     }
 }
-impl From<[u8; Self::LENGTH]> for RemoteSecretAuthenticationToken {
-    fn from(bytes: [u8; Self::LENGTH]) -> Self {
-        Self(bytes)
+impl TryFrom<&[u8]> for RemoteSecretAuthenticationToken {
+    type Error = TryFromSliceError;
+
+    fn try_from(authentication_token: &[u8]) -> Result<Self, Self::Error> {
+        Ok(Self(<[u8; Self::LENGTH]>::try_from(authentication_token)?))
     }
 }
 
-/// A salt used to derive the data backup root key from the [`DataBackupPassword`].
-#[derive(Clone, Name)]
+/// A salt used to derive the [`DataBackupRootKey`] from the data backup password.
+#[derive(Name, ZeroizeOnDrop)]
 pub(crate) struct DataBackupSalt(pub(crate) [u8; Self::LENGTH]);
 impl DataBackupSalt {
     /// Byte length of a data backup salt.
@@ -602,19 +612,26 @@ impl DataBackupSalt {
     }
 }
 
-/// The password for a data backup.
-#[cfg_attr(any(test, feature = "cli"), derive(Clone))]
-#[cfg_attr(feature = "uniffi", derive(libthreema_macros::UniffiNewType))]
-pub struct DataBackupPassword(pub String);
-impl DataBackupPassword {
-    /// Sample a random data backup password.
-    #[must_use]
-    pub fn random() -> Self {
-        Self(rand::distributions::Alphanumeric.sample_string(&mut rand::thread_rng(), 52))
-    }
+/// Key to encrypt the layout of the data backup.
+#[derive(Name, ZeroizeOnDrop)]
+pub(crate) struct DataBackupLayoutKey(pub(crate) chacha20::ChaCha20Poly1305);
 
-    pub(crate) fn derive_root_key(self, salt: &DataBackupSalt) -> Result<DataBackupRootKey, argon2::Error> {
-        let mut root_key = [0; DataBackupRootKey::LENGTH];
+/// Key to encrypt pages of the data backup.
+#[derive(ZeroizeOnDrop)]
+pub(crate) struct DataBackupPageKey(pub(crate) chacha20::ChaCha20Poly1305);
+
+/// The data backup root key derived from the data backup password.
+///
+/// This key is used to derive the [`DataBackupLayoutKey`] and the [`DataBackupPageKey`].
+#[derive(ZeroizeOnDrop)]
+pub(crate) struct DataBackupRootKey([u8; Self::LENGTH]);
+impl DataBackupRootKey {
+    /// Byte length of the data backup root key.
+    pub(crate) const LENGTH: usize = 32;
+
+    #[expect(clippy::needless_pass_by_value, reason = "Prevent reuse")]
+    pub(crate) fn from_password(password: String, salt: &DataBackupSalt) -> Self {
+        let mut root_key = [0; Self::LENGTH];
         argon2::Argon2::new(
             argon2::Argon2id,
             argon2::Version::V0x13,
@@ -622,48 +639,33 @@ impl DataBackupPassword {
                 128 * 1024, // 128 MiB memory
                 8,          // iterations
                 1,          // No parallelization
-                Some(DataBackupRootKey::LENGTH),
-            )?,
+                Some(Self::LENGTH),
+            )
+            .expect("Parameters are within required bounds"),
         )
-        .hash_password_into(self.0.as_bytes(), &salt.0, &mut root_key)?;
+        .hash_password_into(password.as_bytes(), &salt.0, &mut root_key)
+        .expect("Argon2id does not fail with controlled inputs");
 
-        Ok(DataBackupRootKey(root_key))
+        Self(root_key)
     }
-}
 
-/// The data backup root key derived from [`DataBackupPassword`].
-///
-/// This key is used to derive the [`DataBackupPageKey`] and the
-/// [`DataBackupLayoutKey`].
-pub(crate) struct DataBackupRootKey(pub(crate) [u8; Self::LENGTH]);
-impl DataBackupRootKey {
-    /// Byte length of the data backup root key.
-    pub(crate) const LENGTH: usize = 32;
-
-    fn derive_key(&self, salt: &[u8]) -> chacha20::XChaCha20Poly1305 {
+    fn derive_key(&self, salt: &[u8]) -> chacha20::ChaCha20Poly1305 {
         let derived_key: [u8; chacha20::KEY_LENGTH] =
             blake2b::Blake2bMac256::new_with_salt_and_personal(Some(&self.0), salt, b"3ma-bup")
                 .expect("Blake2bMac256 failed")
                 .finalize_fixed()
                 .into();
-        chacha20::XChaCha20Poly1305::new(&derived_key.into())
+        chacha20::ChaCha20Poly1305::new(&derived_key.into())
     }
 
     pub(crate) fn layout_key(&self) -> DataBackupLayoutKey {
-        DataBackupLayoutKey(self.derive_key(b"l"))
+        DataBackupLayoutKey(self.derive_key(b"layout"))
     }
 
     pub(crate) fn page_key(&self) -> DataBackupPageKey {
-        DataBackupPageKey(self.derive_key(b"p"))
+        DataBackupPageKey(self.derive_key(b"page"))
     }
 }
-
-/// Key to encrypt the layout of the data backup.
-#[derive(Name)]
-pub(crate) struct DataBackupLayoutKey(pub(crate) chacha20::XChaCha20Poly1305);
-
-/// Key to encrypt pages of the data backup.
-pub(crate) struct DataBackupPageKey(pub(crate) chacha20::XChaCha20Poly1305);
 
 #[cfg(test)]
 mod tests {

@@ -13,6 +13,7 @@ enum KeychainItem: CaseIterable {
     case threemaSafeKey(_ version: KeychainVersion = .v1)
     case threemaSafeServer(_ version: KeychainVersion = .v1)
     case dataBackupRecoveryKey(_ version: KeychainVersion = .v1)
+    case pushNotificationEncryptionKey(_ version: KeychainVersion = .v1)
 
     static let allCases: [KeychainItem] = [
         .remoteSecret(),
@@ -26,6 +27,7 @@ enum KeychainItem: CaseIterable {
         .threemaSafeKey(),
         .threemaSafeServer(),
         .dataBackupRecoveryKey(),
+        .pushNotificationEncryptionKey(),
     ]
     
     /// The label must be unique!
@@ -74,6 +76,8 @@ enum KeychainItem: CaseIterable {
             }
         case .dataBackupRecoveryKey:
             "Threema Data Backup Recovery Key v1"
+        case .pushNotificationEncryptionKey:
+            "Threema Push Notification Encryption Key v1"
         }
     }
 
@@ -93,7 +97,10 @@ enum KeychainItem: CaseIterable {
     var mightContainEncryptedData: Bool {
         switch self {
         case .remoteSecret,
-             .identityBackup:
+             .identityBackup,
+             // The Notification Extension needs this key to decrypt push payloads, thus it must be readable
+             // without a Remote Secret
+             .pushNotificationEncryptionKey:
             false
 
         case .identity,

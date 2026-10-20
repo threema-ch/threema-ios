@@ -1,5 +1,5 @@
 //! Binding version of [`settings`].
-use std::sync::Arc;
+use std::{collections::HashSet, sync::Arc};
 
 use crate::{
     bindings::uniffi::{ConversionError, common::ThreemaId},
@@ -9,49 +9,10 @@ use crate::{
     provider::ProviderError,
 };
 
-/// Binding version of [`settings::SettingsUpdate`].
-#[derive(uniffi::Record)]
-#[expect(missing_docs, reason = "Binding version")]
-pub struct SettingsUpdate {
-    pub contact_sync_policy: Option<protobuf_settings::ContactSyncPolicy>,
-    pub unknown_contact_policy: Option<protobuf_settings::UnknownContactPolicy>,
-    pub read_receipt_policy: Option<protobuf::d2d_sync::ReadReceiptPolicy>,
-    pub typing_indicator_policy: Option<protobuf::d2d_sync::TypingIndicatorPolicy>,
-    pub o2o_call_policy: Option<protobuf_settings::O2oCallPolicy>,
-    pub o2o_call_connection_policy: Option<protobuf_settings::O2oCallConnectionPolicy>,
-    pub o2o_call_video_policy: Option<protobuf_settings::O2oCallVideoPolicy>,
-    pub group_call_policy: Option<protobuf_settings::GroupCallPolicy>,
-    pub screenshot_policy: Option<protobuf_settings::ScreenshotPolicy>,
-    pub blocked_identities: Option<Vec<ThreemaId>>,
-    pub exclude_from_sync_identities: Option<Vec<ThreemaId>>,
-}
-impl From<settings::SettingsUpdate> for SettingsUpdate {
-    fn from(update: settings::SettingsUpdate) -> Self {
-        Self {
-            contact_sync_policy: update.contact_sync_policy,
-            unknown_contact_policy: update.unknown_contact_policy,
-            read_receipt_policy: update.read_receipt_policy,
-            typing_indicator_policy: update.typing_indicator_policy,
-            o2o_call_policy: update.o2o_call_policy,
-            o2o_call_connection_policy: update.o2o_call_connection_policy,
-            o2o_call_video_policy: update.o2o_call_video_policy,
-            group_call_policy: update.group_call_policy,
-            screenshot_policy: update.screenshot_policy,
-            blocked_identities: update
-                .blocked_identities
-                .map(|identities| identities.into_iter().map(ThreemaId::from).collect()),
-            exclude_from_sync_identities: update
-                .exclude_from_sync_identities
-                .map(|identities| identities.into_iter().map(ThreemaId::from).collect()),
-        }
-    }
-}
-
 /// Binding version of [`settings::Settings`].
 #[derive(uniffi::Record)]
 #[expect(missing_docs, reason = "Binding version")]
 pub struct Settings {
-    pub contact_sync_policy: protobuf_settings::ContactSyncPolicy,
     pub unknown_contact_policy: protobuf_settings::UnknownContactPolicy,
     pub read_receipt_policy: protobuf::d2d_sync::ReadReceiptPolicy,
     pub typing_indicator_policy: protobuf::d2d_sync::TypingIndicatorPolicy,
@@ -66,7 +27,6 @@ pub struct Settings {
 impl From<settings::Settings> for Settings {
     fn from(settings: settings::Settings) -> Self {
         Self {
-            contact_sync_policy: settings.contact_sync_policy,
             unknown_contact_policy: settings.unknown_contact_policy,
             read_receipt_policy: settings.read_receipt_policy,
             typing_indicator_policy: settings.typing_indicator_policy,
@@ -93,7 +53,6 @@ impl TryFrom<Settings> for settings::Settings {
 
     fn try_from(settings: Settings) -> Result<Self, Self::Error> {
         Ok(Self {
-            contact_sync_policy: settings.contact_sync_policy,
             unknown_contact_policy: settings.unknown_contact_policy,
             read_receipt_policy: settings.read_receipt_policy,
             typing_indicator_policy: settings.typing_indicator_policy,
@@ -113,6 +72,42 @@ impl TryFrom<Settings> for settings::Settings {
                 .map(common::ThreemaId::try_from)
                 .collect::<Result<_, _>>()?,
         })
+    }
+}
+
+/// Binding version of [`settings::SettingsUpdate`].
+#[derive(uniffi::Record)]
+#[expect(missing_docs, reason = "Binding version")]
+pub struct SettingsUpdate {
+    pub unknown_contact_policy: Option<protobuf_settings::UnknownContactPolicy>,
+    pub read_receipt_policy: Option<protobuf::d2d_sync::ReadReceiptPolicy>,
+    pub typing_indicator_policy: Option<protobuf::d2d_sync::TypingIndicatorPolicy>,
+    pub o2o_call_policy: Option<protobuf_settings::O2oCallPolicy>,
+    pub o2o_call_connection_policy: Option<protobuf_settings::O2oCallConnectionPolicy>,
+    pub o2o_call_video_policy: Option<protobuf_settings::O2oCallVideoPolicy>,
+    pub group_call_policy: Option<protobuf_settings::GroupCallPolicy>,
+    pub screenshot_policy: Option<protobuf_settings::ScreenshotPolicy>,
+    pub blocked_identities: Option<HashSet<ThreemaId>>,
+    pub exclude_from_sync_identities: Option<HashSet<ThreemaId>>,
+}
+impl From<settings::SettingsUpdate> for SettingsUpdate {
+    fn from(update: settings::SettingsUpdate) -> Self {
+        Self {
+            unknown_contact_policy: update.unknown_contact_policy,
+            read_receipt_policy: update.read_receipt_policy,
+            typing_indicator_policy: update.typing_indicator_policy,
+            o2o_call_policy: update.o2o_call_policy,
+            o2o_call_connection_policy: update.o2o_call_connection_policy,
+            o2o_call_video_policy: update.o2o_call_video_policy,
+            group_call_policy: update.group_call_policy,
+            screenshot_policy: update.screenshot_policy,
+            blocked_identities: update
+                .blocked_identities
+                .map(|identities| identities.into_iter().map(ThreemaId::from).collect()),
+            exclude_from_sync_identities: update
+                .exclude_from_sync_identities
+                .map(|identities| identities.into_iter().map(ThreemaId::from).collect()),
+        }
     }
 }
 

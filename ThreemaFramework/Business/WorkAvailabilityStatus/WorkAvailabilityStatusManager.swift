@@ -3,8 +3,8 @@ import Foundation
 
 public final class WorkAvailabilityStatusManager: WorkAvailabilityStatusManagerProtocol {
     
-    private let workAvailabilityStatusCategoryKey = "WorkAvailabilityStatusCategoryKey"
-    private let workAvailabilityStatusTextKey = "workAvailabilityStatusTextKey"
+    static let workAvailabilityStatusCategoryKey = "WorkAvailabilityStatusCategoryKey"
+    static let workAvailabilityStatusTextKey = "workAvailabilityStatusTextKey"
 
     private let defaults: UserDefaults
     
@@ -17,8 +17,8 @@ public final class WorkAvailabilityStatusManager: WorkAvailabilityStatusManagerP
     // MARK: - Own Status
     
     public func ownStatus() -> WorkAvailabilityStatus {
-        let categoryRawValue = defaults.integer(forKey: workAvailabilityStatusCategoryKey)
-        let text = defaults.string(forKey: workAvailabilityStatusTextKey)
+        let categoryRawValue = defaults.integer(forKey: Self.workAvailabilityStatusCategoryKey)
+        let text = defaults.string(forKey: Self.workAvailabilityStatusTextKey)
         
         guard let category = WorkAvailabilityStatus.Category(rawValue: categoryRawValue) else {
             DDLogError(
@@ -44,20 +44,20 @@ public final class WorkAvailabilityStatusManager: WorkAvailabilityStatusManagerP
             return
         }
         
-        defaults.set(status.category.rawValue, forKey: workAvailabilityStatusCategoryKey)
+        defaults.set(status.category.rawValue, forKey: Self.workAvailabilityStatusCategoryKey)
         
         // We make sure the text gets removed if no text is set for new status
         if let text = status.text, !text.isEmpty {
-            defaults.set(text, forKey: workAvailabilityStatusTextKey)
+            defaults.set(text, forKey: Self.workAvailabilityStatusTextKey)
         }
         else {
-            defaults.removeObject(forKey: workAvailabilityStatusTextKey)
+            defaults.removeObject(forKey: Self.workAvailabilityStatusTextKey)
         }
     }
     
     private func removeOwnStatus() {
-        defaults.removeObject(forKey: workAvailabilityStatusCategoryKey)
-        defaults.removeObject(forKey: workAvailabilityStatusTextKey)
+        defaults.removeObject(forKey: Self.workAvailabilityStatusCategoryKey)
+        defaults.removeObject(forKey: Self.workAvailabilityStatusTextKey)
         DDLogNotice("[WorkAvailabilityStatusManager] Removed own status.")
     }
 }

@@ -92,7 +92,10 @@ impl PayloadEncoder for protobuf::d2m::ClientHello {
     }
 
     #[inline]
-    fn encode_into<TWriter: ByteWriter>(self, writer: &mut TWriter) -> Result<(), D2mProtocolError> {
+    fn encode_into<TWriter>(self, writer: &mut TWriter) -> Result<(), D2mProtocolError>
+    where
+        TWriter: ByteWriter,
+    {
         Self::encode_protobuf(self, writer)
     }
 }

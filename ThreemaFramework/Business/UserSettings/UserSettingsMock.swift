@@ -159,4 +159,10 @@ public final class UserSettingsMock: NSObject, UserSettingsProtocol {
     public var didShowIdentityThisDeviceOnly = true
     
     public var evaluatedPolicyDomainStateApp: Data?
+
+    public var distributionListsEnabled = false
+
+    public var backups2Enabled = false
+
+    public var localBackupDebugRecoveryKeyEnabled = false
 }

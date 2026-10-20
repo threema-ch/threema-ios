@@ -61,6 +61,27 @@ struct PasscodeCoordinatorBiometricAttemptTests {
         #expect(attempt(isBiometricAuthenticationEnabled: false, isUserRequested: true) == .biometricsDisabled)
     }
 
+    // MARK: - Passcode required
+
+    @Test("Once iOS asked for the passcode, the biometric button cannot bring Face ID / Touch ID back")
+    func passcodeRequiredBlocksUserRequest() {
+        #expect(attempt(requiresPasscode: true, isUserRequested: true) == .passcodeRequired)
+        #expect(
+            attempt(requiresPasscode: true, hasEvaluatedBiometrics: true, isUserRequested: true) == .passcodeRequired
+        )
+    }
+
+    @Test("Once iOS asked for the passcode, no automatic attempt prompts either")
+    func passcodeRequiredBlocksAutomaticAttempts() {
+        #expect(attempt(requiresPasscode: true) == .passcodeRequired)
+    }
+
+    @Test("A foreground trip does not lift the passcode requirement")
+    func passcodeRequiredSurvivesForegroundTrip() {
+        // `PasscodeCoordinator.sceneDidEnterBackground()` clears `hasEvaluatedBiometrics`, but not `requiresPasscode`.
+        #expect(attempt(requiresPasscode: true, hasEvaluatedBiometrics: false) == .passcodeRequired)
+    }
+
     // MARK: - Precedence
 
     @Test("Reasons are reported most specific first")
@@ -70,6 +91,7 @@ struct PasscodeCoordinatorBiometricAttemptTests {
             attempt(
                 isLocked: false,
                 isBiometricAuthenticationEnabled: false,
+                requiresPasscode: true,
                 isAuthenticating: true,
                 hasEvaluatedBiometrics: true,
                 isSceneActive: false
@@ -78,10 +100,20 @@ struct PasscodeCoordinatorBiometricAttemptTests {
         #expect(
             attempt(
                 isBiometricAuthenticationEnabled: false,
+                requiresPasscode: true,
                 isAuthenticating: true,
                 hasEvaluatedBiometrics: true,
                 isSceneActive: false
             ) == .biometricsDisabled
+        )
+        #expect(
+            attempt(
+                requiresPasscode: true,
+                isAuthenticating: true,
+                hasEvaluatedBiometrics: true,
+                isSceneActive: false,
+                isUserRequested: true
+            ) == .passcodeRequired
         )
         #expect(
             attempt(
@@ -104,6 +136,7 @@ struct PasscodeCoordinatorBiometricAttemptTests {
     private func attempt(
         isLocked: Bool = true,
         isBiometricAuthenticationEnabled: Bool = true,
+        requiresPasscode: Bool = false,
         isAuthenticating: Bool = false,
         hasEvaluatedBiometrics: Bool = false,
         isSceneActive: Bool = true,
@@ -112,6 +145,7 @@ struct PasscodeCoordinatorBiometricAttemptTests {
         PasscodeCoordinator.biometricAttempt(
             isLocked: isLocked,
             isBiometricAuthenticationEnabled: isBiometricAuthenticationEnabled,
+            requiresPasscode: requiresPasscode,
             isAuthenticating: isAuthenticating,
             hasEvaluatedBiometrics: hasEvaluatedBiometrics,
             isSceneActive: isSceneActive,

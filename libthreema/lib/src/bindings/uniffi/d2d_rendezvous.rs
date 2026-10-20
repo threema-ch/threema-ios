@@ -1,10 +1,7 @@
 //! Bindings for the _Connection Rendezvous Protocol_.
 use std::sync::Mutex;
 
-use crate::{
-    d2d_rendezvous::{self, RendezvousProtocolError},
-    utils::sync::MutexIgnorePoison as _,
-};
+use crate::d2d_rendezvous::{self, RendezvousProtocolError};
 
 /// Binding version of [`d2d_rendezvous::RendezvousPathStateUpdate`].
 #[derive(uniffi::Enum)]
@@ -89,7 +86,7 @@ impl RendezvousProtocol {
     ///
     /// # Errors
     ///
-    /// Returns [`RendezvousProtocolError::InvalidParameter`] if `ak` is not exactly 32 bytes.
+    /// Returns [`RendezvousProtocolError::ConversionError`] if `ak` is not exactly 32 bytes.
     #[uniffi::constructor]
     pub fn new_as_rid(
         is_nominator: bool,
@@ -98,7 +95,7 @@ impl RendezvousProtocol {
     ) -> Result<Self, RendezvousProtocolError> {
         let ak: [u8; 32] = ak
             .try_into()
-            .map_err(|_| RendezvousProtocolError::InvalidParameter("'ak' must be 32 bytes"))?;
+            .map_err(|_| RendezvousProtocolError::ConversionError("'ak' must be 32 bytes"))?;
         Ok(Self {
             inner: Mutex::new(d2d_rendezvous::RendezvousProtocol::new_as_rid(
                 is_nominator,
@@ -119,7 +116,7 @@ impl RendezvousProtocol {
     ///
     /// # Errors
     ///
-    /// Returns [`RendezvousProtocolError::InvalidParameter`] if `ak` is not exactly 32 bytes.
+    /// Returns [`RendezvousProtocolError::ConversionError`] if `ak` is not exactly 32 bytes.
     #[uniffi::constructor]
     pub fn new_as_rrd(
         is_nominator: bool,
@@ -128,7 +125,7 @@ impl RendezvousProtocol {
     ) -> Result<Self, RendezvousProtocolError> {
         let ak: [u8; 32] = ak
             .try_into()
-            .map_err(|_| RendezvousProtocolError::InvalidParameter("'ak' must be 32 bytes"))?;
+            .map_err(|_| RendezvousProtocolError::ConversionError("'ak' must be 32 bytes"))?;
         let (inner, initial_outgoing_frames) = d2d_rendezvous::RendezvousProtocol::new_as_rrd(
             is_nominator,
             d2d_rendezvous::RendezvousAuthenticationKey(ak),
@@ -148,20 +145,28 @@ impl RendezvousProtocol {
     /// The initial outgoing frames to be enqueued on the respective paths.
     ///
     /// Only relevant when constructing the protocol with the RRD role.
-    pub fn initial_outgoing_frames(&self) -> Option<Vec<RendezvousOutgoingFrame>> {
-        self.initial_outgoing_frames.lock_ignore_poison().take()
+    ///
+    /// # Errors
+    ///
+    /// Returns a [`RendezvousProtocolError::LockPoisoned`] if an internal lock could not be obtained.
+    pub fn initial_outgoing_frames(
+        &self,
+    ) -> Result<Option<Vec<RendezvousOutgoingFrame>>, RendezvousProtocolError> {
+        Ok(self.initial_outgoing_frames.lock()?.take())
     }
 
     /// See [`d2d_rendezvous::RendezvousProtocol::is_nominator`].
-    #[must_use]
-    fn is_nominator(&self) -> bool {
-        self.inner.lock_ignore_poison().is_nominator()
+    fn is_nominator(&self) -> Result<bool, RendezvousProtocolError> {
+        Ok(self.inner.lock()?.is_nominator())
     }
 
     /// See [`d2d_rendezvous::RendezvousProtocol::nominated_path`].
-    #[must_use]
-    pub fn nominated_path(&self) -> Option<u32> {
-        self.inner.lock_ignore_poison().nominated_path()
+    ///
+    /// # Errors
+    ///
+    /// Returns a [`RendezvousProtocolError::LockPoisoned`] if an internal lock could not be obtained.
+    pub fn nominated_path(&self) -> Result<Option<u32>, RendezvousProtocolError> {
+        Ok(self.inner.lock()?.nominated_path())
     }
 
     /// Binding version of [`d2d_rendezvous::RendezvousProtocol::add_chunks`].
@@ -172,7 +177,7 @@ impl RendezvousProtocol {
     )]
     pub fn add_chunks(&self, pid: u32, chunks: Vec<Vec<u8>>) -> Result<(), RendezvousProtocolError> {
         let chunks: Vec<&[u8]> = chunks.iter().map(Vec::as_slice).collect();
-        self.inner.lock_ignore_poison().add_chunks(pid, &chunks)
+        self.inner.lock()?.add_chunks(pid, &chunks)
     }
 
     /// Binding version of [`RendezvousProtocol::process_frame`].
@@ -182,7 +187,7 @@ impl RendezvousProtocol {
         pid: u32,
     ) -> Result<Option<RendezvousPathProcessResult>, RendezvousProtocolError> {
         self.inner
-            .lock_ignore_poison()
+            .lock()?
             .process_frame(pid)
             .map(|result| result.map(RendezvousPathProcessResult::from))
     }
@@ -191,7 +196,7 @@ impl RendezvousProtocol {
     #[expect(clippy::missing_errors_doc, reason = "Binding version")]
     pub fn nominate_path(&self, pid: u32) -> Result<RendezvousPathProcessResult, RendezvousProtocolError> {
         self.inner
-            .lock_ignore_poison()
+            .lock()?
             .nominate_path(pid)
             .map(RendezvousPathProcessResult::from)
     }
@@ -203,7 +208,7 @@ impl RendezvousProtocol {
         outgoing_data: Vec<u8>,
     ) -> Result<RendezvousPathProcessResult, RendezvousProtocolError> {
         self.inner
-            .lock_ignore_poison()
+            .lock()?
             .create_ulp_frame(outgoing_data)
             .map(RendezvousPathProcessResult::from)
     }

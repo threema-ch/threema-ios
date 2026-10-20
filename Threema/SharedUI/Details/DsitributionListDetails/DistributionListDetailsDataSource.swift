@@ -339,7 +339,7 @@ extension DistributionListDetailsDataSource {
             DeleteConversationAction.execute(
                 for: strongSelf.conversation,
                 owner: strongDistributionListDetailsViewController,
-                cell: cell,
+                anchorView: cell ?? strongDistributionListDetailsViewController.view,
                 singleFunction: .delete
             ) { _ in
                 DDLogVerbose("Distribution list was deleted")

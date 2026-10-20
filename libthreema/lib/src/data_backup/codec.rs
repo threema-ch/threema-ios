@@ -1,117 +1,49 @@
 //! Codecs for the data backup.
-
-use crate::{
-    common::ThreemaIdError,
-    csp_e2e::message::codec::CspMessageDecodeError,
-    utils::{
-        bytes::{ByteReaderError, ByteWriterError},
-        debug::Name,
-    },
-};
-
-/// Source of a decoding error.
-#[derive(Clone, Debug, thiserror::Error)]
-pub enum BackupDecodingError {
-    /// Error while reading.
-    #[error("Decoding message failed: {0}")]
-    ByteReaderError(#[from] ByteReaderError),
-
-    /// Error during decoding of a protobuf message.
-    #[error("Decoding message failed: {0}")]
-    ProstDecodeError(#[from] prost::DecodeError),
-
-    /// Missing field.
-    #[error("Missing field in {message_name}: '{field_name}'")]
-    MissingField {
-        /// Name of the enum/struct in which the field is missing.
-        message_name: &'static str,
-
-        /// Name of the missing field.
-        field_name: &'static str,
-    },
-
-    /// Unknown type.
-    #[error("Unknown enum variant for '{name}': {variant}")]
-    UnknownEnumVariant {
-        /// Name of the enum.
-        name: &'static str,
-
-        /// Value of the (unknown) variant.
-        variant: i32,
-    },
-
-    /// Invalid Threema ID.
-    #[error("Invalid Threema ID: {0}")]
-    InvalidThreemaId(#[from] ThreemaIdError),
-
-    /// Invalid message.
-    #[error("Invalid message: {0}")]
-    InvalidMessage(String),
-
-    /// Another kind of error occurred.
-    #[error("{0}")]
-    Other(String),
-}
-
-/// Source of an encoding error.
-#[derive(Clone, Debug, thiserror::Error)]
-pub enum BackupEncodingError {
-    /// Error while reading (usually while decoding a struct).
-    #[error(transparent)]
-    EncodingFailed(#[from] ByteWriterError),
-
-    /// Conversion.
-    // TODO(LIB-174): Is there a better name?
-    #[error("Conversion failed: {0}")]
-    ConversionFailed(&'static str),
-}
-
-impl From<CspMessageDecodeError> for BackupDecodingError {
-    fn from(error: CspMessageDecodeError) -> Self {
-        match error {
-            CspMessageDecodeError::DecodingFailed(error) => Self::ByteReaderError(error),
-            CspMessageDecodeError::InvalidString(error) => Self::Other(error.to_string()),
-            CspMessageDecodeError::InvalidMessage(error) => Self::InvalidMessage(error),
-        }
-    }
-}
+use crate::{data_backup::DataBackupDecodeErrorSource, utils::debug::Name};
 
 trait InternalBackupDecoder<TRawMessage: Name>: Sized {
-    fn decode(raw_message: TRawMessage) -> Result<Self, BackupDecodingError>;
+    fn decode(raw_message: TRawMessage) -> Result<Self, DataBackupDecodeErrorSource>;
 
     // TODO(LIB-174): Check: Move this to utils/protobuf.rs ?
     //
     // Idea: Extend prost::Message and expose this for all protobuf messages.
-    fn expect_field<T>(field_name: &'static str, value: Option<T>) -> Result<T, BackupDecodingError> {
-        value.ok_or(BackupDecodingError::MissingField {
-            message_name: TRawMessage::NAME,
+    fn expect_field<T>(value: Option<T>, field_name: &'static str) -> Result<T, DataBackupDecodeErrorSource> {
+        value.ok_or(DataBackupDecodeErrorSource::MissingField {
+            name: TRawMessage::NAME,
             field_name,
         })
     }
 
     // TODO(LIB-174): Check: Move this to utils/protobuf.rs ?
-    fn parse_enum_variant<T: TryFrom<i32> + Name>(variant: i32) -> Result<T, BackupDecodingError> {
+    fn parse_enum_variant<T>(variant: i32) -> Result<T, DataBackupDecodeErrorSource>
+    where
+        T: TryFrom<i32> + Name,
+    {
         variant
             .try_into()
-            .map_err(|_| BackupDecodingError::UnknownEnumVariant {
+            .map_err(|_| DataBackupDecodeErrorSource::UnknownEnumVariant {
                 name: T::NAME,
                 variant,
             })
     }
 
-    /// Parse a required option and return a [`BackupDecodingError`] if the value is `None`.
+    /// Decode an optional enum variant and return a [`BackupDecodingError`] if the value is `None` or if the
+    /// variant could not be decoded.
     // TODO(LIB-174): Check: Move this to utils/protobuf.rs ?
     // TODO(LIB-174): Is there a method provided by prost? Otherwise, we should add an extension.
-    fn expect_and_parse_enum_variant<T: TryFrom<i32> + Name>(
-        field_name: &'static str,
+    fn expect_and_parse_enum_variant<T>(
         variant: Option<i32>,
-    ) -> Result<T, BackupDecodingError> {
-        Self::parse_enum_variant::<T>(Self::expect_field(field_name, variant)?)
+        field_name: &'static str,
+    ) -> Result<T, DataBackupDecodeErrorSource>
+    where
+        T: TryFrom<i32> + Name,
+    {
+        Self::parse_enum_variant::<T>(Self::expect_field(variant, field_name)?)
     }
 }
 
 trait InternalBackupEncoder<TOutput> {
-    fn encode(&self) -> TOutput;
+    fn encode(self) -> TOutput;
 }
 
 mod common {
@@ -119,13 +51,16 @@ mod common {
 
     use crate::{
         common::{ConversationId, DistributionListId, GroupIdentity, ThreemaId},
-        data_backup::codec::{BackupDecodingError, InternalBackupDecoder, InternalBackupEncoder},
+        data_backup::{
+            DataBackupDecodeErrorSource,
+            codec::{InternalBackupDecoder, InternalBackupEncoder},
+        },
         protobuf,
     };
 
     // TODO(LIB-174): Is there a better place for this? Maybe even TryFrom/From implementations?
     impl InternalBackupDecoder<protobuf::common::Identities> for Vec<ThreemaId> {
-        fn decode(raw_message: protobuf::common::Identities) -> Result<Self, BackupDecodingError> {
+        fn decode(raw_message: protobuf::common::Identities) -> Result<Self, DataBackupDecodeErrorSource> {
             let protobuf::common::Identities { identities } = raw_message;
 
             Ok(identities
@@ -135,31 +70,31 @@ mod common {
         }
     }
     impl InternalBackupEncoder<protobuf::common::Identities> for Vec<ThreemaId> {
-        fn encode(&self) -> protobuf::common::Identities {
+        fn encode(self) -> protobuf::common::Identities {
             protobuf::common::Identities {
-                identities: self.clone().into_iter().map(ThreemaId::into).collect(),
+                identities: self.into_iter().map(ThreemaId::into).collect(),
             }
         }
     }
 
     impl InternalBackupDecoder<protobuf::common::Identities> for HashSet<ThreemaId> {
-        fn decode(raw_message: protobuf::common::Identities) -> Result<Self, BackupDecodingError> {
+        fn decode(raw_message: protobuf::common::Identities) -> Result<Self, DataBackupDecodeErrorSource> {
             Ok(Vec::decode(raw_message)?.into_iter().collect())
         }
     }
     impl InternalBackupEncoder<protobuf::common::Identities> for HashSet<ThreemaId> {
-        fn encode(&self) -> protobuf::common::Identities {
+        fn encode(self) -> protobuf::common::Identities {
             protobuf::common::Identities {
-                identities: self.clone().into_iter().map(ThreemaId::into).collect(),
+                identities: self.into_iter().map(ThreemaId::into).collect(),
             }
         }
     }
 
     impl InternalBackupDecoder<protobuf::d2d::ConversationId> for ConversationId {
-        fn decode(raw_message: protobuf::d2d::ConversationId) -> Result<Self, BackupDecodingError> {
+        fn decode(raw_message: protobuf::d2d::ConversationId) -> Result<Self, DataBackupDecodeErrorSource> {
             let protobuf::d2d::ConversationId { id: conversation_id } = raw_message;
 
-            Ok(match Self::expect_field("id", conversation_id)? {
+            Ok(match Self::expect_field(conversation_id, "conversation_id")? {
                 protobuf::d2d::conversation_id::Id::Contact(threema_id) => {
                     Self::Contact(ThreemaId::try_from(threema_id.as_str())?)
                 },
@@ -173,7 +108,7 @@ mod common {
         }
     }
     impl InternalBackupEncoder<protobuf::d2d::ConversationId> for ConversationId {
-        fn encode(&self) -> protobuf::d2d::ConversationId {
+        fn encode(self) -> protobuf::d2d::ConversationId {
             protobuf::d2d::ConversationId {
                 id: Some(match self {
                     Self::Contact(threema_id) => {
@@ -192,15 +127,16 @@ mod common {
 }
 
 mod profile {
-
     use crate::{
-        data_backup::codec::{BackupDecodingError, InternalBackupDecoder, InternalBackupEncoder},
+        data_backup::codec::{DataBackupDecodeErrorSource, InternalBackupDecoder, InternalBackupEncoder},
         model::profile::{ProfilePicture, ProfilePictureMediaType},
         protobuf,
     };
 
     impl InternalBackupDecoder<protobuf::data_backup::ProfilePicture> for ProfilePicture {
-        fn decode(raw_message: protobuf::data_backup::ProfilePicture) -> Result<Self, BackupDecodingError> {
+        fn decode(
+            raw_message: protobuf::data_backup::ProfilePicture,
+        ) -> Result<Self, DataBackupDecodeErrorSource> {
             let protobuf::data_backup::ProfilePicture { media_type, data } = raw_message;
 
             // Parse the format type.
@@ -215,23 +151,22 @@ mod profile {
         }
     }
     impl InternalBackupEncoder<protobuf::data_backup::ProfilePicture> for ProfilePicture {
-        fn encode(&self) -> protobuf::data_backup::ProfilePicture {
+        fn encode(self) -> protobuf::data_backup::ProfilePicture {
             protobuf::data_backup::ProfilePicture {
                 media_type: match self.media_type {
                     ProfilePictureMediaType::Jpeg => protobuf::common::image::Type::Jpeg,
                 }
                 .into(),
-                data: self.data.clone(),
+                data: self.data,
             }
         }
     }
 }
 
 mod contact {
-
     use crate::{
         common::{FeatureMask, ThreemaId, keys::PublicKey},
-        data_backup::codec::{BackupDecodingError, InternalBackupDecoder, InternalBackupEncoder},
+        data_backup::codec::{DataBackupDecodeErrorSource, InternalBackupDecoder, InternalBackupEncoder},
         model::{
             contact::{
                 Contact, ContactNotificationTriggerPolicyOverride,
@@ -257,7 +192,7 @@ mod contact {
     {
         fn decode(
             raw_message: notification_trigger_policy_override::Policy,
-        ) -> Result<Self, BackupDecodingError> {
+        ) -> Result<Self, DataBackupDecodeErrorSource> {
             let notification_trigger_policy_override::Policy { policy, expires_at } = raw_message;
             let policy = {
                 let policy: notification_trigger_policy_override::policy::NotificationTriggerPolicy =
@@ -278,10 +213,10 @@ mod contact {
     {
         fn decode(
             raw_message: d2d_sync::contact::NotificationTriggerPolicyOverride,
-        ) -> Result<Self, BackupDecodingError> {
+        ) -> Result<Self, DataBackupDecodeErrorSource> {
             let d2d_sync::contact::NotificationTriggerPolicyOverride { r#override } = raw_message;
 
-            Ok(match Self::expect_field("override", r#override)? {
+            Ok(match Self::expect_field(r#override, "override")? {
                 notification_trigger_policy_override::Override::Default(_) => None,
                 notification_trigger_policy_override::Override::Policy(policy) => {
                     Some(ContactNotificationTriggerPolicyOverride::decode(policy)?)
@@ -292,7 +227,7 @@ mod contact {
     impl InternalBackupEncoder<d2d_sync::contact::NotificationTriggerPolicyOverride>
         for Option<ContactNotificationTriggerPolicyOverride>
     {
-        fn encode(&self) -> d2d_sync::contact::NotificationTriggerPolicyOverride {
+        fn encode(self) -> d2d_sync::contact::NotificationTriggerPolicyOverride {
             d2d_sync::contact::NotificationTriggerPolicyOverride {
                 r#override: Some(match self {
                     Some(policy) => notification_trigger_policy_override::Override::Policy(
@@ -315,14 +250,15 @@ mod contact {
     }
 
     impl InternalBackupDecoder<d2d_sync::WorkAvailabilityStatus> for WorkAvailabilityStatus {
-        fn decode(raw_message: d2d_sync::WorkAvailabilityStatus) -> Result<Self, BackupDecodingError> {
+        fn decode(
+            raw_message: d2d_sync::WorkAvailabilityStatus,
+        ) -> Result<Self, DataBackupDecodeErrorSource> {
             let d2d_sync::WorkAvailabilityStatus {
                 category,
                 description,
             } = raw_message;
 
-            let category: d2d_sync::WorkAvailabilityStatusCategory = Self::parse_enum_variant(category)?;
-            Ok(match category {
+            Ok(match Self::parse_enum_variant(category)? {
                 d2d_sync::WorkAvailabilityStatusCategory::None => Self::None,
                 d2d_sync::WorkAvailabilityStatusCategory::Unavailable => Self::Unavailable(description),
                 d2d_sync::WorkAvailabilityStatusCategory::Busy => Self::Busy(description),
@@ -330,17 +266,13 @@ mod contact {
         }
     }
     impl InternalBackupEncoder<d2d_sync::WorkAvailabilityStatus> for WorkAvailabilityStatus {
-        fn encode(&self) -> d2d_sync::WorkAvailabilityStatus {
+        fn encode(self) -> d2d_sync::WorkAvailabilityStatus {
             let (category, description) = match self {
                 Self::None => (d2d_sync::WorkAvailabilityStatusCategory::None, String::new()),
-                Self::Unavailable(description) => (
-                    d2d_sync::WorkAvailabilityStatusCategory::Unavailable,
-                    description.clone(),
-                ),
-                Self::Busy(description) => (
-                    d2d_sync::WorkAvailabilityStatusCategory::Busy,
-                    description.clone(),
-                ),
+                Self::Unavailable(description) => {
+                    (d2d_sync::WorkAvailabilityStatusCategory::Unavailable, description)
+                },
+                Self::Busy(description) => (d2d_sync::WorkAvailabilityStatusCategory::Busy, description),
             };
 
             d2d_sync::WorkAvailabilityStatus {
@@ -351,7 +283,7 @@ mod contact {
     }
 
     impl InternalBackupDecoder<data_backup::AugmentedContact> for ContactWithProfilePictures {
-        fn decode(raw_message: data_backup::AugmentedContact) -> Result<Self, BackupDecodingError> {
+        fn decode(raw_message: data_backup::AugmentedContact) -> Result<Self, DataBackupDecodeErrorSource> {
             let data_backup::AugmentedContact {
                 contact,
                 last_update_at,
@@ -359,7 +291,6 @@ mod contact {
                 user_defined_profile_picture,
             } = raw_message;
 
-            let contact = Self::expect_field("contact", contact)?;
             let d2d_sync::Contact {
                 identity,
                 public_key,
@@ -379,43 +310,45 @@ mod contact {
                 read_receipt_policy_override,
                 typing_indicator_policy_override,
                 notification_trigger_policy_override,
+
                 #[expect(deprecated, reason = "Must be handled until phased out")]
                 deprecated_notification_sound_policy_override,
+
                 contact_defined_profile_picture: d2d_sync_contact_defined_profile_picture,
                 user_defined_profile_picture: d2d_sync_user_defined_profile_picture,
                 conversation_category,
                 conversation_visibility,
-            } = contact;
+            } = Self::expect_field(contact, "contact")?;
 
             if deprecated_notification_sound_policy_override.is_some() {
-                return Err(BackupDecodingError::Other(
+                return Err(DataBackupDecodeErrorSource::InvalidMessage(
                     "deprecated_notification_sound_policy_override must be None in d2d_sync::Contact"
                         .to_owned(),
                 ));
             }
 
             if d2d_sync_contact_defined_profile_picture.is_some() {
-                return Err(BackupDecodingError::Other(
+                return Err(DataBackupDecodeErrorSource::InvalidMessage(
                     "contact_defined_profile_picture must be None in d2d_sync::Contact".to_owned(),
                 ));
             }
 
             if d2d_sync_user_defined_profile_picture.is_some() {
-                return Err(BackupDecodingError::Other(
+                return Err(DataBackupDecodeErrorSource::InvalidMessage(
                     "user_defined_profile_picture must be None in d2d_sync::Contact".to_owned(),
                 ));
             }
 
-            let public_key = PublicKey::try_from(Self::expect_field("public_key", public_key)?.as_slice())
+            let public_key = PublicKey::try_from(Self::expect_field(public_key, "public_key")?.as_slice())
                 .map_err(|_| {
-                    BackupDecodingError::InvalidMessage("Public key must have 32 bytes".to_owned())
+                    DataBackupDecodeErrorSource::InvalidMessage("Public key must have 32 bytes".to_owned())
                 })?;
 
-            let created_at = Self::expect_field("created_at", created_at)?;
+            let created_at = Self::expect_field(created_at, "created_at")?;
 
             let read_receipt_policy_override = read_receipt_policy_override
                 .map(|policy_override| {
-                    match Self::expect_field("policy_override.override", policy_override.r#override)? {
+                    match Self::expect_field(policy_override.r#override, "policy_override.override")? {
                         d2d_sync::contact::read_receipt_policy_override::Override::Default(_) => {
                             Ok(d2d_sync::ReadReceiptPolicy::default())
                         },
@@ -428,7 +361,7 @@ mod contact {
 
             let typing_indicator_policy_override = typing_indicator_policy_override
                 .map(|policy_override| {
-                    match Self::expect_field("policy_override.override", policy_override.r#override)? {
+                    match Self::expect_field(policy_override.r#override, "policy_override.override")? {
                         d2d_sync::contact::typing_indicator_policy_override::Override::Default(_) => {
                             Ok(d2d_sync::TypingIndicatorPolicy::default())
                         },
@@ -444,28 +377,25 @@ mod contact {
                 public_key,
                 created_at,
                 last_update_at,
-                first_name: Self::expect_field("first name", first_name)?,
-                last_name: Self::expect_field("last name", last_name)?,
-                nickname: Self::expect_field("nickname", nickname)?,
+                first_name: Self::expect_field(first_name, "first_name")?,
+                last_name: Self::expect_field(last_name, "last_name")?,
+                nickname: Self::expect_field(nickname, "nickname")?,
                 verification_level: Self::expect_and_parse_enum_variant(
-                    "verification level",
                     verification_level,
+                    "verification_level",
                 )?,
                 work_verification_level: Self::expect_and_parse_enum_variant(
-                    "work verification level",
                     work_verification_level,
+                    "work_verification_level",
                 )?,
-                identity_type: Self::expect_and_parse_enum_variant("identity type", identity_type)?,
+                identity_type: Self::expect_and_parse_enum_variant(identity_type, "identity type")?,
                 acquaintance_level: Self::expect_and_parse_enum_variant(
-                    "acquaintance level",
                     acquaintance_level,
+                    "acquaintance_level",
                 )?,
-                activity_state: Self::expect_and_parse_enum_variant("activity state", activity_state)?,
-                feature_mask: FeatureMask(
-                    // TODO(LIB-78): lgr: Do we need to validate this feature mask?
-                    Self::expect_field("feature_mask", feature_mask)?,
-                ),
-                sync_state: Self::expect_and_parse_enum_variant("sync state", sync_state)?,
+                activity_state: Self::expect_and_parse_enum_variant(activity_state, "activity_state")?,
+                feature_mask: FeatureMask(Self::expect_field(feature_mask, "feature_mask")?),
+                sync_state: Self::expect_and_parse_enum_variant(sync_state, "sync_state")?,
                 work_last_full_sync_at,
                 work_availability_status: work_availability_status
                     .map(WorkAvailabilityStatus::decode)
@@ -473,16 +403,16 @@ mod contact {
                 read_receipt_policy_override,
                 typing_indicator_policy_override,
                 notification_trigger_policy_override: Option::decode(Self::expect_field(
-                    "notification_trigger_policy_override",
                     notification_trigger_policy_override,
+                    "notification_trigger_policy_override",
                 )?)?,
                 conversation_category: Self::expect_and_parse_enum_variant(
-                    "conversation category",
                     conversation_category,
+                    "conversation_category",
                 )?,
                 conversation_visibility: Self::expect_and_parse_enum_variant(
-                    "conversation visibility",
                     conversation_visibility,
+                    "conversation_visibility",
                 )?,
             };
 
@@ -498,14 +428,14 @@ mod contact {
         }
     }
     impl InternalBackupEncoder<data_backup::AugmentedContact> for ContactWithProfilePictures {
-        fn encode(&self) -> data_backup::AugmentedContact {
+        fn encode(self) -> data_backup::AugmentedContact {
             let contact = d2d_sync::Contact {
                 identity: self.contact.identity.to_string(),
                 public_key: Some(self.contact.public_key.0.as_bytes().to_vec()),
                 created_at: Some(self.contact.created_at),
-                first_name: Some(self.contact.first_name.clone()),
-                last_name: Some(self.contact.last_name.clone()),
-                nickname: Some(self.contact.nickname.clone()),
+                first_name: Some(self.contact.first_name),
+                last_name: Some(self.contact.last_name),
+                nickname: Some(self.contact.nickname),
                 verification_level: Some(self.contact.verification_level as i32),
                 work_verification_level: Some(self.contact.work_verification_level as i32),
                 identity_type: Some(self.contact.identity_type as i32),
@@ -517,7 +447,6 @@ mod contact {
                 work_availability_status: self
                     .contact
                     .work_availability_status
-                    .as_ref()
                     .map(WorkAvailabilityStatus::encode),
                 read_receipt_policy_override: self.contact.read_receipt_policy_override.map(|policy| {
                     d2d_sync::contact::ReadReceiptPolicyOverride {
@@ -552,12 +481,8 @@ mod contact {
                 last_update_at: self.contact.last_update_at,
                 contact_defined_profile_picture: self
                     .contact_defined_profile_picture
-                    .as_ref()
                     .map(ProfilePicture::encode),
-                user_defined_profile_picture: self
-                    .user_defined_profile_picture
-                    .as_ref()
-                    .map(ProfilePicture::encode),
+                user_defined_profile_picture: self.user_defined_profile_picture.map(ProfilePicture::encode),
             }
         }
     }
@@ -566,7 +491,7 @@ mod contact {
 mod distribution_list {
     use crate::{
         common::ThreemaId,
-        data_backup::codec::{BackupDecodingError, InternalBackupDecoder, InternalBackupEncoder},
+        data_backup::codec::{DataBackupDecodeErrorSource, InternalBackupDecoder, InternalBackupEncoder},
         model::distribution_list::DistributionList,
         protobuf,
     };
@@ -576,7 +501,7 @@ mod distribution_list {
     {
         fn decode(
             raw_message: protobuf::d2d_join::essential_data::AugmentedDistributionList,
-        ) -> Result<Self, BackupDecodingError> {
+        ) -> Result<Self, DataBackupDecodeErrorSource> {
             let protobuf::d2d_join::essential_data::AugmentedDistributionList {
                 distribution_list,
                 last_update_at,
@@ -588,25 +513,25 @@ mod distribution_list {
                 member_identities,
                 conversation_category,
                 conversation_visibility,
-            } = Self::expect_field("distribution_list", distribution_list)?;
+            } = Self::expect_field(distribution_list, "distribution_list")?;
 
             Ok(Self {
                 identity: crate::common::DistributionListId(distribution_list_id),
-                name: Self::expect_field("name", name)?,
-                created_at: Self::expect_field("created_at", created_at)?,
+                name: Self::expect_field(name, "name")?,
+                created_at: Self::expect_field(created_at, "created_at")?,
                 last_update_at,
-                members: Self::expect_field("member_identities", member_identities)?
+                members: Self::expect_field(member_identities, "member_identities")?
                     .identities
                     .into_iter()
                     .map(|identity| ThreemaId::try_from(identity.as_str()))
                     .collect::<Result<_, _>>()?,
                 conversation_category: Self::expect_and_parse_enum_variant(
-                    "conversation_category",
                     conversation_category,
+                    "conversation_category",
                 )?,
                 conversation_visibility: Self::expect_and_parse_enum_variant(
-                    "conversation_visibility",
                     conversation_visibility,
+                    "conversation_visibility",
                 )?,
             })
         }
@@ -614,11 +539,11 @@ mod distribution_list {
     impl InternalBackupEncoder<protobuf::d2d_join::essential_data::AugmentedDistributionList>
         for DistributionList
     {
-        fn encode(&self) -> protobuf::d2d_join::essential_data::AugmentedDistributionList {
+        fn encode(self) -> protobuf::d2d_join::essential_data::AugmentedDistributionList {
             protobuf::d2d_join::essential_data::AugmentedDistributionList {
                 distribution_list: Some(protobuf::d2d_sync::DistributionList {
                     distribution_list_id: self.identity.0,
-                    name: Some(self.name.clone()),
+                    name: Some(self.name),
                     created_at: Some(self.created_at),
                     member_identities: Some(self.members.encode()),
                     conversation_category: Some(self.conversation_category as i32),
@@ -635,7 +560,7 @@ mod group {
 
     use crate::{
         common::{GroupIdentity, ThreemaId},
-        data_backup::codec::{BackupDecodingError, InternalBackupDecoder, InternalBackupEncoder},
+        data_backup::codec::{DataBackupDecodeErrorSource, InternalBackupDecoder, InternalBackupEncoder},
         model::{
             group::{
                 Group, GroupNotificationTriggerPolicyOverride, GroupNotificationTriggerPolicyOverridePolicy,
@@ -652,7 +577,7 @@ mod group {
     };
 
     impl InternalBackupDecoder<protobuf::common::GroupIdentity> for GroupIdentity {
-        fn decode(raw_message: protobuf::common::GroupIdentity) -> Result<Self, BackupDecodingError> {
+        fn decode(raw_message: protobuf::common::GroupIdentity) -> Result<Self, DataBackupDecodeErrorSource> {
             let protobuf::common::GroupIdentity {
                 group_id,
                 creator_identity,
@@ -665,7 +590,7 @@ mod group {
         }
     }
     impl InternalBackupEncoder<protobuf::common::GroupIdentity> for GroupIdentity {
-        fn encode(&self) -> protobuf::common::GroupIdentity {
+        fn encode(self) -> protobuf::common::GroupIdentity {
             protobuf::common::GroupIdentity {
                 group_id: self.group_id,
                 creator_identity: self.creator_identity.to_string(),
@@ -678,12 +603,12 @@ mod group {
     {
         fn decode(
             raw_message: protobuf::d2d_sync::group::NotificationTriggerPolicyOverride,
-        ) -> Result<Self, BackupDecodingError> {
+        ) -> Result<Self, DataBackupDecodeErrorSource> {
             // Parse raw message.
             let protobuf::d2d_sync::group::NotificationTriggerPolicyOverride { r#override } = raw_message;
 
             // Parse override.
-            Ok(match Self::expect_field("override", r#override)? {
+            Ok(match Self::expect_field(r#override, "override")? {
                 protobuf_notification_override::Override::Default(_) => None,
                 protobuf_notification_override::Override::Policy(
                     protobuf_notification_override::Policy { policy, expires_at },
@@ -704,7 +629,7 @@ mod group {
     impl InternalBackupEncoder<protobuf::d2d_sync::group::NotificationTriggerPolicyOverride>
         for GroupNotificationTriggerPolicyOverride
     {
-        fn encode(&self) -> protobuf::d2d_sync::group::NotificationTriggerPolicyOverride {
+        fn encode(self) -> protobuf::d2d_sync::group::NotificationTriggerPolicyOverride {
             let policy = match self.policy {
                 GroupNotificationTriggerPolicyOverridePolicy::Mentioned => {
                     protobuf_notification_policy::NotificationTriggerPolicy::Mentioned
@@ -725,7 +650,9 @@ mod group {
     }
 
     impl InternalBackupDecoder<protobuf::data_backup::AugmentedGroup> for GroupWithProfilePicture {
-        fn decode(raw_message: protobuf::data_backup::AugmentedGroup) -> Result<Self, BackupDecodingError> {
+        fn decode(
+            raw_message: protobuf::data_backup::AugmentedGroup,
+        ) -> Result<Self, DataBackupDecodeErrorSource> {
             let protobuf::data_backup::AugmentedGroup {
                 group,
                 last_update_at,
@@ -746,27 +673,27 @@ mod group {
 
                 conversation_category,
                 conversation_visibility,
-            } = Self::expect_field("group", group)?;
+            } = Self::expect_field(group, "group")?;
 
             Ok(Self {
                 group: Group {
-                    identity: GroupIdentity::decode(Self::expect_field("group_identity", group_identity)?)?,
+                    identity: GroupIdentity::decode(Self::expect_field(group_identity, "group_identity")?)?,
                     name: name.unwrap_or_default(),
-                    created_at: Self::expect_field("created_at", created_at)?,
+                    created_at: Self::expect_field(created_at, "created_at")?,
                     last_update_at,
-                    user_state: Self::expect_and_parse_enum_variant("user_state", user_state)?,
-                    members: HashSet::decode(Self::expect_field("member_identities", member_identities)?)?,
+                    user_state: Self::expect_and_parse_enum_variant(user_state, "user_state")?,
+                    members: HashSet::decode(Self::expect_field(member_identities, "member_identities")?)?,
                     notification_trigger_policy_override: notification_trigger_policy_override
                         .map(Option::decode)
                         .transpose()?
                         .flatten(),
                     conversation_category: Self::expect_and_parse_enum_variant(
-                        "conversation_category",
                         conversation_category,
+                        "conversation_category",
                     )?,
                     conversation_visibility: Self::expect_and_parse_enum_variant(
-                        "conversation_visibility",
                         conversation_visibility,
+                        "conversation_visibility",
                     )?,
                 },
                 profile_picture: profile_picture.map(ProfilePicture::decode).transpose()?,
@@ -774,11 +701,11 @@ mod group {
         }
     }
     impl InternalBackupEncoder<protobuf::data_backup::AugmentedGroup> for GroupWithProfilePicture {
-        fn encode(&self) -> protobuf::data_backup::AugmentedGroup {
+        fn encode(self) -> protobuf::data_backup::AugmentedGroup {
             protobuf::data_backup::AugmentedGroup {
                 group: Some(protobuf::d2d_sync::Group {
                     group_identity: Some(self.group.identity.encode()),
-                    name: Some(self.group.name.clone()),
+                    name: Some(self.group.name),
                     created_at: Some(self.group.created_at),
                     user_state: Some(self.group.user_state as i32),
                     profile_picture: None,
@@ -786,7 +713,6 @@ mod group {
                     notification_trigger_policy_override: self
                         .group
                         .notification_trigger_policy_override
-                        .as_ref()
                         .map(GroupNotificationTriggerPolicyOverride::encode),
 
                     #[expect(deprecated, reason = "Must be handled until phased out")]
@@ -800,7 +726,7 @@ mod group {
                     conversation_visibility: Some(self.group.conversation_visibility as i32),
                 }),
                 last_update_at: self.group.last_update_at,
-                profile_picture: self.profile_picture.as_ref().map(ProfilePicture::encode),
+                profile_picture: self.profile_picture.map(ProfilePicture::encode),
             }
         }
     }
@@ -809,18 +735,20 @@ mod group {
 mod poll {
     use std::collections::HashMap;
 
-    use super::BackupDecodingError;
     use crate::{
         common::{ConversationId, ThreemaId},
-        data_backup::codec::{InternalBackupDecoder, InternalBackupEncoder},
-        model::poll::{Poll, PollChoice, PollChoiceId, PollId, PollVote, PollVotes},
+        data_backup::{
+            DataBackupDecodeErrorSource,
+            codec::{InternalBackupDecoder, InternalBackupEncoder},
+        },
+        model::poll::{Poll, PollChoice, PollChoiceId, PollId, PollVote, PollVotes, PollVotesSummary},
         protobuf::{self, data_backup::poll::poll_votes as protobuf_poll_votes},
     };
 
     impl InternalBackupDecoder<protobuf_poll_votes::poll_votes_list::PollVote> for PollVote {
         fn decode(
             raw_message: protobuf_poll_votes::poll_votes_list::PollVote,
-        ) -> Result<Self, BackupDecodingError> {
+        ) -> Result<Self, DataBackupDecodeErrorSource> {
             let protobuf_poll_votes::poll_votes_list::PollVote {
                 choices,
                 created_at,
@@ -835,9 +763,9 @@ mod poll {
         }
     }
     impl InternalBackupEncoder<protobuf_poll_votes::poll_votes_list::PollVote> for PollVote {
-        fn encode(&self) -> protobuf_poll_votes::poll_votes_list::PollVote {
+        fn encode(self) -> protobuf_poll_votes::poll_votes_list::PollVote {
             protobuf_poll_votes::poll_votes_list::PollVote {
-                choices: self.choices.iter().map(|choice_id| choice_id.0).collect(),
+                choices: self.choices.into_iter().map(|choice_id| choice_id.0).collect(),
                 created_at: self.created_at,
                 modified_at: self.modified_at,
             }
@@ -845,13 +773,15 @@ mod poll {
     }
 
     impl InternalBackupDecoder<protobuf_poll_votes::PollVotesList> for HashMap<ThreemaId, PollVote> {
-        fn decode(raw_message: protobuf_poll_votes::PollVotesList) -> Result<Self, BackupDecodingError> {
+        fn decode(
+            raw_message: protobuf_poll_votes::PollVotesList,
+        ) -> Result<Self, DataBackupDecodeErrorSource> {
             let protobuf_poll_votes::PollVotesList { participant_to_votes } = raw_message;
 
             participant_to_votes
                 .into_iter()
                 .map(|(participant, vote)| {
-                    Ok::<_, BackupDecodingError>((
+                    Ok::<_, DataBackupDecodeErrorSource>((
                         ThreemaId::try_from(participant.as_str())?,
                         PollVote::decode(vote)?,
                     ))
@@ -860,61 +790,77 @@ mod poll {
         }
     }
     impl InternalBackupEncoder<protobuf_poll_votes::PollVotesList> for HashMap<ThreemaId, PollVote> {
-        fn encode(&self) -> protobuf_poll_votes::PollVotesList {
+        fn encode(self) -> protobuf_poll_votes::PollVotesList {
             protobuf_poll_votes::PollVotesList {
                 participant_to_votes: self
-                    .iter()
+                    .into_iter()
                     .map(|(participant, vote)| (participant.to_string(), vote.encode()))
                     .collect(),
             }
         }
     }
 
-    impl InternalBackupDecoder<protobuf_poll_votes::PollVotesSummary> for HashMap<PollChoiceId, u16> {
-        fn decode(raw_message: protobuf_poll_votes::PollVotesSummary) -> Result<Self, BackupDecodingError> {
+    impl InternalBackupDecoder<protobuf_poll_votes::PollVotesSummary> for PollVotesSummary {
+        fn decode(
+            raw_message: protobuf_poll_votes::PollVotesSummary,
+        ) -> Result<Self, DataBackupDecodeErrorSource> {
             let protobuf_poll_votes::PollVotesSummary {
                 poll_choice_id_to_count,
+                user_choices,
             } = raw_message;
 
-            poll_choice_id_to_count
-                .into_iter()
-                .map(|(poll_choice_id, count)| {
-                    let Ok(count) = count.try_into() else {
-                        return Err(BackupDecodingError::Other("Overflow: vote count".to_owned()));
-                    };
+            Ok(Self {
+                summary: poll_choice_id_to_count
+                    .into_iter()
+                    .map(|(poll_choice_id, count)| {
+                        let Ok(count) = count.try_into() else {
+                            return Err(DataBackupDecodeErrorSource::InvalidMessage(
+                                "Overflow: vote count".to_owned(),
+                            ));
+                        };
 
-                    Ok((PollChoiceId(poll_choice_id), count))
-                })
-                .collect()
+                        Ok((PollChoiceId(poll_choice_id), count))
+                    })
+                    .collect::<Result<_, _>>()?,
+                user_choices: user_choices.into_iter().map(PollChoiceId).collect(),
+            })
         }
     }
-    impl InternalBackupEncoder<protobuf_poll_votes::PollVotesSummary> for HashMap<PollChoiceId, u16> {
-        fn encode(&self) -> protobuf_poll_votes::PollVotesSummary {
+    impl InternalBackupEncoder<protobuf_poll_votes::PollVotesSummary> for PollVotesSummary {
+        fn encode(self) -> protobuf_poll_votes::PollVotesSummary {
             protobuf_poll_votes::PollVotesSummary {
                 poll_choice_id_to_count: self
-                    .iter()
-                    .map(|(poll_choice_id, count)| (poll_choice_id.0, u32::from(*count)))
+                    .summary
+                    .into_iter()
+                    .map(|(poll_choice_id, count)| (poll_choice_id.0, u32::from(count)))
+                    .collect(),
+                user_choices: self
+                    .user_choices
+                    .into_iter()
+                    .map(|poll_choice_id| poll_choice_id.0)
                     .collect(),
             }
         }
     }
 
     impl InternalBackupDecoder<protobuf::data_backup::poll::PollVotes> for PollVotes {
-        fn decode(raw_message: protobuf::data_backup::poll::PollVotes) -> Result<Self, BackupDecodingError> {
+        fn decode(
+            raw_message: protobuf::data_backup::poll::PollVotes,
+        ) -> Result<Self, DataBackupDecodeErrorSource> {
             let protobuf::data_backup::poll::PollVotes { votes } = raw_message;
 
-            Ok(match Self::expect_field("votes", votes)? {
+            Ok(match Self::expect_field(votes, "votes")? {
                 protobuf_poll_votes::Votes::PollVotesList(poll_votes_list) => {
                     Self::Votes(HashMap::decode(poll_votes_list)?)
                 },
-                protobuf_poll_votes::Votes::PollVotesSummary(poll_votes_summary) => {
-                    Self::Summary(HashMap::decode(poll_votes_summary)?)
+                protobuf_poll_votes::Votes::PollVotesSummary(votes_summary) => {
+                    Self::Summary(PollVotesSummary::decode(votes_summary)?)
                 },
             })
         }
     }
     impl InternalBackupEncoder<protobuf::data_backup::poll::PollVotes> for PollVotes {
-        fn encode(&self) -> protobuf::data_backup::poll::PollVotes {
+        fn encode(self) -> protobuf::data_backup::poll::PollVotes {
             protobuf::data_backup::poll::PollVotes {
                 votes: Some(match self {
                     Self::Votes(votes) => protobuf_poll_votes::Votes::PollVotesList(votes.encode()),
@@ -927,7 +873,9 @@ mod poll {
     }
 
     impl InternalBackupDecoder<protobuf::data_backup::poll::PollChoice> for PollChoice {
-        fn decode(raw_message: protobuf::data_backup::poll::PollChoice) -> Result<Self, BackupDecodingError> {
+        fn decode(
+            raw_message: protobuf::data_backup::poll::PollChoice,
+        ) -> Result<Self, DataBackupDecodeErrorSource> {
             let protobuf::data_backup::poll::PollChoice { id, description } = raw_message;
 
             Ok(Self {
@@ -937,16 +885,16 @@ mod poll {
         }
     }
     impl InternalBackupEncoder<protobuf::data_backup::poll::PollChoice> for PollChoice {
-        fn encode(&self) -> protobuf::data_backup::poll::PollChoice {
+        fn encode(self) -> protobuf::data_backup::poll::PollChoice {
             protobuf::data_backup::poll::PollChoice {
                 id: self.id.0,
-                description: self.description.clone(),
+                description: self.description,
             }
         }
     }
 
     impl InternalBackupDecoder<protobuf::data_backup::Poll> for Poll {
-        fn decode(raw_message: protobuf::data_backup::Poll) -> Result<Self, BackupDecodingError> {
+        fn decode(raw_message: protobuf::data_backup::Poll) -> Result<Self, DataBackupDecodeErrorSource> {
             let protobuf::data_backup::Poll {
                 poll_id,
                 conversation,
@@ -963,7 +911,7 @@ mod poll {
 
             Ok(Self {
                 id: PollId(poll_id),
-                conversation: ConversationId::decode(Self::expect_field("conversation", conversation)?)?,
+                conversation: ConversationId::decode(Self::expect_field(conversation, "conversation")?)?,
                 creator_identity: ThreemaId::try_from(creator_identity.as_str())?,
                 created_at,
                 state: Self::parse_enum_variant(state)?,
@@ -975,23 +923,23 @@ mod poll {
                     .into_iter()
                     .map(PollChoice::decode)
                     .collect::<Result<_, _>>()?,
-                votes: PollVotes::decode(Self::expect_field("votes", votes)?)?,
+                votes: PollVotes::decode(Self::expect_field(votes, "votes")?)?,
             })
         }
     }
     impl InternalBackupEncoder<protobuf::data_backup::Poll> for Poll {
-        fn encode(&self) -> protobuf::data_backup::Poll {
+        fn encode(self) -> protobuf::data_backup::Poll {
             protobuf::data_backup::Poll {
                 poll_id: self.id.0,
                 conversation: Some(self.conversation.encode()),
                 creator_identity: self.creator_identity.to_string(),
                 created_at: self.created_at,
                 state: self.state.into(),
-                description: self.description.clone(),
+                description: self.description,
                 answer_type: self.answer_type.into(),
                 announce_type: self.announce_type.into(),
                 display_mode: self.display_mode.into(),
-                choices: self.choices.iter().map(PollChoice::encode).collect(),
+                choices: self.choices.into_iter().map(PollChoice::encode).collect(),
                 votes: Some(self.votes.encode()),
             }
         }
@@ -1001,43 +949,32 @@ mod poll {
 mod message {
     use duplicate::duplicate_item;
 
-    use super::BackupDecodingError;
     use crate::{
-        common::{ConversationId, MessageId, ThreemaId},
-        csp_e2e::message::MessageOverrides,
-        data_backup::codec::{InternalBackupDecoder, InternalBackupEncoder},
+        common::{
+            ConversationId, MessageId, MessageOverrides, MessageOverridesDeliveryReceiptPolicy, ThreemaId,
+        },
+        data_backup::{
+            DataBackupDecodeErrorSource,
+            codec::{InternalBackupDecoder, InternalBackupEncoder},
+        },
         model::{
             message::{
-                EmojiReaction, IncomingMessageDirection, LocationMessageState, MessageDirection,
-                MessageReaction, MessageStarMarker, MessageState, MessageStateBody, MessageStateBodyType,
-                MessageText, MessageTextRevision, OutgoingMessageDirection, PollClose, PollOpen,
-                TextMessageState,
+                DeletedMessageState, EmojiReaction, IncomingMessageDirection, LocationMessageState,
+                MessageDirection, MessageReaction, MessageStarMarker, MessageState, MessageStateBody,
+                MessageStateBodyType, MessageText, MessageTextRevision, OutgoingMessageDirection, PollClose,
+                PollOpen, TextMessageState,
             },
             poll::PollId,
         },
-        protobuf::{self},
+        protobuf::{
+            self, data_backup::incoming_message_direction::message_overrides as protobuf_message_overrides,
+        },
     };
 
-    impl InternalBackupDecoder<i32> for MessageStarMarker {
-        fn decode(raw_message: i32) -> Result<Self, BackupDecodingError> {
-            Ok(match Self::parse_enum_variant(raw_message)? {
-                protobuf::data_backup::MessageStarMarker::NoMarker => Self::None,
-                protobuf::data_backup::MessageStarMarker::Star => Self::Star,
-            })
-        }
-    }
-    impl InternalBackupEncoder<i32> for MessageStarMarker {
-        fn encode(&self) -> i32 {
-            match self {
-                Self::None => protobuf::data_backup::MessageStarMarker::NoMarker,
-                Self::Star => protobuf::data_backup::MessageStarMarker::Star,
-            }
-            .into()
-        }
-    }
-
     impl InternalBackupDecoder<protobuf::data_backup::MessageReaction> for MessageReaction {
-        fn decode(raw_message: protobuf::data_backup::MessageReaction) -> Result<Self, BackupDecodingError> {
+        fn decode(
+            raw_message: protobuf::data_backup::MessageReaction,
+        ) -> Result<Self, DataBackupDecodeErrorSource> {
             let protobuf::data_backup::MessageReaction {
                 created_at,
                 creator_identity,
@@ -1051,30 +988,11 @@ mod message {
         }
     }
     impl InternalBackupEncoder<protobuf::data_backup::MessageReaction> for MessageReaction {
-        fn encode(&self) -> protobuf::data_backup::MessageReaction {
+        fn encode(self) -> protobuf::data_backup::MessageReaction {
             protobuf::data_backup::MessageReaction {
                 created_at: self.created_at,
                 creator_identity: self.creator_identity.to_string(),
-                emoji: self.emoji.codepoint.clone(),
-            }
-        }
-    }
-
-    impl InternalBackupDecoder<protobuf::data_backup::MessageOverrides> for MessageOverrides {
-        fn decode(raw_message: protobuf::data_backup::MessageOverrides) -> Result<Self, BackupDecodingError> {
-            let protobuf::data_backup::MessageOverrides {
-                disable_delivery_receipts,
-            } = raw_message;
-
-            Ok(Self {
-                disable_delivery_receipts,
-            })
-        }
-    }
-    impl InternalBackupEncoder<protobuf::data_backup::MessageOverrides> for MessageOverrides {
-        fn encode(&self) -> protobuf::data_backup::MessageOverrides {
-            protobuf::data_backup::MessageOverrides {
-                disable_delivery_receipts: self.disable_delivery_receipts,
+                emoji: self.emoji.codepoint,
             }
         }
     }
@@ -1082,7 +1000,7 @@ mod message {
     impl InternalBackupDecoder<protobuf::data_backup::MessageTextRevision> for MessageTextRevision {
         fn decode(
             raw_message: protobuf::data_backup::MessageTextRevision,
-        ) -> Result<Self, BackupDecodingError> {
+        ) -> Result<Self, DataBackupDecodeErrorSource> {
             let protobuf::data_backup::MessageTextRevision { created_at, text } = raw_message;
 
             Ok(Self {
@@ -1092,16 +1010,18 @@ mod message {
         }
     }
     impl InternalBackupEncoder<protobuf::data_backup::MessageTextRevision> for MessageTextRevision {
-        fn encode(&self) -> protobuf::data_backup::MessageTextRevision {
+        fn encode(self) -> protobuf::data_backup::MessageTextRevision {
             protobuf::data_backup::MessageTextRevision {
                 created_at: self.created_at,
-                text: self.message.text.clone(),
+                text: self.message.text,
             }
         }
     }
 
     impl InternalBackupDecoder<protobuf::data_backup::TextMessageState> for TextMessageState {
-        fn decode(raw_message: protobuf::data_backup::TextMessageState) -> Result<Self, BackupDecodingError> {
+        fn decode(
+            raw_message: protobuf::data_backup::TextMessageState,
+        ) -> Result<Self, DataBackupDecodeErrorSource> {
             let protobuf::data_backup::TextMessageState {
                 original_text,
                 revisions,
@@ -1117,10 +1037,14 @@ mod message {
         }
     }
     impl InternalBackupEncoder<protobuf::data_backup::TextMessageState> for TextMessageState {
-        fn encode(&self) -> protobuf::data_backup::TextMessageState {
+        fn encode(self) -> protobuf::data_backup::TextMessageState {
             protobuf::data_backup::TextMessageState {
-                original_text: self.original.text.clone(),
-                revisions: self.revisions.iter().map(MessageTextRevision::encode).collect(),
+                original_text: self.original.text,
+                revisions: self
+                    .revisions
+                    .into_iter()
+                    .map(MessageTextRevision::encode)
+                    .collect(),
             }
         }
     }
@@ -1128,7 +1052,7 @@ mod message {
     impl InternalBackupDecoder<protobuf::data_backup::LocationMessageState> for LocationMessageState {
         fn decode(
             raw_message: protobuf::data_backup::LocationMessageState,
-        ) -> Result<Self, BackupDecodingError> {
+        ) -> Result<Self, DataBackupDecodeErrorSource> {
             let protobuf::data_backup::LocationMessageState {
                 latitude,
                 longitude,
@@ -1141,19 +1065,19 @@ mod message {
                 latitude,
                 longitude,
                 accuracy_m,
-                name: Self::expect_field("name", name)?,
-                address: Self::expect_field("address", address)?,
+                name: Self::expect_field(name, "name")?,
+                address: Self::expect_field(address, "address")?,
             })
         }
     }
     impl InternalBackupEncoder<protobuf::data_backup::LocationMessageState> for LocationMessageState {
-        fn encode(&self) -> protobuf::data_backup::LocationMessageState {
+        fn encode(self) -> protobuf::data_backup::LocationMessageState {
             protobuf::data_backup::LocationMessageState {
                 latitude: self.latitude,
                 longitude: self.longitude,
                 accuracy_m: self.accuracy_m,
-                name: Some(self.name.clone()),
-                address: Some(self.address.clone()),
+                name: Some(self.name),
+                address: Some(self.address),
             }
         }
     }
@@ -1162,9 +1086,11 @@ mod message {
         poll_message;
         [ PollOpen ];
         [ PollClose ];
-    ) ]
+    )]
     impl InternalBackupDecoder<protobuf::data_backup::poll_message> for poll_message {
-        fn decode(raw_message: protobuf::data_backup::poll_message) -> Result<Self, BackupDecodingError> {
+        fn decode(
+            raw_message: protobuf::data_backup::poll_message,
+        ) -> Result<Self, DataBackupDecodeErrorSource> {
             let protobuf::data_backup::poll_message { poll_id } = raw_message;
 
             Ok(Self { id: PollId(poll_id) })
@@ -1174,72 +1100,159 @@ mod message {
         poll_message;
         [ PollOpen ];
         [ PollClose ];
-    ) ]
+    )]
     impl InternalBackupEncoder<protobuf::data_backup::poll_message> for poll_message {
-        fn encode(&self) -> protobuf::data_backup::poll_message {
+        fn encode(self) -> protobuf::data_backup::poll_message {
             protobuf::data_backup::poll_message { poll_id: self.id.0 }
         }
     }
 
-    impl InternalBackupDecoder<protobuf::data_backup::DeletedMessageState> for MessageStateBodyType {
+    impl InternalBackupDecoder<protobuf::data_backup::DeletedMessageState> for DeletedMessageState {
         fn decode(
             raw_message: protobuf::data_backup::DeletedMessageState,
-        ) -> Result<Self, BackupDecodingError> {
-            let protobuf::data_backup::DeletedMessageState { previous_type } = raw_message;
+        ) -> Result<Self, DataBackupDecodeErrorSource> {
+            let protobuf::data_backup::DeletedMessageState {
+                previous_type,
+                deleted_at,
+            } = raw_message;
 
-            Ok(match Self::parse_enum_variant(previous_type)? {
-                protobuf::data_backup::MessageStateBodyType::Text => Self::Text,
-                protobuf::data_backup::MessageStateBodyType::Location => Self::Location,
-                protobuf::data_backup::MessageStateBodyType::Pollopen => Self::PollOpen,
-                protobuf::data_backup::MessageStateBodyType::Pollclose => Self::PollClose,
-                protobuf::data_backup::MessageStateBodyType::Deleted => Self::Deleted,
+            Ok(Self {
+                previous_message_type: match Self::parse_enum_variant(previous_type)? {
+                    protobuf::data_backup::MessageStateBodyType::Text => MessageStateBodyType::Text,
+                    protobuf::data_backup::MessageStateBodyType::Location => MessageStateBodyType::Location,
+                    protobuf::data_backup::MessageStateBodyType::Pollopen => MessageStateBodyType::PollOpen,
+                    protobuf::data_backup::MessageStateBodyType::Pollclose => MessageStateBodyType::PollClose,
+                    protobuf::data_backup::MessageStateBodyType::Deleted => MessageStateBodyType::Deleted,
+                },
+                deleted_at,
             })
         }
     }
-    impl InternalBackupEncoder<protobuf::data_backup::DeletedMessageState> for MessageStateBodyType {
-        fn encode(&self) -> protobuf::data_backup::DeletedMessageState {
+    impl InternalBackupEncoder<protobuf::data_backup::DeletedMessageState> for DeletedMessageState {
+        fn encode(self) -> protobuf::data_backup::DeletedMessageState {
             protobuf::data_backup::DeletedMessageState {
-                previous_type: *self as i32,
+                previous_type: self.previous_message_type as i32,
+                deleted_at: self.deleted_at,
+            }
+        }
+    }
+
+    impl InternalBackupDecoder<protobuf::data_backup::incoming_message_direction::MessageOverrides>
+        for MessageOverrides
+    {
+        fn decode(
+            raw_message: protobuf::data_backup::incoming_message_direction::MessageOverrides,
+        ) -> Result<Self, DataBackupDecodeErrorSource> {
+            let protobuf::data_backup::incoming_message_direction::MessageOverrides {
+                delivery_receipt_policy,
+            } = raw_message;
+
+            Ok(Self {
+                delivery_receipt_policy: match Self::parse_enum_variant(delivery_receipt_policy)? {
+                    protobuf_message_overrides::DeliveryReceiptPolicy::DefaultDeliveryReceiptPolicy => {
+                        MessageOverridesDeliveryReceiptPolicy::Default
+                    },
+                    protobuf_message_overrides::DeliveryReceiptPolicy::DontSendDeliveryReceipt => {
+                        MessageOverridesDeliveryReceiptPolicy::DontSend
+                    },
+                },
+            })
+        }
+    }
+    impl InternalBackupEncoder<protobuf::data_backup::incoming_message_direction::MessageOverrides>
+        for MessageOverrides
+    {
+        fn encode(self) -> protobuf::data_backup::incoming_message_direction::MessageOverrides {
+            protobuf::data_backup::incoming_message_direction::MessageOverrides {
+                delivery_receipt_policy: match self.delivery_receipt_policy {
+                    MessageOverridesDeliveryReceiptPolicy::Default => {
+                        protobuf_message_overrides::DeliveryReceiptPolicy::DefaultDeliveryReceiptPolicy
+                    },
+                    MessageOverridesDeliveryReceiptPolicy::DontSend => {
+                        protobuf_message_overrides::DeliveryReceiptPolicy::DontSendDeliveryReceipt
+                    },
+                }
+                .into(),
+            }
+        }
+    }
+
+    impl InternalBackupDecoder<protobuf::data_backup::IncomingMessageDirection> for IncomingMessageDirection {
+        fn decode(
+            raw_message: protobuf::data_backup::IncomingMessageDirection,
+        ) -> Result<Self, DataBackupDecodeErrorSource> {
+            let protobuf::data_backup::IncomingMessageDirection {
+                received_at,
+                overrides,
+            } = raw_message;
+
+            Ok(Self {
+                received_at,
+                overrides: MessageOverrides::decode(Self::expect_field(overrides, "overrides")?)?,
+            })
+        }
+    }
+    impl InternalBackupEncoder<protobuf::data_backup::IncomingMessageDirection> for IncomingMessageDirection {
+        fn encode(self) -> protobuf::data_backup::IncomingMessageDirection {
+            protobuf::data_backup::IncomingMessageDirection {
+                received_at: self.received_at,
+                overrides: Some(self.overrides.encode()),
+            }
+        }
+    }
+
+    impl InternalBackupDecoder<protobuf::data_backup::OutgoingMessageDirection> for OutgoingMessageDirection {
+        fn decode(
+            raw_message: protobuf::data_backup::OutgoingMessageDirection,
+        ) -> Result<Self, DataBackupDecodeErrorSource> {
+            let protobuf::data_backup::OutgoingMessageDirection {
+                sent_at,
+                delivered_at,
+            } = raw_message;
+
+            Ok(Self {
+                sent_at,
+                delivered_at,
+            })
+        }
+    }
+    impl InternalBackupEncoder<protobuf::data_backup::OutgoingMessageDirection> for OutgoingMessageDirection {
+        fn encode(self) -> protobuf::data_backup::OutgoingMessageDirection {
+            protobuf::data_backup::OutgoingMessageDirection {
+                sent_at: self.sent_at,
+                delivered_at: self.delivered_at,
             }
         }
     }
 
     impl InternalBackupDecoder<protobuf::data_backup::MessageDirection> for MessageDirection {
-        fn decode(raw_message: protobuf::data_backup::MessageDirection) -> Result<Self, BackupDecodingError> {
+        fn decode(
+            raw_message: protobuf::data_backup::MessageDirection,
+        ) -> Result<Self, DataBackupDecodeErrorSource> {
             let protobuf::data_backup::MessageDirection { direction } = raw_message;
 
-            Ok(match Self::expect_field("direction", direction)? {
+            Ok(match Self::expect_field(direction, "direction")? {
                 protobuf::data_backup::message_direction::Direction::Incoming(incoming_message_direction) => {
-                    Self::Incoming(IncomingMessageDirection {
-                        received_at: incoming_message_direction.received_at,
-                    })
+                    Self::Incoming(IncomingMessageDirection::decode(incoming_message_direction)?)
                 },
                 protobuf::data_backup::message_direction::Direction::Outgoing(outgoing_message_direction) => {
-                    Self::Outgoing(OutgoingMessageDirection {
-                        sent_at: outgoing_message_direction.sent_at,
-                        delivered_at: outgoing_message_direction.delivered_at,
-                    })
+                    Self::Outgoing(OutgoingMessageDirection::decode(outgoing_message_direction)?)
                 },
             })
         }
     }
     impl InternalBackupEncoder<protobuf::data_backup::MessageDirection> for MessageDirection {
-        fn encode(&self) -> protobuf::data_backup::MessageDirection {
+        fn encode(self) -> protobuf::data_backup::MessageDirection {
             protobuf::data_backup::MessageDirection {
                 direction: match self {
                     Self::Incoming(incoming_message_direction) => {
                         Some(protobuf::data_backup::message_direction::Direction::Incoming(
-                            protobuf::data_backup::IncomingMessageDirection {
-                                received_at: incoming_message_direction.received_at,
-                            },
+                            incoming_message_direction.encode(),
                         ))
                     },
                     Self::Outgoing(outgoing_message_direction) => {
                         Some(protobuf::data_backup::message_direction::Direction::Outgoing(
-                            protobuf::data_backup::OutgoingMessageDirection {
-                                sent_at: outgoing_message_direction.sent_at,
-                                delivered_at: outgoing_message_direction.delivered_at,
-                            },
+                            outgoing_message_direction.encode(),
                         ))
                     },
                 },
@@ -1248,10 +1261,12 @@ mod message {
     }
 
     impl InternalBackupDecoder<protobuf::data_backup::MessageStateBody> for MessageStateBody {
-        fn decode(raw_message: protobuf::data_backup::MessageStateBody) -> Result<Self, BackupDecodingError> {
+        fn decode(
+            raw_message: protobuf::data_backup::MessageStateBody,
+        ) -> Result<Self, DataBackupDecodeErrorSource> {
             let protobuf::data_backup::MessageStateBody { body } = raw_message;
 
-            Ok(match Self::expect_field("body", body)? {
+            Ok(match Self::expect_field(body, "body")? {
                 protobuf::data_backup::message_state_body::Body::Text(text_message_state) => {
                     Self::Text(TextMessageState::decode(text_message_state)?)
                 },
@@ -1265,16 +1280,14 @@ mod message {
                     Self::PollClose(PollClose::decode(poll_close_message)?)
                 },
                 protobuf::data_backup::message_state_body::Body::Deleted(deleted_message) => {
-                    // TODO(LIB-94): The conversion from `MessageStateBodyType`
-                    // `protobuf::data_backup::MessageStateBody` and back to is somehow strange.
-                    Self::Deleted(MessageStateBodyType::decode(deleted_message)?)
+                    Self::Deleted(DeletedMessageState::decode(deleted_message)?)
                 },
             })
         }
     }
 
     impl InternalBackupEncoder<protobuf::data_backup::MessageStateBody> for MessageStateBody {
-        fn encode(&self) -> protobuf::data_backup::MessageStateBody {
+        fn encode(self) -> protobuf::data_backup::MessageStateBody {
             protobuf::data_backup::MessageStateBody {
                 body: Some(match self {
                     Self::Text(text_message_state) => {
@@ -1291,10 +1304,10 @@ mod message {
                     Self::PollClose(poll_close) => {
                         protobuf::data_backup::message_state_body::Body::PollClose(poll_close.encode())
                     },
-                    Self::Deleted(previous_type) => {
-                        // TODO(LIB-94): The conversion from `MessageStateBodyType`
-                        // `protobuf::data_backup::MessageStateBody` and back to is somehow strange.
-                        protobuf::data_backup::message_state_body::Body::Deleted(previous_type.encode())
+                    Self::Deleted(deleted_message_state) => {
+                        protobuf::data_backup::message_state_body::Body::Deleted(
+                            deleted_message_state.encode(),
+                        )
                     },
                 }),
             }
@@ -1302,7 +1315,9 @@ mod message {
     }
 
     impl InternalBackupDecoder<protobuf::data_backup::MessageState> for MessageState {
-        fn decode(raw_message: protobuf::data_backup::MessageState) -> Result<Self, BackupDecodingError> {
+        fn decode(
+            raw_message: protobuf::data_backup::MessageState,
+        ) -> Result<Self, DataBackupDecodeErrorSource> {
             let protobuf::data_backup::MessageState {
                 conversation_id,
                 creator_identity,
@@ -1317,35 +1332,42 @@ mod message {
 
             Ok(Self {
                 conversation_id: ConversationId::decode(Self::expect_field(
-                    "conversation_id",
                     conversation_id,
+                    "conversation_id",
                 )?)?,
                 creator_identity: ThreemaId::try_from(creator_identity.as_str())?,
                 message_id: MessageId(message_id),
                 created_at,
-                direction: MessageDirection::decode(Self::expect_field("direction", direction)?)?,
+                direction: MessageDirection::decode(Self::expect_field(direction, "direction")?)?,
                 read_at,
-                star_marker: MessageStarMarker::decode(star_marker)?,
+                star_marker: match Self::parse_enum_variant(star_marker)? {
+                    protobuf::data_backup::MessageStarMarker::NoMarker => MessageStarMarker::None,
+                    protobuf::data_backup::MessageStarMarker::Star => MessageStarMarker::Star,
+                },
                 reactions: reactions
                     .into_iter()
                     .map(MessageReaction::decode)
                     .collect::<Result<Vec<_>, _>>()?,
-                body: MessageStateBody::decode(Self::expect_field("body", body)?)?,
+                body: MessageStateBody::decode(Self::expect_field(body, "body")?)?,
             })
         }
     }
     impl InternalBackupEncoder<protobuf::data_backup::MessageState> for MessageState {
-        fn encode(&self) -> protobuf::data_backup::MessageState {
+        fn encode(self) -> protobuf::data_backup::MessageState {
             protobuf::data_backup::MessageState {
-                conversation_id: Some(ConversationId::encode(&self.conversation_id)),
+                conversation_id: Some(ConversationId::encode(self.conversation_id)),
                 creator_identity: self.creator_identity.to_string(),
                 message_id: self.message_id.0,
                 created_at: self.created_at,
-                direction: Some(MessageDirection::encode(&self.direction)),
+                direction: Some(MessageDirection::encode(self.direction)),
                 read_at: self.read_at,
-                star_marker: MessageStarMarker::encode(&self.star_marker),
-                reactions: self.reactions.iter().map(MessageReaction::encode).collect(),
-                body: Some(MessageStateBody::encode(&self.body)),
+                star_marker: match self.star_marker {
+                    MessageStarMarker::None => protobuf::data_backup::MessageStarMarker::NoMarker,
+                    MessageStarMarker::Star => protobuf::data_backup::MessageStarMarker::Star,
+                }
+                .into(),
+                reactions: self.reactions.into_iter().map(MessageReaction::encode).collect(),
+                body: Some(MessageStateBody::encode(self.body)),
             }
         }
     }
@@ -1359,8 +1381,8 @@ mod user {
     use crate::{
         common::{ChatServerGroup, ThreemaId, keys::ClientKey},
         data_backup::{
-            codec::{BackupDecodingError, InternalBackupDecoder, InternalBackupEncoder},
-            container::UserData,
+            codec::{DataBackupDecodeErrorSource, InternalBackupDecoder, InternalBackupEncoder},
+            common::UserData,
         },
         model::{
             profile::ProfilePicture,
@@ -1380,10 +1402,12 @@ mod user {
     };
 
     impl InternalBackupDecoder<user_profile::ProfilePictureShareWith> for ProfilePictureSharePolicy {
-        fn decode(raw_message: user_profile::ProfilePictureShareWith) -> Result<Self, BackupDecodingError> {
+        fn decode(
+            raw_message: user_profile::ProfilePictureShareWith,
+        ) -> Result<Self, DataBackupDecodeErrorSource> {
             let user_profile::ProfilePictureShareWith { policy } = raw_message;
 
-            Ok(match Self::expect_field("policy", policy)? {
+            Ok(match Self::expect_field(policy, "policy")? {
                 user_profile::profile_picture_share_with::Policy::Nobody(_) => Self::Nobody,
                 user_profile::profile_picture_share_with::Policy::Everyone(_) => Self::Everyone,
                 user_profile::profile_picture_share_with::Policy::AllowList(identities) => {
@@ -1393,8 +1417,8 @@ mod user {
         }
     }
     impl InternalBackupEncoder<user_profile::ProfilePictureShareWith> for ProfilePictureSharePolicy {
-        fn encode(&self) -> user_profile::ProfilePictureShareWith {
-            let policy = match &self {
+        fn encode(self) -> user_profile::ProfilePictureShareWith {
+            let policy = match self {
                 Self::Nobody => {
                     user_profile::profile_picture_share_with::Policy::Nobody(protobuf::common::Unit {})
                 },
@@ -1411,13 +1435,13 @@ mod user {
     }
 
     impl InternalBackupEncoder<user_profile::identity_links::IdentityLink> for IdentityLinkEmailAddress {
-        fn encode(&self) -> user_profile::identity_links::IdentityLink {
+        fn encode(self) -> user_profile::identity_links::IdentityLink {
             user_profile::identity_links::IdentityLink {
                 // The protocol supports a description that is not used in the apps.
                 description: String::new(),
                 r#type: Some(user_profile::identity_links::identity_link::Type::Email(
                     match self {
-                        Self::EmailAddress(email_address) => email_address.clone(),
+                        Self::EmailAddress(email_address) => email_address,
                         Self::Unknown => String::new(),
                     },
                 )),
@@ -1425,13 +1449,13 @@ mod user {
         }
     }
     impl InternalBackupEncoder<user_profile::identity_links::IdentityLink> for IdentityLinkPhoneNumber {
-        fn encode(&self) -> user_profile::identity_links::IdentityLink {
+        fn encode(self) -> user_profile::identity_links::IdentityLink {
             user_profile::identity_links::IdentityLink {
                 // The protocol supports a description that is not used in the apps.
                 description: String::new(),
                 r#type: Some(user_profile::identity_links::identity_link::Type::PhoneNumber(
                     match self {
-                        Self::PhoneNumber(phone_number) => phone_number.clone(),
+                        Self::PhoneNumber(phone_number) => phone_number,
                         Self::Unknown => String::new(),
                     },
                 )),
@@ -1440,7 +1464,7 @@ mod user {
     }
 
     impl InternalBackupDecoder<data_backup::IdentityData> for IdentityData {
-        fn decode(raw_message: data_backup::IdentityData) -> Result<Self, BackupDecodingError> {
+        fn decode(raw_message: data_backup::IdentityData) -> Result<Self, DataBackupDecodeErrorSource> {
             let data_backup::IdentityData {
                 identity,
                 ck,
@@ -1450,16 +1474,20 @@ mod user {
             Ok(Self {
                 user_identity: ThreemaId::try_from(identity.as_str())?,
                 client_key: ClientKey::from(TryInto::<[u8; ClientKey::LENGTH]>::try_into(ck).map_err(
-                    |_| BackupDecodingError::InvalidMessage("client key must have 32 bytes".to_owned()),
+                    |_| {
+                        DataBackupDecodeErrorSource::InvalidMessage(
+                            "Client key must have 32 bytes".to_owned(),
+                        )
+                    },
                 )?),
                 csp_server_group: ChatServerGroup::try_from(csp_server_group.as_str()).map_err(|_| {
-                    BackupDecodingError::InvalidMessage(format!("Invalid {}", ChatServerGroup::NAME))
+                    DataBackupDecodeErrorSource::InvalidMessage(format!("Invalid {}", ChatServerGroup::NAME))
                 })?,
             })
         }
     }
     impl InternalBackupEncoder<data_backup::IdentityData> for IdentityData {
-        fn encode(&self) -> data_backup::IdentityData {
+        fn encode(self) -> data_backup::IdentityData {
             data_backup::IdentityData {
                 identity: self.user_identity.to_string(),
                 ck: self.client_key.as_bytes().to_vec(),
@@ -1469,7 +1497,7 @@ mod user {
     }
 
     impl InternalBackupDecoder<data_backup::UserProfile> for UserProfile {
-        fn decode(raw_message: data_backup::UserProfile) -> Result<Self, BackupDecodingError> {
+        fn decode(raw_message: data_backup::UserProfile) -> Result<Self, DataBackupDecodeErrorSource> {
             let data_backup::UserProfile {
                 nickname,
                 profile_picture,
@@ -1482,7 +1510,7 @@ mod user {
             let (linked_email_address, linked_phone_number) = {
                 let user_profile::IdentityLinks {
                     links: identity_links,
-                } = Self::expect_field("identity_links", identity_links)?;
+                } = Self::expect_field(identity_links, "identity_links")?;
 
                 let mut linked_email_address = None;
                 let mut linked_phone_number = None;
@@ -1524,10 +1552,10 @@ mod user {
             };
 
             Ok(Self {
-                nickname: Self::expect_field("nickname", nickname)?,
+                nickname: Self::expect_field(nickname, "nickname")?,
                 profile_picture_share_policy: ProfilePictureSharePolicy::decode(Self::expect_field(
-                    "profile_picture_share_with",
                     profile_picture_share_with,
+                    "profile_picture_share_with",
                 )?)?,
                 profile_picture: profile_picture.map(ProfilePicture::decode).transpose()?,
                 linked_phone_number,
@@ -1539,14 +1567,14 @@ mod user {
         }
     }
     impl InternalBackupEncoder<data_backup::UserProfile> for UserProfile {
-        fn encode(&self) -> data_backup::UserProfile {
+        fn encode(self) -> data_backup::UserProfile {
             // Encode identity links.
             let identity_links = {
                 let mut identity_links = Vec::new();
-                if let Some(linked_email_address) = &self.linked_email_address {
+                if let Some(linked_email_address) = self.linked_email_address {
                     identity_links.push(linked_email_address.encode());
                 }
-                if let Some(linked_phone_number) = &self.linked_phone_number {
+                if let Some(linked_phone_number) = self.linked_phone_number {
                     identity_links.push(linked_phone_number.encode());
                 }
                 Some(user_profile::IdentityLinks {
@@ -1555,22 +1583,21 @@ mod user {
             };
 
             data_backup::UserProfile {
-                nickname: Some(self.nickname.clone()),
-                profile_picture: self.profile_picture.as_ref().map(ProfilePicture::encode),
+                nickname: Some(self.nickname),
+                profile_picture: self.profile_picture.map(ProfilePicture::encode),
                 profile_picture_share_with: Some(self.profile_picture_share_policy.encode()),
                 identity_links,
-                work_availability_status: self
-                    .work_availability_status
-                    .clone()
-                    .map(WorkAvailabilityStatus::into),
+                work_availability_status: self.work_availability_status.map(WorkAvailabilityStatus::into),
             }
         }
     }
 
     impl InternalBackupDecoder<d2d_sync::Settings> for Settings {
-        fn decode(raw_message: d2d_sync::Settings) -> Result<Self, BackupDecodingError> {
+        fn decode(raw_message: d2d_sync::Settings) -> Result<Self, DataBackupDecodeErrorSource> {
             let d2d_sync::Settings {
-                contact_sync_policy,
+                #[expect(deprecated, reason = "Must be handled until phased out")]
+                    deprecated_contact_sync_policy: _deprecated_contact_sync_policy,
+
                 unknown_contact_policy,
                 read_receipt_policy,
                 typing_indicator_policy,
@@ -1588,57 +1615,44 @@ mod user {
             } = raw_message;
 
             Ok(Self {
-                contact_sync_policy: Self::expect_and_parse_enum_variant(
-                    "contact sync policy",
-                    contact_sync_policy,
-                )?,
-
                 unknown_contact_policy: Self::expect_and_parse_enum_variant(
-                    "unknown contact policy",
                     unknown_contact_policy,
+                    "unknown_contact_policy",
                 )?,
-
                 read_receipt_policy: Self::expect_and_parse_enum_variant(
-                    "read receipt policy",
                     read_receipt_policy,
+                    "read_receipt_policy",
                 )?,
-
                 typing_indicator_policy: Self::expect_and_parse_enum_variant(
-                    "typing_indicator policy",
                     typing_indicator_policy,
+                    "typing_indicator_policy",
                 )?,
-
-                o2o_call_policy: Self::expect_and_parse_enum_variant("o2o_call policy", o2o_call_policy)?,
-
+                o2o_call_policy: Self::expect_and_parse_enum_variant(o2o_call_policy, "o2o_call policy")?,
                 o2o_call_connection_policy: Self::expect_and_parse_enum_variant(
-                    "o2o call connection policy",
                     o2o_call_connection_policy,
+                    "o2o_call_connection_policy",
                 )?,
-
                 o2o_call_video_policy: Self::expect_and_parse_enum_variant(
-                    "o2o call video policy",
                     o2o_call_video_policy,
+                    "o2o_call_video_policy",
                 )?,
-
                 group_call_policy: Self::expect_and_parse_enum_variant(
-                    "group call policy",
                     group_call_policy,
+                    "group_call_policy",
                 )?,
-
                 screenshot_policy: Self::expect_and_parse_enum_variant(
-                    "screenshot policy",
                     screenshot_policy,
+                    "screenshot_policy",
                 )?,
-
-                blocked_identities: Self::expect_field("blocked_identities", blocked_identities)?
+                blocked_identities: Self::expect_field(blocked_identities, "blocked_identities")?
                     .identities
                     .into_iter()
                     .map(|identity| ThreemaId::try_from(identity.as_str()))
                     .collect::<Result<_, _>>()?,
 
                 exclude_from_sync_identities: Self::expect_field(
-                    "exclude_from_sync_identities",
                     exclude_from_sync_identities,
+                    "exclude_from_sync_identities",
                 )?
                 .identities
                 .into_iter()
@@ -1648,9 +1662,12 @@ mod user {
         }
     }
     impl InternalBackupEncoder<d2d_sync::Settings> for Settings {
-        fn encode(&self) -> d2d_sync::Settings {
+        fn encode(self) -> d2d_sync::Settings {
             d2d_sync::Settings {
-                contact_sync_policy: Some(self.contact_sync_policy as i32),
+                #[expect(deprecated, reason = "Must be handled until phased out")]
+                deprecated_contact_sync_policy: Some(
+                    d2d_sync::settings::DeprecatedContactSyncPolicy::NotSynced as i32,
+                ),
                 unknown_contact_policy: Some(self.unknown_contact_policy as i32),
                 read_receipt_policy: Some(self.read_receipt_policy as i32),
                 typing_indicator_policy: Some(self.typing_indicator_policy as i32),
@@ -1672,7 +1689,7 @@ mod user {
     }
 
     impl InternalBackupDecoder<data_backup::UserData> for UserData {
-        fn decode(raw_message: data_backup::UserData) -> Result<Self, BackupDecodingError> {
+        fn decode(raw_message: data_backup::UserData) -> Result<Self, DataBackupDecodeErrorSource> {
             let data_backup::UserData {
                 identity_data,
                 user_profile,
@@ -1680,14 +1697,14 @@ mod user {
             } = raw_message;
 
             Ok(Self {
-                identity_data: IdentityData::decode(Self::expect_field("identity_data", identity_data)?)?,
-                user_profile: UserProfile::decode(Self::expect_field("user_profile", user_profile)?)?,
-                settings: Settings::decode(Self::expect_field("settings", settings)?)?,
+                identity_data: IdentityData::decode(Self::expect_field(identity_data, "identity_data")?)?,
+                user_profile: UserProfile::decode(Self::expect_field(user_profile, "user_profile")?)?,
+                settings: Settings::decode(Self::expect_field(settings, "settings")?)?,
             })
         }
     }
     impl InternalBackupEncoder<data_backup::UserData> for UserData {
-        fn encode(&self) -> data_backup::UserData {
+        fn encode(self) -> data_backup::UserData {
             data_backup::UserData {
                 identity_data: Some(self.identity_data.encode()),
                 user_profile: Some(self.user_profile.encode()),
@@ -1702,151 +1719,77 @@ pub(crate) mod container {
     use prost::Message as _;
 
     use crate::{
-        common::HashedNonce,
         data_backup::{
-            codec::{
-                BackupDecodingError, BackupEncodingError, InternalBackupDecoder as _,
-                InternalBackupEncoder as _,
-            },
-            container::{
-                ContactContainer, DistributionListContainer, GroupContainer, HashedCspNonceContainer,
-                HashedD2mNonceContainer, MessageContainer, PollContainer, UserData, UserDataContainer,
-            },
+            DataBackupCreateError, DataBackupCreateInternalErrorCause, DataBackupDecodeErrorSource,
+            DataBackupEncodeErrorSource, DataBackupRestoreError,
+            codec::{InternalBackupDecoder, InternalBackupEncoder},
+            common::UserData,
         },
         model::{
             contact::ContactWithProfilePictures, distribution_list::DistributionList,
             group::GroupWithProfilePicture, message::MessageState, poll::Poll,
         },
         protobuf,
-        utils::{
-            bytes::{ByteWriter as _, OwnedVecByteWriter},
-            debug::Name,
-            frame::{FrameDelimiter as _, U32LittleEndianDelimiter},
-        },
+        utils::debug::Name,
     };
 
-    // TODO(LIB-174): Check if this can be inlined in PageReader::add_page.
-    pub(crate) trait VariableLengthBackupDecoder: Sized {
-        /// Decode the buffer to a container.
-        ///
-        /// Note: `buffer` does not contain any type or length field.
-        fn decode(buffer: &[u8]) -> Result<Self, BackupDecodingError>;
-    }
-
-    // TODO(LIB-174): Check if this can be inlined in PageReader::add_page.
-    pub(crate) trait HashedNonceBackupDecoder: Sized {
-        /// Decode a fixed length buffer to a container.
-        ///
-        /// Note: The return type is a result to match the signature of
-        /// [`VariableLengthContainerDecoder::decode`].
-        fn decode(buffer: &[u8; HashedNonce::LENGTH]) -> Result<Self, BackupDecodingError>;
-    }
-
-    pub(crate) trait BackupEncoder {
-        fn encode(&self) -> Result<Vec<u8>, BackupEncodingError>;
-
-        /// Encode a container with variable length with a u32 length delimiter.
-        // TODO(LIB-174):
-        // - Move to utils/protobuf
-        // - Make delimiter length constant and choosable by caller, see PaddedMessage trait.
-        // - This can be an extension of prost::Message
-        fn encode_variable_length<TContainer: prost::Message + Name>(
-            container: TContainer,
-        ) -> Result<Vec<u8>, BackupEncodingError> {
-            let value = container.encode_to_vec();
-            let length = value.len();
-            let mut writer = OwnedVecByteWriter::new_with_capacity(
-                length.saturating_add(U32LittleEndianDelimiter::LENGTH),
-            );
-
-            // Convert length.
-            let length: u32 = length
-                .try_into()
-                .map_err(|_| BackupEncodingError::ConversionFailed("Container length"))?;
-
-            // Write &self encoded as length-value.
-            writer.run(|writer| {
-                writer.write_u32_le(length)?;
-                writer.write(&value)
-            })?;
-
-            Ok(writer.into_inner())
-        }
-    }
-
-    #[duplicate_item(
-        hashed_nonce_container ;
-        [ HashedCspNonceContainer ];
-        [ HashedD2mNonceContainer ];
-    ) ]
-    impl HashedNonceBackupDecoder for hashed_nonce_container {
-        fn decode(buffer: &[u8; HashedNonce::LENGTH]) -> Result<Self, BackupDecodingError> {
-            Ok(Self(HashedNonce(*buffer)))
-        }
+    /// Decode a variable length item.
+    ///
+    /// Note: This trait requires that the data was already sized to the correct length and stripped of the
+    /// u32 little endian length delimiter.
+    pub(crate) trait ContainerDecoder: Sized {
+        fn decode(bytes: &[u8]) -> Result<Self, DataBackupRestoreError>;
     }
     #[duplicate_item(
-    hashed_nonce_container     ;
-        [ HashedCspNonceContainer ] ;
-        [ HashedD2mNonceContainer ]  ;
+        destination_type               decoded_type                                           ;
+        [ UserData                   ] [ data_backup::UserData                               ];
+        [ ContactWithProfilePictures ] [ data_backup::AugmentedContact                       ];
+        [ DistributionList           ] [ d2d_join::essential_data::AugmentedDistributionList ];
+        [ GroupWithProfilePicture    ] [ data_backup::AugmentedGroup                         ];
+        [ MessageState               ] [ data_backup::MessageState                           ];
+        [ Poll                       ] [ data_backup::Poll                                   ];
     )]
-    impl BackupEncoder for hashed_nonce_container {
-        fn encode(&self) -> Result<Vec<u8>, BackupEncodingError> {
-            Ok(self.0.0.to_vec())
+    impl ContainerDecoder for destination_type {
+        fn decode(bytes: &[u8]) -> Result<Self, DataBackupRestoreError> {
+            InternalBackupDecoder::decode(protobuf::decoded_type::decode(bytes).map_err(|error| {
+                DataBackupRestoreError::DecodingFailed {
+                    name: Self::NAME,
+                    source: DataBackupDecodeErrorSource::from(error),
+                }
+            })?)
+            .map_err(|error| DataBackupRestoreError::DecodingFailed {
+                name: Self::NAME,
+                source: error,
+            })
         }
     }
 
-    #[duplicate_item(
-          [
-              inner_type     [ UserData ]
-              protobuf_type  [ data_backup::UserData ]
-              container_type [ UserDataContainer ]
-          ]
-          [
-              inner_type     [ ContactWithProfilePictures ]
-              protobuf_type  [ data_backup::AugmentedContact ]
-              container_type [ ContactContainer ]
-          ]
-          [
-              inner_type     [ DistributionList ]
-              protobuf_type  [ d2d_join::essential_data::AugmentedDistributionList ]
-              container_type [ DistributionListContainer ]
-          ]
-          [
-              inner_type     [ GroupWithProfilePicture ]
-              protobuf_type  [ data_backup::AugmentedGroup ]
-              container_type [ GroupContainer ]
-          ]
-          [
-              inner_type     [ MessageState ]
-              protobuf_type  [ data_backup::MessageState ]
-              container_type [ MessageContainer ]
-          ]
-          [
-              inner_type     [ Poll ]
-              protobuf_type  [ data_backup::Poll ]
-              container_type [ PollContainer ]
-          ]
-      )]
-
-    impl VariableLengthBackupDecoder for container_type {
-        fn decode(buffer: &[u8]) -> Result<Self, BackupDecodingError> {
-            Ok(Self(inner_type::decode(protobuf::protobuf_type::decode(
-                buffer,
-            )?)?))
-        }
+    /// Encode a variable length item, placing a u32 little endian ahead to determine the length.
+    pub(crate) trait ContainerEncoder: Name {
+        fn encode_u32_le_delimited(self) -> Result<Vec<u8>, DataBackupCreateError>;
     }
+
     #[duplicate_item(
-        container_type               ;
-        [ UserDataContainer         ];
-        [ ContactContainer          ];
-        [ DistributionListContainer ];
-        [ GroupContainer            ];
-        [ MessageContainer          ];
-        [ PollContainer             ];
+        source_type                   ;
+        [ UserData                   ];
+        [ ContactWithProfilePictures ];
+        [ DistributionList           ];
+        [ GroupWithProfilePicture    ];
+        [ MessageState               ];
+        [ Poll                       ];
     )]
-    impl BackupEncoder for container_type {
-        fn encode(&self) -> Result<Vec<u8>, BackupEncodingError> {
-            Self::encode_variable_length(self.0.encode())
+    impl ContainerEncoder for source_type {
+        fn encode_u32_le_delimited(self) -> Result<Vec<u8>, DataBackupCreateError> {
+            use crate::utils::protobuf::DelimitedMessageU32LittleEndian as _;
+
+            InternalBackupEncoder::encode(self)
+                .encode_u32_le_delimited_to_vec()
+                .map_err(|_| {
+                    DataBackupCreateError::InternalError(DataBackupCreateInternalErrorCause::EncodingFailed {
+                        name: Self::NAME,
+                        source: DataBackupEncodeErrorSource::Other("Contained data length exceeds a u32"),
+                    })
+                })
         }
     }
 }

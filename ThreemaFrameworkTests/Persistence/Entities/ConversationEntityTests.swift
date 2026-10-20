@@ -29,6 +29,7 @@ final class ConversationEntityTests: XCTestCase {
         let groupName = "Group Name"
         let lastTypingStart = Date.now
         let lastUpdate = Date.now
+        let spamReportingState: ConversationEntity.SpamReportingState = .reported
         let typing = true
         let unreadMessageCount: NSNumber = 10
         let visibility: ConversationEntity.Visibility = .pinned
@@ -81,6 +82,7 @@ final class ConversationEntityTests: XCTestCase {
                 groupName: groupName,
                 lastTypingStart: lastTypingStart,
                 lastUpdate: lastUpdate,
+                spamReportingState: spamReportingState,
                 typing: typing,
                 unreadMessageCount: unreadMessageCount,
                 visibility: visibility,
@@ -108,6 +110,7 @@ final class ConversationEntityTests: XCTestCase {
         XCTAssertEqual(groupName, fetchedConversationEntity.groupName)
         XCTAssertFalse(fetchedConversationEntity.marked.boolValue)
         XCTAssertEqual(lastUpdate, fetchedConversationEntity.lastUpdate)
+        XCTAssertEqual(spamReportingState, conversationEntity.spamReportingState)
         XCTAssertEqual(NSNumber(booleanLiteral: typing), fetchedConversationEntity.typing)
         XCTAssertEqual(unreadMessageCount, fetchedConversationEntity.unreadMessageCount)
         XCTAssertEqual(visibility, fetchedConversationEntity.conversationVisibility)
@@ -117,16 +120,17 @@ final class ConversationEntityTests: XCTestCase {
 
         if encrypted {
             XCTAssertEqual(testDatabase.remoteSecretCryptoMock.decryptCalls, 0)
-            XCTAssertEqual(testDatabase.remoteSecretCryptoMock.encryptCalls, 2)
+            XCTAssertEqual(testDatabase.remoteSecretCryptoMock.encryptCalls, 3)
 
             // Test faulting
             testDatabase.context.main.refresh(fetchedConversationEntity, mergeChanges: false)
 
             XCTAssertEqual(groupName, fetchedConversationEntity.groupName)
             XCTAssertFalse(fetchedConversationEntity.marked.boolValue)
+            XCTAssertEqual(spamReportingState, conversationEntity.spamReportingState)
             
-            XCTAssertEqual(testDatabase.remoteSecretCryptoMock.decryptCalls, 2)
-            XCTAssertEqual(testDatabase.remoteSecretCryptoMock.encryptCalls, 2)
+            XCTAssertEqual(testDatabase.remoteSecretCryptoMock.decryptCalls, 3)
+            XCTAssertEqual(testDatabase.remoteSecretCryptoMock.encryptCalls, 3)
         }
         else {
             XCTAssertEqual(testDatabase.remoteSecretCryptoMock.decryptCalls, 0)

@@ -13,6 +13,9 @@ final class SettingsCollectionViewDataSource: UICollectionViewDiffableDataSource
     private weak var collectionView: UICollectionView?
     private weak var coordinator: SettingsCoordinator?
     
+    private static let defaultListCellIdentifier = "Default"
+    private static let hostingListCellIdentifier = "Hosting"
+    
     private let cellProvider: SettingsCollectionViewDataSource.CellProvider = { collectionView, indexPath, item in
         
         switch item {
@@ -27,7 +30,7 @@ final class SettingsCollectionViewDataSource: UICollectionViewDiffableDataSource
         
         case .workAd:
             guard let cell: UICollectionViewListCell = collectionView.dequeueReusableCell(
-                withReuseIdentifier: "Default",
+                withReuseIdentifier: defaultListCellIdentifier,
                 for: indexPath
             ) as? UICollectionViewListCell else {
                 return nil
@@ -43,11 +46,12 @@ final class SettingsCollectionViewDataSource: UICollectionViewDiffableDataSource
             
             cell.contentConfiguration = content
             cell.accessories = [.disclosureIndicator()]
+            
             return cell
         
         case .workReferral:
             guard let cell: UICollectionViewListCell = collectionView.dequeueReusableCell(
-                withReuseIdentifier: "Default",
+                withReuseIdentifier: hostingListCellIdentifier,
                 for: indexPath
             ) as? UICollectionViewListCell else {
                 return nil
@@ -61,11 +65,13 @@ final class SettingsCollectionViewDataSource: UICollectionViewDiffableDataSource
             }
             
             cell.contentConfiguration = hostingConfiguration
+            cell.accessories = []
+            
             return cell
             
         case .network, .version, .workLicense, .remoteSecretState:
             guard let cell: UICollectionViewListCell = collectionView.dequeueReusableCell(
-                withReuseIdentifier: "Default",
+                withReuseIdentifier: defaultListCellIdentifier,
                 for: indexPath
             ) as? UICollectionViewListCell else {
                 return nil
@@ -95,6 +101,7 @@ final class SettingsCollectionViewDataSource: UICollectionViewDiffableDataSource
             }
             
             cell.contentConfiguration = content
+            cell.accessories = []
 
             return cell
         }
@@ -123,7 +130,14 @@ final class SettingsCollectionViewDataSource: UICollectionViewDiffableDataSource
         }
         
         collectionView.registerCell(SettingsCollectionViewCell.self)
-        collectionView.register(UICollectionViewListCell.self, forCellWithReuseIdentifier: "Default")
+        collectionView.register(
+            UICollectionViewListCell.self,
+            forCellWithReuseIdentifier: Self.defaultListCellIdentifier
+        )
+        collectionView.register(
+            UICollectionViewListCell.self,
+            forCellWithReuseIdentifier: Self.hostingListCellIdentifier
+        )
     }
     
     func configureData() {
@@ -242,7 +256,7 @@ final class SettingsCollectionViewDataSource: UICollectionViewDiffableDataSource
             break
             
         case .version:
-            versionSelected()
+            versionSelected(at: indexPath)
             
         case .workLicense:
             break
@@ -251,7 +265,7 @@ final class SettingsCollectionViewDataSource: UICollectionViewDiffableDataSource
             break
             
         case .rate:
-            rateSelected()
+            rateSelected(at: indexPath)
             
         case .invite:
             coordinator.showInviteActivity(from: collectionView?.cellForItem(at: indexPath))
@@ -260,7 +274,7 @@ final class SettingsCollectionViewDataSource: UICollectionViewDiffableDataSource
             coordinator.show(.channel)
             
         case .workAd:
-            workAdSelected()
+            workAdSelected(at: indexPath)
             
         case .workReferral:
             coordinator.show(.workReferral)
@@ -282,20 +296,23 @@ final class SettingsCollectionViewDataSource: UICollectionViewDiffableDataSource
         }
     }
     
-    private func versionSelected() {
+    private func versionSelected(at indexPath: IndexPath) {
         UIPasteboard.general.string = ThreemaUtility.appAndBuildVersionPretty
         NotificationPresenterWrapper.shared.present(type: .copySuccess)
+        collectionView?.deselectItem(at: indexPath, animated: true)
     }
     
-    private func rateSelected() {
+    private func rateSelected(at indexPath: IndexPath) {
         if let link = TargetManager.rateLink {
             UIApplication.shared.open(link, options: [:], completionHandler: nil)
         }
+        collectionView?.deselectItem(at: indexPath, animated: true)
     }
     
-    private func workAdSelected() {
+    private func workAdSelected(at indexPath: IndexPath) {
         if let appURL = URL(string: "threemawork://app"), UIApplication.shared.canOpenURL(appURL) {
             UIApplication.shared.open(appURL, options: [:], completionHandler: nil)
+            collectionView?.deselectItem(at: indexPath, animated: true)
         }
         else {
             coordinator?.show(.workInfo)

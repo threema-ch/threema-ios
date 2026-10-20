@@ -2,6 +2,7 @@ import Sentry
 import Testing
 @testable import Threema
 
+@MainActor
 struct EventEnricherTests {
 
     @Test("Derives an anonymized user from the app device hash")

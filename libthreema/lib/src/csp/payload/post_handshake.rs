@@ -12,7 +12,9 @@ use crate::{
     utils::{
         bytes::{ByteReader, ByteWriter, OwnedVecByteReader, OwnedVecByteWriter},
         debug::{Name as _, debug_slice_length},
-        frame::{FrameDelimiter as _, U16LittleEndianDelimiter, VariableLengthFrameDecoder},
+        frame::{
+            FrameDelimiter as _, LittleEndianDelimiterU16, VariableLengthFrameDecoderU16LittleEndianDelimited,
+        },
     },
 };
 
@@ -320,8 +322,9 @@ pub enum DeletePushNotificationToken {
 
     /// Remove push notification tokens of the provided device IDs.
     ///
-    /// WARNING: This list may not be empty or it will produce an
-    /// [`CspProtocolError::InvalidMessage`] when encoding!
+    /// # Contract
+    ///
+    /// This list must not be empty.
     Devices(Vec<CspDeviceId>),
 }
 impl DeletePushNotificationToken {
@@ -337,7 +340,7 @@ impl DeletePushNotificationToken {
             Self::All => Ok(()),
             Self::Devices(csp_device_ids) => {
                 if csp_device_ids.is_empty() {
-                    return Err(CspProtocolError::InvalidParameter(const_format::formatcp!(
+                    return Err(CspProtocolError::ContractViolation(const_format::formatcp!(
                         "Device list may not be empty for {}",
                         DeletePushNotificationToken::NAME
                     )));
@@ -688,8 +691,7 @@ impl OutgoingPayload {
 }
 
 /// Encrypted [`IncomingPayload`] frame decoder.
-pub(crate) type PayloadDecoder =
-    VariableLengthFrameDecoder<{ U16LittleEndianDelimiter::LENGTH }, U16LittleEndianDelimiter>;
+pub(crate) type PayloadDecoder = VariableLengthFrameDecoderU16LittleEndianDelimited;
 
 /// Contains an [`OutgoingPayload`] to encode it.
 #[derive(Name)]
@@ -697,7 +699,7 @@ pub(crate) struct EncryptedOutgoingPayload(pub(crate) Vec<u8>);
 impl FrameEncoder for EncryptedOutgoingPayload {
     fn encode_frame(&self) -> Result<OutgoingFrame, CspProtocolError> {
         let mut writer = OwnedVecByteWriter::new_with_capacity(
-            U16LittleEndianDelimiter::LENGTH.saturating_add(self.0.len()),
+            LittleEndianDelimiterU16::LENGTH.saturating_add(self.0.len()),
         );
 
         // Prepare length

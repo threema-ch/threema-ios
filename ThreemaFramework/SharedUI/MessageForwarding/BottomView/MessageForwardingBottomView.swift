@@ -177,8 +177,6 @@ extension MessageForwardingBottomView: ChatTextViewDelegate {
     func didEndEditing() { }
 
     func checkIfPastedStringIsMedia() -> Bool { false }
-
-    @available(iOS 18.0, *)
     func processAndSendGlyph(_ glyph: NSAdaptiveImageGlyph) { }
 
     func textView(

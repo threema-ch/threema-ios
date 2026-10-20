@@ -517,7 +517,7 @@ final class ChatViewMessageDetailsViewController: ThemedCodeModernGroupedTableVi
         }
         snapshot.appendItems([.messageID])
         
-        if showDebugInfoTapCounter >= showDebugInfoThreshold || ThreemaEnvironment.env() == .xcode {
+        if showDebugInfoTapCounter >= showDebugInfoThreshold || EnvironmentType.current == .xcode {
             snapshot.appendSections([.debugInfo])
             snapshot.appendItems([.coreDataDebugInfo])
         }

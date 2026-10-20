@@ -17,6 +17,7 @@
 #import "AppGroup.h"
 #import "KKPasscodeLock.h"
 #import "KKKeychain.h"
+#import "TouchIDAuthentication.h"
 #import "ThreemaFramework/ThreemaFramework-Swift.h"
 //------------------ Threema edit end ---------------------------
 
@@ -26,6 +27,21 @@ static const NSTimeInterval LSVShakeAnimationDuration = 0.5f;
 
 static const NSUInteger oldMaxLength = 4;
 static const NSUInteger newMaxLength = 6;
+
+//------------------ Threema edit begin ---------------------------
+// The keypad is built in code rather than in the nib: its cells were sized there by a single chain
+// of equality constraints, so anything that disturbed one cell collapsed the whole grid.
+static const CGFloat LSVKeypadKeySize = 75.0f;
+static const CGFloat LSVKeypadColumnSpacing = 20.0f;
+static const CGFloat LSVKeypadRowSpacing = 10.0f;
+static const CGFloat LSVKeypadTopSpacing = 20.0f;
+static const CGFloat LSVBottomButtonSpacing = 20.0f;
+static const CGFloat LSVBottomButtonInset = 10.0f;
+/// Ratios the digits and the symbols occupy inside their cell
+static const CGFloat LSVKeyDigitRatio = 0.47f;
+static const CGFloat LSVKeySymbolRatio = 0.45f;
+static const CGFloat LSVKeyBackspaceRatio = 0.36f;
+//------------------ Threema edit end ---------------------------
 
 //------------------ Threema edit begin ---------------------------
 @interface JKLLockScreenViewController()<JKLLockScreenPincodeViewDelegate, UITextFieldDelegate> {
@@ -39,19 +55,26 @@ static const NSUInteger newMaxLength = 6;
     BOOL _eraseData;
     BOOL _passcodeLockOn;
     BOOL _sameAsOldPassword;
+    BOOL _biometricUnlockAvailable;
+    BOOL _biometricAuthenticationInProgress;
+    BOOL _biometricUnlockDisabled;
+    NSString *_biometricSymbolName;
+    CGFloat _keypadKeyHeight;
     //------------------ Threema edit end ---------------------------
 }
 
 @property (nonatomic, weak) IBOutlet UILabel  * titleLabel;
 @property (nonatomic, weak) IBOutlet UILabel  * subtitleLabel;
-@property (nonatomic, weak) IBOutlet UIButton * cancelButton;
-@property (nonatomic, weak) IBOutlet UIButton * deleteButton;
 //------------------ Threema edit begin ---------------------------
 @property (nonatomic, weak) IBOutlet UITextField *textField;
 @property (nonatomic, weak) IBOutlet UIImageView *threemaLogo;
-@property (nonatomic, weak) IBOutlet UIButton *eraseDataButton;
+@property (nonatomic, strong) UIButton *cancelButton;
+@property (nonatomic, strong) UIButton *eraseDataButton;
+@property (nonatomic, strong) UIButton *biometricButton;
+@property (nonatomic, strong) UIButton *backspaceButton;
+@property (nonatomic, strong) UIStackView *keypadStackView;
 //------------------ Threema edit end ---------------------------
-@property (strong, nonatomic) IBOutletCollection(JKLLockScreenNumber) NSArray *numberButtons;
+@property (strong, nonatomic) NSArray<JKLLockScreenNumber *> *numberButtons;
 
 @property (nonatomic, weak) IBOutlet JKLLockScreenPincodeView * pincodeView;
 
@@ -72,7 +95,6 @@ static const NSUInteger newMaxLength = 6;
     [super viewWillAppear:animated];
     //------------------ Threema edit begin ---------------------------
     [_cancelButton setTitle:[BundleUtil localizedStringForKey:@"cancel"] forState:UIControlStateNormal];
-    [_deleteButton setTitle:[BundleUtil localizedStringForKey:@"delete"] forState:UIControlStateNormal];
     [_eraseDataButton setTitle:KKPasscodeLockLocalizedString(@"Erase Data", @"") forState:UIControlStateNormal];
     //------------------ Threema edit end ---------------------------
     
@@ -95,6 +117,11 @@ static const NSUInteger newMaxLength = 6;
     _pincodeView.pincodeColor = UIColor.primary;
     _tintColor = UIColor.primary;
     [self tintSubviewsWithColor:_tintColor];
+
+    //------------------ Threema edit begin ---------------------------
+    // Biometry can be switched on or off in Settings while the app is in the background
+    [self lsv_refreshBiometricAvailability];
+    //------------------ Threema edit end ---------------------------
 }
 //------------------ Threema edit end ---------------------------
 
@@ -104,10 +131,14 @@ static const NSUInteger newMaxLength = 6;
     //------------------ Threema edit begin ---------------------------
     
     self.overrideUserInterfaceStyle = UIUserInterfaceStyleDark;
-    
+
+    // Everything below the subtitle is built here, the nib only carries the logo, the labels and
+    // the pincode dots
+    [self lsv_setupKeypad];
+    [self lsv_setupButtonsBelowKeypad];
+
     _cancelButton.titleLabel.adjustsFontSizeToFitWidth = YES;
-    _deleteButton.titleLabel.adjustsFontSizeToFitWidth = YES;
-    
+
     UILongPressGestureRecognizer *lpgr = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(handleLongPress:)];
     [_threemaLogo addGestureRecognizer:lpgr];
     
@@ -168,7 +199,6 @@ static const NSUInteger newMaxLength = 6;
             break;
     }
     [_pincodeView setNeedsDisplay];
-    
     //------------------ Threema edit end ---------------------------
 }
 
@@ -188,6 +218,19 @@ static const NSUInteger newMaxLength = 6;
     }
 }
 
+//------------------ Threema edit begin ---------------------------
+- (void)viewDidDisappear:(BOOL)animated {
+    [super viewDidDisappear:animated];
+
+    // Owners such as `LockScreen` keep this controller around and present it again for the next unlock,
+    // which is a new attempt that may offer biometrics again
+    BOOL isDismissed = self.isBeingDismissed || self.navigationController.isBeingDismissed || self.isMovingFromParentViewController;
+    if (isDismissed) {
+        _biometricUnlockDisabled = NO;
+    }
+}
+//------------------ Threema edit end ---------------------------
+
 /**
  *  Changes buttons tint color
  *
@@ -195,7 +238,11 @@ static const NSUInteger newMaxLength = 6;
  */
 - (void)tintSubviewsWithColor: (UIColor *) color{
     [_cancelButton setTitleColor:color forState:UIControlStateNormal];
-    [_deleteButton setTitleColor:color forState:UIControlStateNormal];
+    //------------------ Threema edit begin ---------------------------
+    // Carry no circle, so they follow the digits rather than the tint color drawn around them
+    [_biometricButton setTintColor:Colors.textLockScreen];
+    [_backspaceButton setTintColor:Colors.textLockScreen];
+    //------------------ Threema edit end ---------------------------
     [_pincodeView setPincodeColor:color];
     
     for (JKLLockScreenNumber * number in _numberButtons)
@@ -209,29 +256,331 @@ static const NSUInteger newMaxLength = 6;
  Touch ID 창을 호출하는 메소드
  */
 - (void)lsv_policyDeviceOwnerAuthentication {
-    
+    //------------------ Threema edit begin ---------------------------
+    // The biometric button allows repeated tries, so don't stack evaluations
+    if (_biometricAuthenticationInProgress || _biometricUnlockDisabled) {
+        return;
+    }
+    //------------------ Threema edit end ---------------------------
+
     NSError   * error   = nil;
     LAContext * context = [[LAContext alloc] init];
-    
+
     // check if the policy can be evaluated
     if ([context canEvaluatePolicy:LAPolicyDeviceOwnerAuthenticationWithBiometrics error:&error]) {
+        //------------------ Threema edit begin ---------------------------
+        _biometricAuthenticationInProgress = YES;
+
+        NSString *reason = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"to_unlock_passcode"], TargetManagerObjC.appName];
+        __weak typeof(self) weakSelf = self;
+        //------------------ Threema edit end ---------------------------
+
         // evaluate
         [context evaluatePolicy:LAPolicyDeviceOwnerAuthenticationWithBiometrics
-                localizedReason:@"Pincode TouchID"
+                localizedReason:reason
                           reply:^(BOOL success, NSError * authenticationError) {
-                              if (success) {
-                                  [self lsv_unlockDelayDismissViewController:LSVDismissWaitingDuration];
-                              }
-                              else {
-                                  NSLog(@"LAContext::Authentication Error : %@", authenticationError);
-                              }
+                              //------------------ Threema edit begin ---------------------------
+                              // The reply runs on a private queue, but everything below touches UI
+                              dispatch_async(dispatch_get_main_queue(), ^{
+                                  typeof(self) strongSelf = weakSelf;
+                                  if (strongSelf == nil) {
+                                      return;
+                                  }
+
+                                  strongSelf->_biometricAuthenticationInProgress = NO;
+
+                                  if (success) {
+                                      [strongSelf lsv_unlockDelayDismissViewController:LSVDismissWaitingDuration];
+                                  }
+                                  else {
+                                      NSLog(@"LAContext::Authentication Error : %@", authenticationError);
+                                      if ([TouchIDAuthentication requiresPasscodeAfterError:authenticationError]) {
+                                          [strongSelf disableBiometricUnlock];
+                                      }
+                                  }
+                              });
+                              //------------------ Threema edit end ---------------------------
                           }];
     }
     else {
         NSLog(@"LAContext::Policy Error : %@", [error localizedDescription]);
     }
-    
+
 }
+
+//------------------ Threema edit begin ---------------------------
+#pragma mark -
+#pragma mark Biometric unlock
+
+/**
+ Creates a digit key. `onNumberClicked:` reads the digit back off the tag.
+ */
+- (JKLLockScreenNumber *)lsv_makeDigitKey:(NSInteger)digit {
+    JKLLockScreenNumber *key = [[JKLLockScreenNumber alloc] initWithFrame:CGRectZero];
+    key.tag = digit;
+    key.backgroundColor = UIColor.clearColor;
+    key.opaque = NO;
+    // The circle is drawn in drawRect:, so it has to be redrawn whenever the cell is resized
+    key.contentMode = UIViewContentModeRedraw;
+    [key setTitle:[@(digit) stringValue] forState:UIControlStateNormal];
+    [key addTarget:self action:@selector(onNumberClicked:) forControlEvents:UIControlEventTouchUpInside];
+
+    return key;
+}
+
+/**
+ Creates one of the two keys that carry a symbol instead of a digit. They draw no circle.
+ */
+- (UIButton *)lsv_makeSymbolKeyWithAction:(SEL)action {
+    UIButton *key = [UIButton buttonWithType:UIButtonTypeSystem];
+    [key addTarget:self action:action forControlEvents:UIControlEventTouchUpInside];
+
+    return key;
+}
+
+/**
+ Builds the keypad.
+
+ The nib used to carry it, but there the twelve cells were sized by one chain of equality constraints
+ hanging off a single width constraint on the 5. Any constraint that disturbed one cell collapsed the
+ whole grid, and the nib reinstalls its size class variations after every attempt to correct that from
+ code. Two nested stack views express the same grid without a constraint graph to fight.
+ */
+- (void)lsv_setupKeypad {
+    if (_keypadStackView != nil) {
+        return;
+    }
+
+    NSMutableArray<JKLLockScreenNumber *> *numbers = [NSMutableArray arrayWithCapacity:10];
+    for (NSInteger digit = 0; digit <= 9; digit++) {
+        [numbers addObject:[self lsv_makeDigitKey:digit]];
+    }
+    self.numberButtons = numbers;
+
+    _biometricButton = [self lsv_makeSymbolKeyWithAction:@selector(onBiometricClicked:)];
+    _biometricButton.alpha = 0.0;
+    _biometricButton.userInteractionEnabled = NO;
+
+    _backspaceButton = [self lsv_makeSymbolKeyWithAction:@selector(onDeleteClicked:)];
+    _backspaceButton.accessibilityLabel = [BundleUtil localizedStringForKey:@"delete"];
+
+    NSArray<NSArray<UIView *> *> *rows = @[
+        @[numbers[1], numbers[2], numbers[3]],
+        @[numbers[4], numbers[5], numbers[6]],
+        @[numbers[7], numbers[8], numbers[9]],
+        @[_biometricButton, numbers[0], _backspaceButton]
+    ];
+
+    NSMutableArray<UIStackView *> *rowStacks = [NSMutableArray arrayWithCapacity:rows.count];
+    for (NSArray<UIView *> *row in rows) {
+        UIStackView *rowStack = [[UIStackView alloc] initWithArrangedSubviews:row];
+        rowStack.axis = UILayoutConstraintAxisHorizontal;
+        rowStack.distribution = UIStackViewDistributionFillEqually;
+        rowStack.spacing = LSVKeypadColumnSpacing;
+        [rowStacks addObject:rowStack];
+    }
+
+    UIStackView *keypad = [[UIStackView alloc] initWithArrangedSubviews:rowStacks];
+    keypad.axis = UILayoutConstraintAxisVertical;
+    keypad.distribution = UIStackViewDistributionFillEqually;
+    keypad.spacing = LSVKeypadRowSpacing;
+    keypad.translatesAutoresizingMaskIntoConstraints = NO;
+
+    [self.view addSubview:keypad];
+    _keypadStackView = keypad;
+
+    UILayoutGuide *safeArea = self.view.safeAreaLayoutGuide;
+
+    // Both stacks fill equally, so squaring one key squares all twelve
+    NSLayoutConstraint *square = [
+        numbers[1].heightAnchor constraintEqualToAnchor:numbers[1].widthAnchor
+    ];
+
+    // Yields to the width limit below, which is what shrinks the keys on a narrow or short screen
+    NSLayoutConstraint *preferredWidth = [
+        keypad.widthAnchor constraintEqualToConstant:3 * LSVKeypadKeySize + 2 * LSVKeypadColumnSpacing
+    ];
+    preferredWidth.priority = UILayoutPriorityRequired - 1;
+
+    // Keeps the logo and the labels hugging the keypad instead of drifting to the top of the screen
+    NSLayoutConstraint *hugSubtitle = [keypad.topAnchor constraintEqualToAnchor:_subtitleLabel.bottomAnchor
+                                                                       constant:LSVKeypadTopSpacing];
+    hugSubtitle.priority = UILayoutPriorityDefaultHigh - 1;
+
+    // Centering the keypad alone would leave all the slack below it, because the logo and the labels
+    // hang off its top. Matching the space above the logo to the space under the keypad centers the
+    // block as a whole, which is how the nib used to balance it.
+    UILayoutGuide *spaceAboveLogo = [[UILayoutGuide alloc] init];
+    UILayoutGuide *spaceBelowKeypad = [[UILayoutGuide alloc] init];
+    [self.view addLayoutGuide:spaceAboveLogo];
+    [self.view addLayoutGuide:spaceBelowKeypad];
+
+    NSLayoutConstraint *balance = [spaceAboveLogo.heightAnchor
+        constraintEqualToAnchor:spaceBelowKeypad.heightAnchor];
+    balance.priority = UILayoutPriorityDefaultHigh;
+
+    [NSLayoutConstraint activateConstraints:@[
+        [keypad.centerXAnchor constraintEqualToAnchor:safeArea.centerXAnchor],
+        [keypad.topAnchor constraintGreaterThanOrEqualToAnchor:_subtitleLabel.bottomAnchor
+                                                      constant:LSVKeypadTopSpacing],
+        [keypad.widthAnchor constraintLessThanOrEqualToAnchor:safeArea.widthAnchor
+                                                     constant:-2 * LSVKeypadColumnSpacing],
+        [spaceAboveLogo.topAnchor constraintEqualToAnchor:safeArea.topAnchor],
+        [spaceAboveLogo.bottomAnchor constraintEqualToAnchor:_threemaLogo.topAnchor],
+        // The nib only keeps the logo 25pt off the top of the view, which on a notched screen is
+        // above the safe area
+        [spaceAboveLogo.heightAnchor constraintGreaterThanOrEqualToConstant:0],
+        [spaceBelowKeypad.topAnchor constraintEqualToAnchor:keypad.bottomAnchor],
+        [spaceBelowKeypad.bottomAnchor constraintEqualToAnchor:safeArea.bottomAnchor],
+        square,
+        preferredWidth,
+        balance,
+        hugSubtitle
+    ]];
+}
+
+/**
+ Places the cancel and the "Erase Data" button in the strip below the keypad. They are never shown in
+ the same mode, so they share the position.
+ */
+- (void)lsv_setupButtonsBelowKeypad {
+    if (_cancelButton != nil) {
+        return;
+    }
+
+    _cancelButton = [self lsv_makeButtonBelowKeypadWithAction:@selector(onCancelClicked:)];
+    _eraseDataButton = [self lsv_makeButtonBelowKeypadWithAction:@selector(onEraseDataClicked:)];
+
+    UILayoutGuide *safeArea = self.view.safeAreaLayoutGuide;
+    
+    [NSLayoutConstraint activateConstraints:@[
+        [_cancelButton.centerXAnchor constraintEqualToAnchor:safeArea.centerXAnchor],
+        [safeArea.bottomAnchor constraintEqualToAnchor:_cancelButton.bottomAnchor constant:LSVBottomButtonInset],
+        [_cancelButton.topAnchor constraintGreaterThanOrEqualToAnchor:_keypadStackView.bottomAnchor
+                                                             constant:LSVBottomButtonSpacing],
+        [_eraseDataButton.centerXAnchor constraintEqualToAnchor:safeArea.centerXAnchor],
+        [safeArea.bottomAnchor constraintEqualToAnchor:_eraseDataButton.bottomAnchor constant:LSVBottomButtonInset],
+        [_eraseDataButton.topAnchor constraintGreaterThanOrEqualToAnchor:_keypadStackView.bottomAnchor
+                                                                constant:LSVBottomButtonSpacing]
+    ]];
+}
+
+- (UIButton *)lsv_makeButtonBelowKeypadWithAction:(SEL)action {
+    UIButton *button = [UIButton buttonWithType:UIButtonTypeSystem];
+    button.translatesAutoresizingMaskIntoConstraints = NO;
+    button.titleLabel.font = [UIFont systemFontOfSize:17];
+    [button addTarget:self action:action forControlEvents:UIControlEventTouchUpInside];
+
+    [self.view addSubview:button];
+
+    return button;
+}
+
+/**
+ Determines whether biometric unlock can be offered and updates the button for the enrolled biometry.
+ */
+- (void)lsv_refreshBiometricAvailability {
+    _biometricUnlockAvailable = NO;
+    _biometricSymbolName = nil;
+    // Forces the symbols to be rebuilt, the enrolled biometry may have changed
+    _keypadKeyHeight = 0;
+
+    BOOL isModeNormal = (_lockScreenMode == LockScreenModeNormal || _lockScreenMode == LockScreenModeExtension);
+    if (!isModeNormal || _biometricUnlockDisabled || ![[KKPasscodeLock sharedLock] isTouchIdOn]) {
+        [self lsv_updateBiometricButtonVisibility];
+        return;
+    }
+
+    NSError *error = nil;
+    LAContext *context = [[LAContext alloc] init];
+
+    // `biometryType` is only meaningful after evaluating this
+    if (![context canEvaluatePolicy:LAPolicyDeviceOwnerAuthenticationWithBiometrics error:&error]) {
+        NSLog(@"LAContext::Policy Error : %@", [error localizedDescription]);
+        [self lsv_updateBiometricButtonVisibility];
+        return;
+    }
+
+    NSString *accessibilityLabelKey = nil;
+
+    switch (context.biometryType) {
+        case LABiometryTypeFaceID:
+            _biometricSymbolName = @"faceid";
+            accessibilityLabelKey = @"passcode_unlock_with_face_id";
+            break;
+        case LABiometryTypeTouchID:
+            _biometricSymbolName = @"touchid";
+            accessibilityLabelKey = @"passcode_unlock_with_touch_id";
+            break;
+        default:
+            // Optic ID and unknown future types are not supported for the passcode lock
+            [self lsv_updateBiometricButtonVisibility];
+            return;
+    }
+
+    _biometricButton.accessibilityLabel = [BundleUtil localizedStringForKey:accessibilityLabelKey];
+
+    _biometricUnlockAvailable = YES;
+    [self lsv_updateBiometricButtonVisibility];
+    [self lsv_updateKeypadSymbols];
+}
+
+- (void)disableBiometricUnlock {
+    _biometricUnlockDisabled = YES;
+    _biometricUnlockAvailable = NO;
+    [self lsv_updateBiometricButtonVisibility];
+}
+
+- (void)lsv_updateBiometricButtonVisibility {
+    // Hiding an arranged subview collapses its cell: the row would fall back to two columns, the
+    // remaining keys would stop lining up with the digits above them, and their cells would no
+    // longer be square
+    _biometricButton.alpha = _biometricUnlockAvailable ? 1.0 : 0.0;
+    _biometricButton.userInteractionEnabled = _biometricUnlockAvailable;
+}
+
+/**
+ Scales the symbols with the keypad, mirroring the ratio the digits have inside their cell.
+
+ A single point size would not do: `delete.backward` is a wider and taller glyph than `faceid` at the
+ same point size, so it gets its own ratio to carry the same visual weight as its neighbours.
+ */
+- (void)lsv_updateKeypadSymbols {
+    CGFloat height = CGRectGetHeight(_backspaceButton.bounds);
+    if (height <= 0) {
+        return;
+    }
+
+    // Setting an image triggers another layout pass, so only redo the work on an actual size change
+    if (fabs(height - _keypadKeyHeight) < 0.5) {
+        return;
+    }
+    _keypadKeyHeight = height;
+
+    UIFont *digitFont = [UIFont systemFontOfSize:round(height * LSVKeyDigitRatio) weight:UIFontWeightThin];
+    for (JKLLockScreenNumber *number in _numberButtons) {
+        number.titleLabel.font = digitFont;
+    }
+
+    [self lsv_setSymbolNamed:@"delete.backward"
+                        font:[digitFont fontWithSize:round(height * LSVKeyBackspaceRatio)]
+                       onKey:_backspaceButton];
+    [self lsv_setSymbolNamed:_biometricSymbolName
+                        font:[digitFont fontWithSize:round(height * LSVKeySymbolRatio)]
+                       onKey:_biometricButton];
+}
+
+- (void)lsv_setSymbolNamed:(NSString *)symbolName font:(UIFont *)font onKey:(UIButton *)key {
+    if (symbolName == nil || key == nil) {
+        return;
+    }
+
+    UIImageSymbolConfiguration *configuration = [UIImageSymbolConfiguration configurationWithFont:font];
+
+    // Kept as a template so the tint color applies and the button dims it while highlighted
+    [key setImage:[UIImage systemImageNamed:symbolName withConfiguration:configuration] forState:UIControlStateNormal];
+}
+//------------------ Threema edit end ---------------------------
 
 /**
  일정 시간 딜레이 후 창을 dismiss 하는 메소드
@@ -354,7 +703,7 @@ static const NSUInteger newMaxLength = 6;
     dispatch_after(delayInSeconds, dispatch_get_main_queue(), ^(void){
         [_pincodeView setEnabled:YES];
         [_pincodeView initPincode];
-        
+
         switch (_lockScreenMode) {
                 //------------------ Threema edit begin ---------------------------
             case LockScreenModeChangeCheck:
@@ -482,7 +831,7 @@ static const NSUInteger newMaxLength = 6;
 #pragma mark -
 #pragma mark IBAction
 - (IBAction)onNumberClicked:(id)sender {
-    
+
     NSInteger number = [((UIButton *)sender) tag];
     [_pincodeView appendingPincode:[@(number) description]];
 }
@@ -497,7 +846,7 @@ static const NSUInteger newMaxLength = 6;
 }
 
 - (IBAction)onDeleteClicked:(id)sender {
-    
+
     [_pincodeView removeLastPincode];
 }
 
@@ -514,6 +863,20 @@ static const NSUInteger newMaxLength = 6;
 
 - (IBAction)onEraseDataClicked:(id)sender {
     [self eraseDataButtonPressed];
+}
+
+- (IBAction)onBiometricClicked:(id)sender {
+    if (_biometricUnlockDisabled) {
+        return;
+    }
+
+    // The delegate may need to run its own flow, e.g. to detect a changed biometry enrollment
+    if ([_delegate respondsToSelector:@selector(didRequestBiometricAuthentication:)]) {
+        [_delegate didRequestBiometricAuthentication:self];
+        return;
+    }
+
+    [self lsv_policyDeviceOwnerAuthentication];
 }
 //------------------ Threema edit end ---------------------------
 
@@ -684,5 +1047,13 @@ static const NSUInteger newMaxLength = 6;
     }
     [self.pincodeView setNeedsDisplay];
 }
+
+//------------------ Threema edit begin ---------------------------
+- (void)viewDidLayoutSubviews {
+    [super viewDidLayoutSubviews];
+
+    [self lsv_updateKeypadSymbols];
+}
+//------------------ Threema edit end ---------------------------
 
 @end

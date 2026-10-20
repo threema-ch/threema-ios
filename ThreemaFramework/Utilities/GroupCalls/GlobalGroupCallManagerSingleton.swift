@@ -269,33 +269,38 @@ public final class GlobalGroupCallManagerSingleton: NSObject {
     ///   - senderIdentity: Identity of the sender
     ///   - groupConversation: Group to handle message for
     ///   - receiveDate: Receive date
+    /// - Returns: `false` if there is no call to join, either because the SFU explicitly told us that it is no longer
+    ///            running or because the message does not describe a call we could ever join. `true` whenever a call
+    ///            might be running, including when we could not determine its state.
+    @discardableResult
     @objc public func handleMessage(
         rawMessage: Any,
         from senderIdentity: String,
         in groupConversationObjectID: NSManagedObjectID,
         receiveDate: Date
-    ) async {
+    ) async -> Bool {
        
         guard currentBusinessInjector.settingsStore.enableThreemaGroupCalls else {
             if !MDMSetup().disableGroupCalls() {
                 postGroupCallStartSystemMessage(in: groupConversationObjectID, by: senderIdentity)
             }
             DDLogVerbose("[Call:GroupCall:Singleton] GroupCalls are not enabled. Skip.")
-            return
+            // Notifications for group calls are suppressed by the setting itself, there is nothing to report here
+            return true
         }
         
         guard let convRawMessage = rawMessage as? CspE2e_GroupCallStart else {
             let msg = "[Call:GroupCall:Singleton] Incorrect message type passed into \(#function)"
             assertionFailure(msg)
             DDLogError("\(msg)")
-            return
+            return false
         }
         
         guard let sfuBaseURL = URL(string: convRawMessage.sfuBaseURL) else {
             DDLogError(
                 "[Call:GroupCall:Singleton] Received message with invalid SFU-URL String: \(convRawMessage.sfuBaseURL)"
             )
-            return
+            return false
         }
 
         let sfuBaseURLValidationResult = await validateSFUBaseURL(sfuBaseURL)
@@ -304,12 +309,13 @@ public final class GlobalGroupCallManagerSingleton: NSObject {
             DDLogError(
                 "[Call:GroupCall:Singleton] Received message with SFU-URL that is not allowed: \(convRawMessage.sfuBaseURL)"
             )
-            return
+            return false
         }
 
         guard let groupModel = await groupCallManager.getGroupModel(for: groupConversationObjectID) else {
             DDLogError("[Call:GroupCall:Singleton] Could not get group model for group.")
-            return
+            // This says nothing about the call itself, so we keep it eligible for a notification
+            return true
         }
         
         let proposedGroupCall: ProposedGroupCall
@@ -328,7 +334,7 @@ public final class GlobalGroupCallManagerSingleton: NSObject {
             let message = "[Call:GroupCall:Singleton] Could not get create ProposedGroupCall for incoming message."
             DDLogError("\(message)")
             assertionFailure(message)
-            return
+            return false
         }
         
         let wrappedMessage = WrappedGroupCallStartMessage(
@@ -348,11 +354,11 @@ public final class GlobalGroupCallManagerSingleton: NSObject {
             DDLogWarn(
                 "[Call:GroupCall:Singleton] Could not validate SFU-URL of call \(proposedGroupCall.hexCallID) yet. The call was stored and will be handled as soon as an SFU token is available."
             )
-            return
+            return true
         }
 
         let senderThreemaID: GroupCallCreatorOrigin = .remote(ThreemaIdentity(senderIdentity))
-        await groupCallManager.handleNewCallMessage(
+        return await groupCallManager.handleNewCallMessage(
             for: proposedGroupCall,
             creatorOrigin: senderThreemaID,
             calledFromExtension: AppGroup.getCurrentType() != AppGroupTypeApp

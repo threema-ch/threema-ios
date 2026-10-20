@@ -45,9 +45,9 @@ extension LibthreemaGroup {
                 nil
             }
 
-        let membersIdentity: [LibthreemaThreemaID] =
+        let membersIdentity: Set<LibthreemaThreemaID> =
             if let members = conversationEntity?.members {
-                members.map { LibthreemaThreemaID($0.identity) }
+                Set(members.map { LibthreemaThreemaID($0.identity) })
             }
             else {
                 []

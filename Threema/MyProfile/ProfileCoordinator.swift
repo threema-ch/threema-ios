@@ -231,6 +231,19 @@ final class ProfileCoordinator: NSObject, Coordinator {
     }
 
     func show(_ destination: InternalDestination) {
+        defer {
+            switch destination {
+            case .editProfile, .scanQRCode, .qrCode, .shareID, .workAvailabilityStatus,
+                 .revocationPassword, .publicKey, .revokeDelete:
+                // Actions and modals don't change the path and dismissing a sheet doesn't trigger
+                // `viewIsAppearing`, so the tapped row would stay highlighted. Re-derive it from the path.
+                profileViewController.updateSelection()
+
+            case .backups, .threemaSafe, .linkPhone, .linkMail:
+                break
+            }
+        }
+
         switch destination {
         case .editProfile:
             showEditProfile()

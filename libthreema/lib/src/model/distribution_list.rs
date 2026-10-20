@@ -13,6 +13,7 @@ use crate::{
 ///
 /// - profile picture
 #[derive(Clone, Debug, Name)]
+#[cfg_attr(test, derive(PartialEq))]
 pub struct DistributionList {
     /// Distribution list identity.
     pub identity: DistributionListId,
@@ -43,10 +44,10 @@ pub struct DistributionList {
 pub trait DistributionListProvider {
     /// 1. For each `distribution_list` of `distribution_lists`:
     ///    1. If a distribution list with ID `distribution_list.identity` already exists, return
-    ///       [`ProviderError::InvalidState`].
+    ///       [`ProviderError::ContractViolation`].
     ///    2. For each `member` of `distribution_list.members`:
-    ///       1. If `member` is the user's identity, return [`ProviderError::InvalidState`].
-    ///       2. If `member` is not a known contact¹, return [`ProviderError::InvalidState`].
+    ///       1. If `member` is the user's identity, return [`ProviderError::ContractViolation`].
+    ///       2. If `member` is not a known contact¹, return [`ProviderError::ContractViolation`].
     /// 2. For each `distribution_list` of `distribution_lists`:
     ///    1. Add `distribution_list` to the application storage.
     ///

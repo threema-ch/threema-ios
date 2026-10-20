@@ -1,6 +1,10 @@
 //! Implementation of the end-to-end encryption layer of the _Chat Server Protocol_.
 use core::{cell::RefCell, fmt};
-use std::{collections::HashMap, rc::Rc, sync::Arc};
+use std::{
+    collections::HashMap,
+    rc::Rc,
+    sync::{Arc, PoisonError},
+};
 
 use educe::Educe;
 use libthreema_macros::Name;
@@ -13,7 +17,10 @@ use crate::{
         keys::{ClientKey, DeviceGroupKey},
     },
     csp::payload::MessageWithMetadataBox,
-    csp_e2e::{contacts::lookup::ContactLookupCache, message::task::incoming::IncomingMessageTask},
+    csp_e2e::{
+        contacts::lookup::ContactLookupCache, message::task::incoming::IncomingMessageTask,
+        transaction::manager::TransactionManager,
+    },
     https::endpoint::HttpsEndpointError,
     model::{
         contact::ContactProvider, conversation::ConversationProvider, group::GroupProvider,
@@ -47,6 +54,14 @@ pub enum CspE2eProtocolInternalErrorCause {
         name: &'static str,
     },
 
+    /// An internal error occurred when starting or committing a transaction.
+    #[error("Transaction management failed: {0}")]
+    TransactionManagementFailed(String),
+
+    /// Unable to obtain a lock.
+    #[error("Obtaining a lock failed")]
+    LockPoisoned,
+
     /// Another kind of error occurred.
     #[error("{0}")]
     Other(String),
@@ -76,14 +91,14 @@ impl<T: Into<String>> From<T> for CspE2eProtocolInternalErrorCause {
     tsify(into_wasm_abi)
 )]
 pub enum CspE2eProtocolError {
+    /// A contract violation occurred.
+    #[error("Contract violation: {0}")]
+    ContractViolation(String),
+
     /// A foreign function considered infallible returned an error.
     #[cfg(any(test, feature = "uniffi", feature = "cli"))]
     #[error("Infallible function failed in foreign code: {0}")]
-    Foreign(String),
-
-    /// Invalid state for the requested operation.
-    #[error("Invalid state: {0}")]
-    InvalidState(&'static str),
+    ForeignFunctionFailed(String),
 
     /// An internal error happened.
     #[cfg_attr(feature = "wasm", serde(serialize_with = "string::to_string::serialize"))]
@@ -155,11 +170,16 @@ impl From<HttpsEndpointError> for CspE2eProtocolError {
 impl From<ProviderError> for CspE2eProtocolError {
     fn from(error: ProviderError) -> Self {
         match error {
-            ProviderError::InvalidParameter(message) => Self::InternalError(message.into()),
-            ProviderError::InvalidState(message) => Self::DesyncError(message),
+            ProviderError::ConversionError(message) => Self::InternalError(message.into()),
+            ProviderError::ContractViolation(message) => Self::DesyncError(message),
             #[cfg(any(test, feature = "uniffi", feature = "cli"))]
-            ProviderError::Foreign(message) => Self::Foreign(message),
+            ProviderError::ForeignFunctionFailed(message) => Self::ForeignFunctionFailed(message),
         }
+    }
+}
+impl<T> From<PoisonError<T>> for CspE2eProtocolError {
+    fn from(_: PoisonError<T>) -> Self {
+        Self::InternalError(CspE2eProtocolInternalErrorCause::LockPoisoned)
     }
 }
 
@@ -256,15 +276,20 @@ pub struct D2xContext {
 
     /// The current D2M role.
     role: D2mRole,
+
+    /// The transaction manager.
+    transaction_manager: TransactionManager,
 }
 impl From<D2xContextInit> for D2xContext {
     fn from(init: D2xContextInit) -> Self {
+        let transaction_manager = TransactionManager::new(init.device_group_key.transaction_scope_key());
         Self {
             device_id: init.device_id,
             device_group_key: init.device_group_key,
             nonce_provider: init.nonce_provider,
             reflect_id: ReflectSequenceNumber(SequenceNumberU32::new(0)),
             role: D2mRole::Follower,
+            transaction_manager,
         }
     }
 }
@@ -356,11 +381,13 @@ impl CspE2eProtocol {
     #[tracing::instrument(skip_all, fields(?d2m_state))]
     pub fn update_d2m_state(&mut self, d2m_state: D2mRole) -> Result<(), CspE2eProtocolError> {
         let Some(d2m_context) = &mut self.context.d2x else {
-            return Err(CspE2eProtocolError::InvalidState("MD context not initialized"));
+            return Err(CspE2eProtocolError::ContractViolation(
+                "MD context not initialized".to_owned(),
+            ));
         };
         if matches!(d2m_context.role, D2mRole::Leader) && matches!(d2m_state, D2mRole::Follower) {
-            return Err(CspE2eProtocolError::InvalidState(
-                "Downgrading D2M state is not allowed",
+            return Err(CspE2eProtocolError::ContractViolation(
+                "Downgrading D2M state is not allowed".to_owned(),
             ));
         }
         debug!("Updating D2M state");

@@ -5,6 +5,7 @@ enum AppLaunchMode {
         #if DEBUG
             return ProcessInfoHelper.isRunningForPreviews
                 || ProcessInfoHelper.isRunningForPlaygrounds
+                || ProcessInfoHelper.isRunningAsTestHost
                 || ProcessInfoHelper.isRunningForTests
         #else
             return false

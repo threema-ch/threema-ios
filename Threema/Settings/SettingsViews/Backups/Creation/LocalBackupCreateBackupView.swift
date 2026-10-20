@@ -4,26 +4,56 @@ struct LocalBackupCreateBackupView: View {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.verticalSizeClass) private var verticalSizeClass
+    @ScaledMetric private var scaledMetric: CGFloat = 1.0
+
+    private let headerHeight = DotHeaderView.defaultHeight
+    private let headerOverlap = DotHeaderView.defaultOverlap
 
     let model: LocalBackupCreateBackupViewModel
 
     var body: some View {
-        List {
-            HeaderView(model: model)
+        ScrollView {
+            VStack(spacing: 0) {
+                DotHeaderView(
+                    icon: DotHeaderView.Icon(
+                        name: model.state.headerIconName,
+                        color: {
+                            switch model.state {
+                            case .inProgress: .accentColor
+                            case .complete: .green
+                            case .failed: .red
+                            }
+                        }()
+                    ),
+                    dotColor: {
+                        switch model.state {
+                        case .failed:
+                            .red.opacity(0.3)
+                        default:
+                            .accentColor.opacity(0.3)
+                        }
+                    }(),
+                    height: headerHeight
+                )
 
-            BackupInfoView(
-                title: model.backupError?.title,
-                content: model.backupError?.content,
-                textColor: Color.red,
-                textFont: .footnote,
-                iconName: model.errorIconName,
-                iconColor: Color.red
-            )
+                VStack(spacing: 10 * scaledMetric) {
+                    BackupHeaderView(
+                        step: model.headerStep,
+                        title: model.headerTitle,
+                        subtitle: model.headerSubtitle,
+                        backdrop: Color.listsBackgroundColor
+                    )
+                    .padding(.bottom, 20 * scaledMetric)
 
-            ExportsView(model: model)
-            NoteView(note: model.note)
-            BottomView(model: model, isVisible: isBottomViewInlined)
+                    ExportsView(model: model)
+                    BottomView(model: model, isVisible: isBottomViewInlined)
+                }
+                .safeAreaPadding(.horizontal, 20)
+                .padding(.top, -headerHeight * headerOverlap / scaledMetric)
+            }
         }
+        .background(Color.listsBackgroundColor.ignoresSafeArea())
+        .ignoresSafeArea(edges: .top)
         .navigationBarTitleDisplayMode(.inline)
         .scrollBounceBehavior(.basedOnSize)
         .scrollIndicators(.hidden)
@@ -38,45 +68,25 @@ struct LocalBackupCreateBackupView: View {
         }
     }
 
-    private struct HeaderView: View {
-        let model: LocalBackupCreateBackupViewModel
-
-        var body: some View {
-            BackupHeaderView(
-                icon: .init(
-                    symbolName: model.state.iconSymbolName,
-                    color: {
-                        switch model.state {
-                        case .inProgress: .blue
-                        case .complete: .green
-                        case .failed: .red
-                        }
-                    }()
-                ),
-                step: model.headerStep,
-                title: model.headerTitle,
-                subtitle: model.headerSubtitle
-            )
-            .listRowInsets(EdgeInsets())
-            .listRowBackground(Color.clear)
-            .listRowSeparator(.hidden)
-            .frame(maxWidth: .infinity)
-            .padding(.bottom, model.state == .complete ? 12 : 0)
-        }
-    }
-
     private struct ExportsView: View {
         @ScaledMetric private var scaledMetric: CGFloat = 1.0
 
         let model: LocalBackupCreateBackupViewModel
 
         var body: some View {
-            Section {
+            SectionCard {
                 VStack(alignment: .leading, spacing: 18 * scaledMetric) {
                     ForEach(model.exportItems) { item in
                         ExportItemView(item: item)
                     }
                 }
+            } footer: {
+                Text(model.note)
+                    .multilineTextAlignment(.center)
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity)
+                    .padding(.bottom)
             }
         }
 
@@ -117,12 +127,7 @@ struct LocalBackupCreateBackupView: View {
                         .font(.system(size: scaledMetric * 15 / 32, weight: .bold))
                         .foregroundStyle(foregroundColor)
                         .apply { image in
-                            if #available(iOS 18.0, *) {
-                                image.symbolEffect(.rotate, isActive: state == .inProgress)
-                            }
-                            else {
-                                image
-                            }
+                            image.symbolEffect(.rotate, isActive: state == .inProgress)
                         }
                         .id(state) // needed for animation state
                         .frame(width: scaledMetric, height: scaledMetric)
@@ -150,22 +155,6 @@ struct LocalBackupCreateBackupView: View {
         }
     }
 
-    private struct NoteView: View {
-        let note: String?
-
-        var body: some View {
-            if let note {
-                Text(note)
-                    .multilineTextAlignment(.center)
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
-                    .frame(maxWidth: .infinity)
-                    .listRowBackground(Color.clear)
-                    .listRowSeparator(.hidden)
-            }
-        }
-    }
-
     private struct BottomView: View {
         let model: LocalBackupCreateBackupViewModel
         let isVisible: Bool
@@ -183,10 +172,10 @@ struct LocalBackupCreateBackupView: View {
                         )
                     case .complete:
                         ThreemaButton(
-                            title: model.doneButtonTitle,
+                            title: model.continueButtonTitle,
                             style: .borderedProminent,
                             size: .fullWidth,
-                            action: model.doneButtonTapped
+                            action: model.continueButtonTapped
                         )
                     case .failed:
                         VStack {
@@ -207,8 +196,6 @@ struct LocalBackupCreateBackupView: View {
                     }
                 }
                 .frame(maxWidth: .infinity)
-                .listRowInsets(EdgeInsets())
-                .listRowBackground(Color.clear)
             }
         }
     }
@@ -250,19 +237,21 @@ struct LocalBackupCreateBackupView: View {
         LocalBackupCreateBackupView.Stance.failed.view
     }
 
-    /// A backup that keeps advancing, to see the steps move.
     #Preview("Creating Backup - Running") {
-        LocalBackupCreateBackupView(
-            model: LocalBackupCreateBackupViewModel(
-                manager: BackupCreateManagerMock(
-                    currentRecoveryKey: .mockGeneratedKey,
-                    createBehavior: .succeeding(
-                        progress: DataBackupProgress.mockRun,
-                        delay: .milliseconds(2000)
-                    )
+        PushedPreview(rootTitle: "Backup Settings") {
+            LocalBackupCreateBackupView(
+                model: LocalBackupCreateBackupViewModel(
+                    manager: BackupCreateManagerMock(
+                        currentRecoveryKey: .mockGeneratedKey,
+                        createBehavior: .succeeding(
+                            progress: DataBackupProgress.mockRun,
+                            delay: .milliseconds(2000)
+                        )
+                    ),
+                    userSettings: .mock
                 )
             )
-        )
+        }
     }
 
     extension LocalBackupCreateBackupView {
@@ -280,7 +269,9 @@ struct LocalBackupCreateBackupView: View {
             }
 
             @MainActor var view: some View {
-                LocalBackupCreateBackupView(model: makeModel())
+                PushedPreview(rootTitle: "Backup Settings") {
+                    LocalBackupCreateBackupView(model: makeModel())
+                }
             }
 
             @MainActor private func makeModel() -> LocalBackupCreateBackupViewModel {
@@ -288,12 +279,13 @@ struct LocalBackupCreateBackupView: View {
                     manager: BackupCreateManagerMock(
                         currentRecoveryKey: .mockGeneratedKey,
                         createBehavior: .idle
-                    )
+                    ),
+                    userSettings: .mock
                 )
 
                 switch self {
                 case .inProgress:
-                    model.apply(DataBackupProgress.mock(phase: .messages, itemsProcessed: 1284))
+                    model.apply(DataBackupProgress.mock(phase: .messages))
 
                 case .complete:
                     model.apply(DataBackupProgress.mock(phase: .finalizing))

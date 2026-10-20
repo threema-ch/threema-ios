@@ -142,7 +142,7 @@ public final class EntityCreator: NSObject {
     public func locationMessageEntity(
         latitude: Double,
         longitude: Double,
-        accuracy: Double,
+        accuracy: Double? = nil,
         poiName: String? = nil,
         poiAddress: String? = nil,
         in conversationEntity: ConversationEntity,

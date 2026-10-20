@@ -1,18 +1,18 @@
 //! High-level crypto bindings.
-use std::sync::Mutex;
+use std::sync::{Mutex, PoisonError};
 
 use duplicate::duplicate_item;
 use libthreema_dependencies::crypto::{argon2, blake2b, chacha20, deprecated::scrypt, salsa20, sha2, x25519};
 
-use crate::{common::Nonce, crypto::chunked, utils::sync::MutexIgnorePoison as _};
+use crate::{common::Nonce, crypto::chunked};
 
 /// A general crypto-related error.
 #[derive(Debug, thiserror::Error, uniffi::Error)]
 #[uniffi(flat_error)]
 pub enum CryptoError {
-    /// Invalid parameter provided by foreign code.
-    #[error("Invalid parameter: {0}")]
-    InvalidParameter(String),
+    /// Some provided parameter could not be converted into the required internal representation.
+    #[error("Conversion error: {0}")]
+    ConversionError(String),
 
     /// Non-contributory key.
     #[error("Key is non-contributory")]
@@ -21,11 +21,19 @@ pub enum CryptoError {
     /// Unable to encrypt/decrypt.
     #[error("Unable to encrypt/decrypt")]
     CipherFailed,
-}
 
+    /// Unable to obtain a lock.
+    #[error("Obtaining a lock failed")]
+    LockPoisoned,
+}
 impl From<chunked::InvalidTag> for CryptoError {
     fn from(_: chunked::InvalidTag) -> Self {
         Self::CipherFailed
+    }
+}
+impl<T> From<PoisonError<T>> for CryptoError {
+    fn from(_: PoisonError<T>) -> Self {
+        Self::LockPoisoned
     }
 }
 
@@ -56,7 +64,7 @@ pub fn hmac_sha256(key: &[u8], data: &[u8]) -> Vec<u8> {
 ///
 /// # Errors
 ///
-/// Returns [`CryptoError::InvalidParameter`] if `key` is present and less than 1 or more than 128
+/// Returns [`CryptoError::ConversionError`] if `key` is present and less than 1 or more than 128
 /// bytes and when `personal` or `salt` is more than 32 bytes.
 #[expect(clippy::ref_option, reason = "Bindings don't allow to use Option<&Vec<u8>>")]
 #[uniffi::export]
@@ -71,7 +79,7 @@ pub fn blake2b_mac_256(
     Ok(
         blake2b::Blake2bMac256::new_with_salt_and_personal(key.as_deref(), salt, personal)
             .map_err(|_| {
-                CryptoError::InvalidParameter(
+                CryptoError::ConversionError(
                     "'key' if provided must be between 1 and 128 bytes, 'personal' and 'salt' must be up to \
                      32 bytes"
                         .to_owned(),
@@ -87,7 +95,7 @@ pub fn blake2b_mac_256(
 ///
 /// # Errors
 ///
-/// Returns [`CryptoError::InvalidParameter`] if `key` is present and less than 1 or more than 128
+/// Returns [`CryptoError::ConversionError`] if `key` is present and less than 1 or more than 128
 /// bytes and when `personal` or `salt` is more than 32 bytes.
 #[expect(clippy::ref_option, reason = "Bindings don't allow to use Option<&Vec<u8>>")]
 #[uniffi::export]
@@ -102,7 +110,7 @@ pub fn blake2b_mac_512(
     Ok(
         blake2b::Blake2bMac512::new_with_salt_and_personal(key.as_deref(), salt, personal)
             .map_err(|_| {
-                CryptoError::InvalidParameter(
+                CryptoError::ConversionError(
                     "'key' if provided must be between 1 and 128 bytes, 'personal' and 'salt' must be up to \
                      32 bytes"
                         .to_owned(),
@@ -134,7 +142,7 @@ impl TryFrom<Argon2idParameters> for argon2::Params {
 
     fn try_from(parameters: Argon2idParameters) -> Result<Self, Self::Error> {
         if !(1..=64).contains(&parameters.output_length) {
-            return Err(CryptoError::InvalidParameter(
+            return Err(CryptoError::ConversionError(
                 "output length must be between 1 and 64 bytes".to_owned(),
             ));
         }
@@ -145,7 +153,7 @@ impl TryFrom<Argon2idParameters> for argon2::Params {
             parameters.parallelism,
             Some(parameters.output_length.into()),
         )
-        .map_err(|error| CryptoError::InvalidParameter(error.to_string()))
+        .map_err(|error| CryptoError::ConversionError(error.to_string()))
     }
 }
 
@@ -153,7 +161,7 @@ impl TryFrom<Argon2idParameters> for argon2::Params {
 ///
 /// # Errors
 ///
-/// Returns [`CryptoError::InvalidParameter`] if the passed parameters are invalid (see
+/// Returns [`CryptoError::ConversionError`] if the passed parameters are invalid (see
 /// [`Argon2idParameters`] for the requirements).
 #[uniffi::export]
 pub fn argon2id(
@@ -165,7 +173,7 @@ pub fn argon2id(
     let mut output = vec![0; parameters.output_length as usize];
     context
         .hash_password_into(password, salt, &mut output)
-        .map_err(|error| CryptoError::InvalidParameter(error.to_string()))?;
+        .map_err(|error| CryptoError::ConversionError(error.to_string()))?;
 
     Ok(output)
 }
@@ -197,7 +205,7 @@ impl TryFrom<ScryptParameters> for scrypt::Params {
             parameters.parallelism,
             parameters.output_length.into(),
         )
-        .map_err(|error| CryptoError::InvalidParameter(error.to_string()))
+        .map_err(|error| CryptoError::ConversionError(error.to_string()))
     }
 }
 
@@ -205,13 +213,13 @@ impl TryFrom<ScryptParameters> for scrypt::Params {
 ///
 /// # Errors
 ///
-/// Returns [`CryptoError::InvalidParameter`] if the passed parameters are invalid (see
+/// Returns [`CryptoError::ConversionError`] if the passed parameters are invalid (see
 /// [`ScryptParameters`] for the requirements).
 #[uniffi::export]
 pub fn scrypt(password: &[u8], salt: &[u8], parameters: ScryptParameters) -> Result<Vec<u8>, CryptoError> {
     let mut output = vec![0; parameters.output_length as usize];
     scrypt::scrypt(password, salt, &parameters.try_into()?, &mut output)
-        .map_err(|error| CryptoError::InvalidParameter(error.to_string()))?;
+        .map_err(|error| CryptoError::ConversionError(error.to_string()))?;
 
     Ok(output)
 }
@@ -220,12 +228,12 @@ pub fn scrypt(password: &[u8], salt: &[u8], parameters: ScryptParameters) -> Res
 ///
 /// # Errors
 ///
-/// Returns [`CryptoError::InvalidParameter`] if `secret_key` is not exactly 32 bytes.
+/// Returns [`CryptoError::ConversionError`] if `secret_key` is not exactly 32 bytes.
 #[uniffi::export]
 pub fn x25519_derive_public_key(secret_key: &[u8]) -> Result<Vec<u8>, CryptoError> {
     let secret_key = x25519::StaticSecret::from(
         <[u8; 32]>::try_from(secret_key)
-            .map_err(|_| CryptoError::InvalidParameter("'secret_key' must be 32 bytes".to_owned()))?,
+            .map_err(|_| CryptoError::ConversionError("'secret_key' must be 32 bytes".to_owned()))?,
     );
     let public_key = x25519::PublicKey::from(&secret_key);
     Ok(public_key.as_bytes().to_vec())
@@ -238,7 +246,7 @@ pub fn x25519_derive_public_key(secret_key: &[u8]) -> Result<Vec<u8>, CryptoErro
 ///
 /// # Errors
 ///
-/// Returns [`CryptoError::InvalidParameter`] if `public_key` or `secret_key` is not exactly 32 bytes.
+/// Returns [`CryptoError::ConversionError`] if `public_key` or `secret_key` is not exactly 32 bytes.
 /// Returns [`CryptoError::NonContributoryKey`] if `public_key` is non-contributory.
 #[uniffi::export]
 pub fn x25519_hsalsa20_derive_shared_secret(
@@ -247,11 +255,11 @@ pub fn x25519_hsalsa20_derive_shared_secret(
 ) -> Result<Vec<u8>, CryptoError> {
     let public_key = x25519::PublicKey::from(
         <[u8; 32]>::try_from(public_key)
-            .map_err(|_| CryptoError::InvalidParameter("'public_key' must be 32 bytes".to_owned()))?,
+            .map_err(|_| CryptoError::ConversionError("'public_key' must be 32 bytes".to_owned()))?,
     );
     let secret_key = x25519::StaticSecret::from(
         <[u8; 32]>::try_from(secret_key)
-            .map_err(|_| CryptoError::InvalidParameter("'secret_key' must be 32 bytes".to_owned()))?,
+            .map_err(|_| CryptoError::ConversionError("'secret_key' must be 32 bytes".to_owned()))?,
     );
     Ok(secret_key
         .diffie_hellman_hsalsa20(&public_key)
@@ -264,7 +272,7 @@ pub fn x25519_hsalsa20_derive_shared_secret(
 ///
 /// # Errors
 ///
-/// Returns [`CryptoError::InvalidParameter`] if `key` is not exactly 32 bytes or `nonce` is not
+/// Returns [`CryptoError::ConversionError`] if `key` is not exactly 32 bytes or `nonce` is not
 /// exactly 24 bytes.
 ///
 /// Returns [`CryptoError::CipherFailed`] if encryption failed.
@@ -278,10 +286,10 @@ pub fn xchacha20_poly1305_encrypt(
     use libthreema_dependencies::crypto::{aead::AeadInPlace as _, cipher::KeyInit as _};
 
     let cipher = chacha20::XChaCha20Poly1305::new_from_slice(key)
-        .map_err(|_| CryptoError::InvalidParameter("'key' must be 32 bytes".to_owned()))?;
+        .map_err(|_| CryptoError::ConversionError("'key' must be 32 bytes".to_owned()))?;
     let nonce: Nonce = nonce
         .try_into()
-        .map_err(|_| CryptoError::InvalidParameter("'nonce' must be 24 bytes".to_owned()))?;
+        .map_err(|_| CryptoError::ConversionError("'nonce' must be 24 bytes".to_owned()))?;
     cipher
         .encrypt_in_place((&nonce).into(), associated_data, &mut data)
         .map_err(|_| CryptoError::CipherFailed)?;
@@ -292,7 +300,7 @@ pub fn xchacha20_poly1305_encrypt(
 ///
 /// # Errors
 ///
-/// Returns [`CryptoError::InvalidParameter`] if `key` is not exactly 32 bytes or `nonce` is not
+/// Returns [`CryptoError::ConversionError`] if `key` is not exactly 32 bytes or `nonce` is not
 /// exactly 24 bytes.
 ///
 /// Returns [`CryptoError::CipherFailed`] if decryption failed.
@@ -306,10 +314,10 @@ pub fn xchacha20_poly1305_decrypt(
     use libthreema_dependencies::crypto::{aead::AeadInPlace as _, cipher::KeyInit as _};
 
     let cipher = chacha20::XChaCha20Poly1305::new_from_slice(key)
-        .map_err(|_| CryptoError::InvalidParameter("'key' must be 32 bytes".to_owned()))?;
+        .map_err(|_| CryptoError::ConversionError("'key' must be 32 bytes".to_owned()))?;
     let nonce: Nonce = nonce
         .try_into()
-        .map_err(|_| CryptoError::InvalidParameter("'nonce' must be 24 bytes".to_owned()))?;
+        .map_err(|_| CryptoError::ConversionError("'nonce' must be 24 bytes".to_owned()))?;
     cipher
         .decrypt_in_place((&nonce).into(), associated_data, &mut data)
         .map_err(|_| CryptoError::CipherFailed)?;
@@ -320,7 +328,7 @@ pub fn xchacha20_poly1305_decrypt(
 ///
 /// # Errors
 ///
-/// Returns [`CryptoError::InvalidParameter`] if `key` is not exactly 32 bytes or `nonce` is not
+/// Returns [`CryptoError::ConversionError`] if `key` is not exactly 32 bytes or `nonce` is not
 /// exactly 24 bytes.
 ///
 /// Returns [`CryptoError::CipherFailed`] if encryption failed.
@@ -333,10 +341,10 @@ pub fn xsalsa20_poly1305_encrypt(
     use libthreema_dependencies::crypto::{aead::AeadInPlace as _, cipher::KeyInit as _};
 
     let cipher = salsa20::XSalsa20Poly1305::new_from_slice(key)
-        .map_err(|_| CryptoError::InvalidParameter("'key' must be 32 bytes".to_owned()))?;
+        .map_err(|_| CryptoError::ConversionError("'key' must be 32 bytes".to_owned()))?;
     let nonce: Nonce = nonce
         .try_into()
-        .map_err(|_| CryptoError::InvalidParameter("'nonce' must be 24 bytes".to_owned()))?;
+        .map_err(|_| CryptoError::ConversionError("'nonce' must be 24 bytes".to_owned()))?;
     cipher
         .encrypt_in_place((&nonce).into(), &[], &mut data)
         .map_err(|_| CryptoError::CipherFailed)?;
@@ -347,7 +355,7 @@ pub fn xsalsa20_poly1305_encrypt(
 ///
 /// # Errors
 ///
-/// Returns [`CryptoError::InvalidParameter`] if `key` is not exactly 32 bytes or `nonce` is not
+/// Returns [`CryptoError::ConversionError`] if `key` is not exactly 32 bytes or `nonce` is not
 /// exactly 24 bytes.
 ///
 /// Returns [`CryptoError::CipherFailed`] if decryption failed.
@@ -360,10 +368,10 @@ pub fn xsalsa20_poly1305_decrypt(
     use libthreema_dependencies::crypto::{aead::AeadInPlace as _, cipher::KeyInit as _};
 
     let cipher = salsa20::XSalsa20Poly1305::new_from_slice(key)
-        .map_err(|_| CryptoError::InvalidParameter("'key' must be 32 bytes".to_owned()))?;
+        .map_err(|_| CryptoError::ConversionError("'key' must be 32 bytes".to_owned()))?;
     let nonce: Nonce = nonce
         .try_into()
-        .map_err(|_| CryptoError::InvalidParameter("'nonce' must be 24 bytes".to_owned()))?;
+        .map_err(|_| CryptoError::ConversionError("'nonce' must be 24 bytes".to_owned()))?;
     cipher
         .decrypt_in_place((&nonce).into(), &[], &mut data)
         .map_err(|_| CryptoError::CipherFailed)?;
@@ -376,10 +384,10 @@ fn ensure_xdance_key_and_nonce<'data>(
 ) -> Result<(&'data [u8; 32], &'data [u8; Nonce::LENGTH]), CryptoError> {
     let key: &[u8; 32] = key
         .try_into()
-        .map_err(|_| CryptoError::InvalidParameter("'key' must be 32 bytes".to_owned()))?;
+        .map_err(|_| CryptoError::ConversionError("'key' must be 32 bytes".to_owned()))?;
     let nonce: &[u8; Nonce::LENGTH] = nonce
         .try_into()
-        .map_err(|_| CryptoError::InvalidParameter("'nonce' must be 24 bytes".to_owned()))?;
+        .map_err(|_| CryptoError::ConversionError("'nonce' must be 24 bytes".to_owned()))?;
     Ok((key, nonce))
 }
 
@@ -458,7 +466,7 @@ impl cipher_name {
     /// Returns [`CryptoError::CipherFailed`] in case of an internal error.
     pub fn encrypt(&self, mut chunk: Vec<u8>) -> Result<Vec<u8>, CryptoError> {
         self.0
-            .lock_ignore_poison()
+            .lock()?
             .as_mut()
             .ok_or(CryptoError::CipherFailed)?
             .encrypt(&mut chunk);
@@ -474,7 +482,7 @@ impl cipher_name {
     pub fn finalize(&self) -> Result<Vec<u8>, CryptoError> {
         Ok(self
             .0
-            .lock_ignore_poison()
+            .lock()?
             .take()
             .ok_or(CryptoError::CipherFailed)?
             .finalize()
@@ -497,7 +505,7 @@ impl cipher_name {
     /// Returns [`CryptoError::CipherFailed`] in case of an internal error.
     pub fn decrypt(&self, mut chunk: Vec<u8>) -> Result<Vec<u8>, CryptoError> {
         self.0
-            .lock_ignore_poison()
+            .lock()?
             .as_mut()
             .ok_or(CryptoError::CipherFailed)?
             .decrypt(&mut chunk);
@@ -513,10 +521,10 @@ impl cipher_name {
     pub fn finalize_verify(&self, expected_tag: &[u8]) -> Result<(), CryptoError> {
         let expected_tag = expected_tag
             .try_into()
-            .map_err(|_| CryptoError::InvalidParameter("'tag' must be 16 bytes".to_owned()))?;
+            .map_err(|_| CryptoError::ConversionError("'tag' must be 16 bytes".to_owned()))?;
         Ok(self
             .0
-            .lock_ignore_poison()
+            .lock()?
             .take()
             .ok_or(CryptoError::CipherFailed)?
             .finalize_verify(expected_tag)?)

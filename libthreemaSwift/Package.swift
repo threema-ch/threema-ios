@@ -5,7 +5,7 @@ import PackageDescription
 let package = Package(
     name: "libthreemaSwift",
     platforms: [
-        .iOS(.v17),
+        .iOS(.v18),
         .macOS(.v15),
     ],
     products: [
@@ -49,7 +49,4 @@ let package = Package(
             dependencies: ["libthreemaSwift"]
         ),
     ],
-    // The generated code from UniFFI doesn't fully fix all concurrency errors of Swift 6 language mode for now:
-    // https://github.com/mozilla/uniffi-rs/issues/2279
-    swiftLanguageModes: [.v5]
 )

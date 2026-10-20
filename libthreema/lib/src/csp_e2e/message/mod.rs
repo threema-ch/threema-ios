@@ -7,7 +7,10 @@ use libthreema_macros::Name;
 use tracing::{debug, warn};
 
 use crate::{
-    common::{ConversationId, DistributionListId, GroupIdentity, MessageFlags, MessageId, ThreemaId},
+    common::{
+        ConversationId, DistributionListId, GroupIdentity, MessageFlags, MessageId, MessageOverrides,
+        MessageOverridesDeliveryReceiptPolicy, ThreemaId,
+    },
     model::message::{
         ContactDeliveryUpdate, IncomingMessageDirection, LocationMessageState, MessageDirection,
         MessageReactionUpdate, MessageReactionUpdateIntent, MessageStarMarker, MessageState,
@@ -106,6 +109,16 @@ impl Apply<MessageProperties> for MessageFlags {
         }
     }
 }
+impl Apply<MessageOverrides> for MessageProperties {
+    fn apply(&mut self, overrides: MessageOverrides) {
+        if matches!(
+            overrides.delivery_receipt_policy,
+            MessageOverridesDeliveryReceiptPolicy::DontSend
+        ) {
+            self.delivery_receipts = false;
+        }
+    }
+}
 
 /// Message properties associated to a group message type.
 ///
@@ -135,51 +148,6 @@ impl GroupMessageProperties {
             reflect_outgoing: self.reflect_outgoing,
             reflect_sent_update: self.reflect_sent_update,
             delivery_receipts: false,
-        }
-    }
-}
-
-/// Message behaviour overrides that need to be stored.
-#[derive(Clone, Copy, Name)]
-#[cfg_attr(test, derive(PartialEq, Default))]
-pub(crate) struct MessageOverrides {
-    /// Whether delivery receipts should be omitted. If `true`, this overrides the default behaviour.
-    pub(crate) disable_delivery_receipts: bool,
-}
-impl Apply<MessageOverrides> for MessageProperties {
-    fn apply(&mut self, overrides: MessageOverrides) {
-        if overrides.disable_delivery_receipts {
-            self.delivery_receipts = false;
-        }
-    }
-}
-impl Apply<MessageOverrides> for MessageFlags {
-    fn apply(&mut self, overrides: MessageOverrides) {
-        if overrides.disable_delivery_receipts {
-            self.0 |= Self::NO_DELIVERY_RECEIPTS;
-        }
-    }
-}
-impl fmt::Debug for MessageOverrides {
-    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        // Keep this format in sync with [`MessageFlags`]!
-        write!(
-            formatter,
-            "{}({})",
-            Self::NAME,
-            itertools::join(
-                [self.disable_delivery_receipts.then_some("no-receipts")]
-                    .into_iter()
-                    .flatten(),
-                ", ",
-            ),
-        )
-    }
-}
-impl From<MessageFlags> for MessageOverrides {
-    fn from(flags: MessageFlags) -> Self {
-        Self {
-            disable_delivery_receipts: flags.0 & MessageFlags::NO_DELIVERY_RECEIPTS != 0,
         }
     }
 }
@@ -293,7 +261,7 @@ impl From<&LocationMessage> for MessageStateBody {
 }
 
 /// The type of delivery receipt.
-#[derive(Debug, Clone, Copy, strum::FromRepr)]
+#[derive(Debug, Clone, Copy, PartialEq, strum::FromRepr)]
 #[repr(u8)]
 pub(super) enum DeliveryReceiptType {
     /// The referred messages have been received (i.e. it was delivered to the recipient).
@@ -791,7 +759,10 @@ impl IncomingMessage {
     /// Convert to an initial [`MessageState`].
     ///
     /// IMPORTANT: The caller must ensure that the body is the reference to the unpacked body of this message!
-    pub(super) fn to_state<TBody: Into<MessageStateBody>>(&self, body: TBody) -> MessageState {
+    pub(super) fn to_state<TBody>(&self, body: TBody) -> MessageState
+    where
+        TBody: Into<MessageStateBody>,
+    {
         MessageState {
             conversation_id: self.conversation_id(),
             creator_identity: self.sender_identity,
@@ -799,6 +770,7 @@ impl IncomingMessage {
             created_at: self.created_at,
             direction: MessageDirection::Incoming(IncomingMessageDirection {
                 received_at: utc_now_ms(),
+                overrides: self.overrides,
             }),
             read_at: None,
             star_marker: MessageStarMarker::None,
@@ -858,5 +830,217 @@ impl struct_name {
     #[inline]
     pub(super) fn effective_properties(&self) -> MessageProperties {
         self.body.properties().chain_apply(self.overrides)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use assert_matches::assert_matches;
+    use rstest::rstest;
+
+    use super::*;
+    use crate::model::message::{EmojiReaction, MessageStateBodyType};
+
+    const ORIGINAL_MESSAGE_ID: MessageId = MessageId(1);
+    const SECOND_ORIGINAL_MESSAGE_ID: MessageId = MessageId(2);
+
+    fn user_identity() -> ThreemaId {
+        ThreemaId::try_from("0THEUSER").unwrap()
+    }
+
+    fn sender_identity() -> ThreemaId {
+        ThreemaId::try_from("0PORRITO").unwrap()
+    }
+
+    fn conversation_id() -> ConversationId {
+        ConversationId::Contact(sender_identity())
+    }
+
+    #[rstest]
+    fn valid_delivery_receipt(
+        #[values(DeliveryReceiptType::Received, DeliveryReceiptType::Read)]
+        delivery_receipt_type: DeliveryReceiptType,
+    ) {
+        let delivery_receipt = DeliveryReceiptMessage {
+            receipt_type: delivery_receipt_type,
+            message_ids: vec![ORIGINAL_MESSAGE_ID, SECOND_ORIGINAL_MESSAGE_ID],
+        };
+
+        let mut updates = delivery_receipt.to_incoming_state_updates(
+            user_identity(),
+            sender_identity(),
+            utc_now_ms(),
+            conversation_id(),
+            &[
+                MessageStateMetadata {
+                    conversation_id: conversation_id(),
+                    creator_identity: user_identity(),
+                    message_id: ORIGINAL_MESSAGE_ID,
+                    message_type: MessageStateBodyType::Text,
+                },
+                MessageStateMetadata {
+                    conversation_id: conversation_id(),
+                    creator_identity: user_identity(),
+                    message_id: SECOND_ORIGINAL_MESSAGE_ID,
+                    message_type: MessageStateBodyType::PollOpen,
+                },
+            ],
+        );
+
+        // Check that the two are accepted, correct and in the same order.
+        assert_eq!(updates.len(), 2);
+        assert_matches!(updates.pop(), Some(update) => {
+            assert_eq!(update.conversation_id, conversation_id());
+            assert_eq!(update.creator_identity, sender_identity());
+            assert_eq!(update.message_id, SECOND_ORIGINAL_MESSAGE_ID);
+            assert_matches!(update.update, MessageStateBodyUpdate::ContactDeliveryReceipt(receipt) => {
+                assert_eq!(match receipt {
+                    ContactDeliveryUpdate::Delivered(_) => DeliveryReceiptType::Received,
+                    ContactDeliveryUpdate::Read(_) => DeliveryReceiptType::Read
+                }, delivery_receipt_type);
+            });
+        });
+        assert_matches!(updates.pop(), Some(update) => {
+            assert_eq!(update.conversation_id, conversation_id());
+            assert_eq!(update.creator_identity, sender_identity());
+            assert_eq!(update.message_id, ORIGINAL_MESSAGE_ID);
+            assert_matches!(update.update, MessageStateBodyUpdate::ContactDeliveryReceipt(receipt) => {
+                assert_eq!(match receipt {
+                    ContactDeliveryUpdate::Delivered(_) => DeliveryReceiptType::Received,
+                    ContactDeliveryUpdate::Read(_) => DeliveryReceiptType::Read
+                }, delivery_receipt_type);
+            });
+        });
+    }
+
+    #[rstest]
+    #[case::message_id_mismatch(
+        MessageStateMetadata {
+            conversation_id: conversation_id(),
+            creator_identity: sender_identity(),
+            message_id: MessageId(42),
+            message_type: MessageStateBodyType::Text
+        }
+    )]
+    #[case::incoming_contact_message(
+        MessageStateMetadata {
+            conversation_id: conversation_id(),
+            creator_identity: sender_identity(),
+            message_id: ORIGINAL_MESSAGE_ID,
+            message_type: MessageStateBodyType::Text
+        }
+    )]
+    fn invalid_delivery_receipt(#[case] invalid_metadata: MessageStateMetadata) {
+        let delivery_receipt = DeliveryReceiptMessage {
+            receipt_type: DeliveryReceiptType::Read,
+            message_ids: vec![ORIGINAL_MESSAGE_ID],
+        };
+
+        let updates = delivery_receipt.to_incoming_state_updates(
+            user_identity(),
+            sender_identity(),
+            utc_now_ms(),
+            conversation_id(),
+            &[invalid_metadata],
+        );
+
+        // No updates.
+        assert_eq!(updates.len(), 0);
+    }
+
+    #[rstest]
+    fn valid_legacy_reaction(
+        #[values(LegacyReactionType::Acknowledge, LegacyReactionType::Decline)]
+        reaction_type: LegacyReactionType,
+    ) {
+        let legacy_reaction = LegacyReactionMessage {
+            reaction_type,
+            message_ids: vec![ORIGINAL_MESSAGE_ID, SECOND_ORIGINAL_MESSAGE_ID],
+        };
+
+        let mut updates = legacy_reaction.to_incoming_state_updates(
+            user_identity(),
+            sender_identity(),
+            utc_now_ms(),
+            conversation_id(),
+            &[
+                MessageStateMetadata {
+                    conversation_id: conversation_id(),
+                    creator_identity: user_identity(),
+                    message_id: ORIGINAL_MESSAGE_ID,
+                    message_type: MessageStateBodyType::Text,
+                },
+                MessageStateMetadata {
+                    conversation_id: conversation_id(),
+                    creator_identity: user_identity(),
+                    message_id: SECOND_ORIGINAL_MESSAGE_ID,
+                    message_type: MessageStateBodyType::Location,
+                },
+            ],
+        );
+
+        // Check that the two are accepted, correct and in the same order.
+        assert_eq!(updates.len(), 2);
+        assert_matches!(updates.pop(), Some(update) => {
+            assert_eq!(update.conversation_id, conversation_id());
+            assert_eq!(update.creator_identity, sender_identity());
+            assert_eq!(update.message_id, SECOND_ORIGINAL_MESSAGE_ID);
+            assert_matches!(update.update, MessageStateBodyUpdate::Reaction(reaction) => {
+                assert_matches!(reaction.intent, MessageReactionUpdateIntent::Replace);
+                assert_eq!(reaction.emoji.codepoint, EmojiReaction::from(reaction_type).codepoint);
+            });
+        });
+        assert_matches!(updates.pop(), Some(update) => {
+            assert_eq!(update.conversation_id, conversation_id());
+            assert_eq!(update.creator_identity, sender_identity());
+            assert_eq!(update.message_id, ORIGINAL_MESSAGE_ID);
+            assert_matches!(update.update, MessageStateBodyUpdate::Reaction(reaction) => {
+                assert_matches!(reaction.intent, MessageReactionUpdateIntent::Replace);
+                assert_eq!(reaction.emoji.codepoint, EmojiReaction::from(reaction_type).codepoint);
+            });
+        });
+    }
+
+    #[rstest]
+    #[case::message_id_mismatch(
+        MessageStateMetadata {
+            conversation_id: conversation_id(),
+            creator_identity: user_identity(),
+            message_id: MessageId(42), message_type:
+            MessageStateBodyType::Text
+        }
+    )]
+    #[case::incoming_contact_message(
+        MessageStateMetadata {
+            conversation_id: conversation_id(),
+            creator_identity: sender_identity(),
+            message_id: ORIGINAL_MESSAGE_ID,
+            message_type: MessageStateBodyType::Text
+        }
+    )]
+    #[case::not_reactable(
+        MessageStateMetadata {
+            conversation_id: conversation_id(),
+            creator_identity: user_identity(),
+            message_id: ORIGINAL_MESSAGE_ID,
+            message_type: MessageStateBodyType::PollOpen
+        }
+    )]
+    fn invalid_legacy_reaction(#[case] invalid_metadata: MessageStateMetadata) {
+        let legacy_reaction = LegacyReactionMessage {
+            reaction_type: LegacyReactionType::Acknowledge,
+            message_ids: vec![ORIGINAL_MESSAGE_ID],
+        };
+
+        let updates = legacy_reaction.to_incoming_state_updates(
+            user_identity(),
+            sender_identity(),
+            utc_now_ms(),
+            conversation_id(),
+            &[invalid_metadata],
+        );
+
+        // No updates.
+        assert_eq!(updates.len(), 0);
     }
 }

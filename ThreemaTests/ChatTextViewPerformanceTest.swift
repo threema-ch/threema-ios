@@ -273,8 +273,6 @@ extension ChatTextViewPerformanceTest: ChatTextViewDelegate {
     func chatTextViewDidChange(_ textView: ChatTextView) { }
     func checkIfPastedStringIsMedia() -> Bool { false }
     func didEndEditing() { }
-
-    @available(iOS 18.0, *)
     func processAndSendGlyph(_ glyph: NSAdaptiveImageGlyph) { }
 
     func sendText() { }

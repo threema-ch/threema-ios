@@ -272,7 +272,7 @@ private struct LinkedDevicesSection: View {
                         Button(role: .destructive) {
                             remove(device)
                         } label: {
-                            Label(#localize("multi_device_new_linked_device_list_remove_button"), systemImage: "trash")
+                            Label(#localize("Remove"), systemImage: "trash")
                         }
                     }
             }

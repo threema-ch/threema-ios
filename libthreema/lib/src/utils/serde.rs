@@ -12,16 +12,17 @@ pub(crate) mod base64 {
             de::{Error, Visitor},
         };
 
-        pub(crate) fn serialize<S: Serializer, const N: usize>(
-            value: &[u8; N],
-            serializer: S,
-        ) -> Result<S::Ok, S::Error> {
+        pub(crate) fn serialize<S, const N: usize>(value: &[u8; N], serializer: S) -> Result<S::Ok, S::Error>
+        where
+            S: Serializer,
+        {
             BASE64.encode(value).serialize(serializer)
         }
 
-        pub(crate) fn deserialize<'de, D: Deserializer<'de>, const N: usize>(
-            deserializer: D,
-        ) -> Result<[u8; N], D::Error> {
+        pub(crate) fn deserialize<'de, D, const N: usize>(deserializer: D) -> Result<[u8; N], D::Error>
+        where
+            D: Deserializer<'de>,
+        {
             struct Base64Visitor<const N: usize>;
             impl<const N: usize> Visitor<'_> for Base64Visitor<N> {
                 type Value = [u8; N];
@@ -30,7 +31,10 @@ pub(crate) mod base64 {
                     write!(formatter, "a base64 string containing {N} bytes")
                 }
 
-                fn visit_str<E: Error>(self, value: &str) -> Result<Self::Value, E> {
+                fn visit_str<E>(self, value: &str) -> Result<Self::Value, E>
+                where
+                    E: Error,
+                {
                     let encoded = value.as_bytes();
                     let length = BASE64.decode_len(encoded.len()).map_err(Error::custom)?;
                     if length < N || length > N.saturating_add(2) {
@@ -60,11 +64,17 @@ pub(crate) mod base64 {
             de::{Error, Visitor},
         };
 
-        pub(crate) fn serialize<S: Serializer>(value: &[u8], serializer: S) -> Result<S::Ok, S::Error> {
+        pub(crate) fn serialize<S>(value: &[u8], serializer: S) -> Result<S::Ok, S::Error>
+        where
+            S: Serializer,
+        {
             BASE64.encode(value).serialize(serializer)
         }
 
-        pub(crate) fn deserialize<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Vec<u8>, D::Error> {
+        pub(crate) fn deserialize<'de, D>(deserializer: D) -> Result<Vec<u8>, D::Error>
+        where
+            D: Deserializer<'de>,
+        {
             struct Base64Visitor;
             impl Visitor<'_> for Base64Visitor {
                 type Value = Vec<u8>;
@@ -76,7 +86,10 @@ pub(crate) mod base64 {
                     )
                 }
 
-                fn visit_str<E: Error>(self, value: &str) -> Result<Self::Value, E> {
+                fn visit_str<E>(self, value: &str) -> Result<Self::Value, E>
+                where
+                    E: Error,
+                {
                     let encoded = value.as_bytes();
                     BASE64.decode(encoded).map_err(|error| Error::custom(error))
                 }
@@ -92,10 +105,11 @@ pub(crate) mod string {
     pub(crate) mod to_string {
         use serde::{Serialize as _, Serializer};
 
-        pub(crate) fn serialize<S: Serializer, T: ToString>(
-            value: &T,
-            serializer: S,
-        ) -> Result<S::Ok, S::Error> {
+        pub(crate) fn serialize<S, T>(value: &T, serializer: S) -> Result<S::Ok, S::Error>
+        where
+            S: Serializer,
+            T: ToString,
+        {
             value.to_string().serialize(serializer)
         }
     }
@@ -109,10 +123,11 @@ pub(crate) mod string {
             de::{Error, Visitor},
         };
 
-        pub(crate) fn deserialize<'de, D: Deserializer<'de>, T>(deserializer: D) -> Result<T, D::Error>
+        pub(crate) fn deserialize<'de, D, T>(deserializer: D) -> Result<T, D::Error>
         where
             T: FromStr,
             T::Err: fmt::Display,
+            D: Deserializer<'de>,
         {
             struct TVisitor<TI>(PhantomData<TI>);
             impl<TI: FromStr> Visitor<'_> for TVisitor<TI>
@@ -125,7 +140,10 @@ pub(crate) mod string {
                     write!(formatter, "valid matching string")
                 }
 
-                fn visit_str<E: Error>(self, value: &str) -> Result<Self::Value, E> {
+                fn visit_str<E>(self, value: &str) -> Result<Self::Value, E>
+                where
+                    E: Error,
+                {
                     value.parse::<Self::Value>().map_err(Error::custom)
                 }
             }
@@ -143,9 +161,10 @@ pub(crate) mod string {
             de::{Error, Visitor},
         };
 
-        pub(crate) fn deserialize<'de, D: Deserializer<'de>>(
-            deserializer: D,
-        ) -> Result<Option<String>, D::Error> {
+        pub(crate) fn deserialize<'de, D>(deserializer: D) -> Result<Option<String>, D::Error>
+        where
+            D: Deserializer<'de>,
+        {
             struct StringVisitor;
             impl Visitor<'_> for StringVisitor {
                 type Value = Option<String>;
@@ -154,11 +173,17 @@ pub(crate) mod string {
                     write!(formatter, "a string")
                 }
 
-                fn visit_string<E: Error>(self, value: String) -> Result<Self::Value, E> {
+                fn visit_string<E>(self, value: String) -> Result<Self::Value, E>
+                where
+                    E: Error,
+                {
                     Ok(if value.is_empty() { None } else { Some(value) })
                 }
 
-                fn visit_str<E: Error>(self, value: &str) -> Result<Self::Value, E> {
+                fn visit_str<E>(self, value: &str) -> Result<Self::Value, E>
+                where
+                    E: Error,
+                {
                     Ok(if value.is_empty() {
                         None
                     } else {

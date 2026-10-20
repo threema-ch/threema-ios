@@ -79,7 +79,10 @@ pub enum Delta<T> {
 impl<T> Delta<T> {
     /// Maps a `Delta<T>` to `Delta<U>` by applying a function to a contained value (if `Update`) or returns
     /// `Unchanged` or `Remove` respectively.
-    pub(crate) fn map<U, F: FnOnce(T) -> U>(self, transform_fn: F) -> Delta<U> {
+    pub(crate) fn map<U, F>(self, transform_fn: F) -> Delta<U>
+    where
+        F: FnOnce(T) -> U,
+    {
         match self {
             Self::Unchanged => Delta::Unchanged,
             Self::Update(value) => Delta::Update(transform_fn(value)),

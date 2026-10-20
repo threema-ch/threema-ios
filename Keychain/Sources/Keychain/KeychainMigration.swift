@@ -95,14 +95,19 @@ enum KeychainMigration {
 
     /// Migrate attribute `kSecAttrAccessible` to `kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly` of Keychain item
     /// Identity.
+    ///
+    /// An identity that is already `kSecAttrAccessibleAfterFirstUnlock` keeps it, because that is the user's choice of
+    /// Easy Device Switch. This migration runs again if all migrations are re-run (e.g. after a downgrade).
     static func migrateToVersion0(using keychainProvider: KeychainProviding = KeychainProvider()) throws {
         guard let result = try keychainProvider.load(.identity(.v0)) else {
             throw KeychainMigrationError.itemNotFound
         }
 
+        let thisDeviceOnly = result.accessibility != kSecAttrAccessibleAfterFirstUnlock
+
         try keychainProvider.store(
             searchItem: KeychainItem.identity(.v0),
-            .identity(.v0),
+            .identity(.v0, thisDeviceOnly: thisDeviceOnly),
             account: result.account,
             password: result.password,
             generic: result.generic,

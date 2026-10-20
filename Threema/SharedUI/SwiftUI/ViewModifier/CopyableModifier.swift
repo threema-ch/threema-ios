@@ -51,7 +51,7 @@ struct CopyableModifier: UIViewRepresentable {
             menuFor configuration: UIEditMenuConfiguration,
             suggestedActions: [UIMenuElement]
         ) -> UIMenu? {
-            let copy = UIAction(title: #localize("copy"), image: UIImage(systemName: "doc.on.doc")) { [text] _ in
+            let copy = UIAction(title: #localize("Copy"), image: UIImage(systemName: "doc.on.doc")) { [text] _ in
                 UIPasteboard.general.string = text
             }
             return UIMenu(children: [copy])

@@ -39,12 +39,13 @@ struct OnPremServerInfoProviderTests {
     @Test func domains() async throws {
         let (configDownloaderMock, configVerifierMock, serverInfoProvider) = makeSUT()
 
-        await withCheckedContinuation { continuation in
-            serverInfoProvider.domains { _, _ in
-                continuation.resume()
+        let domainsCount = await withCheckedContinuation { continuation in
+            serverInfoProvider.domains { domains, _ in
+                continuation.resume(returning: domains?.count)
             }
         }
 
+        #expect(domainsCount == 4)
         #expect(configDownloaderMock.downloadDataCalls.isEmpty)
         #expect(configVerifierMock.verifyCalls.count == 1)
     }

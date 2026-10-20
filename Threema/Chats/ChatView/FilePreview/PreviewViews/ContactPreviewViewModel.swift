@@ -29,12 +29,7 @@ final class ContactPreviewViewModel: ObservableObject {
     func checkContactAccess() {
         let status = authorizationStatus(.contacts)
 
-        if #available(iOS 18.0, *) {
-            isAuthorized = status == .authorized || status == .limited
-        }
-        else {
-            isAuthorized = status == .authorized
-        }
+        isAuthorized = status == .authorized || status == .limited
 
         guard !isAuthorized else {
             return

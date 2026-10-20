@@ -319,7 +319,7 @@ enum ChatViewMessageActionsProvider {
     private static func copyAction(handler: @escaping DefaultHandler) -> MessageAction {
         // We do not check for MDM values here because we allow copy on text messages but not on file messages
         MessageAction(
-            title: #localize("copy"),
+            title: #localize("Copy"),
             image: UIImage(systemName: "doc.on.doc"),
             handler: handler
         )

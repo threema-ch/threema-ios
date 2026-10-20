@@ -19,21 +19,21 @@ pub trait ConversationProvider {
     /// 1. For each `message` of `messages`:
     ///    1. If `message` refers to a 1:1 contact conversation:
     ///       1. Look up the referred contact and let `contact` be the result.¹
-    ///       2. If `contact` is not defined, return [`ProviderError::InvalidState`].
+    ///       2. If `contact` is not defined, return [`ProviderError::ContractViolation`].
     ///       3. If `contact` does not have acquaintance level _direct_, return
-    ///          [`ProviderError::InvalidState`].
+    ///          [`ProviderError::ContractViolation`].
     ///    2. If `message` refers to a distribution list conversation and the referred distribution list does
-    ///       not exist, return [`ProviderError::InvalidState`].
+    ///       not exist, return [`ProviderError::ContractViolation`].
     ///    3. If `message` refers to a group conversation and the referred group does not exist, return
-    ///       [`ProviderError::InvalidState`].
+    ///       [`ProviderError::ContractViolation`].
     ///    4. If `message.message_id` is already present in the referred conversation (i.e. the message has
-    ///       already been added at some point), return [`ProviderError::InvalidState`].²
+    ///       already been added at some point), return [`ProviderError::ContractViolation`].²
     /// 2. Add each message of `messages` to the referred conversation³.
     ///
     /// ¹: This must consider contacts with any acquaintance level, including _deleted_.
     ///
-    /// ²: Messages are not acknowledged from the server until they are fully processed, so this can happen
-    /// even under normal conditions.
+    /// ²: The caller is responsible to discard any duplicated message IDs prior to calling this
+    /// method.
     ///
     /// ³: This implicitly creates a conversation if it does not already exist.
     ///
@@ -45,7 +45,7 @@ pub trait ConversationProvider {
 
     /// Set the typing indicator for a specific 1:1 conversation.
     ///
-    /// 1. If the referred contact does not exist, return [`ProviderError::InvalidState`].¹
+    /// 1. If the referred contact does not exist, return [`ProviderError::ContractViolation`].¹
     /// 2. If `is_typing` is `true`, start a timer to display that the sender is typing in the associated
     ///    conversation for the next 15s.
     /// 3. If `is_typing` is `false`, cancel any running timer displaying that the sender is typing in the
@@ -67,13 +67,13 @@ pub trait ConversationProvider {
     ///
     /// 1. For each `update` of `updates`:
     ///    1. If `update` refers to a 1:1 contact conversation and the referred contact does not exist, return
-    ///       [`ProviderError::InvalidState`].¹
+    ///       [`ProviderError::ContractViolation`].¹
     ///    2. If `update` refers to a distribution list conversation and the referred distribution list does
-    ///       not exist, return [`ProviderError::InvalidState`].
+    ///       not exist, return [`ProviderError::ContractViolation`].
     ///    3. If `update` refers to a group conversation and the referred group does not exist, return
-    ///       [`ProviderError::InvalidState`].
+    ///       [`ProviderError::ContractViolation`].
     ///    4. If the message referred to by `update` does not exist in the referred conversation, return
-    ///       [`ProviderError::InvalidState`].
+    ///       [`ProviderError::ContractViolation`].
     /// 2. For each `update` of `updates`:
     ///    1. Look up the message referred to by `update` in the referred conversation and let `message` be
     ///       the result.
@@ -120,11 +120,11 @@ pub trait ConversationProvider {
     /// Get message metadata for specific messages.
     ///
     /// 1. If `conversation_id` refers to a 1:1 contact conversation and the referred contact does not exist,
-    ///    return [`ProviderError::InvalidState`].¹
+    ///    return [`ProviderError::ContractViolation`].¹
     /// 2. If `conversation_id` refers to a distribution list conversation and the referred distribution list
-    ///    does not exist, return [`ProviderError::InvalidState`].
+    ///    does not exist, return [`ProviderError::ContractViolation`].
     /// 3. If `conversation_id` refers to a group conversation and the referred group does not exist, return
-    ///    [`ProviderError::InvalidState`].
+    ///    [`ProviderError::ContractViolation`].
     /// 4. Let `metadata` be an empty list.
     /// 5. For each `message-id` of `message_ids`:
     ///    1. Look up a message by `message-id` in the conversation with `conversation_id`.

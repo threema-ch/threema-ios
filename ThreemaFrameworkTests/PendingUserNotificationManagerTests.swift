@@ -568,4 +568,143 @@ final class PendingUserNotificationManagerTests: XCTestCase {
         let unarchivedUnwrapped2 = try XCTUnwrap(unarchived2)
         XCTAssertEqual(unarchivedUnwrapped2.first, pendingNotification1.key)
     }
+
+    // MARK: - Processed user notifications limit
+
+    func testAddAsProcessedKeepsNewest300Keys() throws {
+        let pendingManager = makePendingManager()
+        let keys = (0..<301).map { "KEY\($0)" }
+
+        for key in keys {
+            pendingManager.addAsProcessed(pendingUserNotification: PendingUserNotification(key: key))
+        }
+
+        XCTAssertEqual(try savedProcessedKeys(), Array(keys.dropFirst()))
+    }
+
+    func testAddAsProcessedKeepsAllKeysAtLimit() throws {
+        let pendingManager = makePendingManager()
+        let keys = (0..<300).map { "KEY\($0)" }
+
+        for key in keys {
+            pendingManager.addAsProcessed(pendingUserNotification: PendingUserNotification(key: key))
+        }
+
+        XCTAssertEqual(try savedProcessedKeys(), keys)
+    }
+
+    func testAddAsProcessedDoesNotRewriteFileForKnownKey() throws {
+        let pendingManager = makePendingManager()
+        let pendingUserNotification = PendingUserNotification(key: "KEY0")
+        let fileURL = URL(fileURLWithPath: PendingUserNotificationManager.pathProcessedUserNotifications)
+
+        pendingManager.addAsProcessed(pendingUserNotification: pendingUserNotification)
+        XCTAssertEqual(try savedProcessedKeys(), ["KEY0"])
+
+        // Any write would recreate the file
+        FileUtility.shared.deleteIfExists(at: fileURL)
+        pendingManager.addAsProcessed(pendingUserNotification: pendingUserNotification)
+
+        XCTAssertFalse(FileUtility.shared.fileExists(atPath: fileURL.path))
+    }
+
+    func testLoadAllTrimsOversizedProcessedFile() throws {
+        let keys = (0..<350).map { "KEY\($0)" }
+        let archivedData = try NSKeyedArchiver.archivedData(withRootObject: keys, requiringSecureCoding: true)
+        FileUtility.shared.write(
+            contents: archivedData,
+            to: URL(fileURLWithPath: PendingUserNotificationManager.pathProcessedUserNotifications)
+        )
+
+        _ = makePendingManager()
+
+        XCTAssertEqual(try savedProcessedKeys(), Array(keys.suffix(300)))
+    }
+
+    // MARK: - Processed user notifications content
+
+    func testAddAsProcessedSkipsMessagesThatNeverNotify() throws {
+        let pendingManager = makePendingManager()
+        let messages: [AbstractMessage] = [
+            TypingIndicatorMessage(),
+            DeliveryReceiptMessage(),
+            ContactRequestPhotoMessage(),
+        ]
+
+        for (index, message) in messages.enumerated() {
+            let pendingUserNotification = PendingUserNotification(key: "KEY\(index)")
+            pendingUserNotification.abstractMessage = message
+            pendingManager.addAsProcessed(pendingUserNotification: pendingUserNotification)
+        }
+
+        XCTAssertFalse(
+            FileUtility.shared.fileExists(atPath: PendingUserNotificationManager.pathProcessedUserNotifications)
+        )
+    }
+
+    func testAddAsProcessedRecordsMessagesThatNotify() throws {
+        let pendingManager = makePendingManager()
+        let messages: [AbstractMessage] = [
+            BoxTextMessage(),
+            ReactionMessage(),
+            GroupReactionMessage(),
+        ]
+
+        for (index, message) in messages.enumerated() {
+            let pendingUserNotification = PendingUserNotification(key: "KEY\(index)")
+            pendingUserNotification.abstractMessage = message
+            pendingManager.addAsProcessed(pendingUserNotification: pendingUserNotification)
+        }
+
+        XCTAssertEqual(try savedProcessedKeys(), ["KEY0", "KEY1", "KEY2"])
+    }
+
+    func testAddAsProcessedRemovesPendingEntry() throws {
+        let messages: [AbstractMessage] = [BoxTextMessage(), DeliveryReceiptMessage()]
+
+        for message in messages {
+            message.messageID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.messageIDLength)!
+            message.fromIdentity = "SENDER01"
+
+            let pendingManager = makePendingManager()
+            let pendingUserNotification = try XCTUnwrap(
+                pendingManager.pendingUserNotification(for: message, stage: .abstract)
+            )
+            XCTAssertTrue(
+                FileUtility.shared.fileExists(atPath: PendingUserNotificationManager.pathPendingUserNotifications),
+                "\(type(of: message)): pending entry was not saved"
+            )
+
+            pendingManager.addAsProcessed(pendingUserNotification: pendingUserNotification)
+            // The removal runs async on `pendingQueue`
+            PendingUserNotificationManager.pendingQueue.sync { }
+
+            // The file is deleted when the last pending entry is removed
+            XCTAssertFalse(
+                FileUtility.shared.fileExists(atPath: PendingUserNotificationManager.pathPendingUserNotifications),
+                "\(type(of: message)): pending entry was not removed"
+            )
+        }
+    }
+
+    // MARK: - Helpers
+
+    private func makePendingManager() -> PendingUserNotificationManager {
+        PendingUserNotificationManager(
+            userNotificationManager: UserNotificationManagerMock(),
+            userNotificationCenterManager: UserNotificationCenterManagerMock(),
+            pushSettingManager: PushSettingManagerMock(),
+            entityManager: EntityManager(databaseContext: dbMainCnx, isRemoteSecretEnabled: false)
+        )
+    }
+
+    private func savedProcessedKeys() throws -> [String] {
+        let data = try XCTUnwrap(
+            FileUtility.shared.read(
+                fileURL: URL(fileURLWithPath: PendingUserNotificationManager.pathProcessedUserNotifications)
+            )
+        )
+        let keys = try NSKeyedUnarchiver.unarchivedObject(ofClasses: [NSArray.self, NSString.self], from: data)
+        return try XCTUnwrap(keys as? [String])
+    }
 }

@@ -1,6 +1,7 @@
 //! Task structures to monitor an existing remote secret by initially fetching it and then monitoring its
 //! availability according to the protocol.
 use core::{mem, ops::RangeInclusive};
+use std::sync::PoisonError;
 
 use const_format::formatcp;
 use educe::Educe;
@@ -22,6 +23,7 @@ use crate::{
     },
     utils::{
         debug::Name as _,
+        serde::string,
         time::{Duration, Instant},
     },
 };
@@ -37,6 +39,15 @@ const N_FAILED_ATTEMPTS_MAX_WHILE_LOCKED: u16 = 5;
 
 // Valid refresh interval range: 10s up to 24h.
 const VALID_CHECK_INTERVAL_RANGE_S: RangeInclusive<u32> = 10..=86400;
+
+/// Cause of an internal error.
+#[derive(Clone, Debug, thiserror::Error)]
+#[cfg_attr(test, derive(PartialEq))]
+pub enum RemoteSecretMonitorInternalErrorCause {
+    /// Unable to obtain a lock.
+    #[error("Obtaining a lock failed")]
+    LockPoisoned,
+}
 
 /// Most recent cause for a remote secret monitoring timeout.
 #[derive(Clone, Debug, thiserror::Error)]
@@ -108,14 +119,19 @@ impl From<HttpsEndpointError> for TimeoutCause {
 )]
 #[cfg_attr(test, derive(PartialEq))]
 pub enum RemoteSecretMonitorError {
-    /// Invalid parameter provided by foreign code.
+    /// Some provided parameter could not be converted into the required internal representation.
     #[cfg(feature = "uniffi")]
-    #[error("Invalid parameter: {0}")]
-    InvalidParameter(&'static str),
+    #[error("Conversion error: {0}")]
+    ConversionError(String),
 
-    /// Invalid state for the requested operation.
-    #[error("Invalid state: {0}")]
-    InvalidState(&'static str),
+    /// A contract violation occurred.
+    #[error("Contract violation: {0}")]
+    ContractViolation(&'static str),
+
+    /// An internal error happened.
+    #[cfg_attr(feature = "wasm", serde(serialize_with = "string::to_string::serialize"))]
+    #[error("Internal error: {0}")]
+    InternalError(#[from] RemoteSecretMonitorInternalErrorCause),
 
     /// A server misbehaved in an operation considered infallible.
     #[error("Server error: {0}")]
@@ -136,6 +152,17 @@ pub enum RemoteSecretMonitorError {
     /// A remote secret was found but it does not match the one we were expecting.
     #[error("Remote secret differs from the one we expect")]
     Mismatch,
+}
+#[cfg(feature = "uniffi")]
+impl From<crate::bindings::uniffi::ConversionError> for RemoteSecretMonitorError {
+    fn from(error: crate::bindings::uniffi::ConversionError) -> Self {
+        Self::ConversionError(error.to_string())
+    }
+}
+impl<T> From<PoisonError<T>> for RemoteSecretMonitorError {
+    fn from(_: PoisonError<T>) -> Self {
+        Self::InternalError(RemoteSecretMonitorInternalErrorCause::LockPoisoned)
+    }
 }
 
 /// Verifier for a Remote Secret.
@@ -292,7 +319,7 @@ impl State {
     ) -> Result<(Self, RemoteSecretMonitorInstruction), RemoteSecretMonitorError> {
         // Ensure the caller provided the response.
         let Some(response) = state.response else {
-            return Err(RemoteSecretMonitorError::InvalidState(formatcp!(
+            return Err(RemoteSecretMonitorError::ContractViolation(formatcp!(
                 "{} result was not provided for '{}' state",
                 RemoteSecretMonitorResponse::NAME,
                 State::VERIFY,
@@ -499,7 +526,7 @@ impl RemoteSecretMonitorProtocol {
     pub fn poll(&mut self) -> Result<RemoteSecretMonitorInstruction, RemoteSecretMonitorError> {
         let result = match mem::replace(
             &mut self.state,
-            State::Error(RemoteSecretMonitorError::InvalidState(formatcp!(
+            State::Error(RemoteSecretMonitorError::ContractViolation(formatcp!(
                 "{} in a transitional state",
                 RemoteSecretMonitorProtocol::NAME
             ))),
@@ -537,7 +564,7 @@ impl RemoteSecretMonitorProtocol {
                 let _ = state.response.insert(response);
                 Ok(())
             },
-            _ => Err(RemoteSecretMonitorError::InvalidState(formatcp!(
+            _ => Err(RemoteSecretMonitorError::ContractViolation(formatcp!(
                 "Must be in '{}' state",
                 State::VERIFY,
             ))),
@@ -621,7 +648,7 @@ mod tests {
         };
 
         let result = State::poll_verify(&context, state);
-        assert_matches!(result, Err(RemoteSecretMonitorError::InvalidState(_)));
+        assert_matches!(result, Err(RemoteSecretMonitorError::ContractViolation(_)));
     }
 
     #[apply(monitor_context_template)]
@@ -929,7 +956,7 @@ mod tests {
         let result = protocol.response(RemoteSecretMonitorResponse {
             result: Err(crate::https::HttpsError::Timeout("isso".to_owned())),
         });
-        assert_matches!(result, Err(RemoteSecretMonitorError::InvalidState(_)));
+        assert_matches!(result, Err(RemoteSecretMonitorError::ContractViolation(_)));
     }
 
     #[apply(monitor_context_template)]

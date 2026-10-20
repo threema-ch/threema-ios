@@ -149,7 +149,10 @@ static URL_REGEX: LazyLock<Regex> = LazyLock::new(|| {
 static TEMPLATE_REGEX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"\{(.*?)\}").expect("Template regex compilation failed"));
 
-fn map_placeholders<F: Fn(&'_ str) -> Option<String>>(string: &str, map_fn: F) -> String {
+fn map_placeholders<F>(string: &str, map_fn: F) -> String
+where
+    F: Fn(&'_ str) -> Option<String>,
+{
     TEMPLATE_REGEX
         .replace_all(string, |captures: &Captures<'_>| {
             let key = captures
@@ -198,7 +201,10 @@ impl Url {
     }
 
     #[inline]
-    fn map_placeholders<F: Fn(&'_ str) -> Option<String>>(&self, map_fn: F) -> String {
+    fn map_placeholders<F>(&self, map_fn: F) -> String
+    where
+        F: Fn(&'_ str) -> Option<String>,
+    {
         map_placeholders(&self.0, map_fn)
     }
 }
@@ -228,7 +234,10 @@ impl BaseUrl {
     }
 
     #[inline]
-    fn map_placeholders<F: Fn(&'_ str) -> Option<String>>(&self, map_fn: F) -> String {
+    fn map_placeholders<F>(&self, map_fn: F) -> String
+    where
+        F: Fn(&'_ str) -> Option<String>,
+    {
         self.0.map_placeholders(map_fn)
     }
 }
@@ -292,7 +301,10 @@ impl<'de> Deserialize<'de> for url_type {
                 write!(formatter, "a base URL string")
             }
 
-            fn visit_string<E: serde::de::Error>(self, url: String) -> Result<Self::Value, E> {
+            fn visit_string<E>(self, url: String) -> Result<Self::Value, E>
+            where
+                E: serde::de::Error,
+            {
                 Self::Value::try_from(if url.ends_with('/') {
                     url
                 } else {
@@ -301,7 +313,10 @@ impl<'de> Deserialize<'de> for url_type {
                 .map_err(serde::de::Error::custom)
             }
 
-            fn visit_str<E: serde::de::Error>(self, url: &str) -> Result<Self::Value, E> {
+            fn visit_str<E>(self, url: &str) -> Result<Self::Value, E>
+            where
+                E: serde::de::Error,
+            {
                 Self::visit_string(self, url.to_owned())
             }
         }

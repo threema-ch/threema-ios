@@ -243,16 +243,16 @@ message EssentialData {
     // The device cookie used by the device group for the Threema ID (16 bytes)
     bytes csp_device_cookie = 3;
 
-    // The CSP server group associated to the Threema ID (1 byte)
+    // The CSP server group associated to the Threema ID ([a-zA-Z0-9\-]+)
     string csp_server_group = 4;
   }
   IdentityData identity_data = 2;
 
   // Threema Work credentials
   //
-  // Shall not be present in the _Consumer_ flavour.
+  // Shall not be present in the _Consumer_ or _Green_ flavour.
   //
-  // Required in the _Work_ flavour.
+  // Required in the _Work_, _Blue_ or _OnPrem_ flavour.
   d2d_sync.ThreemaWorkCredentials work_credentials = 12;
 
   // Device group data
@@ -270,9 +270,9 @@ message EssentialData {
 
   // MDM parameters
   //
-  // Shall not be present in the _Consumer_ flavour.
+  // Shall not be present in the _Consumer_ or _Green_ flavour.
   //
-  // Optional in the _Work_ flavour.
+  // Optional in the _Work_, _Blue_ or _OnPrem_ flavour.
   //
   // [//]: # "TODO(SE-307): Make this required for Threema Work!"
   d2d_sync.MdmParameters mdm_parameters = 6;

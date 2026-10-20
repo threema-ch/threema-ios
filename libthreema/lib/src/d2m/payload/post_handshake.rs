@@ -428,7 +428,7 @@ impl TryFrom<BeginTransaction> for protobuf::d2m::BeginTransaction {
         Ok(Self {
             encrypted_scope,
             ttl: ttl.unwrap_or_default().as_secs().try_into().map_err(|_| {
-                D2mProtocolError::InvalidParameter("Transaction TTL in seconds must fit a u32")
+                D2mProtocolError::ConversionError("Transaction TTL in seconds must fit a u32")
             })?,
         })
     }
@@ -569,7 +569,10 @@ impl PayloadEncoder for OutgoingPayload {
         }
     }
 
-    fn encode_into<TWriter: ByteWriter>(self, writer: &mut TWriter) -> Result<(), D2mProtocolError> {
+    fn encode_into<TWriter>(self, writer: &mut TWriter) -> Result<(), D2mProtocolError>
+    where
+        TWriter: ByteWriter,
+    {
         let name = self.variant_name();
         match self {
             Self::Proxy(data) => writer.write(&data).map_err(|error| {

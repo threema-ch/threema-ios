@@ -18,8 +18,7 @@ use crate::common::HashedNonce;
     tsify(from_wasm_abi)
 )]
 pub enum ProviderError {
-    /// Some provided parameter was invalid, meaning that it could not be converted into the required internal
-    /// representation.
+    /// Some provided parameter could not be converted into the required internal representation.
     ///
     /// This error may be returned by both libthreema and apps and is intended for simple conversion errors
     /// where parameter data doesn't conform to the defined standard.
@@ -29,10 +28,10 @@ pub enum ProviderError {
     /// - A [`u16`] was expected but the provided input is larger than `65535`.
     /// - When a Threema ID is expected but the string violates the definition of a Threema ID.
     /// - When a 32 byte sequence is expected but a byte sequence with a different length was provided.
-    #[error("Invalid parameter: {0}")]
-    InvalidParameter(String),
+    #[error("Conversion error: {0}")]
+    ConversionError(String),
 
-    /// The internal state conflicts with the requested action.
+    /// An API contract was violated.
     ///
     /// This error may be returned by both libthreema and apps and is intended to be used for any API contract
     /// violations that go beyond simple conversion errors.
@@ -41,8 +40,8 @@ pub enum ProviderError {
     ///
     /// - A task state machine requires a specific input variant but receives another variant.
     /// - A distribution list is being added where one of the members is an unknown contact.
-    #[error("Invalid state: {0}")]
-    InvalidState(String),
+    #[error("Contract violation: {0}")]
+    ContractViolation(String),
 
     /// A foreign function considered infallible returned an error.
     ///
@@ -50,18 +49,18 @@ pub enum ProviderError {
     /// boundaries. It should not be used for any other case!
     #[cfg(any(test, feature = "uniffi", feature = "cli"))]
     #[error("Unexpected error from foreign function: {0}")]
-    Foreign(String),
+    ForeignFunctionFailed(String),
 }
 #[cfg(feature = "uniffi")]
 impl From<uniffi::UnexpectedUniFFICallbackError> for ProviderError {
     fn from(error: uniffi::UnexpectedUniFFICallbackError) -> Self {
-        Self::Foreign(error.reason)
+        Self::ForeignFunctionFailed(error.reason)
     }
 }
 #[cfg(feature = "uniffi")]
 impl From<crate::bindings::uniffi::ConversionError> for ProviderError {
     fn from(error: crate::bindings::uniffi::ConversionError) -> Self {
-        Self::InvalidParameter(error.to_string())
+        Self::ConversionError(error.to_string())
     }
 }
 

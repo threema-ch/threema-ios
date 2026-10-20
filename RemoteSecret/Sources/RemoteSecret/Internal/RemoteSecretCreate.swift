@@ -69,9 +69,9 @@ final class RemoteSecretCreate: RemoteSecretCreateProtocol {
             )
             return (remoteSecretAuthenticationToken, remoteSecretIdentityHash)
         }
-        catch let RemoteSecretSetupError.InvalidParameter(message: message) {
-            DDLogError("RSHID creation failed with invalid parameters: \(message)")
-            throw RemoteSecretManagerError.invalidParameter
+        catch let RemoteSecretSetupError.ConversionError(message: message) {
+            DDLogError("RSHID creation failed with conversion error: \(message)")
+            throw RemoteSecretManagerError.conversionError
         }
         catch {
             DDLogError("Unexpected error from libthreema: \(error)")
@@ -90,15 +90,19 @@ final class RemoteSecretCreate: RemoteSecretCreateProtocol {
             do {
                 return try await runRemoteSecretCreateTask(context)
             }
-            catch let RemoteSecretSetupError.InvalidParameter(message: message) {
-                DDLogError("Remote secret creation failed with invalid parameters: \(message)")
+            catch let RemoteSecretSetupError.ConversionError(message: message) {
+                DDLogError("Remote secret creation failed with conversion error: \(message)")
                 // Here it doesn't make sense to retry after 10s
-                throw RemoteSecretManagerError.invalidParameter
+                throw RemoteSecretManagerError.conversionError
             }
-            catch let RemoteSecretSetupError.InvalidState(message: message) {
-                DDLogError("Remote secret creation failed with an invalid state: \(message)")
-                try await waitAndRetryIfNeeded(error: .invalidState)
+            catch let RemoteSecretSetupError.ContractViolation(message: message) {
+                DDLogError("Remote secret creation failed with an contract violation: \(message)")
+                try await waitAndRetryIfNeeded(error: .contractViolation)
                 // The while loop will try to run it again if it didn't throw...
+            }
+            catch let RemoteSecretSetupError.InternalError(message: message) {
+                DDLogError("Remote secret creation failed because of an internal error: \(message)")
+                throw RemoteSecretManagerError.internalError
             }
             catch let RemoteSecretSetupError.NetworkError(message: message) {
                 DDLogError("Remote secret creation failed with a network error: \(message)")

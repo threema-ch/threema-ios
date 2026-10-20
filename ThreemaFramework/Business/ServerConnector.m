@@ -15,7 +15,6 @@
 #import "BundleUtil.h"
 #import "AppGroup.h"
 #import "LicenseStore.h"
-#import "PushPayloadDecryptor.h"
 @import Keychain;
 
 #ifdef DEBUG
@@ -1302,6 +1301,12 @@ struct pktExtension {
             return;
         }
 
+        NSData *pushEncryptionKey = [KeychainManager loadPushNotificationEncryptionKeyObjC];
+        if (pushEncryptionKey == nil) {
+            DDLogError(@"Cannot send push notification token (apple mc), because the push encryption key is missing");
+            return;
+        }
+
         DDLogInfo(@"Sending push notification token (apple mc)");
         
 #ifdef DEBUG
@@ -1315,7 +1320,7 @@ struct pktExtension {
         [payloadData appendData:[@"|" dataUsingEncoding:NSUTF8StringEncoding]];
         [payloadData appendData:[[BundleUtil threemaAppIdentifier] dataUsingEncoding:NSASCIIStringEncoding]];
         [payloadData appendData:[@"|" dataUsingEncoding:NSUTF8StringEncoding]];
-        [payloadData appendData:[PushPayloadDecryptor pushEncryptionKey]];
+        [payloadData appendData:pushEncryptionKey];
         [self sendPayloadWithType:PLTYPE_PUSH_NOTIFICATION_TOKEN data:payloadData];
     });
 }

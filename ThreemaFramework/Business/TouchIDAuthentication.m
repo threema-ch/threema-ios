@@ -13,9 +13,12 @@
 @implementation TouchIDAuthentication
 
 + (void)tryTouchIDAuthenticationCallback:(void(^)(BOOL success, NSError *error, NSData * data))callback {
-    if (![[KKPasscodeLock sharedLock] isTouchIdOn])
+    if (![[KKPasscodeLock sharedLock] isTouchIdOn]) {
+        // The callback must always run, otherwise awaiting callers are suspended forever
+        callback(NO, [NSError errorWithDomain:LAErrorDomain code:LAErrorBiometryNotAvailable userInfo:nil], nil);
         return;
-    
+    }
+
     LAContext *context = [LAContext new];
     NSError *error;
     if ([context canEvaluatePolicy:LAPolicyDeviceOwnerAuthenticationWithBiometrics error:&error]) {
@@ -55,8 +58,24 @@
         ];
     }
     
-    if (error) {
+    else {
         DDLogError(@"Touch ID evaluation error: %@", error);
+        callback(NO, error ?: [NSError errorWithDomain:LAErrorDomain code:LAErrorBiometryNotAvailable userInfo:nil], nil);
+    }
+}
+
++ (BOOL)requiresPasscodeAfterError:(NSError *)error {
+    if (![error.domain isEqualToString:LAErrorDomain]) {
+        return NO;
+    }
+
+    switch (error.code) {
+        case LAErrorUserFallback:
+        case LAErrorAuthenticationFailed:
+        case LAErrorBiometryLockout:
+            return YES;
+        default:
+            return NO;
     }
 }
 

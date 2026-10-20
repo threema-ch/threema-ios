@@ -16,6 +16,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 
 NSString * const kFeatureDistributionListsEnabled = @"FEATURE_DISTRIBUTION_LISTS_ENABLED";
 NSString * const kFeatureBackups2Enabled = @"FEATURE_BACKUPS_2_ENABLED";
+NSString * const kLocalBackupDebugRecoveryKeyEnabled = @"FEATURE_BACKUPS_2_DEBUG_RECOVERY_KEY_ENABLED";
 NSString * const kPreferenceInterfaceStyleKey = @"PREFERENCE_INTERFACE_STYLE";
 NSString * const kPreferenceAllowScreenshotKey = @"AllowScreenshot";
 
@@ -133,6 +134,7 @@ typedef NS_ENUM(NSInteger, ThreemaAudioMessagePlaySpeed) {
 @synthesize ipcSecretPrefix;
 @synthesize distributionListsEnabled;
 @synthesize backups2Enabled;
+@synthesize localBackupDebugRecoveryKeyEnabled;
 
 @synthesize didShowIdentityThisDeviceOnly;
 
@@ -269,6 +271,7 @@ static UserSettings *instance;
                                         [NSNumber numberWithUnsignedInteger:[TargetManagerObjC isBusinessApp] ? WallpaperTypeEmpty : WallpaperTypeThreema], @"WallpaperType",
                                         [NSNumber numberWithBool:NO], kFeatureDistributionListsEnabled,
                                         [NSNumber numberWithBool:NO], kFeatureBackups2Enabled,
+                                        [NSNumber numberWithBool:NO], kLocalBackupDebugRecoveryKeyEnabled,
                                         [NSNumber numberWithInteger: [TargetManagerObjC isBusinessApp] ? UserInterfacePreferenceDark : UserInterfacePreferenceSystem], kPreferenceInterfaceStyleKey, // Default Dark mode for Business App
                                      nil];
                                      //Keys `EvaluatedPolicyDomainStateApp` and `EvaluatedPolicyDomainStateShareExtension` are intentionally not set, since we need them to be `nil` the first time.
@@ -412,17 +415,27 @@ static UserSettings *instance;
         [defaults removeObjectForKey:@"NewNavigationEnabled"];
     }
 
-    /// Feature flags are stored in the Developer Settings. A launch argument in the scheme is in the
-    /// argument domain, which is searched first, and thus overrides the stored value for that launch.
     distributionListsEnabled = [defaults boolForKey:kFeatureDistributionListsEnabled];
-    backups2Enabled = [defaults boolForKey:kFeatureBackups2Enabled];
 
-    if ([ThreemaEnvironment env] != EnvironmentTypeAppStore) {
-        ipcCommunicationEnabled = [defaults boolForKey:@"IPCEnabled"];
+    /// STAGE 1: For `GREEN` and `BLUE` apps (all build types)
+    /// STAGE 2: For `GREEN` and `BLUE` apps (all build types) + all `production` apps for TestFlight Builds
+    int stage = 1;
+
+    if (TargetManagerObjC.isSandbox) {
+        backups2Enabled = YES;
     }
     else {
-        ipcCommunicationEnabled = false;
+        if (stage == 2 && [self environmentType] == EnvironmentTypeTestFlight) {
+            backups2Enabled = YES;
+        } else {
+            // Take the previous persisted value
+            backups2Enabled = [defaults boolForKey:kFeatureBackups2Enabled];
+        }
     }
+
+    localBackupDebugRecoveryKeyEnabled = [defaults boolForKey:kLocalBackupDebugRecoveryKeyEnabled];
+
+    ipcCommunicationEnabled = [defaults boolForKey:@"IPCEnabled"];
 
     ipcSecretPrefix = [defaults objectForKey:@"IPCSecretPrefix"];
     didShowIdentityThisDeviceOnly = [defaults boolForKey:@"DidShowIdentityThisDeviceOnly"];
@@ -950,6 +963,12 @@ static UserSettings *instance;
 - (void)setBackups2Enabled:(BOOL)newValue {
     backups2Enabled = newValue;
     [defaults setBool:backups2Enabled forKey:kFeatureBackups2Enabled];
+    [defaults synchronize];
+}
+
+- (void)setLocalBackupDebugRecoveryKeyEnabled:(BOOL)newValue {
+    localBackupDebugRecoveryKeyEnabled = newValue;
+    [defaults setBool:localBackupDebugRecoveryKeyEnabled forKey:kLocalBackupDebugRecoveryKeyEnabled];
     [defaults synchronize];
 }
 

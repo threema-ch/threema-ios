@@ -27,7 +27,9 @@ final class PasscodeCoordinator: NSObject, Coordinator {
     // MARK: - Coordinator
 
     var childCoordinators: [any Coordinator] = []
-    private(set) lazy var rootViewController: UIViewController = makeLockScreenViewController()
+    private(set) lazy var rootViewController: UIViewController = lockScreenViewController
+
+    private lazy var lockScreenViewController: JKLLockScreenViewController = makeLockScreenViewController()
 
     // MARK: - Dependencies
 
@@ -50,6 +52,8 @@ final class PasscodeCoordinator: NSObject, Coordinator {
     /// `true` once an evaluation reached the system since the scene last left the foreground. Dismissing
     /// the system sheet activates the scene again, so retrying on activation would re-present it.
     private var hasEvaluatedBiometrics = false
+
+    private var requiresPasscode = false
 
     private var isLocked: Bool {
         passcodeWindow != nil
@@ -106,6 +110,10 @@ final class PasscodeCoordinator: NSObject, Coordinator {
             return
         }
 
+        for sceneWindow in windowScene.windows {
+            sceneWindow.endEditing(true)
+        }
+
         let window = PasscodeWindow(windowScene: windowScene)
         window.rootViewController = rootViewController
         window.makeKeyAndVisible()
@@ -124,6 +132,7 @@ final class PasscodeCoordinator: NSObject, Coordinator {
         case evaluating
         case notLocked
         case biometricsDisabled
+        case passcodeRequired
         case alreadyAuthenticated
         case alreadyEvaluated
         case sceneInactive
@@ -132,6 +141,7 @@ final class PasscodeCoordinator: NSObject, Coordinator {
     static func biometricAttempt(
         isLocked: Bool,
         isBiometricAuthenticationEnabled: Bool,
+        requiresPasscode: Bool,
         isAuthenticating: Bool,
         hasEvaluatedBiometrics: Bool,
         isSceneActive: Bool,
@@ -142,6 +152,9 @@ final class PasscodeCoordinator: NSObject, Coordinator {
         }
         guard isBiometricAuthenticationEnabled else {
             return .biometricsDisabled
+        }
+        guard !requiresPasscode else {
+            return .passcodeRequired
         }
         guard !isAuthenticating else {
             return .alreadyAuthenticated
@@ -162,7 +175,8 @@ final class PasscodeCoordinator: NSObject, Coordinator {
     }
 
     /// A lock can outlive a foreground trip. Coming back is a new attempt to open the app, so it earns a
-    /// fresh evaluation even if the previous one was cancelled or failed.
+    /// fresh evaluation even if the previous one was cancelled. Not after iOS asked for the passcode, see
+    /// `requiresPasscode`.
     func sceneDidEnterBackground() {
         hasEvaluatedBiometrics = false
     }
@@ -171,6 +185,7 @@ final class PasscodeCoordinator: NSObject, Coordinator {
         let decision = Self.biometricAttempt(
             isLocked: isLocked,
             isBiometricAuthenticationEnabled: appContainer.passcodeLock.isBiometricAuthenticationEnabled(),
+            requiresPasscode: requiresPasscode,
             isAuthenticating: isAuthenticatingBiometrics,
             hasEvaluatedBiometrics: hasEvaluatedBiometrics,
             isSceneActive: isSceneActive,
@@ -211,8 +226,17 @@ final class PasscodeCoordinator: NSObject, Coordinator {
             }
             catch {
                 DDLogNotice("Biometric authentication failed: \(Self.describe(error))")
+                if Self.requiresPasscode(after: error) {
+                    self?.handlePasscodeRequired()
+                }
             }
         }
+    }
+
+    private func handlePasscodeRequired() {
+        DDLogNotice("Biometric unlock disabled for this lock. Passcode entry required.")
+        requiresPasscode = true
+        lockScreenViewController.disableBiometricUnlock()
     }
 
     private func handleBiometricsChanged(evaluatePolicyStateData: Data?) {
@@ -249,16 +273,23 @@ final class PasscodeCoordinator: NSObject, Coordinator {
 
     // MARK: - Helpers
 
+    /// Whether `error` from `authenticateBiometrics` means the passcode must be entered for this lock.
+    static func requiresPasscode(after error: Error) -> Bool {
+        TouchIDAuthentication.requiresPasscode(after: unwrap(error))
+    }
+
     /// Domain and code of the underlying `LAError`. That is what tells a cancelled prompt apart from one
     /// that was never shown; `localizedDescription` does not.
     private static func describe(_ error: Error) -> String {
-        var underlying = error
-        if case let TouchIDAuthentication.BiometricAuthenticationError.underlying(wrapped) = error {
-            underlying = wrapped
-        }
-
-        let nsError = underlying as NSError
+        let nsError = unwrap(error) as NSError
         return "\(nsError.domain) \(nsError.code) (\(nsError.localizedDescription))"
+    }
+
+    private static func unwrap(_ error: Error) -> Error {
+        if case let TouchIDAuthentication.BiometricAuthenticationError.underlying(wrapped) = error {
+            return wrapped
+        }
+        return error
     }
 
     private func makeLockScreenViewController() -> JKLLockScreenViewController {

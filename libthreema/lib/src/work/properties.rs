@@ -1,5 +1,6 @@
 //! Task structures to request work properties.
 use core::mem;
+use std::sync::PoisonError;
 
 use const_format::formatcp;
 use educe::Educe;
@@ -7,6 +8,8 @@ use libthreema_macros::{DebugVariantNames, Name, VariantNames};
 use prost::Message as _;
 use tracing::{debug, info, warn};
 
+#[cfg(feature = "uniffi")]
+use crate::bindings::uniffi::ConversionError;
 use crate::{
     common::{
         ClientInfo, ThreemaId,
@@ -44,13 +47,13 @@ use crate::{
     tsify(into_wasm_abi)
 )]
 pub enum WorkPropertiesUpdateError {
-    /// Invalid parameter provided.
-    #[error("Invalid parameter: {0}")]
-    InvalidParameter(String),
+    /// Some provided parameter could not be converted into the required internal representation.
+    #[error("Conversion error: {0}")]
+    ConversionError(String),
 
-    /// Invalid state for the requested operation.
-    #[error("Invalid state: {0}")]
-    InvalidState(&'static str),
+    /// A contract violation occurred.
+    #[error("Contract violation: {0}")]
+    ContractViolation(&'static str),
 
     /// An unrecoverable network error occurred while communicating with a server.
     #[error("Network error: {0}")]
@@ -71,6 +74,11 @@ pub enum WorkPropertiesUpdateError {
     /// A rate limit of a server has been exceeded.
     #[error("Rate limit exceeded")]
     RateLimitExceeded,
+
+    /// Unable to obtain a lock.
+    #[cfg(feature = "uniffi")]
+    #[error("Obtaining a lock failed")]
+    LockPoisoned,
 }
 impl From<HttpsEndpointError> for WorkPropertiesUpdateError {
     fn from(error: HttpsEndpointError) -> Self {
@@ -88,6 +96,18 @@ impl From<HttpsEndpointError> for WorkPropertiesUpdateError {
             | HttpsEndpointError::DecodingFailed(_)
             | HttpsEndpointError::CustomPossiblyLocalizedError(_) => Self::ServerError(error.to_string()),
         }
+    }
+}
+#[cfg(feature = "uniffi")]
+impl From<ConversionError> for WorkPropertiesUpdateError {
+    fn from(error: ConversionError) -> Self {
+        Self::ConversionError(error.to_string())
+    }
+}
+#[cfg(feature = "uniffi")]
+impl<T> From<PoisonError<T>> for WorkPropertiesUpdateError {
+    fn from(_: PoisonError<T>) -> Self {
+        Self::LockPoisoned
     }
 }
 
@@ -259,7 +279,7 @@ impl State {
     ) -> Result<(Self, WorkPropertiesUpdateLoop), WorkPropertiesUpdateError> {
         // Ensure the caller provided the response.
         let Some(response) = state.response else {
-            return Err(WorkPropertiesUpdateError::InvalidState(formatcp!(
+            return Err(WorkPropertiesUpdateError::ContractViolation(formatcp!(
                 "{} result was not provided for '{}' state",
                 WorkPropertiesUpdateResponse::NAME,
                 State::CHALLENGE,
@@ -289,7 +309,7 @@ impl State {
     ) -> Result<(Self, WorkPropertiesUpdateLoop), WorkPropertiesUpdateError> {
         // Ensure the caller provided the response.
         let Some(response) = state.response else {
-            return Err(WorkPropertiesUpdateError::InvalidState(formatcp!(
+            return Err(WorkPropertiesUpdateError::ContractViolation(formatcp!(
                 "{} result was not provided for '{}' state",
                 WorkPropertiesUpdateResponse::NAME,
                 State::UPDATE,
@@ -333,7 +353,7 @@ impl WorkPropertiesUpdateTask {
     pub fn poll(&mut self) -> Result<WorkPropertiesUpdateLoop, WorkPropertiesUpdateError> {
         let result = match mem::replace(
             &mut self.state,
-            State::Error(WorkPropertiesUpdateError::InvalidState(formatcp!(
+            State::Error(WorkPropertiesUpdateError::ContractViolation(formatcp!(
                 "{} in a transitional state",
                 WorkPropertiesUpdateTask::NAME
             ))),
@@ -342,7 +362,7 @@ impl WorkPropertiesUpdateTask {
             State::Init(state) => State::poll_init(&self.context, state),
             State::Challenge(state) => State::poll_challenge(&self.context, state),
             State::Update(state) => State::poll_update(state),
-            State::Done => Err(WorkPropertiesUpdateError::InvalidState(formatcp!(
+            State::Done => Err(WorkPropertiesUpdateError::ContractViolation(formatcp!(
                 "{} already done",
                 WorkPropertiesUpdateTask::NAME
             ))),
@@ -381,7 +401,7 @@ impl WorkPropertiesUpdateTask {
                 let _ = state.response.insert(response);
                 Ok(())
             },
-            _ => Err(WorkPropertiesUpdateError::InvalidState(formatcp!(
+            _ => Err(WorkPropertiesUpdateError::ContractViolation(formatcp!(
                 "Must be in '{}' or '{}' state",
                 State::CHALLENGE,
                 State::UPDATE,
@@ -470,7 +490,7 @@ mod tests {
         };
 
         let result = State::poll_challenge(&context, state);
-        assert_matches!(result, Err(WorkPropertiesUpdateError::InvalidState(_)));
+        assert_matches!(result, Err(WorkPropertiesUpdateError::ContractViolation(_)));
     }
 
     #[test]
@@ -523,7 +543,7 @@ mod tests {
         let state = UpdateState { response: None };
 
         let result = State::poll_update(state);
-        assert_matches!(result, Err(WorkPropertiesUpdateError::InvalidState(_)));
+        assert_matches!(result, Err(WorkPropertiesUpdateError::ContractViolation(_)));
     }
 
     #[rstest]
@@ -556,7 +576,7 @@ mod tests {
                 "row row row your boat".to_owned(),
             )),
         });
-        assert_matches!(result, Err(WorkPropertiesUpdateError::InvalidState(_)));
+        assert_matches!(result, Err(WorkPropertiesUpdateError::ContractViolation(_)));
 
         Ok(())
     }
@@ -578,7 +598,7 @@ mod tests {
             state: State::Done,
         };
         let result = task.poll();
-        assert_matches!(result, Err(WorkPropertiesUpdateError::InvalidState(_)));
+        assert_matches!(result, Err(WorkPropertiesUpdateError::ContractViolation(_)));
     }
 
     #[test]

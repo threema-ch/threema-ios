@@ -36,7 +36,7 @@ impl TryFrom<IdentityBackupData> for id_backup::IdentityBackupData {
 ///
 /// # Errors
 ///
-/// Returns [`IdentityBackupError::InvalidParameter`] if `backup_data` is invalid.
+/// Returns [`IdentityBackupError::ConversionError`] if `backup_data` is invalid.
 #[uniffi::export]
 pub fn encrypt_identity_backup(
     password: &str,

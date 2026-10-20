@@ -40,6 +40,14 @@ typedef NS_ENUM(NSInteger, LockScreenMode) {
  */
 @property (nonatomic, weak) UIColor *tintColor;
 
+//------------------ Threema edit begin ---------------------------
+/// Removes the biometric button for the rest of this lock screen's life, so only the passcode unlocks it.
+///
+/// Call this once a biometric evaluation failed in a way that asks for the passcode, see
+/// `+[TouchIDAuthentication requiresPasscodeAfterError:]`.
+- (void)disableBiometricUnlock;
+//------------------ Threema edit end ---------------------------
+
 @end
 
 @protocol JKLLockScreenViewControllerDelegate <NSObject>
@@ -55,6 +63,12 @@ typedef NS_ENUM(NSInteger, LockScreenMode) {
 - (void)shouldEraseApplicationData:(JKLLockScreenViewController*)viewController;
 - (void)didSettingsChanged:(JKLLockScreenViewController*)viewController;
 - (void)didPasscodeViewDismiss:(JKLLockScreenViewController*)viewController;
+
+/// The user tapped the biometric unlock button on the passcode screen.
+///
+/// Implement this to run your own biometric authentication (e.g. to handle a changed biometry
+/// enrollment). If it is not implemented the lock screen evaluates the biometric policy itself.
+- (void)didRequestBiometricAuthentication:(JKLLockScreenViewController*)viewController;
 //------------------ Threema edit end ---------------------------
 
 @end

@@ -5,7 +5,7 @@ import PackageDescription
 let package = Package(
     name: "GroupCalls",
     platforms: [
-        .iOS(.v17),
+        .iOS(.v18),
     ],
     products: [
         // Products define the executables and libraries a package produces, and make them visible to other packages.
@@ -15,14 +15,12 @@ let package = Package(
         ),
     ],
     dependencies: [
-        // Dependencies declare other packages that this package depends on.
-        // .package(url: /* package url */, from: "1.0.0"),
         .package(path: "../AudioSessionManager"),
         .package(path: "../ThreemaProtocols"),
         .package(path: "../ThreemaBlake2b"),
         .package(path: "../ThreemaEssentials"),
         .package(url: "https://github.com/apple/swift-protobuf.git", exact: "1.38.1"),
-        .package(url: "https://github.com/apple/swift-async-algorithms", from: "1.0.0"),
+        .package(url: "https://github.com/apple/swift-async-algorithms", exact: "1.1.5"),
         .package(url: "https://github.com/CocoaLumberjack/CocoaLumberjack.git", exact: "3.9.1"),
     ],
     targets: [

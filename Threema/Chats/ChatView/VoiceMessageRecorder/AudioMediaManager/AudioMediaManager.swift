@@ -6,7 +6,8 @@ import ThreemaFramework
 final class AudioMediaManager: AudioMediaManagerProtocol {
 
     static func newRecordingAudioURL() -> URL {
-        let fullFileName = "voice_recording_\(DateFormatter.getDateForExport(.now))"
+        // The UUID keeps names unique: recorder, merge output and draft files are often created within the same second
+        let fullFileName = "voice_recording_\(DateFormatter.getDateForExport(.now))_\(UUID().uuidString)"
         let url = FileUtility.shared.appTemporaryUnencryptedDirectory
             .appendingPathComponent(fullFileName)
             .appendingPathExtension(MEDIA_EXTENSION_AUDIO)
@@ -87,18 +88,20 @@ final class AudioMediaManager: AudioMediaManagerProtocol {
         }
     }
 
-    static func moveToDocumentsDir(from url: URL) throws -> URL {
+    /// Copies `url` to a new file in the documents dir.
+    ///
+    /// The name is always new: `MessageDraftStore` deletes the file of the draft it replaces, which must never be the
+    /// file of the new draft.
+    static func copyToDocumentsDir(from url: URL) throws -> URL {
         guard let persistentDir = FileUtility.shared.appDocumentsDirectory
         else {
             throw VoiceMessageError.fileOperationFailed
         }
 
-        let newURL = persistentDir.appendingPathComponent(url.lastPathComponent)
+        let newURL = persistentDir.appendingPathComponent(newRecordingAudioURL().lastPathComponent)
 
         do {
-            if !FileUtility.shared.fileExists(at: newURL) {
-                try FileUtility.shared.move(from: url, to: newURL)
-            }
+            try FileUtility.shared.copy(from: url, to: newURL)
         }
         catch {
             throw VoiceMessageError.fileOperationFailed

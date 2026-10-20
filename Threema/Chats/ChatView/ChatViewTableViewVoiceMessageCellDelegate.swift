@@ -246,9 +246,12 @@ final class ChatViewTableViewVoiceMessageCellDelegate: NSObject, ChatViewTableVi
         initializeAudioPlayerIfNeeded(url: url)
         
         guard audioPlayer != nil else {
-            let msg = "Couldn't create audioPlayer from audio message"
-            assertionFailure(msg)
-            DDLogError("\(msg)")
+            DDLogError("Couldn't create audioPlayer from audio message")
+            FileUtility.shared.deleteIfExists(at: url)
+            NotificationPresenterWrapper.shared.present(type: .recordingPlayingFailed)
+            DispatchQueue.main.async {
+                finishedCallback(true)
+            }
             return
         }
 

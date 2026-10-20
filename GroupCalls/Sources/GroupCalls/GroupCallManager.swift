@@ -70,11 +70,14 @@ public final actor GroupCallManager {
     ///   - proposedGroupCall: Proposed call
     ///   - creatorOrigin: Where the proposed call stems from
     ///   - calledFromExtension: Wether we call this func in an extension context or not
+    /// - Returns: `false` only if the SFU explicitly told us that the call is no longer running, `true` in every other
+    ///            case including when the state could not be determined
+    @discardableResult
     public func handleNewCallMessage(
         for proposedGroupCall: ProposedGroupCall,
         creatorOrigin: GroupCallCreatorOrigin,
         calledFromExtension: Bool
-    ) async {
+    ) async -> Bool {
         // TODO: (IOS-3857) Logging
         DDLogNotice("[GroupCall] [Message Processor] \(#function) with callID \(proposedGroupCall.hexCallID)")
         
@@ -152,12 +155,16 @@ public final actor GroupCallManager {
             DDLogNotice(
                 "[GroupCall] [PeriodicCleanup] After adding \(newGroupCall.callID). We have currently \(groupsWithCurrentlyRunningGroupCalls.keys.count) groups with running calls"
             )
+
+            return callMightBeRunning
         }
         catch let error as GroupCallSystemMessageAdapterError {
             DDLogError("[GroupCall] An error occurred when attempting to post a system message: \(error)")
+            return true
         }
         catch {
             DDLogError("[GroupCall] An error occurred when adding a new group call: \(error)")
+            return true
         }
     }
     

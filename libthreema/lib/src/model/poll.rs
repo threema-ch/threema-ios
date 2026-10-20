@@ -30,6 +30,7 @@ pub struct PollChoiceId(pub u32);
 
 /// A poll choice.
 #[derive(Clone, Debug, Name)]
+#[cfg_attr(test, derive(PartialEq))]
 #[cfg_attr(feature = "uniffi", derive(uniffi::Record))]
 pub struct PollChoice {
     /// The poll choice ID.
@@ -41,6 +42,8 @@ pub struct PollChoice {
 
 /// A vote as part of [`PollVotes::Votes`].
 #[derive(Clone, Debug, Name)]
+#[cfg_attr(feature = "uniffi", derive(uniffi::Record))]
+#[cfg_attr(test, derive(PartialEq))]
 pub struct PollVote {
     /// The list of the voter's current choices.
     pub choices: HashSet<PollChoiceId>,
@@ -52,8 +55,22 @@ pub struct PollVote {
     pub modified_at: Option<u64>,
 }
 
+/// The votes of a [`Poll`] with display mode [`protobuf::data_backup::poll::PollDisplayMode::Summary`].
+#[derive(Clone, Debug, Name)]
+#[cfg_attr(feature = "uniffi", derive(uniffi::Record))]
+#[cfg_attr(test, derive(PartialEq))]
+pub struct PollVotesSummary {
+    /// A map of choice IDs to the amount of participants that voted for it (including the votes of the
+    /// user).
+    pub summary: HashMap<PollChoiceId, u16>,
+
+    /// The choices of the user.
+    pub user_choices: HashSet<PollChoiceId>,
+}
+
 /// The votes of a [`Poll`].
 #[derive(Clone, Debug, Name)]
+#[cfg_attr(test, derive(PartialEq))]
 pub enum PollVotes {
     /// A map of participants to their chosen option(s).
     ///
@@ -63,17 +80,18 @@ pub enum PollVotes {
     /// - the display mode is _list_.
     Votes(HashMap<ThreemaId, PollVote>),
 
-    /// A map of choice ids to the amount of participants that voted for it.
+    /// The votes of summary poll.
     ///
     /// Used if all the following conditions hold:
     ///
     /// - the user is not the creator of the poll, **and**
     /// - the display mode is _summary_.
-    Summary(HashMap<PollChoiceId, u16>),
+    Summary(PollVotesSummary),
 }
 
 /// A poll including all possible choices and votes.
 #[derive(Clone, Debug, Name)]
+#[cfg_attr(test, derive(PartialEq))]
 pub struct Poll {
     /// A unique (per creator within a conversation) identifier of the poll.
     pub id: PollId,
@@ -128,17 +146,17 @@ impl Poll {
 pub trait PollProvider {
     /// 1. For each `poll` of `polls`:
     ///    1. If `poll` refers to a 1:1 contact conversation and the referred contact does not exist, return
-    ///       [`ProviderError::InvalidState`].¹
-    ///    2. If `poll` refers to a distribution list, return [`ProviderError::InvalidState`].
+    ///       [`ProviderError::ContractViolation`].¹
+    ///    2. If `poll` refers to a distribution list, return [`ProviderError::ContractViolation`].
     ///    3. If `poll` refers to a group conversation and the referred group does not exist, return
-    ///       [`ProviderError::InvalidState`].
+    ///       [`ProviderError::ContractViolation`].
     ///    4. If the `poll.creator` is neither the user, nor a known contact¹, return
-    ///       [`ProviderError::InvalidState`].
+    ///       [`ProviderError::ContractViolation`].
     ///    5. If a poll with `poll.id` already exists in the referred conversation, return
-    ///       [`ProviderError::InvalidState`].
+    ///       [`ProviderError::ContractViolation`].
     ///    6. If `poll.votes` is of type [`PollVotes::Votes`]:
     ///       1. For each `vote` of `poll.votes`, if the `vote`r is neither the user, nor a known contact¹,
-    ///          return [`ProviderError::InvalidState`].
+    ///          return [`ProviderError::ContractViolation`].
     /// 2. For each `poll` of `polls`:
     ///    1. Add `poll` to the application storage.
     ///

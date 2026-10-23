@@ -173,7 +173,7 @@ extension CustomContextMenuMenuTableView: UITableViewDataSource, UITableViewDele
         if #available(iOS 26.0, *) {
             guard section < actions.count - 1 else {
                 // After the last section we only need a bit of space w/o any view
-                // One config.tableViewInset is removed a again with the contentInset. This prevents the menu to scroll
+                // One config.tableViewInset is removed again with the contentInset. This prevents the menu to scroll
                 // when it fits the screen
                 return config.tableViewInset * 2
             }

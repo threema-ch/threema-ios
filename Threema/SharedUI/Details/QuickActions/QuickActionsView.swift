@@ -184,7 +184,7 @@ final class QuickActionsView: UIStackView {
             firstStackContainer.axis = .vertical
             
         case 3:
-            // If three buttons don't fit on one line we but the last one below it
+            // If three buttons don't fit on one line we put the last one below it
             
             // We know there are 3 elements in here so last will contain a value
             secondStackContainer.addArrangedSubview(quickActionButtons.last!)

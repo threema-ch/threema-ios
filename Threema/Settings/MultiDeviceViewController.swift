@@ -240,7 +240,7 @@ extension MultiDeviceViewController {
             return
         }
         
-        // This a hack, because `ThemedTableViewController` resets all the colors. We should remove this behavior
+        // This is a hack, because `ThemedTableViewController` resets all the colors. We should remove this behavior
         // of `ThemedTableViewController` in the future.
         multiDeviceCell.updateColors()
     }

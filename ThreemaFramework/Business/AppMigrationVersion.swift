@@ -31,7 +31,7 @@ public enum AppMigrationVersion: Int, Comparable, CaseIterable {
     case v7_0_4 = 33
     case v7_1 = 34
     case v7_3 = 35
-    case v7_4 = 37
+    case v7_4 = 36
     case v7_5 = 39
     // Add new version for app migration here...
 

@@ -222,7 +222,7 @@
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "(bağlı)"
+            "value" : "(linked)"
           }
         },
         "uk" : {
@@ -341,7 +341,7 @@
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "(isteğe bağlı)"
+            "value" : "(optional)"
           }
         },
         "uk" : {
@@ -460,7 +460,7 @@
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Beklemede"
+            "value" : "Pending"
           }
         },
         "uk" : {
@@ -579,7 +579,7 @@
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "(bilinmeyen)"
+            "value" : "(unknown)"
           }
         },
         "uk" : {
@@ -1172,7 +1172,7 @@
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$lld %2$@"
+            "value" : "%1$@: %2$@"
           }
         },
         "uk" : {
@@ -1291,7 +1291,7 @@
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%d üye"
+            "value" : "%d members"
           }
         },
         "uk" : {
@@ -18241,13 +18241,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "将所有聊天记录、消息和媒体文件保存在本地，创建完整的备份。"
+            "value" : "将所有聊天记录、消息和媒体文件保存在本地，以创建完整的备份。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "將所有對話紀錄、訊息和媒體檔案都儲存至本地，建立完整的備份。"
+            "value" : "將所有對話紀錄、訊息和媒體檔案都儲存至本地，以建立完整的備份。"
           }
         }
       }
@@ -19585,6 +19585,12 @@
             "value" : "Mesajlarınız ve medyalarınız şifrelenmiş ve güvenli bir şekilde kaydedilmiştir."
           }
         },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ваші повідомлення та медіафайли були зашифровані та безпечно збережені."
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -19655,6 +19661,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ekranınızı kilitlemeyin veya uygulamayı zorla kapatmayın."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не блокуйте пристрій та не закривайте застосунок примусово."
           }
         },
         "zh-Hans" : {
@@ -19728,6 +19740,12 @@
             "value" : "Kişiler dışa aktarılıyor"
           }
         },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Експортування контактів"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -19797,6 +19815,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dağıtım listeleri dışa aktarılıyor"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Експортування списків розсилки"
           }
         },
         "zh-Hans" : {
@@ -19871,6 +19895,12 @@
             "value" : "Mesajlar dışa aktarılıyor"
           }
         },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Експортування повідомлень"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -19943,6 +19973,12 @@
             "value" : "Yedekleme tamamlanıyor"
           }
         },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Завершення створення резервної копії"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -20012,6 +20048,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Gruplar Dışa Aktarılıyor"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Експортування груп"
           }
         },
         "zh-Hans" : {
@@ -20156,6 +20198,12 @@
             "value" : "Anketleri dışa aktarma"
           }
         },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Експортування опитувань"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -20220,6 +20268,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Kullanıcı verilerini dışa aktarmak"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Експортування даних користувача"
           }
         },
         "zh-Hans" : {
@@ -20311,6 +20365,12 @@
             "value" : "Yedekleme Oluşturuluyor"
           }
         },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Створення резервної копії"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -20382,6 +20442,12 @@
             "value" : "Dahil edilen"
           }
         },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Включно"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -20451,6 +20517,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dahil Değil"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не включно"
           }
         },
         "zh-Hans" : {
@@ -20525,6 +20597,12 @@
             "value" : "Yedekleme tamamlanamadı. Veri kaybedilmedi."
           }
         },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Неможливо завершити створення резервної копії. Дані не втрачено."
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -20597,6 +20675,12 @@
             "value" : "Yedekleme başarısız oldu"
           }
         },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Неможливо завершити створення резервної копії"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -20667,6 +20751,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bu işlem, yedekleme boyutunuza bağlı olarak birkaç dakika sürebilir."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Це може зайняти декілька хвилин залежно від розміру резервної копії."
           }
         },
         "zh-Hans" : {
@@ -20744,13 +20834,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "手动在设备上保存您的会话、消息和媒体以获得完全的控制权和隐私。\n保护您的数据安全，并在更换新设备或恢复出厂设置时恢复数据。\n\n备份仅存储在您的设备上，如果设备丢失或损坏时，就无法恢复。"
+            "value" : "手动在设备上保存您的会话、消息和媒体以获得完全的控制权和隐私。保护您的数据安全，并在更换新设备或恢复出厂设置时恢复数据。\n\n备份仅存储在您的设备上。如果设备丢失或损坏时，就无法恢复。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "手動在裝置上儲存您的對話、訊息和媒體以取得完全的控制權和隱私。\n保護您的資料安全，並在更換新裝置或恢復原廠設定時還原資料。\n\n備份僅儲存在您的裝置上，如果裝置遺失或損壞時，則無法還原。"
+            "value" : "手動在裝置上儲存您的對話、訊息和媒體以取得完全的控制權和隱私。保護您的資料安全，並在更換新裝置或恢復原廠設定時還原資料。\n\n備份僅儲存在您的裝置上。如果裝置遺失或損壞時，則無法還原。"
           }
         }
       }
@@ -20816,13 +20906,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "将会产生一个新密钥并创建新的备份。您需要保存这个新密钥——旧密钥将无法用于以后的备份。\n\n您现有的备份仍保存在此设备上，并且在您保存新密钥之前，仍可使用当前的旧密钥访问现有备份。"
+            "value" : "将会产生一个新密钥并创建新的备份。您需要保存这个新密钥，旧密钥将无法用于以后的备份。\n\n您现有的备份仍保存在此设备上，并且在您保存新密钥之前，仍可使用当前的旧密钥访问现有备份。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "將會產生一個新金鑰並建立新的備份。您需要儲存這個新金鑰——舊金鑰將無法用於以後的備份。\n\n您現有的備份仍保存在此裝置上，並且在您儲存新金鑰之前，仍可使用目前的舊金鑰存取現有備份。"
+            "value" : "將會產生一個新金鑰並建立新的備份。您需要儲存這個新金鑰，舊金鑰將無法用於以後的備份。\n\n您現有的備份仍保存在此裝置上，並且在您儲存新金鑰之前，仍可使用目前的舊金鑰存取現有備份。"
           }
         }
       }
@@ -20883,6 +20973,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Yeni bir kurtarma anahtarı oluşturulsun mu?"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Створити новий ключ відновлення?"
           }
         },
         "zh-Hans" : {
@@ -20955,6 +21051,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Yeni anahtar oluştur ve yedekle"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Створити новий ключ та резервну копію"
           }
         },
         "zh-Hans" : {
@@ -21101,6 +21203,12 @@
             "value" : "Kurtarma anahtarını bu cihazdan kaldır?"
           }
         },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Видалити ключ відновлення з цього пристрою?"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -21171,6 +21279,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Kurtarma anahtarınızın son rakamlarını yazarak doğru sakladığınızı onaylayın."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Введіть останні цифри ключа відновлення для підтвердження, що він правильно збережений."
           }
         },
         "zh-Hans" : {
@@ -21245,6 +21359,12 @@
             "value" : "Anahtar eşleşmiyor. Devam edin ve tekrar deneyin."
           }
         },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ключі не збігаються. Спробуйте ще раз."
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -21314,6 +21434,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Anahtarınızı Onaylayın"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Підтвердіть Ваш ключ"
           }
         },
         "zh-Hans" : {
@@ -36610,13 +36736,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Die ID und der Nickname dieses Nutzers werden zusammen mit Ihrer ID an Threema übermittelt. Es werden weder Nachrichteninhalte noch personenbezogene Daten weitergegeben, und dieser Nutzer wird nicht benachrichtigt."
+            "value" : "Die ID und der Nickname dieses Nutzers werden zusammen mit Ihrer ID an Threema übermittelt. Es werden weder Nachrichteninhalte noch sonstige personenbezogene Daten weitergegeben, und dieser Nutzer wird nicht benachrichtigt."
           }
         },
         "en" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "This user’s ID and nickname will be reported to Threema along with your ID. No message content or personal information will be shared, and this user will not be notified."
+            "state" : "needs_review",
+            "value" : "This user’s ID and nickname will be reported to Threema along with your ID. No message content or other personal information will be shared, and this user will not be notified."
           }
         },
         "es" : {
@@ -36634,7 +36760,7 @@
         "gsw-CH" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "D’ID und de Nickname vo dem Nutzer werded zäme mit Ihrere ID a Threema übermittled. Es werded weder Nachrichteinhält no personebezogeni Date wiitergeh, und de Nutzer wird nöd benachrichtigt."
+            "value" : "D’ID und de Nickname vo dem Nutzer werded zäme mit Ihrere ID a Threema übermittled. Es werded weder Nachrichteinhält no anderi personebezogeni Date wiitergeh, und de Nutzer wird nöd benachrichtigt."
           }
         },
         "it" : {
@@ -36646,7 +36772,7 @@
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Bu kullanıcının kimliği ve takma adı, sizin kimliğinizle birlikte Threema'ya bildirilecektir. Hiçbir mesaj içeriği veya kişisel bilgi paylaşılmayacak ve bu kullanıcı bilgilendirilmeyecektir."
+            "value" : "Bu kullanıcının kimliği ve takma adı, sizin kimliğinizle birlikte Threema’ya bildirilecektir. Mesaj içeriği veya başka hiçbir kişisel bilgi paylaşılmayacak olup, söz konusu kullanıcıya da herhangi bir bildirimde bulunulmayacaktır."
           }
         },
         "zh-Hans" : {
@@ -36802,13 +36928,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Die ID dieser Gruppe, die Anzahl Mitglieder sowie die ID und der Nickname des Gruppen-Admins werden zusammen mit Ihrer ID an Threema übermittelt. Es werden weder Nachrichteninhalte noch personenbezogene Daten weitergegeben, und niemand in dieser Gruppe wird benachrichtigt."
+            "value" : "Die ID dieser Gruppe, die Anzahl Mitglieder sowie die ID und der Nickname des Gruppen-Admins werden zusammen mit Ihrer ID an Threema übermittelt. Es werden weder Nachrichteninhalte noch sonstige personenbezogene Daten weitergegeben, und niemand in dieser Gruppe wird benachrichtigt."
           }
         },
         "en" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "This group’s ID, the number of members, and the ID and nickname of the group creator will be reported to Threema along with your ID. No message content or personal information will be shared, and no one in the group will be notified."
+            "state" : "needs_review",
+            "value" : "This group’s ID, the number of members, and the ID and nickname of the group creator will be reported to Threema along with your ID. No message content or other personal information will be shared, and no one in the group will be notified."
           }
         },
         "es" : {
@@ -36826,31 +36952,31 @@
         "gsw-CH" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "D’ID vo dere Gruppe, d’Azahl Mitglieder und d’ID und de Nickname vom Gruppe-Admin werded zäme mit Ihrere ID a Threema übermittled. Es werded kei Nachrichteinhält und kei personebezogeni Date wiitergeh, und niemer i dere Gruppe wird benachrichtigt."
+            "value" : "D’ID vo dere Gruppe, d’Azahl Mitglieder und d’ID und de Nickname vom Gruppe-Admin werded zäme mit Ihrere ID a Threema übermittled. Es werded kei Nachrichteinhält oder anderi personebezogeni Date wiitergeh, und niemer i dere Gruppe wird benachrichtigt."
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Le ID di questo gruppo, il numero di membri, e l'ID e il nickname del creatore del gruppo saranno riportati a Threema insieme al tuo ID. Nessun contenuto dei messaggi o informazione personale verrà condiviso, e nessuno nel gruppo sarà notificato."
+            "value" : "Le ID di questo gruppo, il numero di membri, e l'ID e il nickname del creatore del gruppo verranno segnalati a Threema insieme al tuo ID. Nessun contenuto dei messaggi o informazione personale verrà condiviso, e nessuno nel gruppo sarà notificato."
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Bu grubun kimliği, üye sayısı, grup kurucusunun kimliği ve takma ismi, sizin kimliğinizle birlikte Threema'ya bildirilecektir. Hiçbir mesaj içeriği veya kişisel bilgi paylaşılmayacak ve gruptaki hiç kimse bilgilendirilmeyecektir."
+            "value" : "Bu grubun kimlik numarası, üye sayısı ve grubu oluşturan kişinin kimlik numarası ile takma adı, sizin kimlik numaranızla birlikte Threema'ya bildirilecektir. Mesaj içeriği veya başka herhangi bir kişisel bilgi paylaşılmayacak ve gruptaki hiç kimseye bildirimde bulunulmayacaktır."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "该群组的 ID、成员人数，以及群组创建者的 ID 和昵称，将连同您的 ID 一并上报给 Threema。消息内容或个人信息都不会被分享，群组中的任何成员都不会收到通知。"
+            "value" : "此群组的 ID、成员人数，以及群组创建者的 ID 和昵称，将连同您的 ID 一并上报给 Threema。消息内容或个人信息都不会被分享，而群组中的任何成员都不会收到上报通知。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "該群組的ID、成員人數，以及群組建立者的ID和暱稱，將連同您的 ID 一併回報給 Threema。訊息內容或個人資料均不會被分享，群組內任何成員都不會收到通知。"
+            "value" : "此群組的ID、成員人數，以及群組建立者的ID和暱稱，將連同您的 ID 一併回報給 Threema。訊息內容或個人資料均不會被分享，而群組內任何成員都不會收到回報通知。"
           }
         }
       }
@@ -36878,7 +37004,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Denunciar %1$(group_name)@"
+            "value" : "Denunciar a %1$(group_name)@"
           }
         },
         "fr" : {
@@ -36969,6 +37095,12 @@
             "value" : "Bu sohbet bilinmeyen bir kullanıcıdan"
           }
         },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ця група від невідомого користувача"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -37033,10 +37165,16 @@
             "value" : "Spam Değil"
           }
         },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не спам"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "非垃圾信息"
+            "value" : "非垃圾消息"
           }
         },
         "zh-Hant" : {
@@ -37095,6 +37233,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bu sohbet bilinmeyen bir kullanıcıdan"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Це повідомлення від невідомого користувача"
           }
         },
         "zh-Hans" : {
@@ -39664,6 +39808,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ayarları Onayla"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Підтвердити налаштування"
           }
         },
         "zh-Hans" : {
@@ -45269,6 +45419,12 @@
             "value" : "Contact Support"
           }
         },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Звернутись до служби підтримки"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -47474,7 +47630,13 @@
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sohbetlere Devam Et"
+            "value" : "Continue to Chats"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перейти до бесід"
           }
         },
         "zh-Hans" : {
@@ -48838,6 +49000,12 @@
             "value" : "Kopyalandı"
           }
         },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Скопійовано"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -49736,6 +49904,12 @@
             "value" : "Gelecek yedeklemeler için yeni bir anahtar oluştur"
           }
         },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Створити новий ключ для майбутніх резервних копій"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -49802,6 +49976,12 @@
             "value" : "Yeni Yedek Oluştur"
           }
         },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Створити нову резервну копію"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -49841,7 +50021,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Crear una nueva clave"
+            "value" : "Crear una clave nueva"
           }
         },
         "fr" : {
@@ -49866,6 +50046,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Yeni Anahtar Oluştur"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Створити новий ключ"
           }
         },
         "zh-Hans" : {
@@ -50297,6 +50483,12 @@
             "value" : "Mevcut Anahtar"
           }
         },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Поточний ключ"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -50482,6 +50674,12 @@
             "value" : "Mevcut kurtarma anahtarı"
           }
         },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Поточний ключ відновлення"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -50546,6 +50744,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Veri Yedekleme"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Резервне копіювання даних"
           }
         },
         "zh-Hans" : {
@@ -57814,6 +58018,12 @@
             "value" : "Reddet"
           }
         },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відхилити"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -59189,6 +59399,12 @@
             "value" : "Belgeler ve dosyalar"
           }
         },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Документи та файли"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -59253,6 +59469,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tamam"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Готово"
           }
         },
         "zh-Hans" : {
@@ -67898,6 +68120,12 @@
             "value" : "Şifreleniyor"
           }
         },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зашифровано з"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -70211,6 +70439,12 @@
             "value" : "Kurtarma anahtarınızı girin"
           }
         },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Уведіть ключ відновлення"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -70274,6 +70508,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bu yedeklemeyi oluştururken size verilen kurtarma anahtarını girin. Yedeklemenizi geri yüklemek için bu anahtar gereklidir."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Уведіть ключ відновлення, наданий під час створення резервної копії. Цей ключ потрібен для її відновлення."
           }
         },
         "zh-Hans" : {
@@ -72601,6 +72841,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Medya hariç tut"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Без медіа"
           }
         },
         "zh-Hans" : {
@@ -78445,6 +78691,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Alan aç"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Звільнити місце"
           }
         },
         "zh-Hans" : {
@@ -95580,6 +95832,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Uygulama hazır değil. Lütfen tekrar deneyin."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Застосунок не готовий. Будь ласка, спробуйте пізніше."
           }
         },
         "zh-Hans" : {
@@ -140082,6 +140340,12 @@
             "value" : "Face ID ile Aç"
           }
         },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Використовувати Face ID для розблокування"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -140145,6 +140409,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Touch ID ile Aç"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Використовувати Touch ID для розблокування"
           }
         },
         "zh-Hans" : {
@@ -154988,6 +155258,12 @@
             "value" : "Kurtarma Anahtarı"
           }
         },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ключ відновлення"
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -155295,7 +155571,7 @@
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Видалити"
+            "value" : "Вилучити"
           }
         },
         "zh-Hans" : {
@@ -159885,6 +160161,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Korumalı veriler mevcut değil. Lütfen cihazınızı kilidini açın."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Доступ до захищених даних відсутній. Будь ласка, розблокуйте пристрій."
           }
         },
         "zh-Hans" : {

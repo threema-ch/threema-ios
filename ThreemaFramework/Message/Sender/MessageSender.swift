@@ -217,6 +217,7 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
 
                     return message
                 }
+                DDLogError("Conversation for text message not found in context: \(conversation.objectID)")
                 return nil
             }
 

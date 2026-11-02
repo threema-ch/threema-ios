@@ -102,20 +102,10 @@ public final class ThreemaEnvironment: NSObject {
     // MARK: Spam reporting
     
     public static var enableSpamReporting: Bool {
-        if EnvironmentType.current == .appStore {
-            false
-        }
-        else {
-            TargetManager.isSandbox
-        }
+        true
     }
     
     public static var enableGroupSpamReporting: Bool {
-        if EnvironmentType.current == .appStore {
-            false
-        }
-        else {
-            TargetManager.isSandbox
-        }
+        true
     }
 }

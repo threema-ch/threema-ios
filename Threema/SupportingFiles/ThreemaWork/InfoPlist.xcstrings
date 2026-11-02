@@ -938,7 +938,7 @@
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Mikrofon sesli mesajları kaydetmek için kullanılır."
+            "value" : "Sesli aramalar, sesli mesajlar ve görüntülü aramalar gibi özellikler için uygulamanın mikrofonunuza erişmesi gerekir. Bu özellikleri kullanabilmek adına lütfen mikrofon erişimine izin verin."
           }
         },
         "uk" : {

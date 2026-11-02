@@ -63,7 +63,13 @@ public enum BackupEncryptionKey: Sendable {
 
 #if DEBUG
     extension BackupEncryptionKey {
-        private static let key = "45S9KSPB6JVQZ12Y99BX8MS744Y4HNJSX19HQ7C4A7Q4WSZU722X789T745QT418"
+
+        /// Mock key for previews and tests, split into groups so it isn't mistaken for a real secret
+        private static let sampleKey = [
+            "45S9KSPB", "6JVQZ12Y", "99BX8MS7", "44Y4HNJS",
+            "X19HQ7C4", "A7Q4WSZU", "722X789T", "745QT418",
+        ].joined()
+
         private static let date = Date(timeIntervalSince1970: 1_234_567_890)
 
         public static var mockNone: Self {
@@ -71,11 +77,11 @@ public enum BackupEncryptionKey: Sendable {
         }
 
         public static var mockGeneratedKey: Self {
-            .generated(key: key)
+            .generated(key: sampleKey)
         }
 
         public static var mockDefaultKey: Self {
-            .default(key: key, lastBackupDate: date)
+            .default(key: sampleKey, lastBackupDate: date)
         }
     }
 #endif

@@ -165,10 +165,10 @@ final class ItemSender: NSObject {
             }
             else {
                 let title = #localize("error_message_no_items_title")
-                let message = #localize("error_message_no_items_message")
-                delegate!.showAlert(with: title, message: message)
+                let errorMessage = #localize("error_message_no_items_message")
+                delegate!.showAlert(with: title, message: errorMessage)
                 
-                delegate?.finishedItem(item: progressItemKey(item: message, conversation: toConversation)!)
+                delegate?.finishedItem(item: progressItemKey(item: message, conversation: toConversation))
                 sentItemCount = sentItemCount! + 1
                 checkIsFinished()
             }
@@ -200,10 +200,8 @@ final class ItemSender: NSObject {
     
     private func sendString(message: String, toConversation: ConversationEntity) {
         Task { @MainActor in
-            self.delegate?.setProgress(
-                progress: 0.1,
-                forItem: self.progressItemKey(item: message, conversation: toConversation)!
-            )
+            let progressItemKey = self.progressItemKey(item: message, conversation: toConversation)
+            self.delegate?.setProgress(progress: 0.1, forItem: progressItemKey)
             
             Task {
                 let textMessages = await BusinessInjector().messageSender.sendTextMessage(
@@ -211,16 +209,15 @@ final class ItemSender: NSObject {
                     in: toConversation
                 )
                 Task { @MainActor in
-                    self.textMessageCompletionHandler(textMessages: textMessages)
+                    self.textMessageCompletionHandler(textMessages: textMessages, progressItemKey: progressItemKey)
                 }
             }
         }
     }
     
-    private func textMessageCompletionHandler(textMessages: [TextMessageEntity]) {
+    private func textMessageCompletionHandler(textMessages: [TextMessageEntity], progressItemKey: NSNumber) {
         for textMessage in textMessages {
-            delegate?
-                .finishedItem(item: [progressItemKey(item: textMessage.text, conversation: textMessage.conversation)])
+            delegate?.finishedItem(item: progressItemKey)
             
             if textMessage.conversation.conversationVisibility == .archived {
                 textMessage.conversation.visibility = ConversationEntity.Visibility.default
@@ -236,9 +233,11 @@ final class ItemSender: NSObject {
         }
     }
     
-    private func progressItemKey(item: String, conversation: ConversationEntity) -> Any? {
-        let hash: NSInteger = (item as AnyObject).hash + conversation.hashValue
-        return NSNumber(value: hash)
+    private func progressItemKey(item: String, conversation: ConversationEntity) -> NSNumber {
+        var hasher = Hasher()
+        hasher.combine(item)
+        hasher.combine(conversation.objectID)
+        return NSNumber(value: hasher.finalize())
     }
     
     private func checkIsFinished() {

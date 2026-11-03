@@ -173,7 +173,7 @@ public final class AppLaunchManager: NSObject {
         return newRemoteSecretManager
     }
     
-    /// Tries to create `BusinessInjector` will throw is App is not launched completely
+    /// Tries to create `BusinessInjector` will throw if App is not launched completely
     /// - Parameter forBackgroundProcess: Get BusinessInjector for running in background
     /// - Returns: BusinessInjector
     @objc public func business(forBackgroundProcess: Bool) throws -> BusinessInjector {

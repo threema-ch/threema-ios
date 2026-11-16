@@ -20,6 +20,7 @@ struct OnPremServerInfoProviderTests {
         #expect(configDownloaderMock.downloadDataCalls.count == 1)
         #expect(configDownloaderMock.downloadDataCalls.first! == true, "Recovery Mode must be true")
         #expect(configVerifierMock.verifyCalls.count == 1)
+        #expect(configVerifierMock.checkExpirationCalls == [true], "A downloaded OPPF must not be expired")
     }
 
     @Test func chatServer() async throws {
@@ -48,6 +49,7 @@ struct OnPremServerInfoProviderTests {
         #expect(domainsCount == 4)
         #expect(configDownloaderMock.downloadDataCalls.isEmpty)
         #expect(configVerifierMock.verifyCalls.count == 1)
+        #expect(configVerifierMock.checkExpirationCalls == [false], "The cached OPPF may be expired")
     }
 
     private func makeSUT() -> (OnPremConfigDownloaderMock, OnPremConfigVerifierMock, OnPremServerInfoProvider) {

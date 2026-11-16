@@ -61,7 +61,7 @@ final class GroupCallAudioOutputButton: UIButton {
     }
     
     // MARK: - Configuration
-    
+
     private func configureButton() {
         
         var initialConfig: UIButton.Configuration =
@@ -85,14 +85,12 @@ final class GroupCallAudioOutputButton: UIButton {
         accessibilityLabel = dependencies.groupCallBundleUtil
             .localizedString(for: "group_call_accessibility_audio_output")
         
-        addSubview(routePickerView)
-        
         NSLayoutConstraint.activate([
             widthAnchor.constraint(equalToConstant: buttonConfig.smallerButtonWidth),
             heightAnchor.constraint(equalTo: widthAnchor),
-            routePickerView.widthAnchor.constraint(equalTo: widthAnchor),
-            routePickerView.heightAnchor.constraint(equalTo: widthAnchor),
         ])
+
+        installRoutePickerView()
         
         configurationUpdateHandler = { [weak self] button in
             guard let self else {
@@ -107,6 +105,15 @@ final class GroupCallAudioOutputButton: UIButton {
         }
     }
     
+    private func installRoutePickerView() {
+        addSubview(routePickerView)
+
+        NSLayoutConstraint.activate([
+            routePickerView.widthAnchor.constraint(equalTo: widthAnchor),
+            routePickerView.heightAnchor.constraint(equalTo: widthAnchor),
+        ])
+    }
+
     private func registerObserver() {
         NotificationCenter.default.addObserver(
             self,
@@ -185,9 +192,12 @@ final class GroupCallAudioOutputButton: UIButton {
 // MARK: - AVRoutePickerViewDelegate
 
 extension GroupCallAudioOutputButton: AVRoutePickerViewDelegate {
-    nonisolated func routePickerViewDidEndPresentingRoutes(_ routePickerView: AVRoutePickerView) {
-        Task {
-            await setNeedsUpdateConfiguration()
+    nonisolated func routePickerViewDidEndPresentingRoutes(_: AVRoutePickerView) {
+        Task { @MainActor in
+            // After it was dismissed, the picker ignores taps until it has been out of the window once
+            self.routePickerView.removeFromSuperview()
+            self.installRoutePickerView()
+            self.setNeedsUpdateConfiguration()
         }
     }
 }

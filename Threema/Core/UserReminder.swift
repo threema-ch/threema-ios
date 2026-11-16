@@ -8,7 +8,7 @@ enum UserReminder {
     
     private static let secondsInMinute: TimeInterval = 60
     private static let minutesInHour: TimeInterval = 60
-    private static let hoursInDay: TimeInterval = 60
+    private static let hoursInDay: TimeInterval = 24
     private static let secondsInDay: TimeInterval = secondsInMinute * minutesInHour * hoursInDay
     
     private static let linkReminderTime: TimeInterval = 2 * secondsInDay

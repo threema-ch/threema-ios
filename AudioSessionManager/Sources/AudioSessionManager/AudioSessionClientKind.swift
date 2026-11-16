@@ -25,8 +25,13 @@ public enum AudioSessionClientKind: Int, Sendable, Comparable {
 
     // MARK: - Properties
     
-    /// Default options every call path uses today
+    /// Default options every call path uses today.
+    ///
+    /// `.mixWithOthers` is what iOS adds to `.duckOthers` anyway. Without it the session never matches WebRTC's
+    /// configuration, so WebRTC sets the category again when its audio unit starts, which drops a speaker override
+    /// the instant an outgoing call is answered.
     private static let callOptions: AVAudioSession.CategoryOptions = [
+        .mixWithOthers,
         .duckOthers,
         .allowBluetooth,
         .allowBluetoothA2DP,
@@ -105,11 +110,14 @@ public enum AudioSessionClientKind: Int, Sendable, Comparable {
                 prefersNoInterruptionsFromSystemAlerts: true
             )
 
+        // Never `.defaultToSpeaker` for calls: CallKit's speaker button only sets the override, so with the option its
+        // `overrideOutputAudioPort(.none)` leaves the route on the speaker. The option also replaces the earpiece in
+        // the system route picker.
         case .call:
             AudioSessionProfile(
                 category: .playAndRecord,
                 mode: .voiceChat,
-                options: Self.options(Self.callOptions, for: output),
+                options: Self.callOptions,
                 output: output,
                 prefersNoInterruptionsFromSystemAlerts: true,
                 activation: .external
@@ -119,7 +127,7 @@ public enum AudioSessionClientKind: Int, Sendable, Comparable {
             AudioSessionProfile(
                 category: .playAndRecord,
                 mode: .voiceChat,
-                options: Self.options(Self.callOptions, for: output),
+                options: Self.callOptions,
                 output: output,
                 prefersNoInterruptionsFromSystemAlerts: true,
                 activation: .driverOwned

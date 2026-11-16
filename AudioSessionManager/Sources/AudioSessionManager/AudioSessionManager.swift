@@ -397,12 +397,22 @@ public actor AudioSessionManager: AudioSessionManagerProtocol {
         let route = await driver(for: winner.kind).currentRoute()
 
         // The manager is not the only thing that can move the route. `AVRoutePickerView` lets the user choose an
-        // output through system UI, with no claim involved, and that arrives here as `.override`.
-        if reason == .override, let winningClaimID {
+        // output through system UI, with no claim involved, and that arrives here as `.override`. CallKit's speaker
+        // button reports turning the speaker on as `.override`, but turning it off as `.categoryChange`, and
+        // picking a headset in its audio menu as `.newDeviceAvailable`.
+        let speakerMovedToHeadset = reason == .newDeviceAvailable
+            && winner.profile.output == .speaker
+            && !route.outputs.isEmpty
+            && !route.outputs.contains(.builtInSpeaker)
+            && !route.outputs.contains(.builtInReceiver)
+
+        if reason == .override || reason == .categoryChange || speakerMovedToHeadset, let winningClaimID {
             await adoptExternalOutput(matching: route, for: winningClaimID, appliedOutput: winner.profile.output)
         }
 
-        if Self.routeChangeReasonsWorthReasserting.contains(reason) {
+        let worthReasserting = Self.routeChangeReasonsWorthReasserting.contains(reason) && !speakerMovedToHeadset
+
+        if worthReasserting {
             DDLogNotice(
                 "[AudioSessionManager] Re-asserting \(winner.profile.output) after route change: \(reason)"
             )

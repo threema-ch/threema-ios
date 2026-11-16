@@ -96,16 +96,6 @@ run = 'mise exec -- swiftformat . --config .swiftformat --swift-version $(cat .s
 description = "Run SwiftLint (audio session ownership only, see .swiftlint.yml)"
 run = 'mise exec -- swiftlint lint --config .swiftlint.yml --strict --quiet'
 
-#- Release notes -#
-
-[tasks.release-notes]
-description = "Print or update the TestFlight release notes of a build, asks for print or update, nightly or beta, app, version and build (or pass them: print|update nightly|beta <app> <version> <build>)"
-run = "./scripts-internal/release-notes.sh"
-
-[tasks.edit-release-notes]
-description = "Open the release notes file of the current branch (pending/<ticket>.txt, created by make-branch)"
-run = "./scripts-internal/edit-release-notes.sh"
-
 #-- WebRTC --#
 
 [tasks.webrtc]

@@ -596,17 +596,39 @@ struct AudioSessionManagerTests {
 
     @Test(
         "A playAndRecord kind asking for the speaker says so in its options, not only in the override",
-        arguments: [AudioSessionClientKind.call, .groupCall, .recording]
+        arguments: [AudioSessionClientKind.recording]
     )
     func speakerIsDurableForPlayAndRecordKinds(kind: AudioSessionClientKind) {
-        // `overrideOutputAudioPort(.speaker)` is temporary: it lasts until the category is set again, and
-        // WebRTC sets it again when it starts its audio unit — which for an outgoing call is the instant the
-        // callee answers. A speaker chosen while it rang was silently dropped to the earpiece right there.
+        // `overrideOutputAudioPort(.speaker)` is temporary: it lasts until the category is set again. The option
+        // keeps the speaker through that. Calls cannot use it because of CallKit's speaker button and the route
+        // picker, and rely on their options matching the session instead, so WebRTC never sets the category again.
         #expect(kind.profile(for: .speaker).options.contains(.defaultToSpeaker))
 
-        // And only when asked for, or every call would start on the speaker.
+        // And only when asked for, or every recording would start on the speaker.
         #expect(!kind.profile(for: .system).options.contains(.defaultToSpeaker))
         #expect(!kind.profile(for: .receiver).options.contains(.defaultToSpeaker))
+    }
+
+    @Test(
+        "A call asking for the speaker relies on the override alone",
+        arguments: [AudioSessionClientKind.call, .groupCall]
+    )
+    func callSpeakerIsOnlyAnOverride(kind: AudioSessionClientKind) {
+        // CallKit's speaker button sets only the override. With `.defaultToSpeaker` its "off" left the route
+        // on the speaker, without even a route change to react to, and the system route picker no longer offered
+        // the earpiece.
+        #expect(!kind.profile(for: .speaker).options.contains(.defaultToSpeaker))
+    }
+
+    @Test(
+        "A call's options already contain what iOS adds to `.duckOthers`",
+        arguments: [AudioSessionClientKind.call, .groupCall]
+    )
+    func callOptionsMatchTheSession(kind: AudioSessionClientKind) {
+        // iOS reports `.duckOthers` with `.mixWithOthers` added. If the requested options differ from that, WebRTC
+        // sets the category again when its audio unit starts, which drops a speaker override on an outgoing call
+        // the instant the callee answers.
+        #expect(kind.profile(for: .system).options.contains([.duckOthers, .mixWithOthers]))
     }
 
     @Test(
@@ -1025,7 +1047,7 @@ struct AudioSessionManagerTests {
     }
 
     @Test(
-        "Route changes this manager caused are reported but never re-asserted",
+        "Route changes that leave the route where the claim asked for it are reported but never re-asserted",
         arguments: [
             AVAudioSession.RouteChangeReason.override,
             .categoryChange,
@@ -1050,7 +1072,8 @@ struct AudioSessionManagerTests {
         #expect(await events.next()?.isOutputRouteChanged(reason) == true)
 
         // The feedback loop: `.override` is what our own `overrideOutputAudioPort` reports, so
-        // answering it with another apply is what made `observeAudioRoutes` chase its own tail.
+        // answering it with another apply is what made `observeAudioRoutes` chase its own tail. Both reasons can
+        // also come from CallKit's speaker button, but only a route away from the claim's output is adopted.
         #expect(await driver.calls.isEmpty)
     }
 
@@ -1120,6 +1143,57 @@ struct AudioSessionManagerTests {
         // Reading that as "the user chose `.system`" would drop the phone at the ear back to the speaker
         // mid-message — and `overrideOutputAudioPort` is invalid outside `.playAndRecord` anyway.
         await manager.routeChanged(reason: .override)
+
+        #expect(await driver.calls.isEmpty)
+    }
+
+    @Test(
+        "Turning the speaker off through CallKit is adopted, not re-asserted",
+        arguments: [
+            AVAudioSession.RouteChangeReason.override,
+            .categoryChange,
+        ]
+    )
+    func callKitSpeakerOffIsAdopted(reason: AVAudioSession.RouteChangeReason) async throws {
+        let driver = MockAudioSessionDriver()
+        let manager = AudioSessionManager(defaultDriver: driver)
+
+        _ = try await manager.acquire(.call, output: .speaker)
+        await driver.reset()
+
+        // The lock screen's speaker button reports "off" as `.categoryChange`, from Speaker to Receiver.
+        await driver.setRoute(outputs: [.builtInReceiver])
+        await manager.routeChanged(reason: reason)
+
+        #expect(await driver.calls == [.apply(.call)])
+    }
+
+    @Test("Picking a headset in CallKit's audio menu after the speaker is adopted, not re-asserted")
+    func callKitHeadsetAfterSpeakerIsAdopted() async throws {
+        let driver = MockAudioSessionDriver()
+        let manager = AudioSessionManager(defaultDriver: driver)
+
+        _ = try await manager.acquire(.call, output: .speaker)
+        await driver.reset()
+
+        // CallKit reports moving from the speaker back to AirPods as `.newDeviceAvailable`. Re-asserting the
+        // speaker there made the AirPods impossible to pick again.
+        await driver.setRoute(outputs: [.bluetoothHFP], hasBluetoothInput: true)
+        await manager.routeChanged(reason: .newDeviceAvailable)
+
+        #expect(await driver.calls == [.apply(.call)])
+    }
+
+    @Test("A speaker call moved to a headset is not pulled back to the speaker")
+    func speakerIsNotReassertedOverAHeadset() async throws {
+        let driver = MockAudioSessionDriver()
+        let manager = AudioSessionManager(defaultDriver: driver)
+
+        _ = try await manager.acquire(.call, output: .speaker)
+        await driver.reset()
+
+        await driver.setRoute(outputs: [.bluetoothHFP], hasBluetoothInput: true)
+        await manager.routeChanged(reason: .routeConfigurationChange)
 
         #expect(await driver.calls.isEmpty)
     }

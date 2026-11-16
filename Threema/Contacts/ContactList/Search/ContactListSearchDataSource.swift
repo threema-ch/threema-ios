@@ -239,7 +239,11 @@ final class ContactListSearchDataSource: UITableViewDiffableDataSource<
             
             return
         }
-        
+        // Cancel a running directory search right away instead of waiting for the debounce in
+        // `loadDirectoryContacts()`. Otherwise a response for the previous text can still land in the new results, or
+        // be applied on top of a stale snapshot
+        currentDirectoryTask?.cancel()
+        currentDirectoryTask = nil
         // Resolve section contents
         
         // Contacts
@@ -401,6 +405,11 @@ final class ContactListSearchDataSource: UITableViewDiffableDataSource<
                     page: 0
                 )
                 
+                // The request itself isn't cancelled, so the results of a replaced search still arrive here
+                guard !Task.isCancelled else {
+                    return
+                }
+                
                 guard let size = paging["size"] as? Double,
                       let total = paging["total"] as? Double else {
                     self.currentDirectoryTask = nil
@@ -414,6 +423,10 @@ final class ContactListSearchDataSource: UITableViewDiffableDataSource<
                 self.applyDirectorySearchResults(contacts: contacts)
             }
             catch {
+                guard !Task.isCancelled else {
+                    return
+                }
+                
                 DDLogError("Error fetching directory contacts: \(error)")
                 self.applyDirectorySearchResults(contacts: [])
             }
@@ -434,7 +447,7 @@ final class ContactListSearchDataSource: UITableViewDiffableDataSource<
         Task { @MainActor in
             self.apply(snapshot)
         }
-
+        
         currentDirectoryTask = Task {
             do {
                 let (contacts, paging) = try await serverAPIConnector.searchDirectory(
@@ -442,6 +455,10 @@ final class ContactListSearchDataSource: UITableViewDiffableDataSource<
                     categoryIdentifiers: directoryCategoryIdentifiers(),
                     page: nextPage
                 )
+                
+                guard !Task.isCancelled else {
+                    return
+                }
                 
                 guard let nextPage = paging["next"] as? Int, let size = paging["size"] as? Double,
                       let total = paging["total"] as? Double else {
@@ -455,6 +472,10 @@ final class ContactListSearchDataSource: UITableViewDiffableDataSource<
                 self.applyDirectorySearchResults(contacts: contacts)
             }
             catch {
+                guard !Task.isCancelled else {
+                    return
+                }
+                
                 DDLogError("Error fetching directory contacts: \(error)")
                 self.applyDirectorySearchResults(contacts: [])
             }
@@ -466,12 +487,25 @@ final class ContactListSearchDataSource: UITableViewDiffableDataSource<
     private func applyDirectorySearchResults(contacts: [CompanyDirectoryContact]) {
         var snapshot = snapshot()
         
+        // Compared by `id`, as `CompanyDirectoryContact` compares by object identity and the snapshot alone wouldn't
+        // prevent a contact from being added twice
+        var shownDirectoryIDs = Set(snapshot.itemIdentifiers.compactMap { row -> String? in
+            guard case let .directoryContact(directoryContact) = row else {
+                return nil
+            }
+            return directoryContact.id
+        })
+        
         let rows: [ContactListSearch.Row] = contacts.compactMap { directoryContact in
             /// In case a directory contact is already in the contact section,
             /// we don't show it in the directory contacts section.
             guard currentContactIDs.contains(where: {
                 $0.rawValue == directoryContact.id
             }) == false else {
+                return nil
+            }
+            
+            guard shownDirectoryIDs.insert(directoryContact.id).inserted else {
                 return nil
             }
             

@@ -86,6 +86,9 @@ struct IdentityThisDeviceOnlyDecisionView: View {
         .task {
             updateWithCurrentState()
         }
+        .onDisappear {
+            onDisappear()
+        }
     }
     
     private func continueTapped() {

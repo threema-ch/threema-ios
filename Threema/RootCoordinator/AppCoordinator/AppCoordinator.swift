@@ -501,13 +501,18 @@ final class AppCoordinator: NSObject, Coordinator {
         let center = appContainer.userNotificationCenter
         center.requestAuthorization(
             options: [.sound, .alert, .badge, .providesAppNotificationSettings]
-        ) { granted, _ in
-            guard !granted else {
+        ) { [weak self] granted, _ in
+            guard granted else {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 10) {
+                    serverConnector.removePushToken()
+                }
                 return
             }
-            
-            DispatchQueue.main.asyncAfter(deadline: .now() + 10) {
-                serverConnector.removePushToken()
+
+            // On first launch `start()` checks the launch modals before the user answers the
+            // permission prompt, so the notification type selection is skipped without this.
+            Task { @MainActor [weak self] in
+                self?.launchModalManager.checkLaunchModals()
             }
         }
     }

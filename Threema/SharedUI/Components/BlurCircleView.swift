@@ -13,6 +13,8 @@ extension BlurCircleView {
         case `default`
         case thumbnail
         case retryAndCancel
+        case galleryGrid
+        case galleryPage
     }
     
     private struct DefaultConfiguration: BlurCircleViewConfiguration {
@@ -74,6 +76,46 @@ extension BlurCircleView {
         let textStyle: UIFont.TextStyle = .body
         let textStyleFontMetrics = UIFontMetrics(forTextStyle: .body)
     }
+    
+    private struct GalleryGridConfiguration: BlurCircleViewConfiguration {
+        
+        /// Diameter of circular view adjusted for current content size
+        var scaledSize: CGFloat {
+            let defaultSize: CGFloat = 50
+            return textStyleFontMetrics.scaledValue(for: defaultSize)
+        }
+        
+        /// Configuration of symbol in the center
+        var symbolConfiguration: UIImage.SymbolConfiguration {
+            let textStyleAndScaleConfiguration = UIImage.SymbolConfiguration(textStyle: textStyle, scale: .small)
+            let weightConfiguration = UIImage.SymbolConfiguration(weight: .bold)
+            return textStyleAndScaleConfiguration.applying(weightConfiguration)
+        }
+        
+        // These should always use the same TextStyle
+        let textStyle: UIFont.TextStyle = .title1
+        let textStyleFontMetrics = UIFontMetrics(forTextStyle: .title1)
+    }
+    
+    private struct GalleryPageConfiguration: BlurCircleViewConfiguration {
+        
+        /// Diameter of circular view adjusted for current content size
+        var scaledSize: CGFloat {
+            let defaultSize: CGFloat = 75
+            return textStyleFontMetrics.scaledValue(for: defaultSize)
+        }
+        
+        /// Configuration of symbol in the center, like the glass play button of the media browser
+        var symbolConfiguration: UIImage.SymbolConfiguration {
+            let textStyleAndScaleConfiguration = UIImage.SymbolConfiguration(textStyle: textStyle, scale: .large)
+            let weightConfiguration = UIImage.SymbolConfiguration(weight: .bold)
+            return textStyleAndScaleConfiguration.applying(weightConfiguration)
+        }
+        
+        // These should always use the same TextStyle
+        let textStyle: UIFont.TextStyle = .title1
+        let textStyleFontMetrics = UIFontMetrics(forTextStyle: .title1)
+    }
 }
 
 /// Circle view with an vibrant symbol in the center and a blurry background
@@ -122,6 +164,10 @@ final class BlurCircleView: UIVisualEffectView {
             self.viewConfiguration = ThumbnailConfiguration()
         case .retryAndCancel:
             self.viewConfiguration = RetryAndCancelButtonConfiguration()
+        case .galleryGrid:
+            self.viewConfiguration = GalleryGridConfiguration()
+        case .galleryPage:
+            self.viewConfiguration = GalleryPageConfiguration()
         }
         
         self.currentSfSymbolName = sfSymbolName

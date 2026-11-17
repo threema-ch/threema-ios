@@ -457,12 +457,16 @@ extension SingleDetailsViewController {
         // WORKAROUND: See `configureHeaderView()` for details
         // The safe area is subtracted, because it is part of the layout margins. Top and bottom
         // margins are set in other places and don't need to be adjusted for this workaround.
-        let currentMargins = headerView.layoutMargins
-        headerView.layoutMargins = UIEdgeInsets(
+        let currentMargins = headerView.directionalLayoutMargins
+        let tableViewMargins = tableView.directionalLayoutMargins
+        let isRightToLeft = tableView.effectiveUserInterfaceLayoutDirection == .rightToLeft
+        let leadingSafeAreaInset = isRightToLeft ? tableView.safeAreaInsets.right : tableView.safeAreaInsets.left
+        let trailingSafeAreaInset = isRightToLeft ? tableView.safeAreaInsets.left : tableView.safeAreaInsets.right
+        headerView.directionalLayoutMargins = NSDirectionalEdgeInsets(
             top: currentMargins.top,
-            left: tableView.layoutMargins.left - tableView.safeAreaInsets.left,
+            leading: tableViewMargins.leading - leadingSafeAreaInset,
             bottom: currentMargins.bottom,
-            right: tableView.layoutMargins.right - tableView.safeAreaInsets.right
+            trailing: tableViewMargins.trailing - trailingSafeAreaInset
         )
     }
 }

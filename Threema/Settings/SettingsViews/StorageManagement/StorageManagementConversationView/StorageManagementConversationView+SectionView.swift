@@ -9,6 +9,7 @@ extension StorageManagementConversationView {
         
         @Binding var amount: Int
         let section: Section
+        var headerTapAction: (() -> Void)?
         let action: () -> Void
 
         var body: some View {
@@ -21,6 +22,11 @@ extension StorageManagementConversationView {
                     title: section.localizedTitle,
                     secondary: "\(amount)"
                 )
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    headerTapAction?()
+                }
+                .allowsHitTesting(headerTapAction != nil)
             }
         }
     }

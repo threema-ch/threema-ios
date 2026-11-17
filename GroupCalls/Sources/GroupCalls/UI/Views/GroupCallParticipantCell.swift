@@ -56,15 +56,16 @@ final class GroupCallParticipantCell: UICollectionViewCell {
     
     private lazy var profilePictureView: UIImageView = {
         let profilePictureView = UIImageView()
-        profilePictureView.image = UIImage(
-            systemName: "person.fill",
-            withConfiguration: UIImage.SymbolConfiguration(pointSize: 40 * UIScreen.main.scale)
-        )
+        let placeholder = makePlaceholderProfilePicture()
+        placeholderProfilePicture = placeholder
+        profilePictureView.image = placeholder
         profilePictureView.tintColor = .white
         profilePictureView.contentMode = .scaleAspectFit
         profilePictureView.translatesAutoresizingMaskIntoConstraints = false
         return profilePictureView
     }()
+    
+    private var placeholderProfilePicture: UIImage?
     
     private lazy var statusSymbolView: UIImageView = {
         let statusSymbolView = UIImageView(
@@ -100,14 +101,16 @@ final class GroupCallParticipantCell: UICollectionViewCell {
         let stackView = UIStackView(arrangedSubviews: [screenShareSymbolView, statusSymbolView, nameLabel])
         stackView.alignment = .leading
 
-        stackView.layoutMargins = UIEdgeInsets(
+        stackView.directionalLayoutMargins = NSDirectionalEdgeInsets(
             top: cellConfig.cellInset,
-            left: cellConfig.cellInset,
+            leading: cellConfig.cellInset,
             bottom: cellConfig.cellInset,
-            right: cellConfig.cellInset
+            trailing: cellConfig.cellInset
         )
         
         stackView.isLayoutMarginsRelativeArrangement = true
+        // The cell tile is the inset reference: tiles at the screen edge must not grow extra margins from the
+        // safe area, the collection view already lays out the tiles inside it
         stackView.insetsLayoutMarginsFromSafeArea = false
         stackView.translatesAutoresizingMaskIntoConstraints = false
         
@@ -164,7 +167,27 @@ final class GroupCallParticipantCell: UICollectionViewCell {
         fatalError("init(coder:) has not been implemented")
     }
         
+    private func makePlaceholderProfilePicture() -> UIImage? {
+        UIImage(
+            systemName: "person.fill",
+            withConfiguration: UIImage.SymbolConfiguration(pointSize: 40 * traitCollection.displayScale)
+        )
+    }
+    
     private func configureCell() {
+        registerForTraitChanges([
+            UITraitVerticalSizeClass.self,
+            UITraitHorizontalSizeClass.self
+        ]) { (self: GroupCallParticipantCell, _) in
+            // Only the placeholder depends on the display scale, a loaded profile picture stays untouched
+            guard self.profilePictureView.image === self.placeholderProfilePicture else {
+                return
+            }
+            let placeholder = self.makePlaceholderProfilePicture()
+            self.placeholderProfilePicture = placeholder
+            self.profilePictureView.image = placeholder
+        }
+        
         layer.cornerRadius = 5
         layer.masksToBounds = true
         layer.cornerCurve = .continuous

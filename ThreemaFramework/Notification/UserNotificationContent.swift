@@ -1,6 +1,9 @@
 import Foundation
 
 public final class UserNotificationContent {
+    /// Key of the reacted message's ID in the `threema` dictionary of a notification about a reaction
+    public static let reactedMessageIDKey = "reactedMessageId"
+
     private let pendingUserNotification: PendingUserNotification
     
     init(_ pendingUserNotification: PendingUserNotification) {
@@ -54,32 +57,19 @@ public final class UserNotificationContent {
     var groupCreator: String?
     
     var userInfo: [String: [String: String]] {
-        if isGroupMessage {
-            if let groupID, let groupCreator {
-                [
-                    "threema": [
-                        "cmd": cmd,
-                        "from": senderID,
-                        "messageId": messageID,
-                        "groupId": groupID,
-                        "groupCreator": groupCreator,
-                    ],
-                ]
-            }
-            else {
-                // This can happen if base message was never set
-                [
-                    "threema": [
-                        "cmd": cmd,
-                        "from": senderID,
-                        "messageId": messageID,
-                    ],
-                ]
-            }
+        var threemaInfo: [String: String] = ["cmd": cmd, "from": senderID, "messageId": messageID]
+
+        // Group ID and creator can be missing if base message was never set
+        if isGroupMessage, let groupID, let groupCreator {
+            threemaInfo["groupId"] = groupID
+            threemaInfo["groupCreator"] = groupCreator
         }
-        else {
-            ["threema": ["cmd": cmd, "from": senderID, "messageId": messageID]]
+
+        if isReactionMessage(), let reactedMessageID = pendingUserNotification.baseMessage?.id.hexString {
+            threemaInfo[UserNotificationContent.reactedMessageIDKey] = reactedMessageID
         }
+
+        return ["threema": threemaInfo]
     }
     
     public func isGroupCallStartMessage() -> Bool {
@@ -88,5 +78,11 @@ public final class UserNotificationContent {
             return true
         }
         return false
+    }
+
+    /// Is this the notification about a reaction to a message?
+    public func isReactionMessage() -> Bool {
+        pendingUserNotification.abstractMessage is ReactionMessage
+            || pendingUserNotification.abstractMessage is GroupReactionMessage
     }
 }

@@ -35,6 +35,11 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
 
+    // The orientation lock depends on the horizontal size class, see `prefersInterfaceOrientationLocked`
+    if (@available(iOS 26.0, *)) {
+        [self registerForTraitChanges:@[UITraitHorizontalSizeClass.class] withAction:@selector(setNeedsUpdateOfPrefersInterfaceOrientationLocked)];
+    }
+
     MDMSetup *mdmSetup = [MDMSetup new];
     isUsernameSetByMDM = [mdmSetup existsMdmKey:MDM_KEY_LICENSE_USERNAME];
     isPasswordSetByMDM = [mdmSetup existsMdmKey:MDM_KEY_LICENSE_PASSWORD];
@@ -194,6 +199,12 @@
     } else {
         return UIInterfaceOrientationMaskPortrait;
     }
+}
+
+/// Resizable scenes on iOS 26+ ignore `supportedInterfaceOrientations`, lock the orientation where it only allows
+/// portrait
+- (BOOL)prefersInterfaceOrientationLocked {
+    return self.traitCollection.horizontalSizeClass != UIUserInterfaceSizeClassRegular;
 }
 
 - (void)updateColors {

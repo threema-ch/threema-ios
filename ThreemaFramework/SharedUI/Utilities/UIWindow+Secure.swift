@@ -8,7 +8,8 @@ extension UIWindow {
 
     private class SecureTextField: UITextField {
         override func leftViewRect(forBounds bounds: CGRect) -> CGRect {
-            UIScreen.main.bounds
+            // The field itself has no size, the prevention view must cover the whole window it secures
+            window?.bounds ?? bounds
         }
     }
 

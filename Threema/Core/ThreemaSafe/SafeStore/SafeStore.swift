@@ -838,7 +838,8 @@ final class SafeStore: SafeStoreProtocol {
                     if let conversation = entityManager.conversation(
                         forContact: contactForConversation,
                         createIfNotExisting: true,
-                        setLastUpdate: false
+                        setLastUpdate: false,
+                        keepContactHidden: true
                     ) {
                         
                         if let lastUpdate = backupContact.lastUpdate {

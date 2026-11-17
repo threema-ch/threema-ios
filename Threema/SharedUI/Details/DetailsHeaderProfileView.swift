@@ -187,7 +187,7 @@ final class DetailsHeaderProfileView: UIStackView {
         container.backgroundColor = .tertiarySystemFill
         container.translatesAutoresizingMaskIntoConstraints = false
         container.isLayoutMarginsRelativeArrangement = true
-        container.layoutMargins = .init(top: 8, left: 24, bottom: 8, right: 24)
+        container.directionalLayoutMargins = .init(top: 8, leading: 24, bottom: 8, trailing: 24)
         container.layer.masksToBounds = true
         container.isHidden = true
         container.addGestureRecognizer(

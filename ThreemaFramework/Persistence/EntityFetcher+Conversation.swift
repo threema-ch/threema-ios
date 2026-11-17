@@ -27,6 +27,28 @@ extension EntityFetcher {
         }
     }
 
+    /// Fetches the object IDs of all other app info system messages in 1:1 conversations
+    ///
+    /// - Returns: Object IDs of the matching system messages, `nil` if the fetch failed
+    public func oneToOneContactOtherAppInfoMessageObjectIDs() -> [NSManagedObjectID]? {
+        let request = NSFetchRequest<NSManagedObjectID>(entityName: "SystemMessage")
+        request.resultType = .managedObjectIDResultType
+        request.predicate = NSPredicate(
+            format: "type == %d AND conversation.groupId == nil",
+            SystemMessageEntity.SystemMessageEntityType.contactOtherAppInfo.rawValue
+        )
+
+        return managedObjectContext.performAndWait {
+            do {
+                return try request.execute()
+            }
+            catch {
+                DDLogError("[EntityFetcher] Failed to fetch other app info system messages. Error: \(error)")
+                return nil
+            }
+        }
+    }
+
     /// Fetches the IDs of conversation entities that are associated with groups or distribution lists or
     /// conversation contact IDs if the conversations are associated with contacts, that match the specified filtering
     /// criteria.

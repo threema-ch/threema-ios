@@ -205,6 +205,8 @@ final class ConversationListViewController: ThemedTableViewController {
     private let isRegularSizeClass: () -> Bool
     
     private var setBackButtonDebounceTask: Task<Void, Never>?
+    /// Last unread count passed to `setBackButton(unread:)`, used to re-render the back button image
+    private var backButtonUnreadCount: Int?
     private let isAppInBackground: () -> Bool
 
     // MARK: - Lifecycle
@@ -267,6 +269,9 @@ final class ConversationListViewController: ThemedTableViewController {
         title = #localize("chats_title")
         navigationController?.navigationBar.prefersLargeTitles = true
         globalSearchResultsViewController.setSearchController(searchController)
+        if RemoteSecretProvider.isRemoteSecretEnabled == false {
+            navigationItem.searchController = searchController
+        }
         
         updateHeaderIfNeeded()
         tableView.tableFooterView = archivedChatsButton
@@ -277,6 +282,16 @@ final class ConversationListViewController: ThemedTableViewController {
             bottomToolbar.trailingAnchor.constraint(equalTo: tableView.frameLayoutGuide.trailingAnchor),
             bottomToolbar.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
         ])
+        
+        registerForTraitChanges([
+            UITraitVerticalSizeClass.self,
+            UITraitHorizontalSizeClass.self
+        ]) { (self: ConversationListViewController, _) in
+            guard let unread = self.backButtonUnreadCount else {
+                return
+            }
+            self.setBackButton(unread: unread)
+        }
     }
 
     override func viewDidLayoutSubviews() {
@@ -295,7 +310,7 @@ final class ConversationListViewController: ThemedTableViewController {
             )
         }
     }
-    
+
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
 
@@ -355,10 +370,15 @@ final class ConversationListViewController: ThemedTableViewController {
         workStatusBanner.layoutIfNeeded()
         
         let fittingSize = CGSize(width: tableView.bounds.width, height: UIView.layoutFittingCompressedSize.height)
-        let targetHeight = workStatusBanner.systemLayoutSizeFitting(fittingSize).height
+        let targetSize = CGSize(
+            width: tableView.bounds.width,
+            height: workStatusBanner.systemLayoutSizeFitting(fittingSize).height
+        )
         
-        if tableView.tableHeaderView?.frame.height != targetHeight {
-            workStatusBanner.frame = CGRect(x: 0, y: 0, width: tableView.bounds.width, height: targetHeight)
+        // The width is part of the comparison: the first layout pass in a split view column can run with a
+        // zero-width table, and a header kept at that width centers its content on the leading edge.
+        if tableView.tableHeaderView?.frame.size != targetSize {
+            workStatusBanner.frame = CGRect(origin: .zero, size: targetSize)
             tableView.tableHeaderView = workStatusBanner
         }
     }
@@ -368,10 +388,14 @@ final class ConversationListViewController: ThemedTableViewController {
         archivedChatsButton.layoutIfNeeded()
         
         let fittingSize = CGSize(width: tableView.bounds.width, height: UIView.layoutFittingCompressedSize.height)
-        let targetHeight = archivedChatsButton.systemLayoutSizeFitting(fittingSize).height
+        let targetSize = CGSize(
+            width: tableView.bounds.width,
+            height: archivedChatsButton.systemLayoutSizeFitting(fittingSize).height
+        )
 
-        if tableView.tableFooterView?.frame.height != targetHeight {
-            archivedChatsButton.frame = CGRect(x: 0, y: 0, width: tableView.bounds.width, height: targetHeight)
+        // See `updateHeaderIfNeeded` for why the width is compared as well.
+        if tableView.tableFooterView?.frame.size != targetSize {
+            archivedChatsButton.frame = CGRect(origin: .zero, size: targetSize)
             tableView.tableFooterView = archivedChatsButton
         }
     }
@@ -924,6 +948,7 @@ extension ConversationListViewController {
 extension ConversationListViewController {
     
     private func setBackButton(unread: Int) {
+        backButtonUnreadCount = unread
         setBackButtonDebounceTask?.cancel()
         
         setBackButtonDebounceTask = Task { @MainActor in
@@ -974,7 +999,7 @@ extension ConversationListViewController {
         let unreadCountBackButtonView = UnreadCountBackButtonView(count: count)
          
         let unreadCountBackButtonImageRenderer = ImageRenderer(content: unreadCountBackButtonView)
-        unreadCountBackButtonImageRenderer.scale = UIScreen.main.scale
+        unreadCountBackButtonImageRenderer.scale = traitCollection.displayScale
         
         return unreadCountBackButtonImageRenderer.uiImage
     }
@@ -1277,11 +1302,12 @@ extension ConversationListViewController {
         let archivedPredicate = NSPredicate(format: "visibility != %d", ConversationEntity.Visibility.archived.rawValue)
         let privatePredicate = NSPredicate(format: "category != %d", ConversationEntity.Category.private.rawValue)
         let lastUpdateNotNil = NSPredicate(format: "lastUpdate != nil")
-        
+
         if businessInjector.userSettings.hidePrivateChats {
             newPredicate = NSCompoundPredicate(andPredicateWithSubpredicates: [
                 archivedPredicate,
                 lastUpdateNotNil,
+                .conversationContactIsVisible,
                 privatePredicate,
             ])
         }
@@ -1289,6 +1315,7 @@ extension ConversationListViewController {
             newPredicate = NSCompoundPredicate(andPredicateWithSubpredicates: [
                 archivedPredicate,
                 lastUpdateNotNil,
+                .conversationContactIsVisible,
             ])
         }
         

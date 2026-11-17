@@ -100,6 +100,7 @@ public class PPAssetsActionController: UIViewController {
 
     fileprivate var foldedPositionConstraint: NSLayoutConstraint!
     fileprivate var shownPositionConstraint: NSLayoutConstraint!
+    fileprivate var assetsSeparatorHeightConstraint: NSLayoutConstraint?
     fileprivate var optionsController: PPOptionsViewController!
     fileprivate var assetsController: PPAssetsCollectionController!
     fileprivate let assetsContainer = UIView()
@@ -182,7 +183,7 @@ public class PPAssetsActionController: UIViewController {
         
         let metrics = ["M": config.inset,
                        "ACM": 6.0,
-                       "MLW": 1 / UIScreen.main.scale,
+                       "MLW": 1 / traitCollection.displayScale,
                        "SI": si]
 
         if #available(iOS 11.0, *) {
@@ -195,21 +196,15 @@ public class PPAssetsActionController: UIViewController {
                                                           constant: 0.0)
             
             /***** BEGIN THREEMA MODIFICATION: bottom padding *********/
-            var bottomConstant: CGFloat = 8
-            /***** BEGIN THREEMA MODIFICATION: Use windows instead of keyWindow *********/
-            if UIApplication.shared.windows.first?.safeAreaInsets.bottom ?? 0 > 0 {
-            /***** END THREEMA MODIFICATION: Use windows instead of keyWindow *********/
-                bottomConstant = 0
-            }
-            /***** END THREEMA MODIFICATION: bottom padding *********/
+            // Pinned to the view's bottom edge, the constant is the bottom safe area inset but at least the padding,
+            // see `viewSafeAreaInsetsDidChange()`
             shownPositionConstraint = NSLayoutConstraint(item: optionsController.tableView,
                                                          attribute: .bottom,
                                                          relatedBy: .equal,
-                                                         toItem: view.safeAreaLayoutGuide,
+                                                         toItem: view,
                                                          attribute: .bottom,
                                                          multiplier: 1.0,
-                                                         /***** BEGIN THREEMA MODIFICATION: bottom padding *********/
-                                                         constant: -bottomConstant)
+                                                         constant: -shownPositionBottomInset)
                                                          /***** END THREEMA MODIFICATION: bottom padding *********/
         } else {
             foldedPositionConstraint = NSLayoutConstraint(item: assetsContainer,
@@ -256,17 +251,27 @@ public class PPAssetsActionController: UIViewController {
                                                                       options: [],
                                                                       metrics: ["M": config.inset,
                                                                                 "ACM": 16.0,
-                                                                                "MLW": 1 / UIScreen.main.scale,
+                                                                                "MLW": 1 / traitCollection.displayScale,
                                                                                 "SI": si],
                                                                       views: views))
         bottomCornersFiller.addConstraints(NSLayoutConstraint.constraints(withVisualFormat: "H:|-SI-[assetsSeparator]-SI-|",
                                                                           options: [],
                                                                           metrics: metrics,
                                                                           views: views))
-        bottomCornersFiller.addConstraints(NSLayoutConstraint.constraints(withVisualFormat: "V:[assetsSeparator(MLW)]|",
-                                                                          options: [],
-                                                                          metrics: metrics,
-                                                                          views: views))
+        let assetsSeparatorConstraints = NSLayoutConstraint.constraints(withVisualFormat: "V:[assetsSeparator(MLW)]|",
+                                                                        options: [],
+                                                                        metrics: metrics,
+                                                                        views: views)
+        assetsSeparatorHeightConstraint = assetsSeparatorConstraints.first { $0.firstAttribute == .height }
+        bottomCornersFiller.addConstraints(assetsSeparatorConstraints)
+        /***** BEGIN THREEMA MODIFICATION: trait change registration *********/
+        registerForTraitChanges([
+            UITraitVerticalSizeClass.self,
+            UITraitHorizontalSizeClass.self
+        ]) { (self: PPAssetsActionController, _) in
+            self.assetsSeparatorHeightConstraint?.constant = 1 / self.traitCollection.displayScale
+        }
+        /***** END THREEMA MODIFICATION: trait change registration *********/
         view.addConstraints(NSLayoutConstraint.constraints(withVisualFormat: "H:|-M-[assetsContainer]-M-|",
                                                            options: [],
                                                            metrics: metrics,
@@ -277,10 +282,24 @@ public class PPAssetsActionController: UIViewController {
                                                            views: views))
     }
     
+    /***** BEGIN THREEMA MODIFICATION: bottom padding *********/
+    /// Distance of the options from the bottom edge: the bottom safe area inset, but at least the padding used on
+    /// devices without one
+    private var shownPositionBottomInset: CGFloat {
+        max(view.safeAreaInsets.bottom, 8)
+    }
+    
+    override public func viewSafeAreaInsetsDidChange() {
+        super.viewSafeAreaInsetsDidChange()
+        
+        shownPositionConstraint?.constant = -shownPositionBottomInset
+    }
+    /***** END THREEMA MODIFICATION: bottom padding *********/
+    
     override public func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         let isIpad = UIDevice.current.userInterfaceIdiom == .pad
-        if (config.isLandscape() && !isIpad) || UIAccessibility.isVoiceOverRunning || assetManager.authorizationStatus() != .authorized || !config.showGalleryPreview {
+        if (config.isLandscape(traitCollection: traitCollection) && !isIpad) || UIAccessibility.isVoiceOverRunning || assetManager.authorizationStatus() != .authorized || !config.showGalleryPreview {
             assetsController.collectionView?.isHidden = true
             assetsContainer.isHidden = true
         } else {
@@ -363,7 +382,7 @@ extension PPAssetsActionController: PPAssetsViewControllerDelegate {
     
     func assetsViewControllerDidRequestAuthorization(_ controller: PPAssetsCollectionController) {
         let isIpad = UIDevice.current.userInterfaceIdiom == .pad
-        if (config.isLandscape() && !isIpad) || UIAccessibility.isVoiceOverRunning || assetManager.authorizationStatus() != .authorized  || !config.showGalleryPreview {
+        if (config.isLandscape(traitCollection: traitCollection) && !isIpad) || UIAccessibility.isVoiceOverRunning || assetManager.authorizationStatus() != .authorized  || !config.showGalleryPreview {
             assetsController.collectionView?.isHidden = true
             assetsContainer.isHidden = true
         } else {

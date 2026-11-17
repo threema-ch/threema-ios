@@ -40,11 +40,7 @@ final class NotificationManager: NotificationManagerProtocol {
     
     final func updateTabBarBadge(badgeTotalCount: Int) {
         Task { @MainActor in
-            if let mainTabBar = SharedAppProvider.tabBarController,
-               let items = mainTabBar.tabBar.items,
-               items.count > Int(kChatTabBarIndex) {
-                items[Int(kChatTabBarIndex)].badgeValue = badgeTotalCount > 0 ? String(badgeTotalCount) : nil
-            }
+            SharedAppProvider.appCoordinator?.updateConversationsBadge(badgeTotalCount)
             do {
                 try await UNUserNotificationCenter.current().setBadgeCount(badgeTotalCount)
             }
@@ -161,7 +157,14 @@ final class NotificationManager: NotificationManagerProtocol {
                         }
                     }
                     
-                    if let info {
+                    if var info {
+                        let conversation = info[kKeyConversation] as? ConversationEntity
+                            ?? businessInjector.entityManager.entityFetcher.conversationEntity(for: from)
+                        if let reactedMessage = reactedMessage(for: threemaPayload, in: conversation) {
+                            info[kKeyMessage] = reactedMessage
+                            info[kKeyMessageMarking] = ShowConversationInformation.MessageMarking.highlight
+                        }
+
                         DispatchQueue.main.async {
                             if !self.firstPushHandled {
                                 NotificationCenter.default.post(
@@ -314,7 +317,25 @@ extension NotificationManager {
         let request = UNNotificationRequest(identifier: "ThreemaWebError", content: notification, trigger: nil)
         UNUserNotificationCenter.current().add(request, withCompletionHandler: nil)
     }
-    
+
+    /// Own message the notification about a reaction refers to, so the chat opens scrolled to it
+    private func reactedMessage(
+        for threemaPayload: [AnyHashable: Any],
+        in conversation: ConversationEntity?
+    ) -> BaseMessageEntity? {
+        guard let reactedMessageID = threemaPayload[UserNotificationContent.reactedMessageIDKey] as? String,
+              let conversation
+        else {
+            return nil
+        }
+
+        return businessInjector.entityManager.entityFetcher.message(
+            with: reactedMessageID.decodeHex(),
+            in: conversation,
+            isOwn: true
+        )
+    }
+
     private func handleWebClientNotification(
         webPayload: [AnyHashable: Any],
         withCompletionHandler completionHandler: ((_ options: UNNotificationPresentationOptions) -> Void)? = nil

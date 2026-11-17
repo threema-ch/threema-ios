@@ -52,7 +52,7 @@ final class EntityManagerExtensionTests: XCTestCase {
         )
     }
 
-    func testGetOrCreateContactIfExistsInMainDBContext() async throws {
+    func testGetOrCreateContactIfExistsInMainDBContext() throws {
         let expectedIdentity = "ECHOECHO"
         let expectedPublicKey = BytesUtility.generatePublicKey()
 
@@ -81,12 +81,12 @@ final class EntityManagerExtensionTests: XCTestCase {
         wait(for: [expect], timeout: 1)
 
         XCTAssertNotNil(contactEntity)
-        XCTAssertTrue(
-            ddLoggerMock
-                .exists(message: "Looking for the contact entity \(expectedIdentity) on main DB context")
-        )
 
         XCTExpectFailure("That test can fail because of timing problem, see delayed insert", options: .nonStrict()) {
+            XCTAssertTrue(
+                ddLoggerMock
+                    .exists(message: "Looking for the contact entity \(expectedIdentity) on main DB context")
+            )
             XCTAssertTrue(
                 ddLoggerMock
                     .exists(message: "Apply contact entity \(expectedIdentity) to current DB context")
@@ -140,7 +140,7 @@ final class EntityManagerExtensionTests: XCTestCase {
         )
     }
 
-    func testGetOrCreateMessageIfExistsInMainDBContext() async throws {
+    func testGetOrCreateMessageIfExistsInMainDBContext() throws {
         let expectedIdentity = "ECHOECHO"
 
         let expectedAbstractMessage = BoxTextMessage()
@@ -201,14 +201,14 @@ final class EntityManagerExtensionTests: XCTestCase {
         wait(for: [expect], timeout: 1)
 
         XCTAssertNotNil(textMessageEntity)
-        XCTAssertTrue(
-            ddLoggerMock
-                .exists(
-                    message: "Looking for the message \(expectedAbstractMessage.messageID.hexString) on main DB context"
-                )
-        )
 
         XCTExpectFailure("That test can fail because of timing problem, see delayed insert", options: .nonStrict()) {
+            XCTAssertTrue(
+                ddLoggerMock
+                    .exists(
+                        message: "Looking for the message \(expectedAbstractMessage.messageID.hexString) on main DB context"
+                    )
+            )
             XCTAssertTrue(
                 ddLoggerMock
                     .exists(

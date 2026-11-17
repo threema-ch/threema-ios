@@ -6,6 +6,10 @@ extension AudioMessageEntity: PreviewableMessage {
         return "\(fileMessageType.localizedDescription) (\(formattedDuration))"
     }
     
+    public var privatePreviewDescription: MessagePreviewDescription {
+        MessagePreviewDescription(typeName: privatePreviewText, quotedText: nil)
+    }
+
     public var previewSymbolName: String? {
         fileMessageType.symbolName
     }

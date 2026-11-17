@@ -4,11 +4,15 @@ import Foundation
 final class WallpaperStoreMock: WallpaperStoreProtocol {
     var defaultWallPaper: UIImage! = nil
 
-    func saveWallpaper(_ wallpaper: UIImage, for conversationID: NSManagedObjectID) {
+    func saveWallpaper(_ wallpaper: UIImage, for conversationID: NSManagedObjectID, screenBounds: CGRect) {
         // no-op
     }
 
-    func saveDefaultWallpaper(_ wallpaper: UIImage?) {
+    func saveDefaultWallpaper(_ wallpaper: UIImage, screenBounds: CGRect) {
+        // no-op
+    }
+
+    func deleteDefaultWallpaper() {
         // no-op
     }
 

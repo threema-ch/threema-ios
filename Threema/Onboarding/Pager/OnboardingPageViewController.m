@@ -8,12 +8,22 @@
 
 @property NSInteger index;
 
+/// Pins the controls above the bottom safe area
+@property NSLayoutConstraint *controlsShownConstraint;
+/// Moves the controls below the bottom edge of the view
+@property NSLayoutConstraint *controlsHiddenConstraint;
+
 @end
 
 @implementation OnboardingPageViewController
 
 - (void)viewDidLoad {
     [super viewDidLoad];
+
+    // The orientation lock depends on the horizontal size class, see `prefersInterfaceOrientationLocked`
+    if (@available(iOS 26.0, *)) {
+        [self registerForTraitChanges:@[UITraitHorizontalSizeClass.class] withAction:@selector(setNeedsUpdateOfPrefersInterfaceOrientationLocked)];
+    }
     
     self.overrideUserInterfaceStyle = UIUserInterfaceStyleDark;
 
@@ -42,11 +52,10 @@
     }
 }
 
-- (void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation {
-    [super didRotateFromInterfaceOrientation:fromInterfaceOrientation];
-
-    [_pageContainerView setFrame:self.view.frame];
-    [_pageContainerView resetPageFrames];
+/// Resizable scenes on iOS 26+ ignore `supportedInterfaceOrientations`, lock the orientation where it only allows
+/// portrait
+- (BOOL)prefersInterfaceOrientationLocked {
+    return self.traitCollection.horizontalSizeClass != UIUserInterfaceSizeClassRegular;
 }
 
 - (void)setViewControllers:(NSArray *)viewControllers {
@@ -61,7 +70,8 @@
 }
 
 - (void)setup {
-    _pageContainerView = [[PageView alloc] initWithFrame:self.view.frame];
+    _pageContainerView = [[PageView alloc] initWithFrame:self.view.bounds];
+    _pageContainerView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
     _pageContainerView.delegate = self;
     _pageContainerView.datasource = self;
     _pageControl.isAccessibilityElement = NO;
@@ -77,7 +87,17 @@
     _pageRightButton.accessibilityLabel = [BundleUtil localizedStringForKey:@"next"];
     _pageControl.accessibilityLabel = [NSString stringWithFormat:@"%li %@ %li", (long)_pageControl.currentPage + 1, [BundleUtil localizedStringForKey:@"from"], (long)_pageControl.numberOfPages];
     _index = 0;
-    _controlsView.frame = CGRectMake(_controlsView.frame.origin.x, _controlsView.frame.origin.y + _controlsView.safeAreaInsets.top, _controlsView.frame.size.width, _controlsView.frame.size.height - _controlsView.safeAreaInsets.bottom);
+    
+    // Keep the controls above the bottom safe area, e.g. the home indicator
+    _controlsView.translatesAutoresizingMaskIntoConstraints = NO;
+    _controlsShownConstraint = [_controlsView.bottomAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.bottomAnchor];
+    _controlsHiddenConstraint = [_controlsView.topAnchor constraintEqualToAnchor:self.view.bottomAnchor];
+    [NSLayoutConstraint activateConstraints:@[
+        [_controlsView.leadingAnchor constraintEqualToAnchor:self.view.leadingAnchor],
+        [_controlsView.trailingAnchor constraintEqualToAnchor:self.view.trailingAnchor],
+        [_controlsView.heightAnchor constraintEqualToConstant:CGRectGetHeight(_controlsView.frame)],
+        _controlsShownConstraint,
+    ]];
 }
 
 - (NSInteger)nextIndexForIncrement:(NSInteger)increment {
@@ -219,15 +239,17 @@
 #pragma mark - PageContentControllerDelegate
 
 - (void)hideControls:(BOOL)hideControls {
-    CGFloat yOffset;
+    // Deactivate before activating to never have both constraints active
     if (hideControls) {
-        yOffset = CGRectGetMaxY(self.view.frame);
+        _controlsShownConstraint.active = NO;
+        _controlsHiddenConstraint.active = YES;
     } else {
-        yOffset = CGRectGetMaxY(self.view.frame) - CGRectGetHeight(_controlsView.frame);
+        _controlsHiddenConstraint.active = NO;
+        _controlsShownConstraint.active = YES;
     }
 
-    CGRect rect = CGRectMake(_controlsView.frame.origin.x, yOffset, _controlsView.frame.size.width, _controlsView.frame.size.height);
-    _controlsView.frame = rect;
+    // Callers animate the change
+    [self.view layoutIfNeeded];
     
     [_pageContainerView enablePanGesture:(hideControls == NO)];
 }

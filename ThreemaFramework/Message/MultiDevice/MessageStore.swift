@@ -127,7 +127,8 @@ final class MessageStore: MessageStoreProtocol {
             for: textMessage,
             sender: nil,
             conversation: conversation,
-            thumbnail: nil, myIdentity: frameworkInjector.myIdentityStore.identity
+            thumbnail: nil,
+            myIdentity: frameworkInjector.profileStore.profile.myIdentity.rawValue
         ) as? TextMessageEntity else {
             throw MediatorReflectedProcessorError.messageNotProcessed(message: "Could not find/create text message")
         }
@@ -194,7 +195,8 @@ final class MessageStore: MessageStoreProtocol {
             if let messageID = id as? Data {
                 try frameworkInjector.entityManager.performAndWait {
                     if let conversation = self.frameworkInjector.entityManager.conversation(
-                        forMessage: deliveryReceiptMessage, myIdentity: self.frameworkInjector.myIdentityStore.identity
+                        forMessage: deliveryReceiptMessage,
+                        myIdentity: self.frameworkInjector.profileStore.profile.myIdentity.rawValue
                     ),
                         let msg = self.frameworkInjector.entityManager.entityFetcher.message(
                             with: messageID,
@@ -287,7 +289,7 @@ final class MessageStore: MessageStoreProtocol {
         let msg = try frameworkInjector.entityManager.deleteMessage(
             for: deleteMessage,
             conversation: conversation,
-            myIdentity: frameworkInjector.myIdentityStore.identity
+            myIdentity: frameworkInjector.profileStore.profile.myIdentity.rawValue
         )
 
         if !isOutgoing {
@@ -318,7 +320,7 @@ final class MessageStore: MessageStoreProtocol {
         let msg = try frameworkInjector.entityManager.deleteMessage(
             for: deleteGroupMessage,
             conversation: conversation,
-            myIdentity: frameworkInjector.myIdentityStore.identity
+            myIdentity: frameworkInjector.profileStore.profile.myIdentity.rawValue
         )
 
         if !isOutgoing {
@@ -344,7 +346,7 @@ final class MessageStore: MessageStoreProtocol {
         let msg = try frameworkInjector.entityManager.editMessage(
             for: editMessage,
             conversation: conversation,
-            myIdentity: frameworkInjector.myIdentityStore.identity
+            myIdentity: frameworkInjector.profileStore.profile.myIdentity.rawValue
         )
 
         if !isOutgoing {
@@ -352,10 +354,13 @@ final class MessageStore: MessageStoreProtocol {
             messageProcessorDelegate.incomingMessageFinished(editMessage)
         }
         else {
-            if let entries = msg.historyEntries {
-                for entry in entries {
-                    messageProcessorDelegate.changedManagedObjectID(entry.objectID)
-                }
+            // The message was returned from its context, only its object IDs may leave it again
+            let entityManager = frameworkInjector.entityManager
+            let historyEntryObjectIDs = entityManager.performAndWait {
+                msg.historyEntries?.map(\.objectID) ?? []
+            }
+            for objectID in historyEntryObjectIDs {
+                messageProcessorDelegate.changedManagedObjectID(objectID)
             }
         }
     }
@@ -369,7 +374,7 @@ final class MessageStore: MessageStoreProtocol {
         let msg = try frameworkInjector.entityManager.editMessage(
             for: editGroupMessage,
             conversation: conversation,
-            myIdentity: frameworkInjector.myIdentityStore.identity
+            myIdentity: frameworkInjector.profileStore.profile.myIdentity.rawValue
         )
 
         if !isOutgoing {
@@ -377,10 +382,13 @@ final class MessageStore: MessageStoreProtocol {
             messageProcessorDelegate.incomingMessageFinished(editGroupMessage)
         }
         else {
-            if let entries = msg.historyEntries {
-                for entry in entries {
-                    messageProcessorDelegate.changedManagedObjectID(entry.objectID)
-                }
+            // The message was returned from its context, only its object IDs may leave it again
+            let entityManager = frameworkInjector.entityManager
+            let historyEntryObjectIDs = entityManager.performAndWait {
+                msg.historyEntries?.map(\.objectID) ?? []
+            }
+            for objectID in historyEntryObjectIDs {
+                messageProcessorDelegate.changedManagedObjectID(objectID)
             }
         }
     }
@@ -433,7 +441,7 @@ final class MessageStore: MessageStoreProtocol {
         // Validate members, all members must be known contacts, otherwise device is not in sync
         try frameworkInjector.entityManager.performAndWait {
             for identity in (amsg.groupMembers as! [String])
-                .filter({ $0 != self.frameworkInjector.myIdentityStore.identity }) {
+                .filter({ $0 != self.frameworkInjector.profileStore.profile.myIdentity.rawValue }) {
                 guard self.frameworkInjector.entityManager.entityFetcher.contactEntity(for: identity) != nil else {
                     DDLogWarn("Unknown group member \(identity), device not in sync anymore")
                     throw MediatorReflectedProcessorError.contactNotFound(identity: identity)
@@ -781,7 +789,7 @@ final class MessageStore: MessageStoreProtocol {
             for: groupLocationMessage,
             sender: sender,
             conversation: conversation,
-            thumbnail: nil, myIdentity: frameworkInjector.myIdentityStore.identity
+            thumbnail: nil, myIdentity: frameworkInjector.profileStore.profile.myIdentity.rawValue
         ) as? LocationMessageEntity else {
             throw MediatorReflectedProcessorError
                 .messageNotProcessed(message: "Could not find/create group location message in DB")
@@ -950,7 +958,7 @@ final class MessageStore: MessageStoreProtocol {
                 try frameworkInjector.entityManager.performAndWait {
                     guard let conversation = self.frameworkInjector.entityManager.conversation(
                         forMessage: groupDeliveryReceiptMessage,
-                        myIdentity: self.frameworkInjector.myIdentityStore.identity
+                        myIdentity: self.frameworkInjector.profileStore.profile.myIdentity.rawValue
                     ) else {
                         throw MediatorReflectedProcessorError
                             .conversationNotFound(message: groupDeliveryReceiptMessage.loggingDescription)
@@ -1022,7 +1030,8 @@ final class MessageStore: MessageStoreProtocol {
             for: groupTextMessage,
             sender: sender,
             conversation: conversation,
-            thumbnail: nil, myIdentity: frameworkInjector.myIdentityStore.identity
+            thumbnail: nil,
+            myIdentity: frameworkInjector.profileStore.profile.myIdentity.rawValue
         ) as? TextMessageEntity else {
             throw MediatorReflectedProcessorError.messageNotProcessed(message: "Could not find/create text message")
         }
@@ -1159,7 +1168,8 @@ final class MessageStore: MessageStoreProtocol {
             for: locationMessage,
             sender: nil,
             conversation: conversation,
-            thumbnail: nil, myIdentity: frameworkInjector.myIdentityStore.identity
+            thumbnail: nil,
+            myIdentity: frameworkInjector.profileStore.profile.myIdentity.rawValue
         ) as? LocationMessageEntity else {
             throw MediatorReflectedProcessorError.messageNotProcessed(message: "Could not find/create location message")
         }
@@ -1282,7 +1292,8 @@ final class MessageStore: MessageStoreProtocol {
                 )
                 let conversationObjectID = await self.frameworkInjector.entityManager.perform {
                     self.frameworkInjector.entityManager.entityFetcher.conversationEntity(
-                        for: groupIdentity, myIdentity: self.frameworkInjector.myIdentityStore.identity
+                        for: groupIdentity,
+                        myIdentity: self.frameworkInjector.profileStore.profile.myIdentity.rawValue
                     )?.objectID
                 }
 
@@ -1497,7 +1508,10 @@ final class MessageStore: MessageStoreProtocol {
         frameworkInjector.entityManager.performAndWait {
             let groupIdentity = GroupIdentity(id: groupID, creator: ThreemaIdentity(groupCreatorIdentity))
             if let conversation = self.frameworkInjector.entityManager.entityFetcher
-                .conversationEntity(for: groupIdentity, myIdentity: self.frameworkInjector.myIdentityStore.identity) {
+                .conversationEntity(
+                    for: groupIdentity,
+                    myIdentity: self.frameworkInjector.profileStore.profile.myIdentity.rawValue
+                ) {
                 self.messageProcessorDelegate.changedManagedObjectID(conversation.objectID)
 
                 if let groupEntity = self.frameworkInjector.entityManager.entityFetcher.groupEntity(for: conversation) {

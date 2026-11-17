@@ -131,6 +131,8 @@ enum ScreenshotGenerator {
 
         await settleModalPresentation(of: hostingController)
 
+        await dismissKeyboard(in: window)
+
         let image = try await capture(window, size: size)
 
         let framedImage = applyBezel(
@@ -234,6 +236,20 @@ enum ScreenshotGenerator {
 
         // A modal can present something itself, e.g. an alert on top of a sheet.
         await settleModalPresentation(of: presented)
+    }
+
+    /// Resigns any text field a screen focuses on appear, so the screenshot shows the screen at rest.
+    ///
+    /// The keyboard lives in a window of its own and never makes it into the capture, but its safe area
+    /// still applies to the preview content, which leaves the bottom of the screen pushed up with an
+    /// empty gap below it. By now the content's `.task` has had the whole modal detection window to set
+    /// its focus, so there is nothing left to take it back.
+    private static func dismissKeyboard(in window: UIWindow) async {
+        window.endEditing(true)
+
+        // One turn for SwiftUI to clear its focus state and drop the keyboard safe area.
+        try? await Task.sleep(for: renderSettleDelay)
+        window.layoutIfNeeded()
     }
 
     /// The scene of the test host.

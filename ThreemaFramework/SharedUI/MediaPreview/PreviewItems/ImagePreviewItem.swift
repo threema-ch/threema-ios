@@ -62,7 +62,13 @@ open class ImagePreviewItem: MediaPreviewItem {
         }
     }
     
+    @available(*, deprecated, message: "Use previewImage(bounds:) instead")
     var previewImage: Promise<UIImage> {
+        previewImage(bounds: UIScreen.main.bounds)
+    }
+    
+    /// - Parameter bounds: Bounds of the view the preview is displayed in
+    func previewImage(bounds: CGRect) -> Promise<UIImage> {
         Promise { seal in
             guard estimatedFileSize < kShareExtensionMaxImagePreviewSize else {
                 seal.reject(MediaPreviewItem.LoadError.memoryConstrained)
@@ -74,7 +80,7 @@ open class ImagePreviewItem: MediaPreviewItem {
                 return
             }
             
-            let size = MediaConverter.fullscreenPreviewSizeForCurrentDevice()
+            let size = MediaConverter.fullscreenPreviewSize(forBounds: bounds)
             guard let image = MediaConverter.scale(image: itemURL, toMaxSize: CGFloat(size)) else {
                 seal.reject(MediaPreviewItem.LoadError.unknown)
                 return

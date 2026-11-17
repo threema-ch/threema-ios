@@ -42,7 +42,8 @@ final class ChatViewTypingIndicatorInformationProvider: ChatViewTypingIndicatorI
     private func accessibilityTyping(conversation: ConversationEntity) {
         guard
             let appCoordinator = SharedAppProvider.appCoordinator,
-            appCoordinator.splitViewController.isTopControllerChat(for: conversation.contact)
+            let contact = conversation.contact,
+            appCoordinator.isShowingChat(for: contact)
         else {
             return
         }

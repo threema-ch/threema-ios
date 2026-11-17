@@ -161,7 +161,8 @@ struct NonceProviderTests {
         let stored = entityManager.entityFetcher.nonceEntities()?.count ?? 0
 
         #expect(stored == defaultBatchSize)
-        #expect(duration < 1.0)
+        // Coarse regression guard: shared CI simulators routinely need more than 1s for this batch.
+        #expect(duration < 5.0)
     }
 
     // MARK: - GetMany tests

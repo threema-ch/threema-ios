@@ -59,10 +59,17 @@ final class ProcessCoordinator: NSObject {
         target: .global()
     )
 
-    // Dispatch queue to sync access to the member variable `state` and `receivedMessageAfterRequest`
+    // Dispatch queue to sync access to the member variable `state`, `receivedMessageAfterRequest` and
+    // `incomingUnusedMessagesCount`
     private let updateStateQueue = DispatchQueue(label: "ch.threema.ProcessStateHandover.updateStateQueue")
     private var state: AccessState = .unused
+    // Incoming messages are only relevant after a new request access.
     private var receivedMessageAfterRequest = false
+    // Change the `state` to `using` only after at least one additional `unused` message has been received.
+    // Incoming messages may originate from a previous `request access` and will still be processed. To
+    // minimize this issue when switching to `using`, at least two `unused` messages must be received.
+    private let changeStateToUsingAfterIncomingUnusedMessages = 2
+    private var incomingUnusedMessagesAfterRequest = 0
 
     private let myAppType: AppGroupType
     private weak var serverConnector: ServerConnectorProtocol?
@@ -147,6 +154,7 @@ final class ProcessCoordinator: NSObject {
 
         updateStateQueue.sync {
             self.receivedMessageAfterRequest = false
+            self.incomingUnusedMessagesAfterRequest = 0
         }
 
         DispatchQueue.global(qos: .userInitiated).async {
@@ -197,15 +205,21 @@ final class ProcessCoordinator: NSObject {
                     )
                 }
                 self.receivedMessageAfterRequest = true
+                if state == .unused {
+                    self.incomingUnusedMessagesAfterRequest += 1
+                }
 
                 let newState = self.process(state: state, from: appType)
 
                 // Enforce posting on `request`, otherwise the sender will be connect after a defined timeout
                 self.update(newState: newState, enforcePosting: state == .requested)
 
-                self.pollingQueue.sync {
-                    self.pollingStopped = true
-                    _ = self.pollingSemaphore?.signal()
+                // Stop the polling only if the process shouldn't request anymore
+                if newState != .requested {
+                    self.pollingQueue.sync {
+                        self.pollingStopped = true
+                        _ = self.pollingSemaphore?.signal()
+                    }
                 }
             }
         }
@@ -315,7 +329,14 @@ final class ProcessCoordinator: NSObject {
         case .unused:
             switch state {
             case .unused: newState = .unused
-            case .requested: newState = .using
+            case .requested:
+                if self.incomingUnusedMessagesAfterRequest >= changeStateToUsingAfterIncomingUnusedMessages {
+                    newState = .using
+                }
+                else {
+                    DDLogNotice("[Darwin] Wait for an additional `unused` message")
+                    newState = .requested
+                }
             case .using: newState = .using
             case .willRelease: newState = .willRelease
             }

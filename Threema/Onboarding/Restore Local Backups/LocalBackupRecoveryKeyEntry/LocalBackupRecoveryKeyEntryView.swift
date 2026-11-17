@@ -9,15 +9,18 @@ struct LocalBackupRecoveryKeyEntryView: View {
     @FocusState private var focusedComponent: Int?
     @ScaledMetric private var scaledMetric: CGFloat = 1.0
 
-    private let headerHeight = DotHeaderView.defaultHeight
-    private let headerOverlap = DotHeaderView.defaultOverlap
+    private let headerHeight = StandardHeaderView.defaultHeight
+    private let headerOverlap = StandardHeaderView.defaultOverlap
 
     var body: some View {
         ScrollView {
             VStack(spacing: 0) {
-                DotHeaderView(
-                    icon: DotHeaderView.Icon(name: model.headerIconName, color: .accentColor),
-                    dotColor: .accentColor.opacity(0.3),
+                StandardHeaderView(
+                    icon: StandardHeaderView.Icon(
+                        name: model.headerIconName,
+                        color: .accentColor,
+                        rotationDegrees: model.headerIconRotationDegrees,
+                    ),
                     height: headerHeight
                 )
 

@@ -198,6 +198,10 @@ final class AppMigration {
                 try migrateTo7_5()
                 migratedTo = .v7_5
             }
+            if migratedTo < .v7_6 {
+                try migrateTo7_6()
+                migratedTo = .v7_6
+            }
 
             // Add here a check if migration is necessary for a particular version...
         }
@@ -408,11 +412,19 @@ final class AppMigration {
         try BusinessInjector.ui.dhSessionStore.executeNull()
 
         businessInjector.entityManager.performAndWaitSave {
-            // Set for all conversations the last update
+            // Set for all conversations the last update, except for 1:1 conversations without content. These only
+            // contain FS status messages, which are never set as last message, or the other app info and must not be
+            // shown in the conversation list. This migration runs again after a downgrade or a Threema Safe restore, so
+            // it also hits conversations created after 5.4.
+            // Batch updates don't support key paths (joins), thus the other app info messages are fetched first.
+            let otherAppInfoMessageIDs = self.businessInjector.entityManager.entityFetcher
+                .oneToOneContactOtherAppInfoMessageObjectIDs() ?? []
+
             let batch = NSBatchUpdateRequest(entityName: "Conversation")
             batch.resultType = .statusOnlyResultType
             batch.predicate = NSPredicate(
-                format: "lastUpdate == nil"
+                format: "lastUpdate == nil AND NOT (groupId == nil AND (lastMessage == nil OR lastMessage IN %@))",
+                otherAppInfoMessageIDs
             )
 
             batch.propertiesToUpdate = [
@@ -751,6 +763,7 @@ final class AppMigration {
         func addReaction(to message: BaseMessageEntity, from contact: ContactEntity?, thumbUp: Bool, at date: Date) {
             let reaction = businessInjector.entityManager.entityCreator.messageReactionEntity(
                 reaction: thumbUp ? "👍" : "👎",
+                readAt: date,
                 message: message
             )
             reaction.creator = contact
@@ -1090,5 +1103,49 @@ final class AppMigration {
         
         os_signpost(.end, log: osPOILog, name: "7.5 migration")
         DDLogNotice("[AppMigration] App migration to version 7.5 successfully finished")
+    }
+
+    /// Migrate to version 7.6
+    /// - Mark all existing reactions as read
+    /// - Remove the last update of 1:1 conversations without content that got one from the 5.4 migration
+    ///
+    /// The 5.4 migration sets the last update of all conversations without one to 1970. It runs again after a
+    /// downgrade or a Threema Safe restore and then also hits 1:1 conversations that only contain FS status messages,
+    /// which are never set as last message, or the other app info. These conversations must not be shown in the
+    /// conversation list. As this migration runs after the 5.4 one, it also reverts it on every later run.
+    private func migrateTo7_6() throws {
+        DDLogNotice("[AppMigration] App migration to version 7.6 started")
+        os_signpost(.begin, log: osPOILog, name: "7.6 migration")
+        let remoteSecretEnabled = RemoteSecretProvider.isRemoteSecretEnabled
+        try persistenceMigration.migrateReadMessageReactions(remoteSecretEnabled: remoteSecretEnabled)
+        
+        businessInjector.entityManager.performAndWaitSave {
+            // Batch updates don't support key paths (joins), thus the other app info messages are fetched first
+            let otherAppInfoMessageIDs = self.businessInjector.entityManager.entityFetcher
+                .oneToOneContactOtherAppInfoMessageObjectIDs() ?? []
+
+            let batch = NSBatchUpdateRequest(entityName: "Conversation")
+            batch.resultType = .statusOnlyResultType
+            batch.predicate = NSPredicate(
+                format: "groupId == nil AND lastUpdate == %@ AND (lastMessage == nil OR lastMessage IN %@)",
+                Date(timeIntervalSince1970: 0) as NSDate,
+                otherAppInfoMessageIDs
+            )
+
+            batch.propertiesToUpdate = [
+                "lastUpdate": NSExpression(forConstantValue: nil),
+            ]
+            // if there was a error, the execute function will return nil or a result with the result 0
+            if let result = self.businessInjector.entityManager.entityFetcher.execute(batchUpdateRequest: batch),
+               (result.result as? Int) != 0 {
+                DDLogNotice("[AppMigration] Succeeded to remove lastUpdate of 1:1 conversations without content")
+            }
+            else {
+                DDLogError("[AppMigration] Failed to remove lastUpdate of 1:1 conversations without content")
+            }
+        }
+
+        os_signpost(.end, log: osPOILog, name: "7.6 migration")
+        DDLogNotice("[AppMigration] App migration to version 7.6 successfully finished")
     }
 }

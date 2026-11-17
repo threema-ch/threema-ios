@@ -198,15 +198,6 @@ final class ChatExportViewModel: ObservableObject {
         }
     }
     
-    func share() {
-        guard let url else {
-            return
-        }
-        
-        let activityVC = UIActivityViewController(activityItems: [url], applicationActivities: nil)
-        UIApplication.shared.windows.first?.rootViewController?.present(activityVC, animated: true, completion: nil)
-    }
-    
     func dismiss() {
         // Cancel task if still running
         exportTask?.cancel()

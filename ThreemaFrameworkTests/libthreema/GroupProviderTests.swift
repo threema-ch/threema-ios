@@ -211,6 +211,68 @@ struct GroupProviderTests {
         #expect(conversationEntity.groupImageSetDate == nil)
     }
 
+    @Test func `addWithProfilePicture without last update`() throws {
+        let (groupProvider, myIdentityStoreMock, testDatabase) = try makeSUT()
+
+        let groupIdentity = GroupIdentity(
+            id: BytesUtility.generateGroupID(),
+            creatorID: myIdentityStoreMock.identity
+        )
+
+        let groupWithProfilePicture = try GroupWithProfilePicture(
+            group: getLibthreemaGroup(groupIdentity: groupIdentity, members: [], lastUpdateAt: nil),
+            profilePicture: nil
+        )
+
+        try groupProvider.addWithProfilePicture(groups: [groupWithProfilePicture])
+
+        let conversationEntity = try #require(testDatabase.entityManager.entityFetcher.conversationEntity(
+            for: groupIdentity,
+            myIdentity: myIdentityStoreMock.identity
+        ))
+        #expect(conversationEntity.lastUpdate == nil)
+    }
+
+    @Test(arguments: [
+        nil,
+        libthreemaSwift.GroupNotificationTriggerPolicyOverride(policy: .mentioned, expiresAt: nil),
+        libthreemaSwift.GroupNotificationTriggerPolicyOverride(policy: .mentioned, expiresAt: 4_102_444_800_000),
+        libthreemaSwift.GroupNotificationTriggerPolicyOverride(policy: .never, expiresAt: nil),
+        libthreemaSwift.GroupNotificationTriggerPolicyOverride(policy: .never, expiresAt: 4_102_444_800_000),
+    ])
+    func `addWithProfilePicture keeps notification trigger policy override`(
+        expectedOverride: libthreemaSwift.GroupNotificationTriggerPolicyOverride?
+    ) throws {
+        let pushSettingManagerMock = PushSettingManagerMock()
+        let (groupProvider, myIdentityStoreMock, _) = try makeSUT(pushSettingManager: pushSettingManagerMock)
+
+        let groupIdentity = GroupIdentity(
+            id: BytesUtility.generateGroupID(),
+            creatorID: myIdentityStoreMock.identity
+        )
+
+        let groupWithProfilePicture = try GroupWithProfilePicture(
+            group: getLibthreemaGroup(
+                groupIdentity: groupIdentity,
+                members: [],
+                notificationTriggerPolicyOverride: expectedOverride
+            ),
+            profilePicture: nil
+        )
+
+        try groupProvider.addWithProfilePicture(groups: [groupWithProfilePicture])
+
+        #expect(pushSettingManagerMock.savedPushSettings.count == 1)
+        let pushSetting = try #require(pushSettingManagerMock.savedPushSettings.first)
+        #expect(pushSetting.groupIdentity == groupIdentity)
+
+        // Read the group back with the push setting saved for it, like a backup does
+        pushSettingManagerMock.groupPushSettings = [pushSetting]
+        let libthreemaGroupIdentity = try LibthreemaGroupIdentity(groupIdentity: groupIdentity)
+        let readGroup = try #require(try groupProvider.getWithProfilePicture(identity: libthreemaGroupIdentity))
+        #expect(readGroup.group.notificationTriggerPolicyOverride == expectedOverride)
+    }
+
     @Test func `addWithProfilePicture group already exists`() throws {
         let (groupProvider, myIdentityStoreMock, testDatabase) = try makeSUT()
 
@@ -618,7 +680,10 @@ struct GroupProviderTests {
         return (data, image)
     }
 
-    private func makeSUT(userIdentity: String? = nil) throws -> (
+    private func makeSUT(
+        userIdentity: String? = nil,
+        pushSettingManager: PushSettingManagerMock = PushSettingManagerMock()
+    ) throws -> (
         ThreemaFramework.GroupProvider,
         MyIdentityStoreMock,
         TestDatabase
@@ -630,7 +695,7 @@ struct GroupProviderTests {
         }
         let groupProvider = try GroupProvider(
             userIdentity: ThreemaIdentity(identity: myIdentityStoreMock.identity),
-            pushSettingManager: PushSettingManagerMock(),
+            pushSettingManager: pushSettingManager,
             entityManager: testDatabase.entityManager
         )
         return (groupProvider, myIdentityStoreMock, testDatabase)

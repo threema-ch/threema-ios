@@ -11,8 +11,7 @@ public protocol UserNotificationManagerProtocol {
     func applyContent(
         from: UserNotificationContent,
         to: inout UNMutableNotificationContent,
-        silent: Bool,
-        baseMessage: BaseMessageEntity?
+        silent: Bool
     )
 }
 
@@ -26,7 +25,8 @@ public final class UserNotificationManager: UserNotificationManagerProtocol {
     private let entityManager: EntityManager
     private let isWorkApp: Bool
     private let fileUtility: FileUtilityProtocol
-    
+    private let isReactionNotificationsEnabled: Bool
+
     public init(
         settingsStore: SettingsStoreProtocol,
         userSettings: UserSettingsProtocol,
@@ -36,7 +36,8 @@ public final class UserNotificationManager: UserNotificationManagerProtocol {
         groupManager: GroupManagerProtocol,
         entityManager: EntityManager,
         isWorkApp: Bool,
-        fileUtility: FileUtilityProtocol = FileUtility.shared
+        fileUtility: FileUtilityProtocol = FileUtility.shared,
+        isReactionNotificationsEnabled: Bool = ThreemaEnvironment.enableReactionNotifications
     ) {
         self.settingsStore = settingsStore
         self.userSettings = userSettings
@@ -47,6 +48,7 @@ public final class UserNotificationManager: UserNotificationManagerProtocol {
         self.entityManager = entityManager
         self.isWorkApp = isWorkApp
         self.fileUtility = fileUtility
+        self.isReactionNotificationsEnabled = isReactionNotificationsEnabled
     }
     
     // MARK: - Public functions
@@ -91,10 +93,7 @@ public final class UserNotificationManager: UserNotificationManagerProtocol {
         
         // Set the body
         if settingsStore.pushShowPreview {
-            userNotificationContent.body = bodyWithPreview(
-                for: pendingUserNotification,
-                fromName: fromName
-            )
+            userNotificationContent.body = bodyWithPreview(for: pendingUserNotification)
         }
         else {
             userNotificationContent.body = bodyWithoutPreview(for: pendingUserNotification)
@@ -163,8 +162,7 @@ public final class UserNotificationManager: UserNotificationManagerProtocol {
     public func applyContent(
         from: UserNotificationContent,
         to: inout UNMutableNotificationContent,
-        silent: Bool,
-        baseMessage: BaseMessageEntity?
+        silent: Bool
     ) {
         
         var pushSound: String = from.categoryIdentifier.elementsEqual("GROUP") ? userSettings
@@ -180,7 +178,9 @@ public final class UserNotificationManager: UserNotificationManagerProtocol {
         let isPrivate = isPrivate(content: from)
         
         if isPrivate {
-            to.title = #localize("private_message_label")
+            to.title = from.isReactionMessage() ? #localize("private_reaction_label") : #localize(
+                "private_message_label"
+            )
             to.body = ""
         }
         
@@ -210,7 +210,9 @@ public final class UserNotificationManager: UserNotificationManagerProtocol {
         to.userInfo = from.userInfo
         
         if from.categoryIdentifier.elementsEqual("SINGLE") || from.categoryIdentifier.elementsEqual("GROUP") {
-            to.categoryIdentifier = userSettings.pushDecrypt ? from.categoryIdentifier : ""
+            // Reactions get no actions: replying and reacting would both act on our own message
+            to.categoryIdentifier = userSettings.pushDecrypt && !from.isReactionMessage() ? from
+                .categoryIdentifier : ""
         }
         else {
             to.categoryIdentifier = from.categoryIdentifier
@@ -219,6 +221,7 @@ public final class UserNotificationManager: UserNotificationManagerProtocol {
         
         // Group notifications
         if from.categoryIdentifier.elementsEqual("SINGLE") {
+            // TODO: Remove this force unwrap, it is on the path of every 1:1 notification, reactions included
             to.threadIdentifier = "SINGLE-\(from.senderID!)"
         }
         else if from.categoryIdentifier.elementsEqual("GROUP"),
@@ -228,6 +231,31 @@ public final class UserNotificationManager: UserNotificationManagerProtocol {
         }
     }
     
+    /// Body of an in-app banner about the reactions to a message of ours
+    ///
+    /// Follows the same rules as a notification, e.g. the reaction settings or blocked contacts. Unlike a rich
+    /// notification it always names who reacted, because nothing is shown next to the title of an in-app banner.
+    /// - Parameter pendingUserNotification: Pending notification about a reaction
+    /// - Returns: Body of the banner, `nil` if none may be shown
+    public func inAppReactionBannerBody(for pendingUserNotification: PendingUserNotification) -> String? {
+        // Only reactions to our own messages are announced, the same as for the notification. Taking a reaction back
+        // is nothing to announce either, the notification is only updated or removed for it.
+        guard pendingUserNotification.baseMessage?.isOwnMessage == true,
+              !pendingUserNotification.isReactionWithdrawal,
+              shouldShowPush(for: pendingUserNotification) else {
+            return nil
+        }
+
+        if pendingUserNotification.abstractMessage is ReactionMessage {
+            return reactionBodyForOneToOne(pendingUserNotification: pendingUserNotification)
+        }
+        else if pendingUserNotification.abstractMessage is GroupReactionMessage {
+            return reactionBodyForGroup(pendingUserNotification: pendingUserNotification, showsLastReactorName: false)
+        }
+
+        return nil
+    }
+
     // MARK: - Private functions
     
     private func saveAttachment(
@@ -306,13 +334,32 @@ public final class UserNotificationManager: UserNotificationManagerProtocol {
                 }
             }
 
-            // Delete or edit message it self can't show notification, but can delete/edit existing notification
+            // Delete or edit message it self can't show notification, but can delete/edit existing notification. Also
+            // reactions get special treatment.
             if !(
-                abstractMessage is DeleteMessage || abstractMessage is DeleteGroupMessage
-                    || abstractMessage is EditMessage || abstractMessage is EditGroupMessage
+                abstractMessage is DeleteMessage ||
+                    abstractMessage is DeleteGroupMessage ||
+                    abstractMessage is EditMessage ||
+                    abstractMessage is EditGroupMessage ||
+                    abstractMessage is ReactionMessage ||
+                    abstractMessage is GroupReactionMessage
             ) {
                 guard abstractMessage.canShowUserNotification(), !abstractMessage.flagImmediateDeliveryRequired(),
                       !abstractMessage.flagIsVoIP() else {
+                    return false
+                }
+            }
+            
+            if abstractMessage is ReactionMessage || abstractMessage is GroupReactionMessage {
+                guard isReactionNotificationsEnabled else {
+                    return false
+                }
+
+                if abstractMessage is ReactionMessage, !userSettings.reactionNotificationsOneToOneEnabled {
+                    return false
+                }
+
+                if abstractMessage is GroupReactionMessage, !userSettings.reactionNotificationsGroupEnabled {
                     return false
                 }
             }
@@ -363,16 +410,25 @@ public final class UserNotificationManager: UserNotificationManagerProtocol {
     private func fromName(for pendingUserNotification: PendingUserNotification) -> String {
         if let senderIdentity = pendingUserNotification.senderIdentity,
            let senderContact = entityManager.entityFetcher.contactEntity(for: senderIdentity) {
-            // We only show nickname for restrictive notifications, otherwise we always use the display name.
-            switch settingsStore.notificationType {
-            case .restrictive:
-                senderContact.publicNickname ?? senderIdentity
-            case .balanced, .complete:
-                senderContact.displayName
-            }
+            name(for: senderContact, identity: senderIdentity)
         }
         else {
             nickname(for: pendingUserNotification)
+        }
+    }
+
+    /// Name of a contact as it may be shown in a notification
+    /// - Parameters:
+    ///   - contact: Contact to get the name of
+    ///   - identity: Identity of the contact, shown if there is no name to show
+    /// - Returns: Name for the notification
+    private func name(for contact: ContactEntity, identity: String) -> String {
+        // We only show nickname for restrictive notifications, otherwise we always use the display name.
+        switch settingsStore.notificationType {
+        case .restrictive:
+            contact.publicNickname ?? identity
+        case .balanced, .complete:
+            contact.displayName
         }
     }
     
@@ -428,45 +484,305 @@ public final class UserNotificationManager: UserNotificationManagerProtocol {
         return fromName
     }
     
-    private func bodyWithPreview(for pendingUserNotification: PendingUserNotification, fromName: String) -> String {
-        if let baseMessage = pendingUserNotification.baseMessage as? PreviewableMessage {
-            return baseMessage.previewAttributedText(for: .pushNotification, settingsStore: settingsStore).string
+    private func bodyWithPreview(for pendingUserNotification: PendingUserNotification) -> String {
+        // We have a previewable base message
+        if let previewableMessage = pendingUserNotification.baseMessage as? PreviewableMessage {
+            bodyWithPreview(for: previewableMessage, of: pendingUserNotification)
         }
-        if let abstractMessage = pendingUserNotification.abstractMessage {
-            if abstractMessage is AbstractGroupMessage {
-                if abstractMessage is GroupCallStartMessage {
-                    switch settingsStore.notificationType {
-                    case .restrictive, .balanced:
-                        let date = DateFormatter.shortStyleTimeNoDate(abstractMessage.date)
-                        return String.localizedStringWithFormat(
-                            #localize("group_call_notification_body_preview"),
-                            fromName,
-                            date
-                        )
-                    case .complete:
-                        return abstractMessage.pushNotificationBody()
-                    }
-                }
-                else {
-                    return "\(fromName): \(abstractMessage.pushNotificationBody()!)"
-                }
+        // We only have an abstract message
+        else if let abstractMessage = pendingUserNotification.abstractMessage {
+            bodyWithPreview(for: abstractMessage, of: pendingUserNotification)
+        }
+        // No info available, we fallback to defaults
+        else {
+            if let isGroupMessage = pendingUserNotification.isGroupMessage, isGroupMessage {
+                #localize("new_group_message")
             }
             else {
-                return abstractMessage.pushNotificationBody()
+                #localize("new_message")
             }
-        }
-        else {
-            return pendingUserNotification
-                .isGroupMessage ?? false ? #localize("new_group_message") : #localize("new_message")
         }
     }
     
+    private func bodyWithPreview(
+        for previewableMessage: PreviewableMessage,
+        of pendingUserNotification: PendingUserNotification
+    ) -> String {
+        // If we have a base message, and the abstract message is a reaction message, we handle it specially
+        if pendingUserNotification.abstractMessage is ReactionMessage {
+            return reactionBodyForOneToOne(pendingUserNotification: pendingUserNotification)
+        }
+        else if pendingUserNotification.abstractMessage is GroupReactionMessage {
+            // A rich notification shows the name of the person that reacted last next to the group name
+            return reactionBodyForGroup(
+                pendingUserNotification: pendingUserNotification,
+                showsLastReactorName: settingsStore.notificationType == .complete
+            )
+        }
+        
+        // A normal push for a base message
+        return previewableMessage.previewAttributedText(for: .pushNotification, settingsStore: settingsStore).string
+    }
+    
+    private func bodyWithPreview(
+        for abstractMessage: AbstractMessage,
+        of pendingUserNotification: PendingUserNotification
+    ) -> String {
+        // Non group messages are straight forward
+        if !(abstractMessage is AbstractGroupMessage) {
+            return abstractMessage.pushNotificationBody()
+        }
+    
+        let fromName = fromName(for: pendingUserNotification)
+        
+        // Non group call messages
+        if !(abstractMessage is GroupCallStartMessage) {
+            return "\(fromName): \(abstractMessage.pushNotificationBody(), default: #localize("new_group_message"))"
+        }
+        
+        // Group call messages need special attention
+        switch settingsStore.notificationType {
+        case .restrictive, .balanced:
+            let date = DateFormatter.shortStyleTimeNoDate(abstractMessage.date)
+            return String.localizedStringWithFormat(
+                #localize("group_call_notification_body_preview"),
+                fromName,
+                date
+            )
+            
+        case .complete:
+            return abstractMessage.pushNotificationBody()
+        }
+    }
+    
+    // MARK: - Emoji reaction body
+    
+    // MARK: 1-to-1
+    
+    private func reactionBodyForOneToOne(pendingUserNotification: PendingUserNotification) -> String {
+        guard let reactionMessage = pendingUserNotification.abstractMessage as? ReactionMessage,
+              let messageID = reactionMessage.decoded?.messageID.littleEndianData else {
+            return #localize("new_reaction")
+        }
+        
+        // Everything read from the message and its reactions must happen on the queue of their context
+        return entityManager.performAndWait {
+            guard let messageInfo = self.messageInfoForReactionContent(
+                pendingUserNotification: pendingUserNotification,
+                reactionMessage: reactionMessage,
+                messageID: messageID
+            ) else {
+                return #localize("new_reaction")
+            }
+            let (message, messageReactions) = messageInfo
+
+            guard let emojis = self.compactedEmojiString(for: messageReactions),
+                  let preview = message.quotedPreviewText(for: .pushNotification) else {
+                return #localize("new_reaction")
+            }
+
+            let localizedReaction = String.localizedStringWithFormat(
+                #localize("new_message_reacted_with_one_to_one"),
+                emojis
+            )
+
+            return "\(localizedReaction) \(preview)"
+        }
+    }
+    
+    // MARK: Group
+    
+    /// - Parameters:
+    ///   - pendingUserNotification: Pending notification about a reaction
+    ///   - showsLastReactorName: Pass `true` if the name of the person that reacted last is already shown elsewhere,
+    /// thus must not be repeated in the body
+    private func reactionBodyForGroup(
+        pendingUserNotification: PendingUserNotification,
+        showsLastReactorName: Bool
+    ) -> String {
+        guard let reactionMessage = pendingUserNotification.abstractMessage as? GroupReactionMessage,
+              let messageID = reactionMessage.decoded?.messageID.littleEndianData else {
+            return #localize("new_reaction")
+        }
+        
+        // Everything read from the message and its reactions must happen on the queue of their context
+        return entityManager.performAndWait {
+            guard let messageInfo = self.messageInfoForReactionContent(
+                pendingUserNotification: pendingUserNotification,
+                reactionMessage: reactionMessage,
+                messageID: messageID
+            ) else {
+                return #localize("new_reaction")
+            }
+            let (message, messageReactions) = messageInfo
+
+            // Each reactor once, the one that reacted last comes first. Own reactions (creator is `nil`) are always
+            // read and thus never part of this.
+            var reactorIdentities = [String]()
+            for reaction in messageReactions.sorted(using: KeyPathComparator(\.date, order: .reverse)) {
+                guard let identity = reaction.creator?.identity, !reactorIdentities.contains(identity) else {
+                    continue
+                }
+                reactorIdentities.append(identity)
+            }
+
+            let senderString: String
+            switch reactorIdentities.count {
+            case 1:
+                guard let emojis = self.compactedEmojiString(for: messageReactions) else {
+                    return #localize("new_reaction")
+                }
+
+                senderString =
+                    if showsLastReactorName {
+                        String.localizedStringWithFormat(#localize("new_message_reacted_with_one_to_one"), emojis)
+                    }
+                    else {
+                        String.localizedStringWithFormat(
+                            #localize("new_message_reacted_one_member"),
+                            self.senderName(for: reactorIdentities[0]),
+                            emojis
+                        )
+                    }
+
+            case 2:
+                senderString =
+                    if showsLastReactorName {
+                        String.localizedStringWithFormat(
+                            #localize("new_message_reacted_and_one_member"),
+                            self.senderName(for: reactorIdentities[1])
+                        )
+                    }
+                    else {
+                        String.localizedStringWithFormat(
+                            #localize("new_message_reacted_two_members"),
+                            self.senderName(for: reactorIdentities[0]),
+                            self.senderName(for: reactorIdentities[1])
+                        )
+                    }
+
+            case 3...:
+                // The last reactor is named, all others are counted
+                senderString =
+                    if showsLastReactorName {
+                        String.localizedStringWithFormat(
+                            #localize("new_message_reacted_and_n_members"),
+                            reactorIdentities.count - 1
+                        )
+                    }
+                    else {
+                        String.localizedStringWithFormat(
+                            #localize("new_message_reacted_n_members"),
+                            self.senderName(for: reactorIdentities[0]),
+                            reactorIdentities.count - 1
+                        )
+                    }
+
+            default:
+                // There is nobody we could attribute the reactions to
+                return #localize("new_reaction")
+            }
+
+            guard let preview = message.quotedPreviewText(for: .pushNotification) else {
+                return #localize("new_reaction")
+            }
+
+            return "\(senderString) \(preview)"
+        }
+    }
+    
+    // MARK: General emoji body helpers
+
+    /// Number of emojis shown in a notification before the rest is truncated away
+    static let maxShownEmojis = 3
+
+    /// Emojis of the given reactions, newest first. Everything beyond `maxShownEmojis` is replaced by the number of
+    /// remaining emojis.
+    /// - Parameter reactions: Reactions to show the emojis of
+    /// - Returns: Emojis for the notification body or `nil` if there is no emoji to show
+    func compactedEmojiString(for reactions: [MessageReactionEntity]) -> String? {
+        let emojis = reactions
+            .sorted(using: KeyPathComparator(\.date, order: .reverse))
+            .compactMap { $0.emoji?.rawValue }
+
+        guard !emojis.isEmpty else {
+            return nil
+        }
+
+        guard emojis.count > Self.maxShownEmojis else {
+            return emojis.joined()
+        }
+
+        return String.localizedStringWithFormat(
+            #localize("new_message_reacted_emojis_truncated"),
+            emojis.prefix(Self.maxShownEmojis).joined(),
+            emojis.count - Self.maxShownEmojis
+        )
+    }
+
+    /// Name of the person that reacted, shown the same way as the name of somebody sending a message
+    /// - Parameter identity: Identity of the person that reacted
+    /// - Returns: Name for the notification, the identity if we don't know the person
+    func senderName(for identity: String) -> String {
+        entityManager.performAndWait {
+            guard let contact = self.entityManager.entityFetcher.contactEntity(for: identity) else {
+                return identity
+            }
+
+            return self.name(for: contact, identity: identity)
+        }
+    }
+    
+    /// Message a reaction is about and its unread reactions
+    ///
+    /// Must be called on the queue of the context of `entityManager`, and the result must only be used there.
+    /// - Parameters:
+    ///   - pendingUserNotification: Pending notification about the reaction
+    ///   - reactionMessage: Reaction that came in
+    ///   - messageID: ID of the message that was reacted to
+    /// - Returns: Message and its unread reactions, `nil` if the message can't be found or can't be previewed
+    private func messageInfoForReactionContent(
+        pendingUserNotification: PendingUserNotification,
+        reactionMessage: AbstractMessage,
+        messageID: Data
+    ) -> (PreviewableMessage, [MessageReactionEntity])? {
+        let message: BaseMessageEntity? =
+            if let baseMessageObjectID = pendingUserNotification.baseMessage?.objectID {
+                // The message the notification is about already, loaded again because it may belong to another context
+                entityManager.entityFetcher.existingObject(with: baseMessageObjectID) as? BaseMessageEntity
+            }
+            else if let conversation = entityManager.existingConversationSenderReceiver(
+                for: reactionMessage,
+                myIdentity: myIdentityStore.identity
+            ).conversation {
+                entityManager.entityFetcher.message(with: messageID, in: conversation)
+            }
+            else {
+                nil
+            }
+
+        guard let message,
+              let previewableMessage = message as? PreviewableMessage,
+              let reactions = entityManager.entityFetcher.unreadMessageReactionEntities(for: message) else {
+            return nil
+        }
+
+        return (previewableMessage, reactions)
+    }
+
     private func bodyWithoutPreview(for pendingUserNotification: PendingUserNotification) -> String {
         if let abstractMessage = pendingUserNotification.abstractMessage, abstractMessage is GroupCallStartMessage {
             abstractMessage.pushNotificationBody()
         }
         else {
-            pendingUserNotification.isGroupMessage ?? false ? #localize("new_group_message") : #localize("new_message")
+            if pendingUserNotification.abstractMessage is ReactionMessage || pendingUserNotification.abstractMessage is GroupReactionMessage {
+                #localize("new_reaction")
+            }
+            else {
+                pendingUserNotification.isGroupMessage ?? false ? #localize("new_group_message") : #localize(
+                    "new_message"
+                )
+            }
         }
     }
     

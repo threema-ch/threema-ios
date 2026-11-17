@@ -17,7 +17,7 @@ struct LocalBackupRecoveryKeyViewModelTests {
         #expect(sut.copyIconName == "document.on.document")
         #expect(sut.deleteIconName == "trash")
         #expect(sut.errorIconName == "exclamationmark.circle")
-        #expect(sut.headerIconName == "key")
+        #expect(sut.headerIconName == "key.fill")
         #expect(sut.createKeyIconName == "chevron.forward")
         #expect(sut.warningIconName == "info.circle")
 

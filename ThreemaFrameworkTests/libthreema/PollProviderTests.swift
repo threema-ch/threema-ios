@@ -66,6 +66,31 @@ struct PollProviderTests {
         #expect(poll.votes == .summary(PollVotesSummary(summary: [0: 3, 1: 1], userChoices: Set())))
     }
 
+    @Test func `GetMany maps a summary poll the user created with detailed votes`() async throws {
+        // The creator of a summary poll knows every vote, so the votes are not a summary for them
+
+        let conversation = addContactConversation()
+        let fixture = BallotFixture(displayMode: .summary, choices: ["Yes", "No"], votes: .detailed([
+            PollProviderTests.userIdentity: [0],
+            PollProviderTests.firstVoter: [1],
+        ]))
+        addBallotEntity(fixture, in: conversation, id: UInt64(1).littleEndianData)
+
+        let sut = makeSUT()
+
+        let polls = try sut.getMany(batchIndex: 0)
+        let poll = try #require(polls.first)
+
+        #expect(poll.displayMode == .summary)
+        guard case let .votes(votes) = poll.votes else {
+            Issue.record("Expected detailed votes but got \(poll.votes)")
+            return
+        }
+        #expect(votes.count == 2)
+        #expect(votes[PollProviderTests.userIdentity]?.choices == [0])
+        #expect(votes[PollProviderTests.firstVoter]?.choices == [1])
+    }
+
     @Test func `GetMany maps a poll with detailed votes`() async throws {
         // A non-summary poll stores the individual selection of every voter
 
@@ -514,9 +539,11 @@ struct PollProviderTests {
         addContactConversation()
 
         let pollID: LibthreemaPollID = 1
+        // Created by the contact, as the votes of a summary poll the user created are not a summary
         let poll = makePoll(
             id: pollID,
             in: .contact(PollProviderTests.firstVoter),
+            creator: PollProviderTests.firstVoter,
             displayMode: .summary,
             choices: [
                 PollChoice(id: 0, description: "Yes"),
@@ -796,8 +823,14 @@ struct PollProviderTests {
 
     private var openSingleChoiceBallot: BallotFixture { BallotFixture() }
 
+    /// Created by a contact: only then are the votes of a summary poll a summary for the user
     private var summaryVotesBallot: BallotFixture {
-        BallotFixture(displayMode: .summary, choices: ["Yes", "No"], votes: .summary([3, 1]))
+        BallotFixture(
+            creator: PollProviderTests.firstVoter,
+            displayMode: .summary,
+            choices: ["Yes", "No"],
+            votes: .summary([3, 1])
+        )
     }
 
     private var detailedVotesBallot: BallotFixture {

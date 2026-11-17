@@ -62,6 +62,11 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
+
+    // The orientation lock depends on the horizontal size class, see `prefersInterfaceOrientationLocked`
+    if (@available(iOS 26.0, *)) {
+        [self registerForTraitChanges:@[UITraitHorizontalSizeClass.class] withAction:@selector(setNeedsUpdateOfPrefersInterfaceOrientationLocked)];
+    }
     
     self.overrideUserInterfaceStyle = UIUserInterfaceStyleDark;
 
@@ -135,7 +140,7 @@
         
         NSMutableAttributedString *attributedString = [[NSMutableAttributedString alloc] initWithString:privacyPolicyText attributes:normalAttributes];
         CGRect infoRect = [attributedString boundingRectWithSize:CGSizeMake(_privacyView.frame.size.width, 400.0) options:NSStringDrawingUsesLineFragmentOrigin | NSStringDrawingUsesFontLeading context:nil];
-        if (MAX([UIScreen mainScreen].bounds.size.height, [UIScreen mainScreen].bounds.size.width) <= 480) {
+        if ([self hasSmallViewBounds]) {
             /* iPhone 4s */
             _welcomeLabel.frame = CGRectMake(_welcomeLabel.frame.origin.x, _welcomeLabel.frame.origin.y - 20.0, _welcomeLabel.frame.size.width, _welcomeLabel.frame.size.height);
             _privacyPolicyInfo.frame = CGRectMake(_privacyPolicyInfo.frame.origin.x, _privacyPolicyInfo.frame.origin.y - 50.0, infoRect.size.width, infoRect.size.height + 20.0);
@@ -166,13 +171,19 @@
     }
 }
 
+/// Resizable scenes on iOS 26+ ignore `supportedInterfaceOrientations`, lock the orientation where it only allows
+/// portrait
+- (BOOL)prefersInterfaceOrientationLocked {
+    return self.traitCollection.horizontalSizeClass != UIUserInterfaceSizeClassRegular;
+}
+
 - (void)viewWillTransitionToSize:(CGSize)size withTransitionCoordinator:(id<UIViewControllerTransitionCoordinator>)coordinator {
     [super viewWillTransitionToSize:size withTransitionCoordinator:coordinator];
     
     [coordinator animateAlongsideTransition:nil completion:^(id<UIViewControllerTransitionCoordinatorContext>  _Nonnull context) {
         CGRect privacyTargetRect;
         
-        if (MAX([UIScreen mainScreen].bounds.size.height, [UIScreen mainScreen].bounds.size.width) <= 480) {
+        if ([self hasSmallViewBounds]) {
             /* iPhone 4s */
             privacyTargetRect = CGRectMake(_privacyView.frame.origin.x, 120.0, _privacyView.frame.size.width, _privacyView.frame.size.height);
         } else {
@@ -180,13 +191,13 @@
         }
                 
         CGRect controlsTargetRect;
-        if (MAX([UIScreen mainScreen].bounds.size.height, [UIScreen mainScreen].bounds.size.width) <= 480) {
+        if ([self hasSmallViewBounds]) {
             /* iPhone 4s */
-            privacyTargetRect = CGRectMake(_controlsView.frame.origin.x, privacyTargetRect.origin.y + privacyTargetRect.size.height - 40.0, _controlsView.frame.size.width, _controlsView.frame.size.height);
+            controlsTargetRect = CGRectMake(_controlsView.frame.origin.x, privacyTargetRect.origin.y + privacyTargetRect.size.height - 40.0, _controlsView.frame.size.width, _controlsView.frame.size.height);
         } else {
-            privacyTargetRect = CGRectMake(_controlsView.frame.origin.x, privacyTargetRect.origin.y + privacyTargetRect.size.height, _controlsView.frame.size.width, _controlsView.frame.size.height);
+            controlsTargetRect = CGRectMake(_controlsView.frame.origin.x, privacyTargetRect.origin.y + privacyTargetRect.size.height, _controlsView.frame.size.width, _controlsView.frame.size.height);
         }
-                
+
         _privacyView.frame = privacyTargetRect;
         _controlsView.frame = controlsTargetRect;
     }];
@@ -200,6 +211,11 @@
     [self.delegate splashViewControllerDidAppear:self];
 }
 
+/// Whether the view is as small as a 3.5 inch iPhone screen (iPhone 4s), which needs a denser layout
+- (BOOL)hasSmallViewBounds {
+    return MAX(self.view.bounds.size.height, self.view.bounds.size.width) <= 480;
+}
+
 - (void)setRestoreButtonHidden:(BOOL)hidden {
     _restoreButton.hidden = hidden;
 }
@@ -209,7 +225,7 @@
 
     CGRect privacyTargetRect;
     
-    if (MAX([UIScreen mainScreen].bounds.size.height, [UIScreen mainScreen].bounds.size.width) <= 480) {
+    if ([self hasSmallViewBounds]) {
         /* iPhone 4s */
         privacyTargetRect = CGRectMake(_privacyView.frame.origin.x, 120.0, _privacyView.frame.size.width, _privacyView.frame.size.height);
     } else {
@@ -217,7 +233,7 @@
     }
     
     CGRect controlsTargetRect;
-    if (MAX([UIScreen mainScreen].bounds.size.height, [UIScreen mainScreen].bounds.size.width) <= 480) {
+    if ([self hasSmallViewBounds]) {
         /* iPhone 4s */
         controlsTargetRect = CGRectMake(_controlsView.frame.origin.x, privacyTargetRect.origin.y + privacyTargetRect.size.height - 40.0, _controlsView.frame.size.width, _controlsView.frame.size.height);
     } else {
@@ -467,6 +483,9 @@
         [self addChildViewController:child];
 
         childView = child.view;
+        childView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+        // The view still has its storyboard size, and the autoresizing mask only follows later size changes
+        childView.frame = self.view.bounds;
         [self.view addSubview:childView];
     }
 

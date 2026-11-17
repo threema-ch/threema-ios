@@ -1588,6 +1588,73 @@ final class DBLoadTests: XCTestCase {
         }
     }
     
+    /// Adds 1 to 10 image messages to each of 20 random months of the last 5 years, e.g. for the monthly sections of
+    /// the media browser
+    func testLoadImageFileMessagesInRandomMonths() throws {
+        let monthCount = 20
+
+        _ = createContacts(for: ["ECHOECHO"])
+        let entityManager = PersistenceManager(
+            appGroupID: AppGroup.groupID(),
+            userDefaults: AppGroup.userDefaults(),
+            remoteSecretManager: RemoteSecretProvider.remoteSecretManager
+        ).entityManager
+
+        let testImageURL = try XCTUnwrap(
+            Bundle(for: DBLoadTests.self).url(forResource: "Bild-1-0", withExtension: "jpg")
+        )
+        let imageData = try Data(contentsOf: testImageURL)
+        let thumbnailImage = try XCTUnwrap(MediaConverter.getThumbnailFor(XCTUnwrap(UIImage(data: imageData))))
+        let thumbnailData = try XCTUnwrap(thumbnailImage.jpegData(compressionQuality: 0.9))
+
+        let calendar = Calendar.current
+        let now = Date.now
+        // Distinct random months, 0 is the current one
+        let monthOffsets = Array(0..<(5 * 12)).shuffled().prefix(monthCount)
+
+        entityManager.performAndWaitSave {
+            guard let contact = entityManager.entityFetcher.contactEntity(for: "ECHOECHO"),
+                  let conversation = entityManager.conversation(forContact: contact, createIfNotExisting: true) else {
+                XCTFail("No conversation")
+                return
+            }
+
+            for monthOffset in monthOffsets {
+                guard let monthDate = calendar.date(byAdding: .month, value: -monthOffset, to: now),
+                      let month = calendar.dateInterval(of: .month, for: monthDate) else {
+                    continue
+                }
+
+                let imageCount = Int.random(in: 1...10)
+                print("\(imageCount) images in \(month.start)")
+
+                for _ in 0..<imageCount {
+                    // Not in the future for the current month
+                    let date = min(month.start.addingTimeInterval(.random(in: 0..<month.duration)), now)
+
+                    let message: FileMessageEntity = entityManager.entityCreator.fileMessageEntity(in: conversation)
+                    message.data = entityManager.entityCreator.fileDataEntity(data: imageData)
+                    message.thumbnail = entityManager.entityCreator.imageDataEntity(
+                        data: thumbnailData,
+                        size: thumbnailImage.size
+                    )
+                    message.fileName = "Bild.jpeg"
+                    message.fileSize = NSNumber(integerLiteral: imageData.count)
+                    message.mimeType = "image/jpeg"
+                    message.type = NSNumber(integerLiteral: 1)
+                    message.date = date
+                    message.deliveryDate = date
+                    message.remoteSentDate = date
+                    message.sender = conversation.contact
+                    message.sent = NSNumber(booleanLiteral: true)
+                    message.delivered = NSNumber(booleanLiteral: true)
+                    message.read = NSNumber(booleanLiteral: true)
+                    message.encryptionKey = NaClCrypto.shared().randomBytes(kBlobKeyLen)
+                }
+            }
+        }
+    }
+    
     // MARK: File message helper
     
     private func add(

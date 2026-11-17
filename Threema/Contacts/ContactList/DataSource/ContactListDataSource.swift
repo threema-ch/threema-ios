@@ -188,7 +188,10 @@ final class ContactListDataSource<
             guard let self else {
                 return
             }
-            apply(snapshot)
+            // Animating the first population inserts every cell inside the batch-update animation, so the cells
+            // lay out from a zero frame and zoom in from the top leading corner
+            let isPopulated = !self.snapshot().itemIdentifiers.isEmpty
+            apply(snapshot, animatingDifferences: isPopulated)
             didUpdate(snapshot: snapshot)
         }
     }

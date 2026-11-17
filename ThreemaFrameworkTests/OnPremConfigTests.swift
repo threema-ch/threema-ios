@@ -98,7 +98,7 @@ final class OnPremConfigTests: XCTestCase {
     override class func setUp() {
         let verifier = OnPremConfigVerifier(trustedPublicKeys: OnPremConfigTests.publicKeys)
         do {
-            config = try verifier.verify(oppfData: OnPremConfigTests.goodOppf, checkExpiration: true)
+            config = try verifier.verify(oppfData: OnPremConfigTests.goodOppf)
         }
         catch {
             print("setUp error: \(error)")
@@ -114,14 +114,14 @@ final class OnPremConfigTests: XCTestCase {
         let badOppf = OnPremConfigTests.goodOppf.replacingOccurrences(of: "initrode", with: "inytrode")
         
         let verifier = OnPremConfigVerifier(trustedPublicKeys: OnPremConfigTests.publicKeys)
-        XCTAssertThrowsError(try verifier.verify(oppfData: badOppf, checkExpiration: true)) { error in
+        XCTAssertThrowsError(try verifier.verify(oppfData: badOppf)) { error in
             XCTAssertEqual(error as! OnPremConfigError, OnPremConfigError.badSignature)
         }
     }
     
     func testVerifyUntrustedKey() throws {
         let verifier = OnPremConfigVerifier(trustedPublicKeys: OnPremConfigTests.wrongPublicKeys)
-        XCTAssertThrowsError(try verifier.verify(oppfData: OnPremConfigTests.goodOppf, checkExpiration: true))
+        XCTAssertThrowsError(try verifier.verify(oppfData: OnPremConfigTests.goodOppf))
     }
     
     func testRefresh() {
@@ -130,52 +130,11 @@ final class OnPremConfigTests: XCTestCase {
     
     func testExpiration() {
         let verifier = OnPremConfigVerifier(trustedPublicKeys: OnPremConfigTests.publicKeys)
-        XCTAssertThrowsError(
-            try verifier.verify(oppfData: OnPremConfigTests.expiredOppf, checkExpiration: true)
-        ) { error in
+        XCTAssertThrowsError(try verifier.verify(oppfData: OnPremConfigTests.expiredOppf)) { error in
             XCTAssertEqual(error as! OnPremConfigError, OnPremConfigError.licenseExpired)
         }
     }
     
-    func testExpirationNotChecked() throws {
-        let verifier = OnPremConfigVerifier(trustedPublicKeys: OnPremConfigTests.publicKeys)
-
-        let config = try verifier.verify(oppfData: OnPremConfigTests.expiredOppf, checkExpiration: false)
-
-        XCTAssertEqual(config.chat.hostname, "chat.threemaonprem.initrode.com")
-    }
-
-    func testExpirationNotCheckedStillVerifiesSignature() {
-        let badOppf = OnPremConfigTests.expiredOppf.replacingOccurrences(of: "initrode", with: "inytrode")
-
-        let verifier = OnPremConfigVerifier(trustedPublicKeys: OnPremConfigTests.publicKeys)
-        XCTAssertThrowsError(try verifier.verify(oppfData: badOppf, checkExpiration: false)) { error in
-            XCTAssertEqual(error as! OnPremConfigError, OnPremConfigError.badSignature)
-        }
-    }
-
-    func testCachedConfigFetcherAcceptsExpiredOppf() throws {
-        let cacheURL = FileManager.default.temporaryDirectory.appendingPathComponent("\(UUID().uuidString).oppf")
-        try OnPremConfigTests.expiredOppf.write(to: cacheURL, atomically: true, encoding: .utf8)
-        defer { try? FileManager.default.removeItem(at: cacheURL) }
-
-        let fetcher = OnPremCachedConfigFetcher(
-            configVerifier: OnPremConfigVerifier(trustedPublicKeys: OnPremConfigTests.publicKeys),
-            cacheURL: cacheURL
-        )
-
-        let expectation = expectation(description: "fetch")
-        var result: Result<OnPremConfig, Error>?
-        fetcher.fetch {
-            result = $0
-            expectation.fulfill()
-        }
-        wait(for: [expectation], timeout: 5)
-
-        let config = try XCTUnwrap(result).get()
-        XCTAssertEqual(config.work?.url, "https://work.threemaonprem.initrode.com/")
-    }
-
     func testChatConfig() {
         XCTAssertEqual(OnPremConfigTests.config!.chat.hostname, "chat.threemaonprem.initrode.com")
         XCTAssertEqual(OnPremConfigTests.config!.chat.ports, [5222, 443])

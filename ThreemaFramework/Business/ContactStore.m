@@ -632,7 +632,9 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
         if ((featureMask || contact.featureMask) && ![featureMask isEqual:contact.featureMask]) {
             [contact setFeatureMaskTo: featureMask.intValue];
         }
-                
+        
+        BOOL needsUpdateWorkAvailabilityStatus = NO;
+
         if(workAvailabilityStatus) {
             // Check if contact currently has status
             if (contact.workAvailabilityStatus) {
@@ -640,21 +642,25 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
                 if ([self workAvailabilityStatusChangedWithCurrent:contact.workAvailabilityStatus new:workAvailabilityStatus]) {
                     [em.entityDestroyer deleteWithWorkAvailabilityStatus:contact.workAvailabilityStatus];
                     [em.entityCreator workAvailabilityStatusEntityWithValue:workAvailabilityStatus.categoryRawValue text:workAvailabilityStatus.text contact:contact];
+                    needsUpdateWorkAvailabilityStatus = YES;
                 }
             }
             // Contact has no status, we create a new one
             else {
                 [em.entityCreator workAvailabilityStatusEntityWithValue:workAvailabilityStatus.categoryRawValue text:workAvailabilityStatus.text contact:contact];
+                needsUpdateWorkAvailabilityStatus = YES;
             }
         }
         // We did not receive a status, if contact has one, we remove it
         else if (contact.workAvailabilityStatus) {
             [em.entityDestroyer deleteWithWorkAvailabilityStatus:contact.workAvailabilityStatus];
+            needsUpdateWorkAvailabilityStatus = YES;
         }
         
-        // We always sync the status, even if is not set
-        [mediatorSyncableContacts updateWorkAvailabilityStatusWithIdentity:contact.identity status:workAvailabilityStatus != nil ? workAvailabilityStatus : [[WorkAvailabilityStatus alloc] initWithValue:0 text:nil]];
-
+        if (needsUpdateWorkAvailabilityStatus) {
+            [mediatorSyncableContacts updateWorkAvailabilityStatusWithIdentity:contact.identity status:workAvailabilityStatus != nil ? workAvailabilityStatus : [[WorkAvailabilityStatus alloc] initWithValue:0 text:nil]];
+        }
+        
         contactIdentity = contact.identity;
     }];
 

@@ -29,7 +29,8 @@ final class LocalBackupRecoveryKeyEntryViewModel {
     let continueButtonTitle = #localize("continue")
     let headerTitle = #localize("enter_your_recovery_key")
     let headerSubtitle = #localize("enter_your_recovery_key_subtitle")
-    let headerIconName = "key"
+    let headerIconName = "key.fill"
+    let headerIconRotationDegrees = 24.0
     let sectionHeader = #localize("Recovery_key")
 
     @ObservationIgnored

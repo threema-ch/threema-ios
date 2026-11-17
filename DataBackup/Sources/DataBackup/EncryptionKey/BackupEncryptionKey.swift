@@ -8,6 +8,8 @@ import Foundation
 /// - Once a backup completes successfully with the key, it becomes the `default` key — the key
 ///   that will be reused for the next backup — and records the date of that backup.
 public enum BackupEncryptionKey: Sendable {
+    public static let groupSize = 4
+    public static let prettyFormatSeparator: Character = "-"
 
     /// The key is not yet resolved
     case none
@@ -30,14 +32,14 @@ public enum BackupEncryptionKey: Sendable {
         }
     }
 
-    public var trimmedValue: String {
+    public var abbreviatedValue: String {
         let key = rawValue
 
-        guard key.count > 8 else {
+        guard key.count > Self.groupSize * 2 else {
             return key
         }
 
-        return "\(key.prefix(4))...\(key.suffix(4))"
+        return "\(key.prefix(Self.groupSize))...\(key.suffix(Self.groupSize))"
     }
 
     public var isDefault: Bool {
@@ -58,6 +60,18 @@ public enum BackupEncryptionKey: Sendable {
         case let .default(_, lastBackupDate):
             lastBackupDate
         }
+    }
+
+    public var prettyFormatted: String {
+        var result = ""
+        result.reserveCapacity(rawValue.count + rawValue.count / Self.groupSize)
+        for (index, character) in rawValue.enumerated() {
+            if index > 0, index % Self.groupSize == 0 {
+                result.append(Self.prettyFormatSeparator)
+            }
+            result.append(character)
+        }
+        return result
     }
 }
 

@@ -11,7 +11,12 @@
 
 @property NSString *phoneNumber;
 
+@property NSLayoutConstraint *finishButtonBottomConstraint;
+
 @end
+
+static CGFloat const kWizardControlsHeight = 55.0;
+static CGFloat const kFinishButtonSpacingAboveControls = 8.0;
 
 @implementation CompletedIDViewController
 
@@ -89,7 +94,7 @@
     _syncContactsView.frame = CGRectMake(_syncContactsView.frame.origin.x, _syncContactsView.frame.origin.y + yOffset, _syncContactsView.frame.size.width, _syncContactsView.frame.size.height);
     
     yOffset -= 16.0;
-    _finishButton.frame = CGRectMake(_finishButton.frame.origin.x, _finishButton.frame.origin.y + yOffset, _finishButton.frame.size.width, _finishButton.frame.size.height);
+    _finishButtonBottomConstraint.constant += yOffset;
 }
 
 - (void)setup {
@@ -109,14 +114,8 @@
     _finishButton.backgroundColor = UIColor.tintColor;
     [_finishButton setTitleColor:Colors.textProminentButtonWizard forState:UIControlStateNormal];
     
-    CGFloat bottomInset = self.view.safeAreaInsets.bottom;
-    if (bottomInset > 0) {
-        BOOL isRegularSizeClass =
-            self.view.traitCollection.horizontalSizeClass == UIUserInterfaceSizeClassRegular;
-        CGFloat regularSizeSpace = isRegularSizeClass ? 50 : 0;
-        _finishButton.frame = CGRectMake(_finishButton.frame.origin.x, _finishButton.frame.origin.y - 20.0 - regularSizeSpace, _finishButton.frame.size.width, _finishButton.frame.size.height);
-    }
-    
+    [self setupFinishButtonConstraints];
+
     _contactImageView.image = [[UIImage systemImageNamed:@"person.fill"] imageWithTintColor:Colors.textSetup];
     _phoneImageView.image = [[UIImage systemImageNamed:@"phone.fill"] imageWithTintColor:Colors.textSetup];
     _mailImageView.image = [[UIImage systemImageNamed:@"envelope.fill"] imageWithTintColor:Colors.textSetup];
@@ -124,6 +123,21 @@
     if (!TargetManagerObjC.isBusinessApp) {
         _emailView.hidden = YES;
     }
+}
+
+/// Keeps the button above the wizard controls; otherwise the transparent controls view covers it and swallows taps
+- (void)setupFinishButtonConstraints {
+    CGRect buttonFrame = _finishButton.frame;
+    UIView *buttonContainer = _finishButton.superview;
+
+    _finishButton.translatesAutoresizingMaskIntoConstraints = NO;
+    _finishButtonBottomConstraint = [_finishButton.bottomAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.bottomAnchor constant:-(kWizardControlsHeight + kFinishButtonSpacingAboveControls)];
+    [NSLayoutConstraint activateConstraints:@[
+        [_finishButton.leadingAnchor constraintEqualToAnchor:buttonContainer.leadingAnchor constant:CGRectGetMinX(buttonFrame)],
+        [_finishButton.trailingAnchor constraintEqualToAnchor:buttonContainer.trailingAnchor constant:-(CGRectGetWidth(buttonContainer.bounds) - CGRectGetMaxX(buttonFrame))],
+        [_finishButton.heightAnchor constraintEqualToConstant:CGRectGetHeight(buttonFrame)],
+        _finishButtonBottomConstraint,
+    ]];
 }
 
 - (BOOL)isInputValid {

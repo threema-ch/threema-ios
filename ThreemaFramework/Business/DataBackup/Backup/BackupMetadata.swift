@@ -16,11 +16,21 @@ public struct BackupMetadata: Sendable, Codable, Equatable {
     /// Whether the backup includes media (photos, videos, audio, documents, etc.).
     public var includesMedia: Bool
 
+    /// Name of the backup file in the documents directory, as chosen by libthreema when the backup was created.
+    public var fileName: String?
+
     /// Initializer with default values
-    public init(date: Date = .now, size: UInt64 = 0, includesMessages: Bool = true, includesMedia: Bool = true) {
+    public init(
+        date: Date = .now,
+        size: UInt64 = 0,
+        includesMessages: Bool = true,
+        includesMedia: Bool = true,
+        fileName: String? = nil
+    ) {
         self.date = date
         self.size = size
         self.includesMessages = includesMessages
         self.includesMedia = includesMedia
+        self.fileName = fileName
     }
 }

@@ -1,7 +1,7 @@
 import Foundation
 
 class ScreenWidthSizedCell: UICollectionViewCell {
-    // Adjust the systemLayoutSizeFitting to be <= the screen width
+    // Adjust the systemLayoutSizeFitting to be <= the width of the collection view displaying the cell
     override func systemLayoutSizeFitting(
         _ targetSize: CGSize,
         withHorizontalFittingPriority horizontalFittingPriority: UILayoutPriority,
@@ -13,7 +13,7 @@ class ScreenWidthSizedCell: UICollectionViewCell {
             verticalFittingPriority: .fittingSizeLevel
         )
         
-        size.width = min(targetSize.width, UIScreen.main.bounds.width)
+        size.width = min(targetSize.width, superview?.bounds.width ?? targetSize.width)
         return size
     }
 }

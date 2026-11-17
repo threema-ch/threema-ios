@@ -12,9 +12,6 @@ struct LearnMoreSheetView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
-    private let headerHeight = DotHeaderView.defaultHeight
-    private let headerOverlap = DotHeaderView.defaultOverlap
-
     private let headerIconName: String
     private let title: String
     private let content: String
@@ -36,32 +33,22 @@ struct LearnMoreSheetView: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(alignment: horizontalAlignment, spacing: 0) {
-                    DotHeaderView(
-                        icon: DotHeaderView.Icon(name: headerIconName, color: .accentColor),
-                        dotColor: .accentColor.opacity(0.3),
-                        height: headerHeight
-                    )
+                VStack(alignment: horizontalAlignment, spacing: 24) {
+                    Text(title)
+                        .font(.title.bold())
+                        .multilineTextAlignment(textAlignment)
+                        .frame(maxWidth: .infinity)
+                        .accessibilityAddTraits(.isHeader)
 
-                    VStack(alignment: horizontalAlignment, spacing: 24) {
-                        Text(title)
-                            .font(.title.bold())
-                            .multilineTextAlignment(textAlignment)
-                            .frame(maxWidth: .infinity)
-                            .accessibilityAddTraits(.isHeader)
-
-                        Text(content)
-                            .font(.callout)
-                            .multilineTextAlignment(textAlignment)
-                            .foregroundStyle(.gray600)
-                            .frame(maxWidth: .infinity)
-                    }
-                    .safeAreaPadding(.horizontal, 44)
-                    .padding(.top, -headerHeight * headerOverlap)
+                    Text(content)
+                        .font(.callout)
+                        .multilineTextAlignment(textAlignment)
+                        .foregroundStyle(.gray600)
+                        .frame(maxWidth: .infinity)
                 }
+                .safeAreaPadding(.horizontal, 44)
+                .safeAreaPadding(.top, 24)
             }
-            .background(Color.listsBackgroundColor.ignoresSafeArea())
-            .ignoresSafeArea(edges: .top)
             .scrollIndicators(.hidden)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -81,3 +68,15 @@ struct LearnMoreSheetView: View {
         dynamicTypeSize >= .accessibility1 ? .leading : .center
     }
 }
+
+#if DEBUG
+
+    #Preview(BackupCenterView.Stance.learnMoreSafe.title) {
+        BackupCenterView.Stance.learnMoreSafe.view
+    }
+
+    #Preview(BackupCenterView.Stance.learnMoreBackup.title) {
+        BackupCenterView.Stance.learnMoreBackup.view
+    }
+
+#endif

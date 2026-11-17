@@ -19,7 +19,6 @@ final class LocalBackupSettingsViewModel {
 
     // MARK: Public properties
 
-    let checkmarkIconName = "checkmark.circle.fill"
     let disclosureIconName = "chevron.right"
     let includedMessagesSubtitle = #localize("backup_local_settings_messages_description")
     let includedMessagesTitle = #localize("messages")
@@ -31,21 +30,13 @@ final class LocalBackupSettingsViewModel {
     let mediaSectionHeader = #localize("media")
     let recoveryKeyLabel = #localize("Recovery_Key")
     let recoveryKeySectionHeader = #localize("encrypting_with")
-    let headerIconName = "gearshape"
+    let headerIconName = "gearshape.fill"
+    let headerTitle = #localize("backup_settings")
 
     @ObservationIgnored var onStartButtonTapped: () -> Void = { /* no-op */ }
     @ObservationIgnored var onRecoveryKeyDetailsButtonTapped: () -> Void = { /* no-op */ }
 
     private let manager: any BackupCreateManagerProtocol
-
-    var headerTitle: String {
-        if isDefaultKey {
-            #localize("confirm_settings")
-        }
-        else {
-            #localize("backup_settings")
-        }
-    }
 
     var headerSubtitle: String {
         if isDefaultKey {
@@ -68,8 +59,8 @@ final class LocalBackupSettingsViewModel {
         manager.currentRecoveryKey.isDefault
     }
 
-    var recoveryKeyTrimmed: String {
-        manager.currentRecoveryKey.trimmedValue
+    var recoveryKeyAbbreviated: String {
+        manager.currentRecoveryKey.abbreviatedValue
     }
 
     let mediaItems: [MediaItem] = [

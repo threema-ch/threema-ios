@@ -48,6 +48,7 @@ public final class FileMessageEntity: BaseMessageEntity {
         case data
         case mimeType
         case dataAvailable
+        case type
         
         static func name(for field: Field, encrypted: Bool) -> String {
             switch field {
@@ -59,6 +60,8 @@ public final class FileMessageEntity: BaseMessageEntity {
                 encrypted ? encryptedMimeTypeName : mimeTypeName
             case .dataAvailable:
                 encrypted ? encryptedDataAvailableName : dataAvailableName
+            case .type:
+                encrypted ? encryptedTypeName : typeName
             }
         }
     }

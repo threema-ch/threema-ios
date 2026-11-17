@@ -161,8 +161,12 @@ final class GroupMessageProcessorTests: XCTestCase {
 
         // prepare test db
 
-        for member in [expectedMember01, expectedMember02, expectedMember03] {
-            databasePreparer.createContact(identity: member.rawValue)
+        // Insert and save on the context's queue: this async test runs off the main queue, and the first save
+        // of the group manager would otherwise flush inserts made from another thread.
+        databasePreparer.save {
+            for member in [expectedMember01, expectedMember02, expectedMember03] {
+                databasePreparer.createContact(identity: member.rawValue)
+            }
         }
 
         // 0: test description
@@ -369,8 +373,10 @@ final class GroupMessageProcessorTests: XCTestCase {
         // prepare test db
 
         var members = Set<ContactEntity>()
-        for member in [expectedMember01, expectedMember02, expectedMember03] {
-            members.insert(databasePreparer.createContact(identity: member.rawValue))
+        databasePreparer.save {
+            for member in [expectedMember01, expectedMember02, expectedMember03] {
+                members.insert(databasePreparer.createContact(identity: member.rawValue))
+            }
         }
 
         // 0: test description

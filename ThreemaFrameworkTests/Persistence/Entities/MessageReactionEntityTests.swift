@@ -23,6 +23,7 @@ final class MessageReactionEntityTests: XCTestCase {
 
         let contactID = "TESTER01"
         let date = Date.now
+        let readAt = Date.now
         let expectedReaction = "😁"
         
         // Act
@@ -57,6 +58,7 @@ final class MessageReactionEntityTests: XCTestCase {
                 context: testDatabase.context.main,
                 date: date,
                 reaction: expectedReaction,
+                readAt: readAt,
                 contact: contactEntity,
                 message: message
             )
@@ -70,21 +72,26 @@ final class MessageReactionEntityTests: XCTestCase {
         // Assert
         XCTAssertEqual(date, fetchedMessageReactionEntity.date)
         XCTAssertEqual(expectedReaction, fetchedMessageReactionEntity.reaction)
+        XCTAssertEqual(readAt, fetchedMessageReactionEntity.readAt)
         XCTAssertEqual(contactEntity.objectID, fetchedMessageReactionEntity.creator?.objectID)
         XCTAssertEqual(message, fetchedMessageReactionEntity.message)
 
         if encrypted {
             XCTAssertEqual(testDatabase.remoteSecretCryptoMock.decryptCalls, 0)
-            XCTAssertEqual(testDatabase.remoteSecretCryptoMock.encryptCalls, 2)
+            XCTAssertEqual(testDatabase.remoteSecretCryptoMock.encryptCalls, 3)
 
             // Test faulting
             testDatabase.context.main.refresh(fetchedMessageReactionEntity, mergeChanges: false)
 
             XCTAssertEqual(date.timeIntervalSince1970, fetchedMessageReactionEntity.date.timeIntervalSince1970)
             XCTAssertEqual(expectedReaction, fetchedMessageReactionEntity.reaction)
-
-            XCTAssertEqual(testDatabase.remoteSecretCryptoMock.decryptCalls, 2)
-            XCTAssertEqual(testDatabase.remoteSecretCryptoMock.encryptCalls, 2)
+            XCTAssertEqual(
+                readAt.timeIntervalSince1970,
+                fetchedMessageReactionEntity.readAt?.timeIntervalSince1970
+            )
+            
+            XCTAssertEqual(testDatabase.remoteSecretCryptoMock.decryptCalls, 3)
+            XCTAssertEqual(testDatabase.remoteSecretCryptoMock.encryptCalls, 3)
         }
         else {
             XCTAssertEqual(testDatabase.remoteSecretCryptoMock.decryptCalls, 0)
@@ -142,6 +149,7 @@ final class MessageReactionEntityTests: XCTestCase {
         // Assert
         XCTAssertEqual(date, fetchedMessageReactionEntity.date)
         XCTAssertEqual(expectedReaction, fetchedMessageReactionEntity.reaction)
+        XCTAssertNil(fetchedMessageReactionEntity.readAt)
         XCTAssertEqual(message, fetchedMessageReactionEntity.message)
     }
 }

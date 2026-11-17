@@ -108,4 +108,10 @@ public final class ThreemaEnvironment: NSObject {
     public static var enableGroupSpamReporting: Bool {
         true
     }
+    
+    // MARK: Emoji reactions notifications
+    
+    public static var enableReactionNotifications: Bool {
+        true
+    }
 }

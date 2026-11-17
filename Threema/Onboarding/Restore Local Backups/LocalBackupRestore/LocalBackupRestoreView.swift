@@ -7,33 +7,25 @@ struct LocalBackupRestoreView: View {
     @Environment(\.verticalSizeClass) private var verticalSizeClass
     @ScaledMetric private var scaledMetric: CGFloat = 1.0
 
-    private let headerHeight = DotHeaderView.defaultHeight
-    private let headerOverlap = DotHeaderView.defaultOverlap
+    private let headerHeight = StandardHeaderView.defaultHeight
+    private let headerOverlap = StandardHeaderView.defaultOverlap
 
     let model: LocalBackupRestoreViewModel
 
     var body: some View {
         ScrollView {
             VStack(spacing: 0) {
-                DotHeaderView(
-                    icon: DotHeaderView.Icon(
+                StandardHeaderView(
+                    icon: StandardHeaderView.Icon(
                         name: model.state.headerIconName,
                         color: {
                             switch model.state {
                             case .inProgress: .accentColor
-                            case .complete: .green
-                            case .failed: .red
+                            case .complete: .statusForegroundSuccess
+                            case .failed: .statusForegroundDestructive
                             }
                         }()
                     ),
-                    dotColor: {
-                        switch model.state {
-                        case .failed:
-                            .red.opacity(0.3)
-                        default:
-                            .accentColor.opacity(0.3)
-                        }
-                    }(),
                     height: headerHeight
                 )
 

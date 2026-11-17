@@ -31,10 +31,14 @@ struct FlavorInfoBusinessAppView: View {
                         .padding(.bottom, Constant.logoBottomPadding)
                         .apply {
                             if horizontalSizeClass == .compact {
-                                $0.frame(maxWidth: UIScreen.main.bounds.width * Constant.logoScaleFactorCompact)
+                                $0.containerRelativeFrame(.horizontal) { length, _ in
+                                    length * Constant.logoScaleFactorCompact
+                                }
                             }
                             else {
-                                $0.frame(maxWidth: UIScreen.main.bounds.width * Constant.logoScaleFactorRegular)
+                                $0.containerRelativeFrame(.horizontal) { length, _ in
+                                    length * Constant.logoScaleFactorRegular
+                                }
                             }
                         }
                         .accessibilityHidden(true)

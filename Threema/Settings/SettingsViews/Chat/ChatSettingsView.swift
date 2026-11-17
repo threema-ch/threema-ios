@@ -1,3 +1,4 @@
+import CocoaLumberjackSwift
 import SwiftUI
 import ThreemaFramework
 import ThreemaMacros
@@ -60,6 +61,9 @@ struct WallpaperSectionView: View {
     @State var customImage: Image?
     @State var selectedUIImage: UIImage?
     
+    /// Its screen determines the size wallpapers are compressed to
+    @State private var windowScene: UIWindowScene?
+    
     var body: some View {
         
         Section(header: Text(#localize("settings_chat_wallpaper_title"))) {
@@ -94,11 +98,16 @@ struct WallpaperSectionView: View {
                     selectCustom()
                 }
                 .onChange(of: selectedUIImage) {
-                    guard selectedUIImage != nil, isSelectingCustom else {
+                    guard let image = selectedUIImage, isSelectingCustom else {
+                        return
+                    }
+                    guard let screenBounds = windowScene?.screen.bounds else {
+                        DDLogError("[ChatSettingsView] Cannot save wallpaper without a window scene")
+                        selectedUIImage = nil
                         return
                     }
                     
-                    settingsVM.wallpaperStore.saveDefaultWallpaper(selectedUIImage)
+                    settingsVM.wallpaperStore.saveDefaultWallpaper(image, screenBounds: screenBounds)
                     settingsVM.wallpaperType = .custom
                     selectedUIImage = nil
                 }
@@ -110,6 +119,7 @@ struct WallpaperSectionView: View {
                 }
             }
             .edgesIgnoringSafeArea(.leading)
+            .onWindowSceneChange { windowScene = $0 }
             
             HStack {
                 Spacer()
@@ -219,6 +229,8 @@ struct WallpaperTypeView: View {
     @Binding var isSelected: Bool
     @Binding var isSelectingCustom: Bool
 
+    @Environment(\.displayScale) private var displayScale
+
     var body: some View {
         VStack(spacing: 5) {
             Text(description)
@@ -234,7 +246,8 @@ struct WallpaperTypeView: View {
                         if let uiImage = image.getUIImage(newSize: CGSize(width: 240, height: 450)) {
                             Image(uiImage: MediaConverter.downscaleImage(
                                 image: uiImage,
-                                toSize: CGSize(width: 80, height: 150)
+                                toSize: CGSize(width: 80, height: 150),
+                                scale: displayScale
                             ))
                             .resizable()
                             .scaledToFill()

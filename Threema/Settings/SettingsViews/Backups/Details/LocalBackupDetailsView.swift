@@ -71,12 +71,14 @@ struct LocalBackupDetailsView: View {
             let model: LocalBackupDetailsViewModel
 
             var body: some View {
-                HStack {
-                    Text(model.shareActionTitle)
-                    Spacer()
-                    ShareLink(item: model.shareURL) {
-                        Image(systemName: model.shareActionIconName)
-                            .foregroundStyle(Color.accentColor)
+                if let shareURL = model.shareURL {
+                    HStack {
+                        Text(model.shareActionTitle)
+                        Spacer()
+                        ShareLink(item: shareURL) {
+                            Image(systemName: model.shareActionIconName)
+                                .foregroundStyle(Color.accentColor)
+                        }
                     }
                 }
             }

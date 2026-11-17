@@ -20,12 +20,26 @@ final class LocalBackupRestoreViewModel {
         var headerIconName: String {
             switch self {
             case .inProgress:
-                "arrow.trianglehead.clockwise"
+                "arrow.down.circle.fill"
             case .complete:
-                "checkmark.circle"
+                "checkmark.circle.fill"
             case .failed:
-                "exclamationmark.circle"
+                "exclamationmark.circle.fill"
             }
+        }
+    }
+
+    enum Step: Int, CaseIterable, Comparable {
+        case preparing
+        case chats
+
+        // No phase of the restore belongs to the media and finalizing steps, so they never show as in progress: they
+        // wait until the restore completes or fails.
+        case media
+        case finalizing
+
+        static func < (lhs: Self, rhs: Self) -> Bool {
+            lhs.rawValue < rhs.rawValue
         }
     }
 
@@ -113,17 +127,8 @@ final class LocalBackupRestoreViewModel {
     }
 
     var restoreItems: [RestoreItem] {
-        let phases = DataRestoreProgress.Phase.allCases.filter { phase in
-            if phase != .distributionLists {
-                true
-            }
-            else {
-                ThreemaEnvironment.distributionListsActive
-            }
-        }
-
-        return phases.map { phase in
-            RestoreItem(state: itemState(for: phase), title: phase.title)
+        Step.allCases.map { step in
+            RestoreItem(state: itemState(for: step), title: step.title)
         }
     }
 
@@ -211,24 +216,26 @@ final class LocalBackupRestoreViewModel {
 
     // MARK: - Private methods
 
-    private func itemState(for phase: DataRestoreProgress.Phase) -> RestoreItem.State {
+    private func itemState(for step: Step) -> RestoreItem.State {
+        let currentStep = currentPhase.step
+
         switch state {
         case .complete:
             return .done
 
         case .failed:
-            guard phase < currentPhase else {
+            guard step < currentStep else {
                 return .failed
             }
 
             return .done
 
         case .inProgress:
-            if phase < currentPhase {
+            if step < currentStep {
                 return .done
             }
 
-            if phase == currentPhase {
+            if step == currentStep {
                 return .inProgress
             }
 
@@ -237,25 +244,33 @@ final class LocalBackupRestoreViewModel {
     }
 }
 
-// MARK: - DataRestoreProgress.Phase + Localization
+// MARK: - DataRestoreProgress.Phase + Step
 
 extension DataRestoreProgress.Phase {
+    /// The step this phase is shown in.
+    fileprivate var step: LocalBackupRestoreViewModel.Step {
+        switch self {
+        case .userData, .contacts:
+            .preparing
+        case .distributionLists, .groups, .cspNonces, .polls, .messages:
+            .chats
+        }
+    }
+}
+
+// MARK: - LocalBackupRestoreViewModel.Step + Localization
+
+extension LocalBackupRestoreViewModel.Step {
     fileprivate var title: String {
         switch self {
-        case .userData:
-            #localize("backup_local_restore_step_user_data_title")
-        case .contacts:
-            #localize("backup_local_restore_step_contacts_title")
-        case .distributionLists:
-            #localize("backup_local_restore_step_distribution_lists_title")
-        case .groups:
-            #localize("backup_local_restore_step_groups_title")
-        case .cspNonces:
-            #localize("backup_local_restore_step_nonces_title")
-        case .polls:
-            #localize("backup_local_restore_step_polls_title")
-        case .messages:
-            #localize("backup_local_restore_step_messages_title")
+        case .preparing:
+            #localize("backup_local_restore_step_preparing_title")
+        case .chats:
+            #localize("backup_local_restore_step_chats_title")
+        case .media:
+            #localize("backup_local_restore_step_media_title")
+        case .finalizing:
+            #localize("backup_local_restore_step_finalize_title")
         }
     }
 }

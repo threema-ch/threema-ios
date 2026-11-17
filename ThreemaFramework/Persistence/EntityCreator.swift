@@ -436,8 +436,17 @@ public final class EntityCreator: NSObject {
         MessageMarkersEntity(context: managedObjectContext)
     }
     
-    public func messageReactionEntity(reaction: String, message: BaseMessageEntity) -> MessageReactionEntity {
-        MessageReactionEntity(context: managedObjectContext, reaction: reaction, message: message)
+    public func messageReactionEntity(
+        reaction: String,
+        readAt: Date?,
+        message: BaseMessageEntity
+    ) -> MessageReactionEntity {
+        MessageReactionEntity(
+            context: managedObjectContext,
+            reaction: reaction,
+            readAt: readAt,
+            message: message
+        )
     }
 
     // MARK: - Nonce

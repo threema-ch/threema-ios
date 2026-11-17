@@ -124,7 +124,7 @@ final class POICell: ThemedCodeTableViewCell, Reusable {
         // View
         separatorInset = UIEdgeInsets(
             top: 0,
-            left: contentView.layoutMargins.left + padding / 2 + inset,
+            left: contentView.directionalLayoutMargins.leading + padding / 2 + inset,
             bottom: 0,
             right: 0
         )

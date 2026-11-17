@@ -11,8 +11,13 @@ import ThreemaMacros
 
 public extension CGSize {
 	
+	@available(*, deprecated, message: "use toPixel(traitCollection:) instead")
 	public func toPixel() -> CGSize {
-		let scale = UIScreen.main.scale
+		return toPixel(traitCollection: UITraitCollection.current)
+	}
+	
+	public func toPixel(traitCollection: UITraitCollection) -> CGSize {
+		let scale = traitCollection.displayScale
 		return CGSize(width: self.width * scale, height: self.height * scale)
 	}
 }
@@ -86,8 +91,13 @@ open class DKAsset: NSObject {
 		}
 	}
 	
+	@available(*, deprecated, message: "use fetchFullScreenImageWithCompleteBlock(bounds:traitCollection:_:) instead")
 	public func fetchFullScreenImageWithCompleteBlock(_ completeBlock: @escaping (_ image: UIImage?, _ info: [AnyHashable: Any]?) -> Void) {
-		self.fetchFullScreenImage(false, completeBlock: completeBlock)
+		self.fetchFullScreenImageWithCompleteBlock(bounds: UIScreen.main.bounds, traitCollection: UITraitCollection.current, completeBlock)
+	}
+	
+	public func fetchFullScreenImageWithCompleteBlock(bounds: CGRect, traitCollection: UITraitCollection, _ completeBlock: @escaping (_ image: UIImage?, _ info: [AnyHashable: Any]?) -> Void) {
+		self.fetchFullScreenImage(false, bounds: bounds, traitCollection: traitCollection, completeBlock: completeBlock)
 	}
     
     /// Returns an AccessibilityLabel for a given Asset
@@ -126,18 +136,31 @@ open class DKAsset: NSObject {
      - parameter sync:          If true, the method blocks the calling thread until image is ready or an error occurs.
      - parameter completeBlock: The block is executed when the image download is complete.
 	*/
+	@available(*, deprecated, message: "use fetchFullScreenImage(_:bounds:traitCollection:completeBlock:) instead")
 	public func fetchFullScreenImage(_ sync: Bool, completeBlock: @escaping (_ image: UIImage?, _ info: [AnyHashable: Any]?) -> Void) {
+		self.fetchFullScreenImage(sync, bounds: UIScreen.main.bounds, traitCollection: UITraitCollection.current, completeBlock: completeBlock)
+	}
+	
+	/**
+     Fetch an image with the given bounds size.
+     
+     - parameter sync:            If true, the method blocks the calling thread until image is ready or an error occurs.
+     - parameter bounds:          Bounds of the view the image is displayed in.
+     - parameter traitCollection: Trait collection providing the display scale.
+     - parameter completeBlock:   The block is executed when the image download is complete.
+	*/
+	public func fetchFullScreenImage(_ sync: Bool, bounds: CGRect, traitCollection: UITraitCollection, completeBlock: @escaping (_ image: UIImage?, _ info: [AnyHashable: Any]?) -> Void) {
 		if let (image, info) = self.fullScreenImage {
 			completeBlock(image, info)
 		} else {
-			let screenSize = UIScreen.main.bounds.size
+			let screenSize = bounds.size
 			
 			let options = PHImageRequestOptions()
 			options.deliveryMode = .highQualityFormat
 			options.resizeMode = .exact
 			options.isSynchronous = sync
 
-			getImageManager().fetchImageForAsset(self, size: screenSize.toPixel(), options: options, contentMode: .aspectFit) { [weak self] image, info in
+			getImageManager().fetchImageForAsset(self, size: screenSize.toPixel(traitCollection: traitCollection), options: options, contentMode: .aspectFit) { [weak self] image, info in
 				guard let strongSelf = self else { return }
 				
 				strongSelf.fullScreenImage = (image, info)

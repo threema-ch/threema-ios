@@ -71,8 +71,15 @@ final class MessageVoiceMessageWaveformView: UIView, UIGestureRecognizerDelegate
     /// UIStackViews
     override var intrinsicContentSize: CGSize {
         /// We do not return our real intrinsic content size here to avoid shrinking the message cell beyond the maximum
-        /// width.
-        CGSize(width: UIScreen.main.bounds.width, height: config.waveformRenderHeight)
+        /// width. The width of the window is always at least the maximum width of a cell.
+        CGSize(width: window?.bounds.width ?? UIView.noIntrinsicMetric, height: config.waveformRenderHeight)
+    }
+    
+    override func didMoveToWindow() {
+        super.didMoveToWindow()
+        
+        // The intrinsic width depends on the window
+        invalidateIntrinsicContentSize()
     }
     
     // MARK: - Private Properties

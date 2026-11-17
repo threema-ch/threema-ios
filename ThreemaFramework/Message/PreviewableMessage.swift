@@ -1,10 +1,28 @@
 import Foundation
 import ThreemaMacros
 
+/// Preview of a message split into the parts that are formatted differently
+public struct MessagePreviewDescription {
+    /// Localized name of the message type, e.g. "Poll" or "Voice message (0:07)". `nil` if the message needs no type
+    /// to be recognized.
+    public let typeName: String?
+    /// What this particular message is called, e.g. its text, a media caption, the title of a poll or a file name.
+    /// Shown in quotes, `nil` if the message has nothing to name it by.
+    public let quotedText: String?
+
+    public init(typeName: String?, quotedText: String?) {
+        self.typeName = typeName
+        self.quotedText = quotedText
+    }
+}
+
 public protocol PreviewableMessage: BaseMessageEntity {
     /// For private use only, use `previewText` instead
     @available(*, deprecated, message: "For private use only, use `previewText` instead")
     var privatePreviewText: String { get }
+    /// For private use only, use `previewDescription` instead
+    @available(*, deprecated, message: "For private use only, use `previewDescription` instead")
+    var privatePreviewDescription: MessagePreviewDescription { get }
     /// System name or asset name of a symbol
     var previewSymbolName: String? { get }
     /// Configuration to be applied to symbol
@@ -25,6 +43,50 @@ extension PreviewableMessage {
         return privatePreviewText
     }
     
+    /// Preview of this message split into its type name and what this message is called
+    ///
+    /// By default the whole preview is the quoted text, which is what a plain text message needs.
+    public var previewDescription: MessagePreviewDescription {
+        // A deleted message has no content left to quote
+        guard deletedAt == nil else {
+            return MessagePreviewDescription(typeName: previewText, quotedText: nil)
+        }
+
+        return privatePreviewDescription
+    }
+
+    public var privatePreviewDescription: MessagePreviewDescription {
+        MessagePreviewDescription(typeName: nil, quotedText: privatePreviewText)
+    }
+
+    /// Preview of this message with the name of it in quotes, e.g. `Poll "Lunch place"` or `Image`
+    ///
+    /// Used where a message is referred to rather than shown, for example in the notification about a reaction to it.
+    /// - Parameter configuration: Configuration the quoted text is trimmed and parsed with
+    /// - Returns: Composed preview or `nil` if there is nothing to show
+    public func quotedPreviewText(for configuration: PreviewableMessageConfiguration = .default) -> String? {
+        let description = previewDescription
+
+        var quotedText: String?
+        if let text = description.quotedText {
+            // Trim as Swift string to prevent emoji cropping, same as `previewAttributedText(for:settingsStore:)`
+            let trimmedText = String(text.prefix(configuration.trimmingCount))
+            let parsedText = MarkupParser().previewString(for: trimmedText, font: configuration.font)
+            quotedText = "\"\(parsedText.string)\""
+        }
+
+        // Only one of both is shown if the other one is missing, e.g. `Image` or `"Probably a long msg"`
+        guard let typeName = description.typeName else {
+            return quotedText
+        }
+        
+        guard let quotedText else {
+            return typeName
+        }
+
+        return "\(typeName) \(quotedText)"
+    }
+
     public var previewSymbolName: String? {
         nil
     }

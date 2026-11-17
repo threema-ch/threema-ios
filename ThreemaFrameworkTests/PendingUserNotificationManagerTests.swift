@@ -41,7 +41,8 @@ final class PendingUserNotificationManagerTests: XCTestCase {
             userNotificationManager: UserNotificationManagerMock(),
             userNotificationCenterManager: UserNotificationCenterManagerMock(),
             pushSettingManager: PushSettingManagerMock(),
-            entityManager: EntityManager(databaseContext: dbMainCnx, isRemoteSecretEnabled: false)
+            entityManager: EntityManager(databaseContext: dbMainCnx, isRemoteSecretEnabled: false),
+            userSettings: UserSettingsMock()
         )
         let pendingNotification1 = pendingManager1.pendingUserNotification(
             for: abstractMsg,
@@ -56,7 +57,8 @@ final class PendingUserNotificationManagerTests: XCTestCase {
             userNotificationManager: UserNotificationManagerMock(),
             userNotificationCenterManager: UserNotificationCenterManagerMock(),
             pushSettingManager: PushSettingManagerMock(),
-            entityManager: EntityManager(databaseContext: dbMainCnx, isRemoteSecretEnabled: false)
+            entityManager: EntityManager(databaseContext: dbMainCnx, isRemoteSecretEnabled: false),
+            userSettings: UserSettingsMock()
         )
         let pendingNotification2 = pendingManager2.pendingUserNotification(
             for: abstractMsg,
@@ -90,7 +92,8 @@ final class PendingUserNotificationManagerTests: XCTestCase {
             ),
             userNotificationCenterManager: userNotificationCenterManagerMock,
             pushSettingManager: PushSettingManagerMock(),
-            entityManager: EntityManager(databaseContext: dbMainCnx, isRemoteSecretEnabled: false)
+            entityManager: EntityManager(databaseContext: dbMainCnx, isRemoteSecretEnabled: false),
+            userSettings: UserSettingsMock()
         )
         let pendingNotification = pendingManager.pendingUserNotification(
             for: abstractMsg,
@@ -145,7 +148,8 @@ final class PendingUserNotificationManagerTests: XCTestCase {
             ),
             userNotificationCenterManager: userNotificationCenterManagerMock,
             pushSettingManager: PushSettingManagerMock(),
-            entityManager: EntityManager(databaseContext: dbMainCnx, isRemoteSecretEnabled: false)
+            entityManager: EntityManager(databaseContext: dbMainCnx, isRemoteSecretEnabled: false),
+            userSettings: UserSettingsMock()
         )
         let pendingNotification = pendingManager.pendingUserNotification(
             for: abstractMsg,
@@ -196,7 +200,8 @@ final class PendingUserNotificationManagerTests: XCTestCase {
                 userNotificationManager: UserNotificationManagerMock(),
                 userNotificationCenterManager: userNotificationCenterManagerMock,
                 pushSettingManager: PushSettingManagerMock(),
-                entityManager: EntityManager(databaseContext: dbMainCnx, isRemoteSecretEnabled: false)
+                entityManager: EntityManager(databaseContext: dbMainCnx, isRemoteSecretEnabled: false),
+                userSettings: UserSettingsMock()
             )
             let pendingNotification = pendingManager.pendingUserNotification(
                 for: abstractMessage,
@@ -273,7 +278,8 @@ final class PendingUserNotificationManagerTests: XCTestCase {
             userNotificationManager: UserNotificationManagerMock(),
             userNotificationCenterManager: userNotificationCenterManagerMock,
             pushSettingManager: PushSettingManagerMock(),
-            entityManager: EntityManager(databaseContext: dbMainCnx, isRemoteSecretEnabled: false)
+            entityManager: EntityManager(databaseContext: dbMainCnx, isRemoteSecretEnabled: false),
+            userSettings: UserSettingsMock()
         )
         _ = pendingManager.pendingUserNotification(
             for: abstractMessage,
@@ -370,7 +376,8 @@ final class PendingUserNotificationManagerTests: XCTestCase {
             ),
             userNotificationCenterManager: userNotificationCenterManagerMock,
             pushSettingManager: PushSettingManagerMock(),
-            entityManager: EntityManager(databaseContext: dbMainCnx, isRemoteSecretEnabled: false)
+            entityManager: EntityManager(databaseContext: dbMainCnx, isRemoteSecretEnabled: false),
+            userSettings: UserSettingsMock()
         )
         _ = pendingManager.pendingUserNotification(
             for: abstractMessage,
@@ -465,7 +472,8 @@ final class PendingUserNotificationManagerTests: XCTestCase {
                 userNotificationManager: UserNotificationManagerMock(),
                 userNotificationCenterManager: userNotificationCenterManagerMock,
                 pushSettingManager: PushSettingManagerMock(),
-                entityManager: EntityManager(databaseContext: dbMainCnx, isRemoteSecretEnabled: false)
+                entityManager: EntityManager(databaseContext: dbMainCnx, isRemoteSecretEnabled: false),
+                userSettings: UserSettingsMock()
             )
             _ = pendingManager.pendingUserNotification(
                 for: abstractMessage,
@@ -521,7 +529,8 @@ final class PendingUserNotificationManagerTests: XCTestCase {
             userNotificationManager: UserNotificationManagerMock(),
             userNotificationCenterManager: UserNotificationCenterManagerMock(),
             pushSettingManager: PushSettingManagerMock(),
-            entityManager: EntityManager(databaseContext: dbMainCnx, isRemoteSecretEnabled: false)
+            entityManager: EntityManager(databaseContext: dbMainCnx, isRemoteSecretEnabled: false),
+            userSettings: UserSettingsMock()
         )
         guard let pendingNotification1 = pendingManager1.pendingUserNotification(
             for: abstractMsg,
@@ -694,7 +703,8 @@ final class PendingUserNotificationManagerTests: XCTestCase {
             userNotificationManager: UserNotificationManagerMock(),
             userNotificationCenterManager: UserNotificationCenterManagerMock(),
             pushSettingManager: PushSettingManagerMock(),
-            entityManager: EntityManager(databaseContext: dbMainCnx, isRemoteSecretEnabled: false)
+            entityManager: EntityManager(databaseContext: dbMainCnx, isRemoteSecretEnabled: false),
+            userSettings: UserSettingsMock()
         )
     }
 
@@ -706,5 +716,330 @@ final class PendingUserNotificationManagerTests: XCTestCase {
         )
         let keys = try NSKeyedUnarchiver.unarchivedObject(ofClasses: [NSArray.self, NSString.self], from: data)
         return try XCTUnwrap(keys as? [String])
+    }
+    
+    func testPendingUserNotificationReactionsOfSeveralPeopleShareOneNotification() throws {
+        let expectedReactedMessageID: Data = BytesUtility.generateRandomBytes(length: ThreemaProtocol.messageIDLength)!
+
+        let firstReactionMsg = GroupReactionMessage()
+        firstReactionMsg.messageID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.messageIDLength)!
+        firstReactionMsg.fromIdentity = "SENDER01"
+
+        let secondReactionMsg = GroupReactionMessage()
+        secondReactionMsg.messageID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.messageIDLength)!
+        secondReactionMsg.fromIdentity = "SENDER02"
+
+        // The message that was reacted to is one of ours
+        let reactedMessage = TextMessageEntity(
+            context: dbMainCnx.current,
+            id: expectedReactedMessageID,
+            isOwn: true,
+            text: "Test 1234",
+            conversation: ConversationEntity(context: dbMainCnx.current)
+        )
+
+        let pendingManager = PendingUserNotificationManager(
+            userNotificationManager: UserNotificationManagerMock(),
+            userNotificationCenterManager: UserNotificationCenterManagerMock(),
+            pushSettingManager: PushSettingManagerMock(),
+            entityManager: EntityManager(databaseContext: dbMainCnx, isRemoteSecretEnabled: false),
+            userSettings: UserSettingsMock()
+        )
+
+        let firstPendingNotification = pendingManager.pendingUserNotification(
+            for: firstReactionMsg,
+            baseMessage: reactedMessage,
+            stage: .base
+        )
+        let secondPendingNotification = pendingManager.pendingUserNotification(
+            for: secondReactionMsg,
+            baseMessage: reactedMessage,
+            stage: .base
+        )
+
+        // Every reaction message is still tracked on its own …
+        XCTAssertNotEqual(firstPendingNotification?.key, secondPendingNotification?.key)
+
+        // … but they all end up in the one notification of the message they belong to
+        XCTAssertEqual(
+            "REACTION-\(expectedReactedMessageID.hexString)",
+            firstPendingNotification?.contentKey
+        )
+        XCTAssertEqual(firstPendingNotification?.contentKey, secondPendingNotification?.contentKey)
+    }
+
+    func testPendingUserNotificationMessagesOfSeveralPeopleHaveOwnNotification() throws {
+        let firstMsg = BoxTextMessage()
+        firstMsg.text = "Test 1234"
+        firstMsg.messageID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.messageIDLength)!
+        firstMsg.fromIdentity = "SENDER01"
+
+        let secondMsg = BoxTextMessage()
+        secondMsg.text = "Test 5678"
+        secondMsg.messageID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.messageIDLength)!
+        secondMsg.fromIdentity = "SENDER02"
+
+        let conversation = ConversationEntity(context: dbMainCnx.current)
+
+        let pendingManager = PendingUserNotificationManager(
+            userNotificationManager: UserNotificationManagerMock(),
+            userNotificationCenterManager: UserNotificationCenterManagerMock(),
+            pushSettingManager: PushSettingManagerMock(),
+            entityManager: EntityManager(databaseContext: dbMainCnx, isRemoteSecretEnabled: false),
+            userSettings: UserSettingsMock()
+        )
+
+        var contentKeys = [String]()
+        for msg in [firstMsg, secondMsg] {
+            let baseMessage = TextMessageEntity(
+                context: dbMainCnx.current,
+                id: msg.messageID,
+                isOwn: false,
+                text: msg.text,
+                conversation: conversation
+            )
+            let pendingNotification = pendingManager.pendingUserNotification(
+                for: msg,
+                baseMessage: baseMessage,
+                stage: .base
+            )
+            try contentKeys.append(XCTUnwrap(pendingNotification?.contentKey))
+        }
+
+        XCTAssertEqual("SENDER01\(firstMsg.messageID.hexString)", contentKeys.first)
+        XCTAssertNotEqual(contentKeys.first, contentKeys.last)
+    }
+
+    // MARK: - Reactions
+
+    func testReactionToOwnMessageIsShown() throws {
+        let reactedMessage = TextMessageEntity(
+            context: dbMainCnx.current,
+            id: BytesUtility.generateMessageID(),
+            isOwn: true,
+            text: "Test 1234",
+            conversation: ConversationEntity(context: dbMainCnx.current)
+        )
+        _ = MessageReactionEntity(context: dbMainCnx.current, reaction: "❤️", message: reactedMessage)
+
+        let userNotificationCenterManagerMock = UserNotificationCenterManagerMock(returnFireDate: Date())
+        let (pendingNotification, shown) = try startReactionNotification(
+            reactedMessage: reactedMessage,
+            userNotificationCenterManager: userNotificationCenterManagerMock
+        )
+
+        XCTAssertTrue(shown)
+        XCTAssertEqual(userNotificationCenterManagerMock.addCalls, [pendingNotification.contentKey])
+    }
+
+    func testReactionToMessageOfSomebodyElseIsNotShown() throws {
+        let reactedMessage = TextMessageEntity(
+            context: dbMainCnx.current,
+            id: BytesUtility.generateMessageID(),
+            isOwn: false,
+            text: "Test 1234",
+            conversation: ConversationEntity(context: dbMainCnx.current)
+        )
+        _ = MessageReactionEntity(context: dbMainCnx.current, reaction: "❤️", message: reactedMessage)
+
+        let userNotificationCenterManagerMock = UserNotificationCenterManagerMock(returnFireDate: Date())
+        let (pendingNotification, shown) = try startReactionNotification(
+            reactedMessage: reactedMessage,
+            userNotificationCenterManager: userNotificationCenterManagerMock
+        )
+
+        // Only the author of a message is told about reactions to it
+        XCTAssertFalse(shown)
+        XCTAssertTrue(userNotificationCenterManagerMock.addCalls.isEmpty)
+        XCTAssertTrue(userNotificationCenterManagerMock.removeCalls.contains(pendingNotification.contentKey))
+    }
+
+    func testReactionNotificationIsRemovedWhenAllReactionsAreWithdrawn() throws {
+        // A message of ours without any reaction left, e.g. after the only one was withdrawn
+        let reactedMessage = TextMessageEntity(
+            context: dbMainCnx.current,
+            id: BytesUtility.generateMessageID(),
+            isOwn: true,
+            text: "Test 1234",
+            conversation: ConversationEntity(context: dbMainCnx.current)
+        )
+
+        let userNotificationCenterManagerMock = UserNotificationCenterManagerMock(returnFireDate: Date())
+        let (pendingNotification, shown) = try startReactionNotification(
+            reactedMessage: reactedMessage,
+            userNotificationCenterManager: userNotificationCenterManagerMock
+        )
+
+        XCTAssertFalse(shown)
+        XCTAssertTrue(userNotificationCenterManagerMock.addCalls.isEmpty)
+        // The notification already shown goes away, not just a pending one
+        XCTAssertTrue(userNotificationCenterManagerMock.removeDeliveredCalls.contains(pendingNotification.contentKey))
+    }
+
+    func testReactionToOwnMessageIsShownWithoutAbstractStage() throws {
+        let reactedMessage = TextMessageEntity(
+            context: dbMainCnx.current,
+            id: BytesUtility.generateMessageID(),
+            isOwn: true,
+            text: "Test 1234",
+            conversation: ConversationEntity(context: dbMainCnx.current)
+        )
+        _ = MessageReactionEntity(context: dbMainCnx.current, reaction: "❤️", message: reactedMessage)
+
+        // A message of our own has no sender, so the sender identity can only come from the abstract message
+        let userNotificationCenterManagerMock = UserNotificationCenterManagerMock(returnFireDate: Date())
+        let (pendingNotification, shown) = try startReactionNotification(
+            reactedMessage: reactedMessage,
+            userNotificationCenterManager: userNotificationCenterManagerMock,
+            runsAbstractStage: false
+        )
+
+        XCTAssertTrue(shown)
+        XCTAssertEqual(pendingNotification.senderIdentity, "SENDER01")
+        XCTAssertEqual(userNotificationCenterManagerMock.addCalls, [pendingNotification.contentKey])
+    }
+
+    func testTakingAReactionBackUpdatesTheNotificationSilently() throws {
+        // One reaction is left after the other one was taken back
+        let reactedMessage = TextMessageEntity(
+            context: dbMainCnx.current,
+            id: BytesUtility.generateMessageID(),
+            isOwn: true,
+            text: "Test 1234",
+            conversation: ConversationEntity(context: dbMainCnx.current)
+        )
+        _ = MessageReactionEntity(context: dbMainCnx.current, reaction: "❤️", message: reactedMessage)
+
+        let withdrawalCenterMock = UserNotificationCenterManagerMock(
+            returnFireDate: Date(),
+            deliveredNotifications: [PendingUserNotificationKey.reactionKey(reactedMessageID: reactedMessage.id)]
+        )
+        _ = try startReactionNotification(
+            reactedMessage: reactedMessage,
+            userNotificationCenterManager: withdrawalCenterMock,
+            isWithdrawal: true
+        )
+
+        let updatedNotification = try XCTUnwrap(withdrawalCenterMock.addedNotifications.first)
+        XCTAssertNil(updatedNotification.sound)
+        XCTAssertEqual(updatedNotification.interruptionLevel, .passive)
+
+        // Applying a reaction alerts as usual
+        let applyCenterMock = UserNotificationCenterManagerMock(returnFireDate: Date())
+        _ = try startReactionNotification(
+            reactedMessage: reactedMessage,
+            userNotificationCenterManager: applyCenterMock
+        )
+
+        let newNotification = try XCTUnwrap(applyCenterMock.addedNotifications.first)
+        XCTAssertNotEqual(newNotification.interruptionLevel, .passive)
+    }
+
+    func testTakingAReactionBackDoesNotBringBackADismissedNotification() throws {
+        // One reaction is left, but its notification was swiped away
+        let reactedMessage = TextMessageEntity(
+            context: dbMainCnx.current,
+            id: BytesUtility.generateMessageID(),
+            isOwn: true,
+            text: "Test 1234",
+            conversation: ConversationEntity(context: dbMainCnx.current)
+        )
+        _ = MessageReactionEntity(context: dbMainCnx.current, reaction: "❤️", message: reactedMessage)
+
+        let userNotificationCenterManagerMock = UserNotificationCenterManagerMock(returnFireDate: Date())
+        let (_, shown) = try startReactionNotification(
+            reactedMessage: reactedMessage,
+            userNotificationCenterManager: userNotificationCenterManagerMock,
+            isWithdrawal: true
+        )
+
+        XCTAssertFalse(shown)
+        XCTAssertTrue(userNotificationCenterManagerMock.addCalls.isEmpty)
+    }
+
+    func testTakingAReactionBackUpdatesANotificationNotShownYet() throws {
+        // The notification about the reaction that remains is still waiting for its trigger
+        let reactedMessage = TextMessageEntity(
+            context: dbMainCnx.current,
+            id: BytesUtility.generateMessageID(),
+            isOwn: true,
+            text: "Test 1234",
+            conversation: ConversationEntity(context: dbMainCnx.current)
+        )
+        _ = MessageReactionEntity(context: dbMainCnx.current, reaction: "❤️", message: reactedMessage)
+
+        let contentKey = PendingUserNotificationKey.reactionKey(reactedMessageID: reactedMessage.id)
+        let userNotificationCenterManagerMock = UserNotificationCenterManagerMock(
+            returnFireDate: Date(),
+            pendingNotifications: [contentKey]
+        )
+        let (_, shown) = try startReactionNotification(
+            reactedMessage: reactedMessage,
+            userNotificationCenterManager: userNotificationCenterManagerMock,
+            isWithdrawal: true
+        )
+
+        // Otherwise it would still show the reaction that was taken back
+        XCTAssertTrue(shown)
+        XCTAssertEqual(userNotificationCenterManagerMock.addCalls, [contentKey])
+    }
+
+    /// Runs a reaction to `reactedMessage` through `startTimedUserNotification`
+    /// - Parameters:
+    ///   - reactedMessage: Message the reaction is for
+    ///   - userNotificationCenterManager: Records what is added and removed
+    ///   - runsAbstractStage: Pass `false` to skip the stage an incoming message usually goes through first
+    ///   - isWithdrawal: Pass `true` if the incoming reaction takes a reaction back
+    /// - Returns: The pending notification and whether it was shown
+    private func startReactionNotification(
+        reactedMessage: BaseMessageEntity,
+        userNotificationCenterManager: UserNotificationCenterManagerMock,
+        runsAbstractStage: Bool = true,
+        isWithdrawal: Bool = false
+    ) throws -> (pendingNotification: PendingUserNotification, shown: Bool) {
+        let reactionMsg = ReactionMessage()
+        reactionMsg.messageID = BytesUtility.generateMessageID()
+        reactionMsg.fromIdentity = "SENDER01"
+
+        var cspReaction = CspE2e_Reaction()
+        cspReaction.messageID = try reactedMessage.id.littleEndian()
+        let emojiData = try XCTUnwrap("❤️".data(using: .utf8))
+        cspReaction.action = isWithdrawal ? .withdraw(emojiData) : .apply(emojiData)
+        reactionMsg.decoded = cspReaction
+
+        // Only whether a notification is added or removed matters here, not what it contains
+        let contentPendingNotification = PendingUserNotification(key: "1")
+        contentPendingNotification.abstractMessage = reactionMsg
+
+        let pendingManager = PendingUserNotificationManager(
+            userNotificationManager: UserNotificationManagerMock(
+                returnUserNotificationContent: UserNotificationContent(contentPendingNotification)
+            ),
+            userNotificationCenterManager: userNotificationCenterManager,
+            pushSettingManager: PushSettingManagerMock(),
+            entityManager: EntityManager(databaseContext: dbMainCnx, isRemoteSecretEnabled: false),
+            userSettings: UserSettingsMock()
+        )
+
+        // Same order as a reaction coming in: the abstract message first, then the message reacted to
+        if runsAbstractStage {
+            _ = pendingManager.pendingUserNotification(for: reactionMsg, stage: .abstract)
+        }
+        let pendingNotification = try XCTUnwrap(pendingManager.pendingUserNotification(
+            for: reactionMsg,
+            baseMessage: reactedMessage,
+            stage: .base
+        ))
+
+        let expect = expectation(description: "startTimedUserNotification")
+        var shown = false
+        pendingManager.startTimedUserNotification(pendingUserNotification: pendingNotification)
+            .done { result in
+                shown = result
+                expect.fulfill()
+            }
+        wait(for: [expect], timeout: 3)
+
+        return (pendingNotification, shown)
     }
 }

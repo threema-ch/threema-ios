@@ -41,6 +41,13 @@ final class DatabaseContextMock {
         withExtension: "momd"
     )
 
+    static func managedObjectModel(name: String) -> NSManagedObjectModel? {
+        guard let modelURL = BundleUtil.url(forResource: name, withExtension: "momd") else {
+            return nil
+        }
+        return NSManagedObjectModel(contentsOf: modelURL)
+    }
+
     /// Context in memory, doesn't work with NSBatch... commands (use devNullContext)
     ///
     /// - Returns: DB context for testing

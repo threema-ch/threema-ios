@@ -54,7 +54,7 @@ struct PersistenceMigrationTests {
             videoFieldName: videoFieldName
         )
 
-        // Act data mirgation
+        // Act data migration
         let persistenceMigration = PersistenceMigration(entityManager: testDatabase.entityManager)
         try persistenceMigration.migrateDataAvailable(
             remoteSecretEnabled: testDatabase.remoteSecretManagerMock.isRemoteSecretEnabled
@@ -190,8 +190,52 @@ struct PersistenceMigrationTests {
             )
         }
     }
+    
+    @Test("Test migration of the field 'readAt'", arguments: [false, true])
+    func migrationOfReadMessageReactions(encrypted: Bool) throws {
+        // Arange
+        
+        let testDatabase = TestDatabase(encrypted: encrypted)
+        let dbPreparer = testDatabase.preparer
+        let message = dbPreparer.save {
+            let contact = dbPreparer.createContact(
+                publicKey: BytesUtility.generateRandomBytes(length: 32)!,
+                identity: "ECHOECHO"
+            )
+            let conversation = dbPreparer.createConversation(contactEntity: contact)
+            let message = dbPreparer.createTextMessage(
+                conversation: conversation,
+                isOwn: false,
+                sender: contact,
+                remoteSentDate: .now
+            )
+            
+            dbPreparer.createMessageReactionEntity(message: message, reaction: "🔮")
+            return message
+        }
+        
+        // Act: Run migration
+        let persistenceMigration = PersistenceMigration(entityManager: testDatabase.entityManager)
+        try persistenceMigration.migrateReadMessageReactions(
+            remoteSecretEnabled: testDatabase.remoteSecretManagerMock.isRemoteSecretEnabled
+        )
+        
+        // Assert
+        let entityManager = testDatabase.entityManager
+        let reactionMessages = try #require(
+            entityManager.entityFetcher.messageReactionEntities(for: message)
+        )
+        #expect(!reactionMessages.isEmpty)
 
-    /// Setup database right after ligth weight migration, no `dataAvailable` fields are set!
+        for reactionMessage in reactionMessages {
+            #expect(reactionMessage.readAt != nil)
+        }
+
+        // Unread reactions are the ones without a `readAt` date, there must be none left
+        #expect(entityManager.entityFetcher.unreadMessageReactionEntities(for: message)?.isEmpty ?? true)
+    }
+    
+    /// Setup database right after light weight migration, no `dataAvailable` fields are set!
     private func setupDataForMigrationOfDataAvailable(
         testDatabase: TestDatabase,
         fileEntityName: String,

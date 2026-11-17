@@ -281,14 +281,16 @@ struct GroupSpamDetectorTests {
         let userSettingsMock = UserSettingsMock()
         let pushSettingsManagerMock = PushSettingManagerMock()
         
-        let group = Group(
-            myIdentityStore: myIdentityStoreMock,
-            userSettings: userSettingsMock,
-            pushSettingManager: pushSettingsManagerMock,
-            groupEntity: groupEntity,
-            conversation: conversationEntity,
-            lastSyncRequest: nil
-        )
+        let group = testDatabase.entityManager.performAndWait {
+            Group(
+                myIdentityStore: myIdentityStoreMock,
+                userSettings: userSettingsMock,
+                pushSettingManager: pushSettingsManagerMock,
+                groupEntity: groupEntity,
+                conversation: conversationEntity,
+                lastSyncRequest: nil
+            )
+        }
         
         // The spam detection must run on a background (private queue) Core Data context
         let groupManagerMock = GroupManagerMock(myIdentityStoreMock)

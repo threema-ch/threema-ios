@@ -5,6 +5,34 @@ import UIKit
 /// Access messages of a conversation
 public final class MessageFetcher: NSObject {
     
+    /// Number of media messages per message entity type
+    public struct MediaMessageCounts: Equatable, Sendable {
+        public var fileMessages = 0
+        public var imageMessages = 0
+        public var videoMessages = 0
+        public var audioMessages = 0
+        
+        public var total: Int {
+            fileMessages + imageMessages + videoMessages + audioMessages
+        }
+        
+        public init(fileMessages: Int = 0, imageMessages: Int = 0, videoMessages: Int = 0, audioMessages: Int = 0) {
+            self.fileMessages = fileMessages
+            self.imageMessages = imageMessages
+            self.videoMessages = videoMessages
+            self.audioMessages = audioMessages
+        }
+        
+        public static func + (lhs: MediaMessageCounts, rhs: MediaMessageCounts) -> MediaMessageCounts {
+            MediaMessageCounts(
+                fileMessages: lhs.fileMessages + rhs.fileMessages,
+                imageMessages: lhs.imageMessages + rhs.imageMessages,
+                videoMessages: lhs.videoMessages + rhs.videoMessages,
+                audioMessages: lhs.audioMessages + rhs.audioMessages
+            )
+        }
+    }
+    
     /// Set order of returned messages (this only affects calls to `messages(at:count:)`). Default is `true`.
     public var orderAscending = true {
         didSet {
@@ -410,13 +438,17 @@ public final class MessageFetcher: NSObject {
 
     /// Number of media messages in the conversation
     public func mediaCount() -> Int {
-        var mediaCount = 0
-        mediaCount += entityManager.entityFetcher.executeCount(countFileMessagesFetchRequest)
-        mediaCount += entityManager.entityFetcher.executeCount(countImageMessagesFetchRequest)
-        mediaCount += entityManager.entityFetcher.executeCount(countVideoMessagesFetchRequest)
-        mediaCount += entityManager.entityFetcher.executeCount(countAudioMessagesFetchRequest)
-        
-        return mediaCount
+        mediaCountsByEntity().total
+    }
+    
+    /// Number of media messages in the conversation per message entity type
+    public func mediaCountsByEntity() -> MediaMessageCounts {
+        MediaMessageCounts(
+            fileMessages: entityManager.entityFetcher.executeCount(countFileMessagesFetchRequest),
+            imageMessages: entityManager.entityFetcher.executeCount(countImageMessagesFetchRequest),
+            videoMessages: entityManager.entityFetcher.executeCount(countVideoMessagesFetchRequest),
+            audioMessages: entityManager.entityFetcher.executeCount(countAudioMessagesFetchRequest)
+        )
     }
     
     /// Object IDs of file messages with a `nil` MIME typ. They have no particular order.

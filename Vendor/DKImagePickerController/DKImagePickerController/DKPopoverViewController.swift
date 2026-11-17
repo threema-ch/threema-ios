@@ -11,9 +11,11 @@ import UIKit
 open class DKPopoverViewController: UIViewController {
     
     open class func popoverViewController(_ viewController: UIViewController, fromView: UIView) {
-        /***** BEGIN THREEMA MODIFICATION: Use windows instead of keyWindow *********/
-        let window = UIApplication.shared.windows.first!
-        /***** END THREEMA MODIFICATION: Use windows instead of keyWindow *********/
+        /***** BEGIN THREEMA MODIFICATION: Use the window of the source view *********/
+        guard let window = fromView.window else {
+            return
+        }
+        /***** END THREEMA MODIFICATION: Use the window of the source view *********/
         
         let popoverViewController = DKPopoverViewController()
         
@@ -24,11 +26,17 @@ open class DKPopoverViewController: UIViewController {
         window.rootViewController!.addChild(popoverViewController)
     }
     
+    @available(*, deprecated, message: "use dismissPopoverViewController(in:) instead")
     open class func dismissPopoverViewController() {
         /***** BEGIN THREEMA MODIFICATION: Use windows instead of keyWindow *********/
         let window = UIApplication.shared.windows.first!
         /***** END THREEMA MODIFICATION: Use windows instead of keyWindow *********/
-
+        
+        dismissPopoverViewController(in: window)
+    }
+    
+    /// - Parameter window: Window the popover was shown in
+    open class func dismissPopoverViewController(in window: UIWindow) {
         for vc in window.rootViewController!.children {
             if vc is DKPopoverViewController {
                 (vc as! DKPopoverViewController).dismiss()
@@ -66,6 +74,15 @@ open class DKPopoverViewController: UIViewController {
         func commonInit() {
             arrowImageView.image = self.arrowImage()
             self.addSubview(arrowImageView)
+            
+            /***** BEGIN THREEMA MODIFICATION: trait change registration *********/
+            registerForTraitChanges([
+                UITraitVerticalSizeClass.self,
+                UITraitHorizontalSizeClass.self
+            ]) { (self: DKPopoverView, _) in
+                self.arrowImageView.image = self.arrowImage()
+            }
+            /***** END THREEMA MODIFICATION: trait change registration *********/
         }
         
         override func layoutSubviews() {
@@ -76,7 +93,7 @@ open class DKPopoverViewController: UIViewController {
         }
         
         func arrowImage() -> UIImage {
-            UIGraphicsBeginImageContextWithOptions(CGSize(width: arrowWidth, height: arrowHeight), false, UIScreen.main.scale)
+            UIGraphicsBeginImageContextWithOptions(CGSize(width: arrowWidth, height: arrowHeight), false, self.traitCollection.displayScale)
             
             let context = UIGraphicsGetCurrentContext()
             UIColor.clear.setFill()

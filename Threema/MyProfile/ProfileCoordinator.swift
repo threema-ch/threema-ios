@@ -32,12 +32,18 @@ final class ProfileCoordinator: NSObject, Coordinator {
 
     var childCoordinators: [any Coordinator] = []
     var rootViewController: UIViewController {
-        rootNavigationController
+        splitViewController
     }
+
+    /// The tab's content: this coordinator's navigation controller as the primary column and a detail column
+    /// owned by the split view. Installed as the tab's root by `AppCoordinator`.
+    private(set) lazy var splitViewController = ThreemaTabSplitViewController(
+        tab: .profile,
+        primaryNavigationController: rootNavigationController
+    )
 
     // MARK: - Routers
 
-    private weak var presentingViewController: ThreemaSplitViewController?
     private let businessInjector: any BusinessInjectorProtocol
     private let shareActivityRouter: any ShareActivityRouterProtocol
     private let modalRouter: any ModalRouterProtocol
@@ -55,8 +61,7 @@ final class ProfileCoordinator: NSObject, Coordinator {
     private lazy var collectionView = ProfileCollectionView { [weak self] in
         self?.currentDestination
     } shouldAllowAutoDeselection: { [weak self] in
-        let traitCollection = self?.presentingViewController?.traitCollection
-        return traitCollection?.horizontalSizeClass == .compact
+        self?.splitViewController.isCompactLayout == true
     }
 
     private var canAddContact: Bool {
@@ -162,9 +167,7 @@ final class ProfileCoordinator: NSObject, Coordinator {
             dataSource: dataSource
         )
 
-        let tab = ThreemaTab(.profile)
-        viewController.tabBarItem = tab.tabBarItem
-        viewController.title = tab.title
+        viewController.title = ThreemaTab(.profile).title
 
         return viewController
     }()
@@ -188,13 +191,11 @@ final class ProfileCoordinator: NSObject, Coordinator {
     // MARK: - Lifecycle
 
     init(
-        presentingViewController: ThreemaSplitViewController,
         businessInjector: any BusinessInjectorProtocol,
         shareActivityRouter: any ShareActivityRouterProtocol,
         modalRouter: any ModalRouterProtocol,
         passcodeRouter: any PasscodeRouterProtocol
     ) {
-        self.presentingViewController = presentingViewController
         self.businessInjector = businessInjector
         self.shareActivityRouter = shareActivityRouter
         self.modalRouter = modalRouter
@@ -202,20 +203,22 @@ final class ProfileCoordinator: NSObject, Coordinator {
         super.init()
 
         router.delegate = self
-        router.forwardDelegate = self
+        // The split view hides the tab bar from the primary column's callbacks, then forwards them here.
+        router.forwardDelegate = splitViewController
+        splitViewController.navigationDelegate = self
     }
 
     // MARK: - Presentation
 
     func start() {
-        /// Due to this coordinator's rootViewController being part of a
-        /// `UITabViewController`, it's not needed to present anything here.
-        /// The rootViewController is added by to the `UITabViewController`'s
-        /// viewControllers in ``AppCoordinator``'s `configureSplitViewController` method.
+        /// The split view is installed as this tab's root by ``AppCoordinator``'s
+        /// `configureTabBarController`; nothing is presented here. The split view
+        /// binds the router on appearance and on collapse/expand.
         rootNavigationController.setViewControllers(
             [profileViewController],
             animated: false
         )
+        splitViewController.routerHandle = routerHandle
 
         setupNavigationBarItems()
         observeIncomingSync()
@@ -303,13 +306,13 @@ final class ProfileCoordinator: NSObject, Coordinator {
     }
 
     func dismiss() {
-        presentingViewController?.presentedViewController?.dismiss(animated: true)
+        splitViewController.presentedViewController?.dismiss(animated: true)
     }
 
     // MARK: - Router binding
 
-    /// Hooks for `ThreemaSplitViewNavigationManager` to activate/deactivate this
-    /// tab's router when tab selection or the size class changes.
+    /// Hooks for the tab's split view (binding on appearance, collapse, expand)
+    /// and the tab bar controller (re-authentication on return, memory warnings).
     var routerHandle: RouterManagedTabHandle {
         RouterManagedTabHandle(
             deactivate: { [weak self] in
@@ -318,8 +321,8 @@ final class ProfileCoordinator: NSObject, Coordinator {
             activateCompact: { [weak self] in
                 self?.bindCompact()
             },
-            activateRegular: { [weak self] navigationController in
-                self?.bindRegular(into: navigationController)
+            activateRegular: { [weak self] column in
+                self?.bindRegular(into: column)
             },
             reauthenticateProtectedDestinations: { [weak self] in
                 guard
@@ -338,20 +341,19 @@ final class ProfileCoordinator: NSObject, Coordinator {
                 )
             },
             releaseMaterializedScreens: { [weak self] in
-                guard
-                    let self,
-                    !router.isBound
-                else {
+                guard let self else {
                     return
                 }
+                // Inactive tabs stay bound: unbind first so the release frees the
+                // screens, then reset both columns to their roots. The next
+                // appearance rebinds and re-materializes the stack from the path.
+                router.unbind()
                 router.releaseMaterializedScreens()
-                // The tab's own navigation controller retains the compact stack
-                // even while inactive — reset it to the root; the next
-                // activation re-materializes the stack from the path.
                 rootNavigationController.setViewControllers(
                     [profileViewController],
                     animated: false
                 )
+                splitViewController.resetSecondaryColumn()
             }
         )
     }
@@ -372,10 +374,10 @@ final class ProfileCoordinator: NSObject, Coordinator {
     /// Regular width: the stack renders in the secondary column, rooted in a
     /// placeholder (the profile screen stays in the primary column). An empty path
     /// shows just the placeholder.
-    private func bindRegular(into navigationController: UINavigationController) {
+    private func bindRegular(into column: TabSecondaryColumn) {
         router.bind(
-            to: navigationController,
-            rootViewController: ThreemaLogoViewController(rootView: ThreemaLogoView()),
+            to: column.navigationController,
+            rootViewController: column.placeholderViewController,
             rootMode: .placeholder
         ) { [weak self] destination in
             self?.makeScreen(destination)
@@ -471,10 +473,9 @@ final class ProfileCoordinator: NSObject, Coordinator {
 
     private func showEditProfile() {
         if businessInjector.userSettings.enableMultiDevice,
-           businessInjector.serverConnector.connectionState != .loggedIn,
-           let presentingViewController {
+           businessInjector.serverConnector.connectionState != .loggedIn {
             UIAlertTemplate.showOKAlert(
-                owner: presentingViewController,
+                owner: splitViewController,
                 title: #localize("not_connected_for_edit_profile_title"),
                 message: #localize("not_connected_for_edit_profile_message")
             )
@@ -507,17 +508,13 @@ final class ProfileCoordinator: NSObject, Coordinator {
                     self?.handleScannerResult(result)
                 }
                 viewModel.onCancel = { [weak self] in
-                    self?.presentingViewController?.dismiss(animated: true)
+                    self?.splitViewController.dismiss(animated: true)
                 }
                 modalRouter.present(viewController, animated: true)
             }
             else {
-                guard let presentingViewController else {
-                    return
-                }
-
                 UIAlertTemplate.showOKAlert(
-                    owner: presentingViewController,
+                    owner: splitViewController,
                     title: "",
                     message: #localize("disabled_by_device_policy")
                 )
@@ -540,7 +537,7 @@ final class ProfileCoordinator: NSObject, Coordinator {
                 )
             )
             model.onCompletion = { [weak self] verifiedContact in
-                self?.presentingViewController?.dismiss(animated: true) {
+                self?.splitViewController.dismiss(animated: true) {
                     guard let verifiedContact else {
                         return
                     }
@@ -559,7 +556,7 @@ final class ProfileCoordinator: NSObject, Coordinator {
 
             // Push onto the scanner's modal navigation controller
             if let modalNavigationController =
-                presentingViewController?.presentedViewController as? UINavigationController {
+                splitViewController.presentedViewController as? UINavigationController {
                 modalNavigationController.pushViewController(viewController, animated: true)
             }
             else {
@@ -567,7 +564,7 @@ final class ProfileCoordinator: NSObject, Coordinator {
             }
 
         case let .identityLink(url: url):
-            presentingViewController?.dismiss(animated: true) {
+            splitViewController.dismiss(animated: true) {
                 URLHandler().handle(url, hideAppChooser: true)
             }
 
@@ -661,13 +658,11 @@ final class ProfileCoordinator: NSObject, Coordinator {
 
     private func showRevokeDelete() {
         guard !passcodeRouter.isPasscodeRequired() else {
-            if let presentingViewController {
-                UIAlertTemplate.showOKAlert(
-                    owner: presentingViewController,
-                    title: #localize("delete_identity_passcode_title"),
-                    message: #localize("delete_identity_passcode_message")
-                )
-            }
+            UIAlertTemplate.showOKAlert(
+                owner: splitViewController,
+                title: #localize("delete_identity_passcode_title"),
+                message: #localize("delete_identity_passcode_message")
+            )
             return
         }
 

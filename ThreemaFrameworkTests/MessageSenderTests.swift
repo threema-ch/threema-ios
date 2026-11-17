@@ -1365,6 +1365,49 @@ final class MessageSenderTests: XCTestCase {
         XCTAssertEqual(expectedThreemaIdentity.rawValue, testTask.receiverIdentity)
     }
     
+    /// Our own reactions must never show up as unread, otherwise we would be notified about them
+    func testOwnReactionIsCreatedRead() async throws {
+        let expectedThreemaIdentity = ThreemaIdentity("ECHOECHO")
+
+        let message = testDatabase.preparer.save {
+            let contactEntity = testDatabase.preparer.createContact(identity: expectedThreemaIdentity.rawValue)
+            contactEntity.setFeatureMask(to: 2024)
+
+            let conversation = testDatabase.preparer.createConversation(contactEntity: contactEntity)
+            return testDatabase.preparer.createTextMessage(
+                conversation: conversation,
+                id: BytesUtility.generateMessageID(),
+                isOwn: false,
+                sender: contactEntity,
+                remoteSentDate: Date()
+            )
+        }
+
+        let userSettingsMock = UserSettingsMock()
+        userSettingsMock.sendEmojiReactions = true
+
+        let messageSender = MessageSender(
+            serverConnector: ServerConnectorMock(),
+            myIdentityStore: MyIdentityStoreMock(),
+            userSettings: userSettingsMock,
+            groupManager: GroupManagerMock(),
+            taskManager: taskManagerMock,
+            entityManager: testDatabase.entityManager
+        )
+        let result = try await messageSender.sendReaction(
+            to: message.objectID,
+            reaction: EmojiVariant(base: .thumbsUp, skintone: nil)
+        )
+
+        XCTAssertEqual(result, .success)
+
+        let entityFetcher = testDatabase.entityManager.entityFetcher
+        let reactions = try XCTUnwrap(entityFetcher.messageReactionEntities(for: message))
+        XCTAssertEqual(reactions.count, 1)
+        XCTAssertNotNil(reactions.first?.readAt)
+        XCTAssertEqual(try XCTUnwrap(entityFetcher.unreadMessageReactionEntities(for: message)).count, 0)
+    }
+
     /// Situation:
     /// Local support: Phase 2
     /// Remote support: Phase 1 or 2

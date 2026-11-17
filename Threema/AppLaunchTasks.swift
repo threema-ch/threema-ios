@@ -75,7 +75,11 @@ final class AppLaunchTasks: AppLaunchTasksProtocol {
 
                 // Delete all files and directories from temporary app directory
                 FileUtility.shared.removeItemsInDirectory(directoryURL: FileUtility.shared.appTemporaryDirectory)
-                
+
+                // Delete the file of a data backup the app was terminated in the middle of. Must run before any backup
+                // can be started, which is why it's here.
+                PartialBackupFiles(fileUtility: FileUtility.shared).removeLeftovers()
+
                 // Reset MD setting if needed
                 businessInjector.multiDeviceManager.resetEnableMultiDeviceIfNeeded()
 

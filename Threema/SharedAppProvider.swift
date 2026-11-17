@@ -10,16 +10,16 @@ enum SharedAppProvider {
 
     // MARK: - Navigation
 
-    static var tabBarController: UITabBarController? {
-        SceneDelegate.current?.rootCoordinator?.tabBarController
-    }
-
     static var currentTopViewController: UIViewController? {
         SceneDelegate.current?.currentTopViewController
     }
 
     static var window: UIWindow? {
         SceneDelegate.current?.window
+    }
+
+    static var tabBarController: ThreemaTabBarController? {
+        window?.rootViewController as? ThreemaTabBarController
     }
 
     // MARK: - Lifecycle
@@ -89,7 +89,7 @@ enum SharedAppProvider {
     // MARK: - Trait collection
 
     static var isCompactSizeClass: Bool {
-        appCoordinator?.splitViewController.traitCollection.horizontalSizeClass == .compact
+        appCoordinator?.rootViewController.traitCollection.horizontalSizeClass == .compact
     }
 
     // MARK: - Orientation (per-scene)

@@ -41,6 +41,12 @@ final class NewMessageToaster {
         )
         notificationCenter.addObserver(
             self,
+            selector: #selector(newReactionReceived),
+            name: Notification.Name(IncomingMessageManager.inAppNotificationNewReaction),
+            object: nil
+        )
+        notificationCenter.addObserver(
+            self,
             selector: #selector(conversationOpened),
             name: Notification.Name(rawValue: kNotificationOpenedConversation),
             object: nil
@@ -104,7 +110,67 @@ final class NewMessageToaster {
                         return
                     }
 
-                    self.bannerPresenter.newBanner(baseMessage: message)
+                    guard let tabBarController = SharedAppProvider.tabBarController else {
+                        return
+                    }
+
+                    self.bannerPresenter.newBanner(on: tabBarController, baseMessage: message)
+                }
+            }
+        }
+    }
+
+    @objc private func newReactionReceived(_ notification: Notification) {
+        DDLogVerbose("newReactionReceived: \(notification)")
+
+        guard let messageObjectID = notification.object as? NSManagedObjectID,
+              let body = notification.userInfo?[IncomingMessageManager.inAppNotificationReactionBodyKey] as? String
+        else {
+            return
+        }
+
+        guard previewSetting.inAppPreview, SharedAppProvider.isAppActive else {
+            return
+        }
+
+        let entityManager = entityManager
+        entityManager.perform {
+            guard let message = entityManager.entityFetcher.existingObject(
+                with: messageObjectID
+            ) as? BaseMessageEntity else {
+                return
+            }
+
+            // A private chat only tells that a reaction came in, never who reacted or to what
+            let accessibilityText = message.conversation.conversationCategory == .private
+                ? #localize("private_reaction_label")
+                : "\(message.conversation.displayName): \(body)"
+
+            Task { @MainActor in
+                // The app can be active while the passcode lock screen is up; don't reveal a preview then.
+                guard !SharedAppProvider.isAppLocked else {
+                    return
+                }
+
+                SharedAppProvider.execute { coordinator in
+                    guard coordinator.canDisplayNotificationToast(for: message) else {
+                        return
+                    }
+
+                    if UIAccessibility.isVoiceOverRunning {
+                        UIAccessibility.post(notification: .announcement, argument: accessibilityText)
+                        return
+                    }
+
+                    guard let tabBarController = SharedAppProvider.tabBarController else {
+                        return
+                    }
+
+                    self.bannerPresenter.newReactionBanner(
+                        on: tabBarController,
+                        reactedMessage: message,
+                        body: body
+                    )
                 }
             }
         }

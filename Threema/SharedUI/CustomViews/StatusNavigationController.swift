@@ -17,6 +17,16 @@ final class StatusNavigationController: UINavigationController {
     /// Logo URL currently shown in the title view. Used to detect a changed (or removed) custom
     /// logo so it gets refetched, instead of freezing the first logo that was ever displayed.
     private var displayedLogoURL: String?
+
+    /// Width inside the navigation bar's layout margins the shown logo was fitted for. `BrandingUtils` sizes the
+    /// logo into the space the margins and bar button items leave, so a narrower bar (iPad window resize, split
+    /// view column) needs a new fit or the logo runs under the buttons. Margins can settle after the first fit
+    /// without a width change, which would otherwise keep a logo fitted for the transient margins.
+    private var logoFittedForWidth: CGFloat?
+    
+    private var logoFitWidth: CGFloat {
+        navigationBar.bounds.inset(by: navigationBar.layoutMargins).width
+    }
     
     // MARK: - Lifecycle
     
@@ -173,12 +183,15 @@ final class StatusNavigationController: UINavigationController {
                 hideTitleView()
             }
         }
-        // Refetch when no logo is shown yet, or when the logo actually changed (e.g. a company
-        // set/removed/changed its logo in the cockpit, or the theme switched the light/dark URL).
-        // Comparing against the displayed URL avoids re-running the async fetch on every layout pass.
+        // Refetch when no logo is shown yet, when the logo actually changed (e.g. a company
+        // set/removed/changed its logo in the cockpit, or the theme switched the light/dark URL), or when
+        // the bar width changed since the logo was fitted. Comparing against the displayed URL and width
+        // avoids re-running the async fetch on every layout pass.
         else if topViewController.navigationItem.titleView == nil ||
-            Colors.licenseLogoURL != displayedLogoURL {
+            Colors.licenseLogoURL != displayedLogoURL ||
+            logoFitWidth != logoFittedForWidth {
             displayedLogoURL = Colors.licenseLogoURL
+            logoFittedForWidth = logoFitWidth
             BrandingUtils.updateTitleLogo(of: topViewController.navigationItem, in: self)
         }
     }
@@ -188,6 +201,7 @@ final class StatusNavigationController: UINavigationController {
     private func hideTitleView() {
         topViewController?.navigationItem.titleView = nil
         displayedLogoURL = nil
+        logoFittedForWidth = nil
     }
     
     @objc private func promptTapped() {

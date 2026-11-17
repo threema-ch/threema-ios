@@ -92,17 +92,25 @@ public struct PPAssetsActionConfig {
 
     public init() {}
     
+    @available(*, deprecated, message: "Use showReplacementOptionInLandscape(traitCollection:) instead")
     public func showReplacementOptionInLandscape() -> Bool {
-        if UIImagePickerController.isSourceTypeAvailable(.camera) && ((isLandscape() && UIDevice.current.userInterfaceIdiom != .pad) || UIAccessibility.isVoiceOverRunning || !showGalleryPreview) {
+        showReplacementOptionInLandscape(traitCollection: UITraitCollection.current)
+    }
+    
+    public func showReplacementOptionInLandscape(traitCollection: UITraitCollection) -> Bool {
+        if UIImagePickerController.isSourceTypeAvailable(.camera) && ((isLandscape(traitCollection: traitCollection) && UIDevice.current.userInterfaceIdiom != .pad) || UIAccessibility.isVoiceOverRunning || !showGalleryPreview) {
             return true
         }
         return false
     }
     
+    @available(*, deprecated, message: "Use isLandscape(traitCollection:) instead")
     public func isLandscape() -> Bool {
-        if UIDevice.current.orientation == .landscapeLeft || UIDevice.current.orientation == .landscapeRight {
-            return true
-        }
-        return false
+        isLandscape(traitCollection: UITraitCollection.current)
+    }
+    
+    /// Whether the vertical space is constrained (e.g. iPhone in landscape), which leaves no room for the gallery preview
+    public func isLandscape(traitCollection: UITraitCollection) -> Bool {
+        traitCollection.verticalSizeClass == .compact
     }
 }

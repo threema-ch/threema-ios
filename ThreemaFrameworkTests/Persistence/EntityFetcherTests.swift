@@ -230,7 +230,7 @@ final class EntityFetcherTests: XCTestCase {
             ThreemaIdentity("MEMBER04"),
         ]
 
-        try databasePreparer.save {
+        databasePreparer.save {
             for memberIdentity in memberIdentities {
                 databasePreparer.createContact(identity: memberIdentity.rawValue)
             }
@@ -268,7 +268,7 @@ final class EntityFetcherTests: XCTestCase {
             ThreemaIdentity("MEMBER04"),
         ]
 
-        try databasePreparer.save {
+        databasePreparer.save {
             for memberIdentity in memberIdentities {
                 databasePreparer.createContact(identity: memberIdentity.rawValue)
             }
@@ -306,7 +306,7 @@ final class EntityFetcherTests: XCTestCase {
             ThreemaIdentity("MEMBER04"),
         ]
 
-        try databasePreparer.save {
+        databasePreparer.save {
             for memberIdentity in memberIdentities {
                 databasePreparer.createContact(identity: memberIdentity.rawValue)
             }
@@ -961,5 +961,105 @@ final class EntityFetcherTests: XCTestCase {
 
             XCTAssertEqual(isGroupMessageDelivered, testCase.isDelivered)
         }
+    }
+
+    // MARK: - Media browser
+
+    func testMediaMessagesFetchResultsController() throws {
+        try mediaMessagesFetchResultsControllerTest(encrypted: false)
+    }
+
+    func testMediaMessagesFetchResultsControllerEncrypted() throws {
+        try mediaMessagesFetchResultsControllerTest(encrypted: true)
+    }
+
+    private func mediaMessagesFetchResultsControllerTest(encrypted: Bool) throws {
+        // Arrange
+        let testDatabaseLocal = TestDatabase(encrypted: encrypted)
+        let preparer = testDatabaseLocal.preparer
+        var date = Date(timeIntervalSince1970: 0)
+        func nextDate() -> Date {
+            date = date.addingTimeInterval(1)
+            return date
+        }
+
+        // Object IDs are only permanent after saving, so we keep the objects until then
+        let (conversation, expectedMessages) = preparer.save {
+            let conversation = preparer.createConversation()
+            let otherConversation = preparer.createConversation()
+
+            func fileMessage(mimeType: String, type: Int, in conversation: ConversationEntity) -> FileMessageEntity {
+                preparer.createFileMessageEntity(
+                    conversation: conversation,
+                    mimeType: mimeType,
+                    type: NSNumber(value: type),
+                    date: nextDate()
+                )
+            }
+
+            // Shown
+            var expectedMessages = [BaseMessageEntity]()
+            expectedMessages.append(fileMessage(mimeType: "image/jpeg", type: 1, in: conversation))
+            expectedMessages.append(fileMessage(mimeType: "image/png", type: 2, in: conversation)) // Sticker
+            expectedMessages.append(fileMessage(mimeType: "image/gif", type: 1, in: conversation))
+            expectedMessages.append(fileMessage(mimeType: "image/gif", type: 2, in: conversation)) // Animated sticker
+            expectedMessages.append(fileMessage(mimeType: "video/mp4", type: 1, in: conversation))
+            expectedMessages.append(
+                preparer.createImageMessageEntity(
+                    conversation: conversation,
+                    image: nil,
+                    thumbnail: nil,
+                    date: nextDate(),
+                    isOwn: false,
+                    sender: nil,
+                    remoteSentDate: nil
+                )
+            )
+            expectedMessages.append(
+                preparer.createVideoMessageEntity(
+                    conversation: conversation,
+                    video: nil,
+                    duration: 1,
+                    thumbnail: nil,
+                    date: nextDate(),
+                    isOwn: false,
+                    sender: nil,
+                    remoteSentDate: nil
+                )
+            )
+
+            // Not shown
+            _ = fileMessage(mimeType: "audio/aac", type: 1, in: conversation) // Voice message
+            _ = fileMessage(mimeType: "application/pdf", type: 0, in: conversation) // File
+            _ = fileMessage(mimeType: "image/jpeg", type: 0, in: conversation) // Image sent as file
+            fileMessage(mimeType: "image/jpeg", type: 1, in: conversation).deletedAt = nextDate()
+            preparer.createTextMessage(
+                conversation: conversation,
+                date: nextDate(),
+                isOwn: false,
+                sender: nil,
+                remoteSentDate: nil
+            )
+            _ = fileMessage(mimeType: "image/jpeg", type: 1, in: otherConversation)
+
+            return (conversation, expectedMessages)
+        }
+        let expectedIDs = expectedMessages.map(\.objectID)
+
+        let entityManager = testDatabaseLocal.entityManager
+
+        // Act
+        let entityFetcher = entityManager.entityFetcher
+        let fetchedResultsController = entityFetcher.mediaMessagesFetchResultsController(for: conversation.objectID)
+        let fetchedIDs = try entityManager.performAndWait {
+            try fetchedResultsController.performFetch()
+            return (fetchedResultsController.fetchedObjects ?? []).map(\.objectID)
+        }
+        var cache = [NSManagedObjectID: Bool]()
+        let shownIDs = entityFetcher.filterMediaMessages(fetchedIDs, cache: &cache)
+
+        // Assert
+        XCTAssertEqual(entityFetcher.mediaMessagesRequireInMemoryFiltering, encrypted)
+        XCTAssertEqual(shownIDs, expectedIDs)
     }
 }

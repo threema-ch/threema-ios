@@ -5,6 +5,19 @@ import ThreemaMacros
 @objc(MessageReactionEntity)
 public final class MessageReactionEntity: ThreemaManagedObject {
 
+    static let entityName = "MessageReaction"
+
+    enum Field: String {
+        case readAt
+
+        static func name(for field: Field, encrypted: Bool) -> String {
+            switch field {
+            case .readAt:
+                encrypted ? encryptedReadAtName : readAtName
+            }
+        }
+    }
+    
     // MARK: Attributes
 
     @EncryptedField
@@ -28,6 +41,18 @@ public final class MessageReactionEntity: ThreemaManagedObject {
             setDate(newValue)
         }
     }
+    
+    /// Date the user saw this reaction, `nil` as long as it is unread.
+    @EncryptedField
+    @objc public dynamic var readAt: Date? {
+        get {
+            getReadAt()
+        }
+
+        set {
+            setReadAt(newValue)
+        }
+    }
 
     // MARK: Relationships
 
@@ -39,6 +64,7 @@ public final class MessageReactionEntity: ThreemaManagedObject {
     // Cached decrypted values
     private var decryptedDate: Date? // Non optional
     private var decryptedReaction: String? // Non optional
+    private var decryptedReadAt: Date?
 
     // MARK: - Lifecycle
 
@@ -46,19 +72,22 @@ public final class MessageReactionEntity: ThreemaManagedObject {
     /// - Parameters:
     ///   - creator: The `ContactEntity` of the creator of the reaction, nil if we reacted
     ///   - reaction: The string of the reaction itself, e.g. the emoji
+    ///   - readAt: Date the user saw the reaction, `nil` if it is still unread
     ///   - message: `BaseMessageEntity` the entity belongs to
     init(
         context: NSManagedObjectContext,
         date: Date = Date(),
         reaction: String,
+        readAt: Date? = nil,
         contact: ContactEntity? = nil,
         message: BaseMessageEntity
     ) {
-        let entity = NSEntityDescription.entity(forEntityName: "MessageReaction", in: context)!
+        let entity = NSEntityDescription.entity(forEntityName: MessageReactionEntity.entityName, in: context)!
         super.init(entity: entity, insertInto: context)
 
         setDate(date)
         setReaction(reaction)
+        setReadAt(readAt)
 
         self.message = message
         self.creator = contact
@@ -156,6 +185,42 @@ public final class MessageReactionEntity: ThreemaManagedObject {
         }
     }
 
+    // MARK: Read at
+
+    private func getReadAt() -> Date? {
+        var value: Date?
+        guard let managedObjectContext else {
+            return value
+        }
+
+        if managedObjectContext.usesAdditionallyEncryptedModel {
+            decryptOptional(&decryptedReadAt, forKey: Self.encryptedReadAtName)
+            value = decryptedReadAt
+        }
+        else {
+            willAccessValue(forKey: Self.readAtName)
+            value = primitiveValue(forKey: Self.readAtName) as? Date
+            didAccessValue(forKey: Self.readAtName)
+        }
+        return value
+    }
+
+    private func setReadAt(_ newValue: Date?) {
+        guard let managedObjectContext else {
+            return
+        }
+
+        if managedObjectContext.usesAdditionallyEncryptedModel {
+            encryptOptional(newValue, forKey: Self.encryptedReadAtName)
+            decryptedReadAt = newValue
+        }
+        else {
+            willChangeValue(forKey: Self.readAtName)
+            setPrimitiveValue(newValue, forKey: Self.readAtName)
+            didChangeValue(forKey: Self.readAtName)
+        }
+    }
+
     // MARK: - Reset cached values
 
     override public func didChangeValue(forKey key: String) {
@@ -165,12 +230,16 @@ public final class MessageReactionEntity: ThreemaManagedObject {
         else if key == Self.encryptedReactionName {
             decryptedReaction = nil
         }
+        else if key == Self.encryptedReadAtName {
+            decryptedReadAt = nil
+        }
         super.didChangeValue(forKey: key)
     }
 
     override public func didTurnIntoFault() {
         decryptedDate = nil
         decryptedReaction = nil
+        decryptedReadAt = nil
         super.didTurnIntoFault()
     }
 }

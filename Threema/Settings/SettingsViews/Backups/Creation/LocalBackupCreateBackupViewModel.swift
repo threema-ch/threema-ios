@@ -18,12 +18,25 @@ final class LocalBackupCreateBackupViewModel {
         var headerIconName: String {
             switch self {
             case .inProgress:
-                "key"
+                "arrow.down.circle.fill"
             case .complete:
-                "checkmark.circle"
+                "checkmark.circle.fill"
             case .failed:
-                "exclamationmark.circle"
+                "exclamationmark.circle.fill"
             }
+        }
+    }
+
+    enum Step: Int, CaseIterable, Comparable {
+        case preparing
+        case chats
+
+        case media
+
+        case finalizing
+
+        static func < (lhs: Self, rhs: Self) -> Bool {
+            lhs.rawValue < rhs.rawValue
         }
     }
 
@@ -72,6 +85,7 @@ final class LocalBackupCreateBackupViewModel {
     let tryAgainButtonTitle = #localize("try_again")
     let errorIconName = "exclamationmark.circle"
     let note = #localize("backup_local_create_backup_note")
+    let hasDefaultRecoveryKey: Bool
 
     var state: State = .inProgress
 
@@ -120,27 +134,17 @@ final class LocalBackupCreateBackupViewModel {
         }
     }
 
-    var hasDefaultRecoveryKey: Bool {
-        manager.currentRecoveryKey.isDefault
-    }
-
-    /// One item per backup phase, in the order the backup reports them.
     var exportItems: [ExportItem] {
-        let phases = DataBackupProgress.Phase.allCases.filter { phase in
-            if phase != .distributionLists {
-                true
-            }
-            else {
-                userSettings.distributionListsEnabled
-            }
+        let steps = Step.allCases.filter { step in
+            step != .media || includesMedia
         }
 
-        return phases.map { phase in
-            let itemState = itemState(for: phase)
+        return steps.map { step in
+            let itemState = itemState(for: step)
 
             return ExportItem(
                 state: itemState,
-                title: phase.title,
+                title: step.title,
                 statusText: itemState.label
             )
         }
@@ -152,7 +156,7 @@ final class LocalBackupCreateBackupViewModel {
     // MARK: - Private properties
 
     private let manager: any BackupCreateManagerProtocol
-    private let userSettings: any UserSettingsProtocol
+    private let includesMedia: Bool
     private var backupHasStarted = false
 
     @ObservationIgnored
@@ -160,9 +164,10 @@ final class LocalBackupCreateBackupViewModel {
 
     // MARK: - Lifecycle
 
-    init(manager: any BackupCreateManagerProtocol, userSettings: any UserSettingsProtocol) {
+    init(manager: any BackupCreateManagerProtocol) {
         self.manager = manager
-        self.userSettings = userSettings
+        self.hasDefaultRecoveryKey = manager.currentRecoveryKey.isDefault
+        self.includesMedia = manager.backupSettings.includesMedia
     }
 
     // MARK: - Public methods
@@ -205,7 +210,7 @@ final class LocalBackupCreateBackupViewModel {
         let password = manager.currentRecoveryKey.rawValue
 
         do {
-            for try await progress in manager.create(url: manager.backupURL, password: password) {
+            for try await progress in manager.create(password: password) {
                 apply(progress)
             }
 
@@ -234,7 +239,9 @@ final class LocalBackupCreateBackupViewModel {
 
     // MARK: - Private methods
 
-    private func itemState(for phase: DataBackupProgress.Phase) -> ExportItem.State {
+    private func itemState(for step: Step) -> ExportItem.State {
+        let currentStep = currentPhase?.step
+
         switch state {
         case .complete:
             return .done
@@ -242,24 +249,24 @@ final class LocalBackupCreateBackupViewModel {
         case .failed:
             // Nothing runs after a failure, so every step that did not finish is settled as failed rather than left
             // waiting — including all of them when the backup failed before reporting a single phase.
-            guard let currentPhase, phase < currentPhase else {
+            guard let currentStep, step < currentStep else {
                 return .failed
             }
 
             return .done
 
         case .inProgress:
-            guard let currentPhase else {
+            guard let currentStep else {
                 return .waiting
             }
 
-            // Phases are monotonic, so everything before the current one is done even if its snapshots were never
+            // Phases are monotonic, so everything before the current step is done even if its snapshots were never
             // observed.
-            if phase < currentPhase {
+            if step < currentStep {
                 return .done
             }
 
-            if phase == currentPhase {
+            if step == currentStep {
                 return .inProgress
             }
 
@@ -268,25 +275,33 @@ final class LocalBackupCreateBackupViewModel {
     }
 }
 
-// MARK: - DataBackupProgress.Phase + Localization
+// MARK: - DataBackupProgress.Phase + Step
 
 extension DataBackupProgress.Phase {
+    /// The step this phase is shown in.
+    fileprivate var step: LocalBackupCreateBackupViewModel.Step {
+        switch self {
+        case .userData, .contacts:
+            .preparing
+        case .distributionLists, .groups, .cspNonces, .polls, .messages:
+            .chats
+        case .finalizing:
+            .finalizing
+        }
+    }
+}
+
+// MARK: - LocalBackupCreateBackupViewModel.Step + Localization
+
+extension LocalBackupCreateBackupViewModel.Step {
     fileprivate var title: String {
         switch self {
-        case .userData:
-            #localize("backup_local_create_backup_step_user_data_title")
-        case .contacts:
-            #localize("backup_local_create_backup_step_contacts_title")
-        case .distributionLists:
-            #localize("backup_local_create_backup_step_distribution_lists_title")
-        case .groups:
-            #localize("backup_local_create_backup_step_groups_title")
-        case .cspNonces:
-            #localize("backup_local_create_backup_step_nonces_title")
-        case .polls:
-            #localize("backup_local_create_backup_step_polls_title")
-        case .messages:
-            #localize("backup_local_create_backup_step_export_title")
+        case .preparing:
+            #localize("backup_local_create_backup_step_preparing_title")
+        case .chats:
+            #localize("backup_local_create_backup_step_chats_title")
+        case .media:
+            #localize("backup_local_create_backup_step_media_title")
         case .finalizing:
             #localize("backup_local_create_backup_step_finalize_title")
         }

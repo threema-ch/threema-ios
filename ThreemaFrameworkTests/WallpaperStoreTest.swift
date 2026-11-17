@@ -24,6 +24,8 @@ final class WallpaperStoreTest: XCTestCase {
         .url(forResource: "Bild-8", withExtension: "png")!
     private var testImage1: UIImage!
     private var testImage2: UIImage!
+    /// Screen bounds of an iPhone 15
+    private let screenBounds = CGRect(x: 0, y: 0, width: 393, height: 852)
 
     override func setUpWithError() throws {
         AppGroup.setGroupID("group.ch.threema")
@@ -90,7 +92,7 @@ final class WallpaperStoreTest: XCTestCase {
     
     func testSaveDefaultWallpaper() {
         // Arrange & Act
-        wallpaperStore.saveDefaultWallpaper(testImage1)
+        wallpaperStore.saveDefaultWallpaper(testImage1, screenBounds: screenBounds)
         
         // Assert
         XCTAssertEqual(wallpaperStore.wallpaper(for: conversationID1)?.pngData(), testImage1.pngData())
@@ -98,10 +100,10 @@ final class WallpaperStoreTest: XCTestCase {
     
     func testSaveWallpaper() {
         // Arrange
-        wallpaperStore.saveDefaultWallpaper(testImage1)
+        wallpaperStore.saveDefaultWallpaper(testImage1, screenBounds: screenBounds)
         
         // Act
-        wallpaperStore.saveWallpaper(testImage2, for: conversationID1)
+        wallpaperStore.saveWallpaper(testImage2, for: conversationID1, screenBounds: screenBounds)
         
         // Assert
         XCTAssertEqual(wallpaperStore.wallpaper(for: conversationID2)?.pngData(), testImage1.pngData())
@@ -110,8 +112,8 @@ final class WallpaperStoreTest: XCTestCase {
     
     func testHasCustomWallpaper() {
         // Arrange & Act
-        wallpaperStore.saveDefaultWallpaper(testImage1)
-        wallpaperStore.saveWallpaper(testImage2, for: conversationID1)
+        wallpaperStore.saveDefaultWallpaper(testImage1, screenBounds: screenBounds)
+        wallpaperStore.saveWallpaper(testImage2, for: conversationID1, screenBounds: screenBounds)
         
         // Assert
         XCTAssertTrue(wallpaperStore.hasCustomWallpaper(for: conversationID1))
@@ -120,10 +122,10 @@ final class WallpaperStoreTest: XCTestCase {
     
     func testDeleteCustomWallpaper() {
         // Arrange
-        wallpaperStore.saveDefaultWallpaper(testImage1)
+        wallpaperStore.saveDefaultWallpaper(testImage1, screenBounds: screenBounds)
         
         // Act
-        wallpaperStore.saveWallpaper(testImage2, for: conversationID1)
+        wallpaperStore.saveWallpaper(testImage2, for: conversationID1, screenBounds: screenBounds)
 
         XCTAssertEqual(wallpaperStore.wallpaper(for: conversationID1)?.pngData(), testImage2.pngData())
 
@@ -136,11 +138,11 @@ final class WallpaperStoreTest: XCTestCase {
     
     func testDeleteAllCustomWallpaper() {
         // Arrange
-        wallpaperStore.saveDefaultWallpaper(testImage1)
+        wallpaperStore.saveDefaultWallpaper(testImage1, screenBounds: screenBounds)
         
         // Act
-        wallpaperStore.saveWallpaper(testImage2, for: conversationID1)
-        wallpaperStore.saveWallpaper(testImage2, for: conversationID2)
+        wallpaperStore.saveWallpaper(testImage2, for: conversationID1, screenBounds: screenBounds)
+        wallpaperStore.saveWallpaper(testImage2, for: conversationID2, screenBounds: screenBounds)
 
         XCTAssertEqual(wallpaperStore.wallpaper(for: conversationID1)?.pngData(), testImage2.pngData())
         XCTAssertEqual(wallpaperStore.wallpaper(for: conversationID2)?.pngData(), testImage2.pngData())

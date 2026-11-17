@@ -21,7 +21,8 @@ final class LocalBackupRecoveryKeyConfirmationViewModel {
     let prompt = #localize("for_example_abbreviation") + "N9CQ"
     let recoveryKeyHeader = #localize("Recovery_key")
     let stepLabel = String.localizedStringWithFormat(#localize("step_count_from_total_steps"), 1, 3).uppercased()
-    let headerIconName = "key"
+    let headerIconName = "key.fill"
+    let headerIconRotationDegrees = 24.0
 
     var enteredLastDigits: String = ""
     @ObservationIgnored var onContinueButtonTapped: () -> Void = { /* no-op */ }

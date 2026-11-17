@@ -1,5 +1,6 @@
 import CocoaLumberjackSwift
 import Foundation
+import ThreemaMacros
 
 extension BallotMessageEntity: PreviewableMessage {
     public var privatePreviewText: String {
@@ -10,7 +11,11 @@ extension BallotMessageEntity: PreviewableMessage {
         
         return ballotTitle
     }
-    
+
+    public var privatePreviewDescription: MessagePreviewDescription {
+        MessagePreviewDescription(typeName: #localize("ballot"), quotedText: ballot?.title)
+    }
+
     public var previewSymbolName: String? {
         "chart.pie.fill"
     }

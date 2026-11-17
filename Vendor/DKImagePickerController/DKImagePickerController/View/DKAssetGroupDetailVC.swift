@@ -84,6 +84,17 @@ open class DKAssetGroupDetailVC: UIViewController, UICollectionViewDelegate, UIC
         		
 		self.hidesCamera = self.imagePickerController.sourceType == .photo
 		self.checkPhotoPermission()
+		
+		/***** BEGIN THREEMA MODIFICATION: trait change registration *********/
+		// The thumbnail size is cached in pixels, recompute it and refetch the thumbnails for the new display scale
+		registerForTraitChanges([
+            UITraitVerticalSizeClass.self,
+            UITraitHorizontalSizeClass.self
+        ]) { (self: DKAssetGroupDetailVC, _) in
+			self.thumbnailSize = CGSize.zero
+			self.collectionView?.reloadData()
+		}
+		/***** END THREEMA MODIFICATION: trait change registration *********/
     }
     
     override open func viewDidAppear(_ animated: Bool) {
@@ -225,7 +236,7 @@ open class DKAssetGroupDetailVC: UIViewController, UICollectionViewDelegate, UIC
 		cell.tag = tag
 		
         if self.thumbnailSize.equalTo(CGSize.zero) {
-            self.thumbnailSize = self.collectionView!.collectionViewLayout.layoutAttributesForItem(at: indexPath)!.size.toPixel()
+            self.thumbnailSize = self.collectionView!.collectionViewLayout.layoutAttributesForItem(at: indexPath)!.size.toPixel(traitCollection: self.traitCollection)
         }
         
         asset.fetchImageWithSize(self.thumbnailSize, options: nil, contentMode: .aspectFill) { (image, info) in

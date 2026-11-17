@@ -6,14 +6,42 @@ import UIKit
 
 public protocol WallpaperStoreProtocol {
     var defaultWallPaper: UIImage! { get }
-    func saveWallpaper(_ wallpaper: UIImage, for conversationID: NSManagedObjectID)
-    func saveDefaultWallpaper(_ wallpaper: UIImage?)
+    /// - Parameter screenBounds: Bounds of the screen the app is displayed on, the wallpaper is compressed to fit it
+    func saveWallpaper(_ wallpaper: UIImage, for conversationID: NSManagedObjectID, screenBounds: CGRect)
+    /// - Parameter screenBounds: Bounds of the screen the app is displayed on, the wallpaper is compressed to fit it
+    func saveDefaultWallpaper(_ wallpaper: UIImage, screenBounds: CGRect)
+    func deleteDefaultWallpaper()
     func wallpaper(for conversationID: NSManagedObjectID) -> UIImage?
     func hasCustomWallpaper(for conversationID: NSManagedObjectID) -> Bool
     func deleteWallpaper(for conversationID: NSManagedObjectID)
     func deleteAllCustom()
     func currentDefaultWallpaper() -> UIImage?
     func wallpaperType() -> WallpaperType
+}
+
+extension WallpaperStoreProtocol {
+    @available(
+        *,
+        deprecated,
+        message: "Use saveWallpaper(_:for:screenBounds:) with the bounds of the window scene's screen"
+    )
+    public func saveWallpaper(_ wallpaper: UIImage, for conversationID: NSManagedObjectID) {
+        saveWallpaper(wallpaper, for: conversationID, screenBounds: UIScreen.main.bounds)
+    }
+
+    @available(
+        *,
+        deprecated,
+        message: "Use saveDefaultWallpaper(_:screenBounds:) with the bounds of the window scene's screen or deleteDefaultWallpaper()"
+    )
+    public func saveDefaultWallpaper(_ wallpaper: UIImage?) {
+        if let wallpaper {
+            saveDefaultWallpaper(wallpaper, screenBounds: UIScreen.main.bounds)
+        }
+        else {
+            deleteDefaultWallpaper()
+        }
+    }
 }
 
 public final class WallpaperStore: WallpaperStoreProtocol {
@@ -35,7 +63,8 @@ public final class WallpaperStore: WallpaperStoreProtocol {
     /// - Parameters:
     ///   - conversationID: ID of the conversation which is used as the key for saving the reference to the wallpaper
     ///   - wallpaperData: The data of the wallpaper
-    public func saveWallpaper(_ wallpaper: UIImage, for conversationID: NSManagedObjectID) {
+    ///   - screenBounds: Bounds of the screen the app is displayed on, the wallpaper is compressed to fit it
+    public func saveWallpaper(_ wallpaper: UIImage, for conversationID: NSManagedObjectID, screenBounds: CGRect) {
         let key = conversationID.uriRepresentation().absoluteString
         var wallpapers: [String: String] = AppGroup.userDefaults()
             .dictionary(forKey: Constants.wallpaperKey) as? [String: String] ?? [String: String]()
@@ -47,7 +76,7 @@ public final class WallpaperStore: WallpaperStoreProtocol {
             return
         }
         
-        let compressed = compressImageData(wallpaper.pngData())
+        let compressed = compressImageData(wallpaper.pngData(), screenBounds: screenBounds)
         fileUtility.write(contents: compressed, to: wallpaperPath)
         
         wallpapers.updateValue(filename, forKey: key)
@@ -56,14 +85,14 @@ public final class WallpaperStore: WallpaperStoreProtocol {
         NotificationCenter.default.post(name: NSNotification.Name(rawValue: kNotificationWallpaperChanged), object: nil)
     }
     
-    public func saveDefaultWallpaper(_ wallpaper: UIImage?) {
-        if let wallpaper {
-            let compressed = compressImageData(wallpaper.pngData())
-            UserSettings.shared().wallpaper = compressed
-        }
-        else {
-            UserSettings.shared().wallpaper = nil
-        }
+    public func saveDefaultWallpaper(_ wallpaper: UIImage, screenBounds: CGRect) {
+        let compressed = compressImageData(wallpaper.pngData(), screenBounds: screenBounds)
+        UserSettings.shared().wallpaper = compressed
+        NotificationCenter.default.post(name: NSNotification.Name(rawValue: kNotificationWallpaperChanged), object: nil)
+    }
+    
+    public func deleteDefaultWallpaper() {
+        UserSettings.shared().wallpaper = nil
         NotificationCenter.default.post(name: NSNotification.Name(rawValue: kNotificationWallpaperChanged), object: nil)
     }
     
@@ -171,9 +200,11 @@ public final class WallpaperStore: WallpaperStoreProtocol {
     }
         
     /// Compresses de passed in image data until it's smaller than the maximal size defined in the function
-    /// - Parameter data: Image data to compress
+    /// - Parameters:
+    ///   - data: Image data to compress
+    ///   - screenBounds: Bounds of the screen, the larger dimension is the maximal size of the compressed image
     /// - Returns: Compressed data or original if is already smaller than size
-    private func compressImageData(_ data: Data?) -> Data? {
+    private func compressImageData(_ data: Data?, screenBounds: CGRect) -> Data? {
         let maxSize = 1_500_000
         
         guard let data, data.count >= maxSize else {
@@ -184,7 +215,7 @@ public final class WallpaperStore: WallpaperStoreProtocol {
         
         guard let compressed = MediaConverter.scaleImageData(
             to: data,
-            toMaxSize: max(UIScreen.main.bounds.width, UIScreen.main.bounds.height),
+            toMaxSize: max(screenBounds.width, screenBounds.height),
             useJPEG: true,
             withQuality: 1
         ) else {

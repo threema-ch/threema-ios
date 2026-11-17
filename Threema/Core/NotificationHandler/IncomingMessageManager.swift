@@ -6,6 +6,8 @@ import ThreemaFramework
 final class IncomingMessageManager: NSObject {
     
     static let inAppNotificationNewMessage = "ThreemaNewMessageReceived"
+    static let inAppNotificationNewReaction = "ThreemaNewReactionReceived"
+    static let inAppNotificationReactionBodyKey = "body"
 
     /// Using as main (context) configured manager (will be used when messages are processed in main thread)
     private let pendingUserNotificationManager: PendingUserNotificationManagerProtocol
@@ -16,6 +18,8 @@ final class IncomingMessageManager: NSObject {
 
     private let businessInjector: BusinessInjectorProtocol
     private let notificationManager: NotificationManager
+    /// Puts together the text of in-app banners about reactions
+    private let inAppUserNotificationManager: UserNotificationManager
 
     private lazy var dirtyObjectManager = PersistenceManager(
         appGroupID: AppGroup.groupID(),
@@ -29,20 +33,39 @@ final class IncomingMessageManager: NSObject {
         SharedAppProvider.isAppActive
     }
 
+    /// - Parameters:
+    ///   - pendingUserNotificationManager: Manager for notifications of incoming Threema pushes
+    ///   - backgroundPendingUserNotificationManager: Manager for notifications of messages processed in background
+    ///   - backgroundBusinessInjector: Business injector of the background context
+    ///   - inAppUserNotificationManager: Puts together the text of in-app banners about reactions, must use the
+    /// background context of `backgroundBusinessInjector`
     required init(
         pendingUserNotificationManager: PendingUserNotificationManagerProtocol,
         backgroundPendingUserNotificationManager: PendingUserNotificationManagerProtocol,
-        backgroundBusinessInjector: BusinessInjectorProtocol
+        backgroundBusinessInjector: BusinessInjectorProtocol,
+        inAppUserNotificationManager: UserNotificationManager
     ) {
         self.pendingUserNotificationManager = pendingUserNotificationManager
         self.backgroundPendingUserNotificationManager = backgroundPendingUserNotificationManager
         self.businessInjector = backgroundBusinessInjector
         self.notificationManager = NotificationManager(businessInjector: backgroundBusinessInjector)
+        self.inAppUserNotificationManager = inAppUserNotificationManager
     }
     
     override convenience init() {
         let businessInjector = BusinessInjector.ui
         let backgroundBusinessInjector = BusinessInjector(forBackgroundProcess: true)
+        // Shared by the notifications of messages processed in background and the in-app banners about reactions
+        let backgroundUserNotificationManager = UserNotificationManager(
+            settingsStore: backgroundBusinessInjector.settingsStore,
+            userSettings: backgroundBusinessInjector.userSettings,
+            myIdentityStore: backgroundBusinessInjector.myIdentityStore,
+            pushSettingManager: backgroundBusinessInjector.pushSettingManager,
+            contactStore: backgroundBusinessInjector.contactStore,
+            groupManager: backgroundBusinessInjector.groupManager,
+            entityManager: backgroundBusinessInjector.entityManager,
+            isWorkApp: TargetManager.isBusinessApp
+        )
         self.init(
             pendingUserNotificationManager: PendingUserNotificationManager(
                 userNotificationManager: UserNotificationManager(
@@ -56,23 +79,17 @@ final class IncomingMessageManager: NSObject {
                     isWorkApp: TargetManager.isBusinessApp
                 ),
                 pushSettingManager: businessInjector.pushSettingManager,
-                entityManager: businessInjector.entityManager
+                entityManager: businessInjector.entityManager,
+                userSettings: businessInjector.userSettings
             ),
             backgroundPendingUserNotificationManager: PendingUserNotificationManager(
-                userNotificationManager: UserNotificationManager(
-                    settingsStore: backgroundBusinessInjector.settingsStore,
-                    userSettings: backgroundBusinessInjector.userSettings,
-                    myIdentityStore: backgroundBusinessInjector.myIdentityStore,
-                    pushSettingManager: backgroundBusinessInjector.pushSettingManager,
-                    contactStore: backgroundBusinessInjector.contactStore,
-                    groupManager: backgroundBusinessInjector.groupManager,
-                    entityManager: backgroundBusinessInjector.entityManager,
-                    isWorkApp: TargetManager.isBusinessApp
-                ),
+                userNotificationManager: backgroundUserNotificationManager,
                 pushSettingManager: backgroundBusinessInjector.pushSettingManager,
-                entityManager: backgroundBusinessInjector.entityManager
+                entityManager: backgroundBusinessInjector.entityManager,
+                userSettings: backgroundBusinessInjector.userSettings
             ),
-            backgroundBusinessInjector: backgroundBusinessInjector
+            backgroundBusinessInjector: backgroundBusinessInjector,
+            inAppUserNotificationManager: backgroundUserNotificationManager
         )
     }
 
@@ -163,7 +180,20 @@ final class IncomingMessageManager: NSObject {
                     return
                 }
                 
-                guard !manager.isProcessed(pendingUserNotification: pendingUserNotification) else {
+                // A reaction can't show a notification on its own, so its abstract stage marks it as processed
+                // already. When it comes in live, its final stage still gets an in-app banner below. Only then, so
+                // nothing changes in builds without reaction notifications and nothing but the banner can be reached.
+                let isLiveReactionFinalStage = ThreemaEnvironment.enableReactionNotifications
+                    && pendingUserNotification.stage == .final
+                    && pendingUserNotification.baseMessage.map { $0.deletedAt == nil } == true
+                    && pendingUserNotification.abstractMessage?.receivedAfterInitialQueueSend == true
+                    && (
+                        pendingUserNotification.abstractMessage is ReactionMessage
+                            || pendingUserNotification.abstractMessage is GroupReactionMessage
+                    )
+
+                guard isLiveReactionFinalStage || !manager.isProcessed(pendingUserNotification: pendingUserNotification)
+                else {
                     manager
                         .removeAllTimedUserNotifications(pendingUserNotification: pendingUserNotification)
                     seal(true)
@@ -200,7 +230,31 @@ final class IncomingMessageManager: NSObject {
                                 fatalError("No push settings for conversation found")
                             }
 
-                            if pushSettingManager.canSendPush(for: message) {
+                            let isReaction = pendingUserNotification.abstractMessage is ReactionMessage
+                                || pendingUserNotification.abstractMessage is GroupReactionMessage
+
+                            // A reaction is about a message of our own, which is why it gets a banner of its own
+                            if isReaction {
+                                if pushSettingManager.canSendPush(for: message, isReaction: true),
+                                   let body = self.inAppUserNotificationManager
+                                   .inAppReactionBannerBody(for: pendingUserNotification) {
+                                    let messageObjectID = message.objectID
+
+                                    DispatchQueue.main.async {
+                                        NotificationCenter.default.post(
+                                            name: NSNotification
+                                                .Name(rawValue: IncomingMessageManager.inAppNotificationNewReaction),
+                                            object: messageObjectID,
+                                            userInfo: [IncomingMessageManager.inAppNotificationReactionBodyKey: body]
+                                        )
+                                    }
+
+                                    if !pushSetting.muted {
+                                        self.notificationManager.playReceivedMessageSound()
+                                    }
+                                }
+                            }
+                            else if pushSettingManager.canSendPush(for: message) {
                                 let messageObjectID = message.objectID
 
                                 DispatchQueue.main.async {

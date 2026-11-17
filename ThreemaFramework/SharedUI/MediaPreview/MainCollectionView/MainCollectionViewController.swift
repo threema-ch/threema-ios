@@ -42,7 +42,9 @@ final class MainCollectionViewController: NSObject, UICollectionViewDataSource, 
         layout collectionViewLayout: UICollectionViewLayout,
         sizeForItemAt indexPath: IndexPath
     ) -> CGSize {
-        let width = min(collectionView.frame.width, UIScreen.main.bounds.width)
+        // Never wider than the window the collection view is displayed in
+        let width = collectionView.window.map { min(collectionView.frame.width, $0.bounds.width) }
+            ?? collectionView.frame.width
         let size = CGSize(width: width, height: collectionView.frame.height)
         return size
     }
@@ -141,7 +143,7 @@ final class MainCollectionViewController: NSObject, UICollectionViewDataSource, 
         
         if let delegate,
            delegate.memoryConstrained {
-            handleMemoryConstrainedImageItem(item: item, cell: cell)
+            handleMemoryConstrainedImageItem(item: item, cell: cell, bounds: collectionView.bounds)
         }
         else {
             handleImageItem(item: item, cell: cell)
@@ -150,8 +152,12 @@ final class MainCollectionViewController: NSObject, UICollectionViewDataSource, 
         return cell
     }
     
-    private func handleMemoryConstrainedImageItem(item: ImagePreviewItem, cell: ImagePreviewCollectionViewCell) {
-        item.previewImage.then { image in
+    private func handleMemoryConstrainedImageItem(
+        item: ImagePreviewItem,
+        cell: ImagePreviewCollectionViewCell,
+        bounds: CGRect
+    ) {
+        item.previewImage(bounds: bounds).then { image in
             self.convertThumbnail(thumbnail: image)
         }.done { imageData in
             cell.updateImageTo(data: imageData)

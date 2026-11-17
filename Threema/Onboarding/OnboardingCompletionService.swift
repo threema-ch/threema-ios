@@ -45,17 +45,9 @@ final class OnboardingCompletionService {
     
     // MARK: - Public Methods
     
-    /// Runs database and app migrations, updates feature mask, and sets app setup state.
-    /// - Parameters:
-    ///   - remoteSecretManager: The remote secret manager for database initialization
-    ///   - keychainManager: The keychain manager for database initialization
-    /// - Throws: Error if migration fails
-    func runMigrationsAndSetup(
-        remoteSecretManager: any RemoteSecretManagerProtocol,
-        businessInjector: BusinessInjectorProtocol
-    ) async throws {
-        try await SetupApp.runDatabaseMigrationIfNeeded(remoteSecretManager: remoteSecretManager)
-        try await SetupApp.runAppMigrationIfNeeded(businessInjector: businessInjector)
+    /// Updates feature mask, and sets app setup state.
+    /// - Throws: Error if updating feature mask fails
+    func runSetup() async throws {
         try await FeatureMask.updateLocal()
         
         AppSetup.state = .identitySetupComplete

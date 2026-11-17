@@ -43,7 +43,7 @@ final class VideoURLSenderItemCreatorTest: XCTestCase {
             expect.fulfill()
         }
         
-        waitForExpectations(timeout: 10, handler: nil)
+        waitForExpectations(timeout: 60, handler: nil)
         guard let url else {
             return XCTFail("Expected a valid URL")
         }

@@ -46,7 +46,7 @@ struct LocalBackupSettingsViewModelTests {
         #expect(sut.recoveryKeySectionHeader == "Encrypting with")
         #expect(sut.startButtonTitle == "Start Backup")
         #expect(sut.stepLabel == "STEP 2 OF 3")
-        #expect(sut.headerIconName == "gearshape")
+        #expect(sut.headerIconName == "gearshape.fill")
     }
 
     // MARK: - Helpers

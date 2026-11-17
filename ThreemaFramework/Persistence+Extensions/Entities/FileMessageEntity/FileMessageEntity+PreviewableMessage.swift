@@ -27,8 +27,46 @@ extension FileMessageEntity: PreviewableMessage {
         }
     }
     
+    public var privatePreviewDescription: MessagePreviewDescription {
+        switch fileMessageType {
+        case .voice:
+            MessagePreviewDescription(typeName: privatePreviewText, quotedText: nil)
+
+        case let .video(message):
+            description(message: message)
+
+        case let .image(message):
+            description(message: message)
+
+        case let .animatedImage(message):
+            description(message: message)
+
+        case let .sticker(message):
+            description(message: message)
+
+        case let .animatedSticker(message):
+            description(message: message)
+
+        case let .file(message):
+            // A file is always named, either by its caption or by its file name
+            MessagePreviewDescription(
+                typeName: fileMessageType.localizedDescription,
+                quotedText: message.caption ?? message.name
+            )
+        }
+    }
+
     private func text(message: CommonFileMessageMetadata) -> String {
         message.caption ?? fileMessageType.localizedDescription
+    }
+
+    private func description(message: CommonFileMessageMetadata) -> MessagePreviewDescription {
+        if let caption = message.caption {
+            MessagePreviewDescription(typeName: nil, quotedText: caption)
+        }
+        else {
+            MessagePreviewDescription(typeName: fileMessageType.localizedDescription, quotedText: nil)
+        }
     }
     
     public var previewSymbolName: String? {

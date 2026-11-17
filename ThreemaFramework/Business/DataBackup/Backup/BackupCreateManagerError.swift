@@ -10,7 +10,4 @@ public enum BackupCreateManagerError: Error {
 
     /// Nothing readable where the backup was just written.
     case missingBackupFile
-
-    /// The backup already on the device could not be deleted.
-    case deletionPreviousBackupFailed
 }

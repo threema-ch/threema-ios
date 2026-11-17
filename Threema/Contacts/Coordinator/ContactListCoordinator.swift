@@ -20,8 +20,15 @@ final class ContactListCoordinator: NSObject, Coordinator {
 
     var childCoordinators: [any Coordinator] = []
     var rootViewController: UIViewController {
-        rootNavigationController
+        splitViewController
     }
+
+    /// The tab's content: this coordinator's navigation controller as the primary column and a detail column
+    /// owned by the split view. Installed as the tab's root by `AppCoordinator`.
+    private(set) lazy var splitViewController = ThreemaTabSplitViewController(
+        tab: .contacts,
+        primaryNavigationController: rootNavigationController
+    )
 
     private let router = NavigationRouter()
 
@@ -31,9 +38,7 @@ final class ContactListCoordinator: NSObject, Coordinator {
             contactListSearchResultsDelegate: self
         )
 
-        let tab = ThreemaTab(.contacts)
-        viewController.tabBarItem = tab.tabBarItem
-        viewController.title = tab.title
+        viewController.title = ThreemaTab(.contacts).title
 
         return viewController
     }()
@@ -44,7 +49,6 @@ final class ContactListCoordinator: NSObject, Coordinator {
 
     // MARK: - Private properties
 
-    private weak var presentingViewController: ThreemaSplitViewController?
     private let businessInjector: BusinessInjectorProtocol
     private let contactListContainerFactory: ContactListContainerViewControllerFactory
     private let viewControllerForItem: (ContactListAddItem) -> UIViewController
@@ -54,14 +58,12 @@ final class ContactListCoordinator: NSObject, Coordinator {
     // MARK: - Lifecycle
 
     init(
-        presentingViewController: ThreemaSplitViewController,
         businessInjector: BusinessInjectorProtocol,
         contactListContainerFactory: ContactListContainerViewControllerFactory,
         viewControllerForItem: @escaping (ContactListAddItem) -> UIViewController,
         viewControllerForDestination: @escaping (InternalDestination) -> UIViewController?,
         isWork: @autoclosure @escaping () -> Bool
     ) {
-        self.presentingViewController = presentingViewController
         self.businessInjector = businessInjector
         self.contactListContainerFactory = contactListContainerFactory
         self.viewControllerForItem = viewControllerForItem
@@ -70,20 +72,22 @@ final class ContactListCoordinator: NSObject, Coordinator {
         super.init()
 
         router.delegate = self
-        router.forwardDelegate = self
+        // The split view hides the tab bar from the primary column's callbacks, then forwards them here.
+        router.forwardDelegate = splitViewController
+        splitViewController.navigationDelegate = self
     }
 
     // MARK: - Presentation
 
     func start() {
-        /// Due to this coordinator's rootViewController being part of a
-        /// `UITabViewController`, it's not needed to present anything here.
-        /// The rootViewController is added by to the `UITabViewController`'s
-        /// viewControllers in ``AppCoordinator``'s `configureSplitViewController` method.
+        /// The split view is installed as this tab's root by ``AppCoordinator``'s
+        /// `configureTabBarController`; nothing is presented here. The split view
+        /// binds the router on appearance and on collapse/expand.
         rootNavigationController.setViewControllers(
             [contactListViewController],
             animated: false
         )
+        splitViewController.routerHandle = routerHandle
     }
 
     func finish() {
@@ -104,8 +108,8 @@ final class ContactListCoordinator: NSObject, Coordinator {
 
     // MARK: - Router binding
 
-    /// Hooks for `ThreemaSplitViewNavigationManager` to activate/deactivate this
-    /// tab's router when tab selection or the size class changes.
+    /// Hooks for the tab's split view (binding on appearance, collapse, expand)
+    /// and the tab bar controller (re-authentication on return, memory warnings).
     var routerHandle: RouterManagedTabHandle {
         RouterManagedTabHandle(
             deactivate: { [weak self] in
@@ -114,26 +118,25 @@ final class ContactListCoordinator: NSObject, Coordinator {
             activateCompact: { [weak self] in
                 self?.bindCompact()
             },
-            activateRegular: { [weak self] navigationController in
-                self?.bindRegular(into: navigationController)
+            activateRegular: { [weak self] column in
+                self?.bindRegular(into: column)
             },
             // No passcode-protected destinations in this tab.
             reauthenticateProtectedDestinations: { },
             releaseMaterializedScreens: { [weak self] in
-                guard
-                    let self,
-                    !router.isBound
-                else {
+                guard let self else {
                     return
                 }
+                // Inactive tabs stay bound: unbind first so the release frees the
+                // screens, then reset both columns to their roots. The next
+                // appearance rebinds and re-materializes the stack from the path.
+                router.unbind()
                 router.releaseMaterializedScreens()
-                // The tab's own navigation controller retains the compact stack
-                // even while inactive — reset it to the root; the next
-                // activation re-materializes the stack from the path.
                 rootNavigationController.setViewControllers(
                     [contactListViewController],
                     animated: false
                 )
+                splitViewController.resetSecondaryColumn()
             }
         )
     }
@@ -154,10 +157,10 @@ final class ContactListCoordinator: NSObject, Coordinator {
     /// Regular width: the stack renders in the secondary column, rooted in a
     /// placeholder (the contact list stays in the primary column). An empty path
     /// shows just the placeholder.
-    private func bindRegular(into navigationController: UINavigationController) {
+    private func bindRegular(into column: TabSecondaryColumn) {
         router.bind(
-            to: navigationController,
-            rootViewController: ThreemaLogoViewController(rootView: ThreemaLogoView()),
+            to: column.navigationController,
+            rootViewController: column.placeholderViewController,
             rootMode: .placeholder
         ) { [weak self] destination in
             self?.makeScreen(destination)

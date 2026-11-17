@@ -52,6 +52,9 @@ final class GroupDetailsDataSource: UITableViewDiffableDataSource<GroupDetails.S
         )
     }()
     
+    /// Only set while the media browser is presented
+    private var mediaBrowserCoordinator: MediaBrowserCoordinator?
+    
     private lazy var photoBrowserWrapper: MWPhotoBrowserWrapper? = {
         if let viewController = groupDetailsViewController {
             return MWPhotoBrowserWrapper(
@@ -509,16 +512,48 @@ extension GroupDetailsDataSource {
     ) -> QuickAction {
         let localizedMediaString = #localize("media_overview")
         
+        let conversationID = conversation.objectID
+        
         return QuickAction(
             imageName: "photo.fill.on.rectangle.fill",
             title: localizedMediaString,
             accessibilityIdentifier: "GroupDetailsDataSourceMediaQuickActionButton"
-        ) { _ in
-            guard let photoBrowser = self.photoBrowserWrapper else {
+        ) { [weak self] _ in
+            guard let self else {
                 return
             }
-            photoBrowser.openPhotoBrowser()
+            if businessInjector.userSettings.newMediaBrowserEnabled {
+                guard let groupDetailsViewController else {
+                    return
+                }
+                showMediaBrowser(for: conversationID, on: groupDetailsViewController)
+            }
+            else {
+                guard let photoBrowser = self.photoBrowserWrapper else {
+                    return
+                }
+                photoBrowser.openPhotoBrowser()
+            }
         }
+    }
+    
+    private func showMediaBrowser(for conversationID: NSManagedObjectID, on viewController: UIViewController) {
+        guard mediaBrowserCoordinator == nil else {
+            return
+        }
+        
+        let coordinator = MediaBrowserCoordinator(
+            conversationID: conversationID,
+            entityManager: businessInjector.entityManager,
+            willDeleteMessages: { [weak self] objectIDs in
+                self?.willDeleteMessages(with: objectIDs)
+            },
+            onDismiss: { [weak self] in
+                self?.mediaBrowserCoordinator = nil
+            }
+        )
+        mediaBrowserCoordinator = coordinator
+        coordinator.showGrid(on: viewController)
     }
     
     private func ballotsQuickAction(

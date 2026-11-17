@@ -1,6 +1,7 @@
 import CocoaLumberjackSwift
 import Foundation
 import Intents
+import ThreemaProtocols
 
 // Consist of sender identity (`String`) and the ID of the message
 typealias PendingUserNotificationKey = String
@@ -100,6 +101,17 @@ public final class PendingUserNotification: NSObject, NSSecureCoding {
         }
     }
     
+    /// Does this notification come from taking a reaction back, rather than applying one?
+    var isReactionWithdrawal: Bool {
+        let decoded = (abstractMessage as? ReactionMessage)?.decoded
+            ?? (abstractMessage as? GroupReactionMessage)?.decoded
+
+        guard let action = decoded?.action, case .withdraw = action else {
+            return false
+        }
+        return true
+    }
+
     public var senderIdentity: String? {
         if let threemaPushNotification {
             return threemaPushNotification.from
@@ -157,6 +169,13 @@ extension PendingUserNotificationKey {
 
     static func key(for boxedMessage: BoxedMessage) -> PendingUserNotificationKey? {
         key(identity: boxedMessage.fromIdentity, messageID: boxedMessage.messageID)
+    }
+
+    /// Content key of the notification showing the reactions to a message.
+    /// - Parameter reactedMessageID: ID of the message that was reacted to
+    /// - Returns: Content key for the reaction notification of that message
+    static func reactionKey(reactedMessageID: Data) -> PendingUserNotificationKey {
+        "REACTION-\(reactedMessageID.hexString)"
     }
 
     static func key(identity: String?, messageID: Data?) -> PendingUserNotificationKey? {

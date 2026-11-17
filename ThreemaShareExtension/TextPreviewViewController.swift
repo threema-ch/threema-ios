@@ -7,6 +7,7 @@ final class TextPreviewViewController: UIViewController, UITextViewDelegate {
     var selectedText: NSRange?
     var selectedConversations: [ConversationEntity]?
     var bottomLayoutConstraint: NSLayoutConstraint?
+    private var hairlineHeightConstraint: NSLayoutConstraint?
     
     init(previewText: String?, selectedText: NSRange? = nil, selectedConversations: [ConversationEntity]? = nil) {
         self.previewText = previewText
@@ -27,6 +28,13 @@ final class TextPreviewViewController: UIViewController, UITextViewDelegate {
         view.backgroundColor = Colors.backgroundViewController
                 
         configureLayout()
+        
+        registerForTraitChanges([
+            UITraitVerticalSizeClass.self,
+            UITraitHorizontalSizeClass.self
+        ]) { (self: TextPreviewViewController, _) in
+            self.hairlineHeightConstraint?.constant = 1 / self.traitCollection.displayScale
+        }
         
         if !KKPasscodeLock.shared().isPasscodeRequired() {
             textPreviewView.becomeFirstResponder()
@@ -126,8 +134,10 @@ final class TextPreviewViewController: UIViewController, UITextViewDelegate {
     private lazy var hairlineView: UIView = {
         let view = UIView()
         
+        let heightConstraint = view.heightAnchor.constraint(equalToConstant: 1 / traitCollection.displayScale)
+        hairlineHeightConstraint = heightConstraint
         NSLayoutConstraint.activate([
-            view.heightAnchor.constraint(equalToConstant: 1 / UIScreen.main.scale),
+            heightConstraint,
         ])
         
         view.backgroundColor = Colors.separator
@@ -210,18 +220,20 @@ final class TextPreviewViewController: UIViewController, UITextViewDelegate {
         if let userInfo = notification.userInfo {
             let endFrame = (userInfo[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue
             let endFrameY = endFrame?.origin.y ?? 0
+            // The object of keyboard notifications is the screen the keyboard frame is expressed in
+            let screen = (notification.object as? UIScreen) ?? view.window?.windowScene?.screen
             let duration: TimeInterval = (userInfo[UIResponder.keyboardAnimationDurationUserInfoKey] as? NSNumber)?
                 .doubleValue ?? 0
             let animationCurveRawNSN = userInfo[UIResponder.keyboardAnimationCurveUserInfoKey] as? NSNumber
             let animationCurveRaw = animationCurveRawNSN?.uintValue ?? UIView.AnimationOptions.curveEaseInOut.rawValue
             let animationCurve = UIView.AnimationOptions(rawValue: animationCurveRaw)
-            if endFrameY >= UIScreen.main.bounds.size.height {
+            if let screen, endFrameY >= screen.bounds.size.height {
                 bottomLayoutConstraint?.constant = 0.0
             }
             else {
-                if let endFrame {
+                if let endFrame, let screen {
                     let safeInset: CGFloat = view.safeAreaInsets.bottom
-                    let convertedEndframe = view.convert(endFrame, from: UIScreen.main.coordinateSpace)
+                    let convertedEndframe = view.convert(endFrame, from: screen.coordinateSpace)
                     let intersection = view.frame.intersection(convertedEndframe).height
                     bottomLayoutConstraint?.constant = -max(intersection - safeInset, 0)
                 }

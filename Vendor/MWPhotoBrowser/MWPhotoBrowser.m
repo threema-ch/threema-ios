@@ -623,6 +623,17 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
     [super viewWillLayoutSubviews];
 }
 
+- (void)viewSafeAreaInsetsDidChange {
+    [super viewSafeAreaInsetsDidChange];
+    
+    // The toolbars are placed above the bottom safe area, which is only known once the view is in a window
+    if (![self areControlsHidden]) {
+        UIInterfaceOrientation orientation = [self currentInterfaceOrientation];
+        _toolbar.frame = [self frameForToolbarAtOrientation:orientation];
+        _gridToolbar.frame = [self frameForToolbarAtOrientation:orientation];
+    }
+}
+
 - (void)layoutVisiblePages {
     
 	// Flag
@@ -1173,9 +1184,9 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
 - (CGRect)frameForToolbarAtOrientation:(UIInterfaceOrientation)orientation {
     CGFloat height = 44;
     if ([UIDevice currentDevice].userInterfaceIdiom == UIUserInterfaceIdiomPhone &&
-        UIInterfaceOrientationIsLandscape(orientation)) height = 32;
+        self.traitCollection.verticalSizeClass == UIUserInterfaceSizeClassCompact) height = 32;
     CGFloat adjust = 0;
-    UIEdgeInsets safeArea = [[[UIApplication sharedApplication] windows] firstObject].safeAreaInsets;
+    UIEdgeInsets safeArea = self.view.safeAreaInsets;
     adjust = safeArea.bottom;
     return CGRectIntegral(CGRectMake(0, self.view.bounds.size.height - height - adjust, self.view.bounds.size.width, height));
 }
@@ -2067,10 +2078,7 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
     if (self.view.window) {
         return [[[[self.view window] windowScene] effectiveGeometry] interfaceOrientation] ?: UIInterfaceOrientationUnknown;
     } else {
-        UIWindow *window = UIApplication.sharedApplication.windows.firstObject;
-        if (window.windowScene) {
-            return window.windowScene.effectiveGeometry.interfaceOrientation;
-        }
+        // Without a window there is no scene to take the orientation from
         return UIInterfaceOrientationUnknown;
     }
 }

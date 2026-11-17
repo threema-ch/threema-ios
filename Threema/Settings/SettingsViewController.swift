@@ -11,7 +11,7 @@ final class SettingsViewController: UIViewController {
     private lazy var collectionView = SettingsCollectionView { [weak self] in
         self?.coordinator?.currentDestination
     } shouldAllowAutoDeselection: { [weak self] in
-        self?.coordinator?.presentingViewController?.isCollapsed == true
+        self?.coordinator?.splitViewController.isCollapsed == true
     }
 
     private lazy var dataSource = SettingsCollectionViewDataSource(

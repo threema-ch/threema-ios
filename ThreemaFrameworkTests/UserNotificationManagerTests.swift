@@ -1721,8 +1721,7 @@ final class UserNotificationManagerTests: XCTestCase {
             userNotificationManager.applyContent(
                 from: userNotificationContent,
                 to: &result,
-                silent: testData["silent"] as! Bool,
-                baseMessage: nil
+                silent: testData["silent"] as! Bool
             )
 
             XCTAssertEqual(result.title, expectedTitle)
@@ -1964,7 +1963,6 @@ final class UserNotificationManagerTests: XCTestCase {
                 from: userNotificationContent,
                 to: &result,
                 silent: testData["silent"] as! Bool,
-                baseMessage: nil
             )
 
             XCTAssertEqual(result.title, expectedTitle)

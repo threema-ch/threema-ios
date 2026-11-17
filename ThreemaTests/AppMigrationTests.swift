@@ -62,6 +62,7 @@ final class AppMigrationTests: XCTestCase {
         setupDataForMigrationVersion7_1()
         try setupDataForMigrationVersion7_4()
         setupDataForMigrationVersion7_5()
+        setupDataForMigrationVersion7_6()
 
         // Verify that the migration was started by `doMigrate` and not some other function accidentally accessing the
         // database before the proper migration was initialized.
@@ -171,12 +172,19 @@ final class AppMigrationTests: XCTestCase {
         XCTAssertTrue(ddLoggerMock.exists(message: "[AppMigration] App migration to version 7.5 started"))
         XCTAssertTrue(ddLoggerMock.exists(message: "[AppMigration] App migration to version 7.5 successfully finished"))
 
+        XCTAssertTrue(ddLoggerMock.exists(message: "[AppMigration] App migration to version 7.6 started"))
+        XCTAssertTrue(
+            ddLoggerMock
+                .exists(message: "[AppMigration] Succeeded to remove lastUpdate of 1:1 conversations without content")
+        )
+        XCTAssertTrue(ddLoggerMock.exists(message: "[AppMigration] App migration to version 7.6 successfully finished"))
+
         XCTAssertEqual(1, keychainManagerMock.migrateToVersion0Calls)
 
         let entityManager = testDatabase.entityManager
         let conversations: [ConversationEntity] = entityManager.entityFetcher
             .conversationEntities() ?? []
-        XCTAssertEqual(conversations.count, 7)
+        XCTAssertEqual(conversations.count, 12)
 
         // Checks for 4.8 migration
         for conversation in ["SENDER01", "SENDER02"]
@@ -362,6 +370,31 @@ final class AppMigrationTests: XCTestCase {
         // Key is moved out of the user defaults into the Keychain
         XCTAssertNil(AppGroup.userDefaults().object(forKey: AppMigration.legacyPushEncryptionKeyUserDefaultsKey))
         XCTAssertEqual(pushEncryptionKey, try KeychainManager.loadPushNotificationEncryptionKey())
+
+        // Checks for 7.6 migration
+        // Existing reactions are marked as read, so they don't show up in the next reaction notification
+        let reactorConversation = try XCTUnwrap(entityManager.entityFetcher.conversationEntity(for: "REACTOR1"))
+        let reactedMessage = try XCTUnwrap(
+            entityManager.entityFetcher.textMessageEntities(for: reactorConversation)?.first
+        )
+        let unreadReactions = try XCTUnwrap(
+            entityManager.entityFetcher.unreadMessageReactionEntities(for: reactedMessage)
+        )
+        XCTAssertTrue(unreadReactions.isEmpty)
+
+        // The batch updates bypass the context, thus reload the values from the store
+        testDatabase.context.main.refreshAllObjects()
+
+        // 1:1 conversations without content don't get a last update from the 5.4 migration
+        XCTAssertNil(entityManager.entityFetcher.conversationEntity(for: "FSONLY01")?.lastUpdate)
+        XCTAssertNil(entityManager.entityFetcher.conversationEntity(for: "APPINFO1")?.lastUpdate)
+        // The last update of an earlier 5.4 migration run is removed
+        XCTAssertNil(entityManager.entityFetcher.conversationEntity(for: "FSONLY02")?.lastUpdate)
+        // 1:1 conversations with content keep the last update of the 5.4 migration
+        XCTAssertEqual(
+            entityManager.entityFetcher.conversationEntity(for: "CONTENT1")?.lastUpdate,
+            Date(timeIntervalSince1970: 0)
+        )
     }
 
     private func setupDataForMigrationVersion4_8() {
@@ -771,5 +804,55 @@ final class AppMigrationTests: XCTestCase {
     func setupDataForMigrationVersion7_5() {
         pushEncryptionKey = BytesUtility.generateRandomBytes(length: 32)!
         AppGroup.userDefaults().set(pushEncryptionKey, forKey: AppMigration.legacyPushEncryptionKeyUserDefaultsKey)
+    }
+
+    func setupDataForMigrationVersion7_6() {
+        dbPreparer.save {
+            let contact = dbPreparer.createContact(
+                publicKey: BytesUtility.generateRandomBytes(length: 32)!,
+                identity: "REACTOR1"
+            )
+            let conversation = dbPreparer.createConversation(contactEntity: contact)
+            let message = dbPreparer.createTextMessage(
+                conversation: conversation,
+                isOwn: true,
+                sender: nil,
+                remoteSentDate: nil
+            )
+
+            // Unread, as reactions were before the read state existed
+            dbPreparer.createMessageReactionEntity(message: message, reaction: "🔮", contact: contact)
+
+            // 1:1 conversations without last update, the 5.4 migration sets it to 1970
+
+            // Only FS status messages, which are never set as last message
+            let fsOnlyContact = dbPreparer.createContact(identity: "FSONLY01")
+            let fsOnlyConversation = dbPreparer.createConversation(contactEntity: fsOnlyContact)
+            dbPreparer.createSystemMessage(conversation: fsOnlyConversation, type: .fsSessionReset)
+
+            // Only FS status messages and the last update of an earlier 5.4 migration run
+            let migratedFSOnlyContact = dbPreparer.createContact(identity: "FSONLY02")
+            let migratedFSOnlyConversation = dbPreparer.createConversation(contactEntity: migratedFSOnlyContact)
+            migratedFSOnlyConversation.lastUpdate = Date(timeIntervalSince1970: 0)
+            dbPreparer.createSystemMessage(conversation: migratedFSOnlyConversation, type: .fsSessionReset)
+
+            // Only the other app info
+            let appInfoContact = dbPreparer.createContact(identity: "APPINFO1")
+            let appInfoConversation = dbPreparer.createConversation(contactEntity: appInfoContact)
+            appInfoConversation.lastMessage = dbPreparer.createSystemMessage(
+                conversation: appInfoConversation,
+                type: .contactOtherAppInfo
+            )
+
+            // Content message
+            let contentContact = dbPreparer.createContact(identity: "CONTENT1")
+            let contentConversation = dbPreparer.createConversation(contactEntity: contentContact)
+            contentConversation.lastMessage = dbPreparer.createTextMessage(
+                conversation: contentConversation,
+                isOwn: false,
+                sender: contentContact,
+                remoteSentDate: Date()
+            )
+        }
     }
 }

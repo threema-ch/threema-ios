@@ -17,26 +17,24 @@ public protocol BackupCreateManagerProtocol: AnyObject {
     /// What the next backup includes.
     var backupSettings: BackupMetadata { get set }
 
-    /// Where a local backup is written to.
-    var backupURL: URL { get }
+    /// Where the backup of ``lastBackup`` is, or `nil` if there is none.
+    var backupURL: URL? { get }
 
     /// The most recent backup that completed, or `nil` if none ever has.
     ///
     /// Persisted, so this outlives the app session it was written in.
     var lastBackup: BackupMetadata? { get }
 
-    /// Writes a backup of this ID and its data to `url`, reporting progress as it goes.
+    /// Writes a backup of this ID and its data to a new file in the documents directory, reporting progress as it goes.
     ///
-    /// - Parameters:
-    ///   - url: Destination of the backup file.
-    ///   - password: Password the backup is encrypted with.
-    func create(url: URL, password: String) -> AsyncThrowingStream<DataBackupProgress, any Error>
+    /// - Parameter password: Password the backup is encrypted with.
+    func create(password: String) -> AsyncThrowingStream<DataBackupProgress, any Error>
 
-    /// Records the backup at ``backupURL`` as the most recent one, persisting when it was made, how big it is and what
-    /// it includes.
+    /// Records the backup that ``create(password:)`` just wrote as the most recent one, persisting where it is, when
+    /// it was made, how big it is and what it includes, and deletes the backup it replaces.
     ///
-    /// - Throws: If there is no readable file at ``backupURL``, or the record could not be written. A backup that
-    ///           cannot be recorded is not usable, because the details screen shows nothing else.
+    /// - Throws: If there is no readable file where the backup was written, or the record could not be written. A
+    ///           backup that cannot be recorded is not usable, because the details screen shows nothing else.
     func recordSuccessfulBackup() throws
 
     /// Deletes a persisted default key and generates a fresh key in its place.
@@ -51,7 +49,7 @@ public protocol BackupCreateManagerProtocol: AnyObject {
     ///              user saved.
     func deleteDefaultRecoveryKey() throws
 
-    /// Deletes the backup file from disk
+    /// Deletes the backup at ``backupURL`` from disk, and its record.
     func removePreviousBackup() throws
 }
 
@@ -61,7 +59,7 @@ public protocol BackupCreateManagerProtocol: AnyObject {
     /// In-memory `BackupCreateManagerProtocol` for previews and tests.
     public final class BackupCreateManagerMock: BackupCreateManagerProtocol {
 
-        /// What ``create(url:password:)`` reports.
+        /// What ``create(password:)`` reports.
         public enum CreateBehavior: Sendable {
             /// Reports nothing and never finishes, so a screen stays in the state it started in.
             case idle
@@ -115,7 +113,8 @@ public protocol BackupCreateManagerProtocol: AnyObject {
             date: Date(timeIntervalSince1970: 1_775_030_400), // 2026-04-01 08:00 UTC
             size: 1_288_490_188,
             includesMessages: true,
-            includesMedia: true
+            includesMedia: true,
+            fileName: "2026-04-01T08-00-00-threema.backup"
         )
 
         /// An error ``recordSuccessfulBackup()`` throws instead of recording anything.
@@ -124,11 +123,11 @@ public protocol BackupCreateManagerProtocol: AnyObject {
         /// Number of ``recordSuccessfulBackup()`` calls so far.
         public private(set) var recordSuccessfulBackupCallCount = 0
 
-        // Matches where the real manager writes, so a location derived from it
+        // Derived like the real manager does, so a location derived from it
         // reads the same in previews and tests. Nothing is ever written through the mock.
-        public var backupURL = URL.documentsDirectory
-            .appending(path: "Backup", directoryHint: .notDirectory)
-            .appendingPathExtension("dat")
+        public var backupURL: URL? {
+            lastBackup?.fileName.map { URL.documentsDirectory.appending(path: $0, directoryHint: .notDirectory) }
+        }
 
         public func recordSuccessfulBackup() throws {
             recordSuccessfulBackupCallCount += 1
@@ -141,7 +140,8 @@ public protocol BackupCreateManagerProtocol: AnyObject {
                 date: Date(),
                 size: 1_288_490_188,
                 includesMessages: backupSettings.includesMessages,
-                includesMedia: backupSettings.includesMedia
+                includesMedia: backupSettings.includesMedia,
+                fileName: "2026-04-01T08-00-00-threema.backup"
             )
         }
 
@@ -149,7 +149,7 @@ public protocol BackupCreateManagerProtocol: AnyObject {
             createCalls.withLock { $0 }
         }
 
-        public func create(url: URL, password: String) -> AsyncThrowingStream<DataBackupProgress, any Error> {
+        public func create(password: String) -> AsyncThrowingStream<DataBackupProgress, any Error> {
             createCalls.withLock { $0 += 1 }
 
             // Read upfront so the replaying task never touches the mock itself.

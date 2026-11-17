@@ -431,7 +431,7 @@ private struct Fixture {
         // the delegate callback sequence.
         UIView.setAnimationsEnabled(false)
 
-        let window = UIWindow(frame: UIScreen.main.bounds)
+        let window = UIWindow(frame: .zero)
         let navigationController = TransitionStubNavigationController()
         let rootViewController = UIViewController()
         rootViewController.title = "root"

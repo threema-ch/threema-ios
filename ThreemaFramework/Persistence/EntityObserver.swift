@@ -99,7 +99,7 @@ public final class EntityObserver: NSObject {
                 informSubscribers(
                     updatedObjectIDs: deletedObjectIDs,
                     updatedObjects: allowedDeletedObjects,
-                    subscribers: subscribersForDelete,
+                    subscribers: \.subscribersForDelete,
                     reason: .deleted
                 )
             }
@@ -113,7 +113,7 @@ public final class EntityObserver: NSObject {
                 informSubscribers(
                     updatedObjectIDs: updatedObjectIDs,
                     updatedObjects: allowedUpdatedObjects,
-                    subscribers: subscribersForUpdate,
+                    subscribers: \.subscribersForUpdate,
                     reason: .updated
                 )
             }
@@ -123,11 +123,12 @@ public final class EntityObserver: NSObject {
     private func informSubscribers(
         updatedObjectIDs: Set<NSManagedObjectID?>,
         updatedObjects: Set<NSManagedObject>?,
-        subscribers: Set<Subscriber>,
+        subscribers: KeyPath<EntityObserver, Set<Subscriber>>,
         reason: EntityChangedReason
     ) {
+        // The subscriber sets are mutated on `queue`, so they must only be read there
         let (localSubscribers, subscribersForObjectIDs) = queue.sync {
-            let localSubscribers = Set(subscribers)
+            let localSubscribers = self[keyPath: subscribers]
 
             var subscribersForObjectIDs = Set<NSManagedObjectID?>()
             for subscriber in localSubscribers {
@@ -244,25 +245,38 @@ extension EntityObserver: NSFetchedResultsControllerDelegate {
 
             if temporaryIDs.count == permanentIDs.count {
                 queue.async {
-                    for index in 0..<temporaryIDs.count {
-                        if let subscriber = self.subscribersForUpdate.first(where: { subscriber in
-                            subscriber.managedObjectID == temporaryIDs[index].objectID
-                        }) {
-                            // Replace subscription with temporary objectID, with subscription with permanent objectID
-                            self.subscribersForUpdate.insert(
-                                Subscriber(
-                                    uuid: UUID(),
-                                    managedObjectFetchPermanentID: nil,
-                                    managedObjectID: permanentIDs[index].objectID,
-                                    entityChangedReason: subscriber.entityChangedReason,
-                                    entityChangedAction: subscriber.entityChangedAction
-                                )
-                            )
-                            self.subscribersForUpdate.remove(subscriber)
-                        }
+                    for (temporaryID, permanentID) in zip(temporaryIDs, permanentIDs) {
+                        Self.replaceObjectID(
+                            temporaryID.objectID,
+                            with: permanentID.objectID,
+                            in: &self.subscribersForUpdate
+                        )
+                        Self.replaceObjectID(
+                            temporaryID.objectID,
+                            with: permanentID.objectID,
+                            in: &self.subscribersForDelete
+                        )
                     }
                 }
             }
+        }
+    }
+
+    /// Replace the temporary object ID of all matching subscribers with the permanent object ID. The `uuid` is kept so
+    /// that the `SubscriptionToken` can still remove the subscriber.
+    private static func replaceObjectID(
+        _ temporaryID: NSManagedObjectID,
+        with permanentID: NSManagedObjectID,
+        in subscribers: inout Set<Subscriber>
+    ) {
+        for subscriber in subscribers where subscriber.managedObjectID == temporaryID {
+            subscribers.update(with: Subscriber(
+                uuid: subscriber.uuid,
+                managedObjectFetchPermanentID: nil,
+                managedObjectID: permanentID,
+                entityChangedReason: subscriber.entityChangedReason,
+                entityChangedAction: subscriber.entityChangedAction
+            ))
         }
     }
 }

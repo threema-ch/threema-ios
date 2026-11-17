@@ -39,7 +39,22 @@ final class ChatBarCoordinator {
     }()
     
     var isRecording = false
-    
+
+    /// See `ChatBarView.restsOnBarBaseline`
+    var restsOnBarBaseline: Bool {
+        get {
+            chatBar.restsOnBarBaseline
+        }
+        set {
+            chatBar.restsOnBarBaseline = newValue
+        }
+    }
+
+    /// See `ChatBarView.singleLineRowCenterYAnchor`
+    var singleLineRowCenterYAnchor: NSLayoutYAxisAnchor {
+        chatBar.singleLineRowCenterYAnchor
+    }
+
     // MARK: - Private properties
 
     private let imageSender = ImageURLSenderItemCreator()
@@ -506,7 +521,7 @@ extension ChatBarCoordinator: ChatBarViewDelegate {
         let assetActionHelper = PPAssetsActionHelper()
         assetActionHelper.delegate = self
         
-        let assetActionController = assetActionHelper.buildAction()
+        let assetActionController = assetActionHelper.buildAction(bounds: chatViewController.view.bounds)
         
         chatViewController.present(assetActionController, animated: true, completion: nil)
     }

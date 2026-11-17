@@ -24,6 +24,24 @@ final class ChatBarView: UIView {
 
     weak var chatBarViewDelegate: ChatBarViewDelegate?
 
+    /// `true` while the chat bar rests on the system bar baseline, which lies inside the bottom safe area (see
+    /// `ChatViewController`): the controls then keep their distance to the bottom edge instead of the safe area
+    var restsOnBarBaseline = false {
+        didSet {
+            guard restsOnBarBaseline != oldValue else {
+                return
+            }
+            controlsBottomToSafeAreaConstraint.isActive = !restsOnBarBaseline
+            controlsBottomToEdgeConstraint.isActive = restsOnBarBaseline
+        }
+    }
+
+    /// Vertical center of the single-line row of controls: the plus button sits on it, and the other controls
+    /// center on the same row (glass layout)
+    var singleLineRowCenterYAnchor: NSLayoutYAxisAnchor {
+        plusButton.centerYAnchor
+    }
+
     // MARK: - Private properties
 
     private let markupParser = MarkupParser()
@@ -43,6 +61,15 @@ final class ChatBarView: UIView {
     private var cameraMicButtonConstraint: NSLayoutConstraint?
 
     private var currentSingleLineHeight: CGFloat = Config.defaultSingleLineHeight
+
+    /// The bottom the glass controls keep their distance to (see `restsOnBarBaseline`)
+    private let controlsBottomGuide = UILayoutGuide()
+    private lazy var controlsBottomToSafeAreaConstraint = controlsBottomGuide.bottomAnchor.constraint(
+        equalTo: safeAreaLayoutGuide.bottomAnchor
+    )
+    private lazy var controlsBottomToEdgeConstraint = controlsBottomGuide.bottomAnchor.constraint(
+        equalTo: bottomAnchor
+    )
     private var updatableConstraints = [UpdatableConstraint]()
 
     private lazy var feedbackGenerator = UINotificationFeedbackGenerator()
@@ -191,7 +218,7 @@ final class ChatBarView: UIView {
             constant: Config.textInputButtonSpacing
         ),
         trailingButtonsGlassView.bottomAnchor.constraint(
-            equalTo: safeAreaLayoutGuide.bottomAnchor,
+            equalTo: controlsBottomGuide.bottomAnchor,
             constant: -Config.verticalChatBarTextViewDistance
         ),
         trailingButtonsGlassView.trailingAnchor.constraint(
@@ -519,6 +546,10 @@ final class ChatBarView: UIView {
         return view
     }()
 
+    private lazy var bottomHairlineHeightConstraint = bottomHairlineView.heightAnchor.constraint(
+        equalToConstant: 0.5 / traitCollection.displayScale
+    )
+
     // MARK: - Superview overrides
 
     override func layoutSubviews() {
@@ -567,6 +598,13 @@ final class ChatBarView: UIView {
         }
         else {
             configureOldLayout()
+
+            registerForTraitChanges([
+                UITraitVerticalSizeClass.self,
+                UITraitHorizontalSizeClass.self
+            ]) { (self: ChatBarView, _) in
+                self.bottomHairlineHeightConstraint.constant = 0.5 / self.traitCollection.displayScale
+            }
         }
 
         // This should give an effect similar to the one in the tab bar
@@ -927,6 +965,14 @@ final class ChatBarView: UIView {
     private func configureGlassLayout() {
         translatesAutoresizingMaskIntoConstraints = false
 
+        addLayoutGuide(controlsBottomGuide)
+        NSLayoutConstraint.activate([
+            controlsBottomGuide.topAnchor.constraint(equalTo: topAnchor),
+            controlsBottomGuide.leadingAnchor.constraint(equalTo: leadingAnchor),
+            controlsBottomGuide.trailingAnchor.constraint(equalTo: trailingAnchor),
+            controlsBottomToSafeAreaConstraint,
+        ])
+
         // Buttons should be centered next to a single line text field. To achieve this we dynamically update the
         // centerYAnchor constraint for these buttons whenever the height of the text field changes
 
@@ -939,7 +985,7 @@ final class ChatBarView: UIView {
                 constant: Config.textInputButtonSpacing
             ),
             plusButton.bottomAnchor.constraint(
-                equalTo: safeAreaLayoutGuide.bottomAnchor,
+                equalTo: controlsBottomGuide.bottomAnchor,
                 constant: -Config.verticalChatBarTextViewDistance
             ),
             plusButton.widthAnchor.constraint(
@@ -968,7 +1014,7 @@ final class ChatBarView: UIView {
                 constant: Config.textInputButtonSpacing
             ),
             glassEffectChatTextView.bottomAnchor.constraint(
-                equalTo: safeAreaLayoutGuide.bottomAnchor,
+                equalTo: controlsBottomGuide.bottomAnchor,
                 constant: -Config.verticalChatBarTextViewDistance
             ),
         ])
@@ -1008,7 +1054,7 @@ final class ChatBarView: UIView {
                 constant: -Config.textInputButtonSpacing
             ),
             sendButton.bottomAnchor.constraint(
-                equalTo: safeAreaLayoutGuide.bottomAnchor,
+                equalTo: controlsBottomGuide.bottomAnchor,
                 constant: -Config.verticalChatBarTextViewDistance
             ),
             sendButton.widthAnchor.constraint(
@@ -1048,7 +1094,7 @@ final class ChatBarView: UIView {
                 bottomHairlineView.leadingAnchor.constraint(equalTo: leadingAnchor),
                 bottomHairlineView.bottomAnchor.constraint(equalTo: bottomAnchor),
                 bottomHairlineView.trailingAnchor.constraint(equalTo: trailingAnchor),
-                bottomHairlineView.heightAnchor.constraint(equalToConstant: 0.5 / UIScreen.main.scale),
+                bottomHairlineHeightConstraint,
             ])
         }
 

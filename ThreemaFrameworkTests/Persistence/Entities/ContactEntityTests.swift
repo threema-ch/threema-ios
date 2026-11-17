@@ -70,7 +70,11 @@ final class ContactEntityTests: XCTestCase {
                 in: conversations.first!,
                 setLastUpdate: false
             )
-            return [entityManager.entityCreator.messageReactionEntity(reaction: "😂", message: message)]
+            return [entityManager.entityCreator.messageReactionEntity(
+                reaction: "😂",
+                readAt: nil,
+                message: message
+            )]
         }
         let rejectedMessages: Set<TextMessageEntity> = entityManager.performAndWaitSave {
             [

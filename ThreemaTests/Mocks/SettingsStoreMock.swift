@@ -4,6 +4,7 @@ import ThreemaProtocols
 @testable import ThreemaFramework
 
 final class SettingsStoreMock: SettingsStoreProtocol, SettingsStoreInternalProtocol {
+    
     var inAppSounds = true
 
     var inAppVibrate = true
@@ -91,6 +92,10 @@ final class SettingsStoreMock: SettingsStoreProtocol, SettingsStoreInternalProto
     var sentryAppDevice: String?
     
     var ipcCommunicationEnabled = false
+    
+    var reactionNotificationsOneToOneEnabled = true
+    
+    var reactionNotificationsGroupEnabled = true
 
     func updateSettingsStore(with syncSettings: D2dSync_Settings) {
         // Noop

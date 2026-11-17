@@ -10,16 +10,19 @@ struct LocalBackupRecoveryKeyView: View {
     @ScaledMetric private var scaledMetric: CGFloat = 1.0
     @Bindable var model: LocalBackupRecoveryKeyViewModel
 
-    private let headerHeight = DotHeaderView.defaultHeight
-    private let headerOverlap = DotHeaderView.defaultOverlap
+    private let headerHeight = StandardHeaderView.defaultHeight
+    private let headerOverlap = StandardHeaderView.defaultOverlap
 
     var body: some View {
         ScrollViewReader { proxy in
             ScrollView {
                 VStack(spacing: 0) {
-                    DotHeaderView(
-                        icon: DotHeaderView.Icon(name: model.headerIconName, color: .accentColor),
-                        dotColor: .accentColor.opacity(0.3),
+                    StandardHeaderView(
+                        icon: StandardHeaderView.Icon(
+                            name: model.headerIconName,
+                            color: .accentColor,
+                            rotationDegrees: model.headerIconRotationDegrees
+                        ),
                         height: headerHeight
                     )
 
@@ -37,11 +40,11 @@ struct LocalBackupRecoveryKeyView: View {
                         BackupInfoView(
                             title: nil,
                             content: model.warning,
-                            textColor: .accentColor,
+                            textColor: Color.statusForegroundInfo,
                             textFont: .callout,
                             iconName: model.warningIconName,
-                            iconColor: .accentColor,
-                            backgroundColor: Color(.secondary)
+                            iconColor: Color.statusForegroundInfo,
+                            backgroundColor: Color.statusBackgroundInfo
                         )
                         .padding(.bottom, 20 * scaledMetric)
 

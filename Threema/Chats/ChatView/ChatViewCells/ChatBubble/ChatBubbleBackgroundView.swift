@@ -90,8 +90,11 @@ final class ChatBubbleBackgroundView: UIView {
             // Use this instead of `.fillMode`and `isRemovedOnCompletion` because those will keep the animation
             // "running"
             backgroundLayer.path = backgroundPath.cgPath
-                
-            backgroundLayer.add(morph, forKey: nil)
+
+            // A fixed key replaces a running morph instead of stacking another one on the layer. Un-keyed animations
+            // pile up when many layout passes run within one transaction (e.g. a split view collapse), and each
+            // further `add` gets slower until the main thread hangs.
+            backgroundLayer.add(morph, forKey: ChatBubbleBackgroundView.morphAnimationKey)
                 
             // Commit our animation
             CATransaction.commit()
@@ -112,10 +115,9 @@ final class ChatBubbleBackgroundView: UIView {
     // Indicates whether the next change to `bubbleFrame` should be animated or not
     var animate = false
     
+    private static let morphAnimationKey = "path"
+
     private func updatePaths(for frame: CGRect) {
-        // This could probably be optimized by caching the previous frame and only update if it changes or
-        // the update is forced (when the value of `showChatBubbleArrow` changes).
-        
         // We always have a rounded rectangle background
         let path = ChatBubbleShape.roundedRect(for: frame, with: traitCollection)
         
@@ -131,7 +133,12 @@ final class ChatBubbleBackgroundView: UIView {
         case .none:
             break
         }
-        
+
+        // Cells set `bubbleFrame` on every layout pass, mostly with an unchanged frame
+        guard path.cgPath != backgroundPath.cgPath else {
+            return
+        }
+
         backgroundPath = path
     }
     

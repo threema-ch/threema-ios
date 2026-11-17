@@ -773,7 +773,15 @@ extension VoIPCallPeerConnectionClient {
                 .patch(type: type, sdp: remoteSdp.sdp)
             delegate?.peerconnectionClient(self, startTransportExpectedStableTimer: true)
             let patchedDescription = RTCSessionDescription(type: remoteSdp.type, sdp: patchedSdpString)
-            peerConnection.setRemoteDescription(patchedDescription, completionHandler: completion)
+            // WebRTC runs this handler on its signaling thread and keeps using the peer connection afterwards. If
+            // releasing `completion` there released the last owner of the peer connection, WebRTC would continue on
+            // freed memory, so the last reference to `completion` is dropped on another thread.
+            peerConnection.setRemoteDescription(patchedDescription) { error in
+                completion(error)
+                DispatchQueue.global(qos: .userInitiated).async {
+                    withExtendedLifetime(completion) { }
+                }
+            }
         }
         catch {
             completion(nil)

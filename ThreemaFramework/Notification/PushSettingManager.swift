@@ -8,8 +8,16 @@ public protocol PushSettingManagerProtocol {
     func pushSetting(for pendingUserNotification: PendingUserNotification) -> PushSetting?
     func save(pushSetting: PushSetting, sync: Bool) async
     func delete(forContact identity: ThreemaIdentity) async
-    func canSendPush(for message: BaseMessageEntity) -> Bool
+    func canSendPush(for message: BaseMessageEntity, isReaction: Bool) -> Bool
     func canMasterDndSendPush() -> Bool
+}
+
+extension PushSettingManagerProtocol {
+    /// Should we show a notification for this base message?
+    /// - Parameter message: Message the notification is about
+    public func canSendPush(for message: BaseMessageEntity) -> Bool {
+        canSendPush(for: message, isReaction: false)
+    }
 }
 
 public actor PushSettingManager: PushSettingManagerProtocol {
@@ -214,9 +222,13 @@ public actor PushSettingManager: PushSettingManagerProtocol {
     }
 
     /// Should we show a notification for this base message?
-    public nonisolated func canSendPush(for message: BaseMessageEntity) -> Bool {
+    /// - Parameters:
+    ///   - message: Message the notification is about
+    ///   - isReaction: Pass `true` if the notification is about a reaction to `message`. Only then a message of our
+    /// own can have a notification, because reactions are only ever shown to the author of the message.
+    public nonisolated func canSendPush(for message: BaseMessageEntity, isReaction: Bool) -> Bool {
         entityManager.performAndWait { [weak self] in
-            guard let self, !message.isOwnMessage else {
+            guard let self, isReaction || !message.isOwnMessage else {
                 return false
             }
 
@@ -228,7 +240,8 @@ public actor PushSettingManager: PushSettingManagerProtocol {
                 var pushSetting = find(forGroup: group.groupIdentity)
                 if pushSetting.type == .offPeriod || pushSetting.type == .off {
                     if pushSetting.mentioned {
-                        if !markupParser.isMeOrAllMention(in: message.contentToCheckForMentions() ?? "") {
+                        // A reaction can't mention anybody. The text checked here would be the one of our own message.
+                        if isReaction || !markupParser.isMeOrAllMention(in: message.contentToCheckForMentions() ?? "") {
                             return false
                         }
                     }

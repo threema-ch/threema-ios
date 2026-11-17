@@ -30,9 +30,9 @@ struct OnboardingRestoreSafeInformation {
 // MARK: - SafeRestorePreparation
 
 /// Returned by `prepareRestore(with:)` and consumed by
-/// `performRestore(preparation:remoteSecretManager:)`.
+/// `performRestore(preparation:businessInjector:)`.
 /// Carries everything produced in phase 1 (backup download + identity restore)
-/// that phase 2 (migrations + Safe restore) needs.
+/// that phase 2 (Safe restore) needs.
 struct SafeRestorePreparation {
     let safeBackupData: SafeJsonParser.SafeBackupData
     let identity: String
@@ -50,15 +50,13 @@ struct SafeRestorePreparation {
 protocol SafeRestoring {
     /// Phase 1: downloads the backup and restores the identity store. No remote secret is needed yet.
     ///
-    /// - Returns: A `SafeRestorePreparation` to be passed to `performRestore(preparation:remoteSecretManager:)`.
+    /// - Returns: A `SafeRestorePreparation` to be passed to `performRestore(preparation:businessInjector:)`.
     func prepareRestore(with info: OnboardingRestoreSafeInformation) async throws -> SafeRestorePreparation
 
-    /// Phase 2: runs migrations, restores Safe data, and activates Safe.
-    ///
-    /// Requires the remote secret to have been resolved externally and passed in.
+    /// Phase 2: Restores Safe data, and activates Safe.
     func performRestore(
         preparation: SafeRestorePreparation,
-        remoteSecretManager: any RemoteSecretManagerProtocol
+        businessInjector: any BusinessInjectorProtocol
     ) async throws
 }
 
@@ -147,20 +145,8 @@ final class OnboardingRestoreSafeManager: SafeRestoring {
 
     func performRestore(
         preparation: SafeRestorePreparation,
-        remoteSecretManager: any RemoteSecretManagerProtocol
+        businessInjector: any BusinessInjectorProtocol
     ) async throws {
-        try await SetupApp.runDatabaseMigrationIfNeeded(
-            remoteSecretManager: remoteSecretManager
-        )
-        
-        let businessInjector = BusinessInjector(
-            remoteSecretManager: remoteSecretManager
-        )
-
-        try await SetupApp.runAppMigrationIfNeeded(
-            businessInjector: businessInjector
-        )
-
         DDLogNotice("[ThreemaSafe Restore] Beginning ThreemaSafe restore")
 
         let safeConfigManager = SafeConfigManager()

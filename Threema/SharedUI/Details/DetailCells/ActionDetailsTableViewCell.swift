@@ -171,7 +171,7 @@ final class ActionDetailsTableViewCell: ThemedCodeTableViewCell {
             leftSeparatorInset += iconCenterFromLeadingMargin + labelOffsetFromIconCenter
         }
         else if let isDestructive = action?.destructive, isDestructive {
-            leftSeparatorInset = -layoutMargins.left
+            leftSeparatorInset = -directionalLayoutMargins.leading
         }
         
         separatorInset = UIEdgeInsets(top: 0, left: leftSeparatorInset, bottom: 0, right: 0)

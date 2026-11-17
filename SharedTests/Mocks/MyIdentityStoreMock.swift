@@ -163,6 +163,12 @@ final class MyIdentityStoreMock: NSObject, MyIdentityStoreProtocol {
         onCompletion: @escaping () -> Void,
         onError: @escaping (any Error) -> Void
     ) {
+        // Like `MyIdentityStore`, so a restored backup leaves the identity it belongs to behind.
+        identity = myIdentity
+        clientKey = mySecretKey
+        publicKey = NaClCrypto.shared().derivePublicKey(fromSecretKey: mySecretKey)
+        serverGroup = nil
+
         onCompletion()
     }
 }

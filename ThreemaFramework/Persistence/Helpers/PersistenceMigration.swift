@@ -131,17 +131,46 @@ public final class PersistenceMigration {
                     if let success = result.result as? Int,
                        success == 0 {
                         DDLogError(
-                            "[PersistenceMigration] Failed to set data available for video messages"
+                            "[PersistenceMigration] Failed to set data available for \(entityName)"
                         )
                     }
                 }
                 else {
                     DDLogError(
-                        "[PersistenceMigration] Failed to set data available for video messages"
+                        "[PersistenceMigration] Failed to set data available for \(entityName)"
                     )
                 }
                 self.entityManager.refreshAllObjects()
             }
+        }
+    }
+    
+    public func migrateReadMessageReactions(remoteSecretEnabled: Bool) throws {
+        entityManager.performAndWaitSave {
+            
+            let batch = NSBatchUpdateRequest(entityName: MessageReactionEntity.entityName)
+            batch.resultType = .statusOnlyResultType
+           
+            let fieldName = MessageReactionEntity.Field.name(for: .readAt, encrypted: remoteSecretEnabled)
+            let readAt = Date()
+            let readAtValue: Any = remoteSecretEnabled ? EntityCryptoManager.shared.encrypt(readAt) : readAt
+            batch.propertiesToUpdate = [fieldName: readAtValue]
+            
+            // If there was an error, the execute function will return nil or a result with the result 0
+            if let result = self.entityManager.entityFetcher.execute(batchUpdateRequest: batch) {
+                if let success = result.result as? Int,
+                   success == 0 {
+                    DDLogError(
+                        "[PersistenceMigration] Failed to set read value for \(MessageReactionEntity.entityName)"
+                    )
+                }
+            }
+            else {
+                DDLogError(
+                    "[PersistenceMigration] Failed to set \(MessageReactionEntity.entityName)"
+                )
+            }
+            self.entityManager.refreshAllObjects()
         }
     }
 }

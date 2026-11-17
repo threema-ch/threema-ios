@@ -113,6 +113,10 @@ extern NSString * const kPreferenceAllowScreenshotKey;
 @property (nonatomic, readwrite) BOOL distributionListsEnabled;
 @property (nonatomic, readwrite) BOOL backups2Enabled;
 @property (nonatomic, readwrite) BOOL localBackupDebugRecoveryKeyEnabled;
+@property (nonatomic, readwrite) BOOL newMediaBrowserEnabled;
+
+@property (nonatomic, readwrite) BOOL reactionNotificationsOneToOneEnabled;
+@property (nonatomic, readwrite) BOOL reactionNotificationsGroupEnabled;
 
 @end
 

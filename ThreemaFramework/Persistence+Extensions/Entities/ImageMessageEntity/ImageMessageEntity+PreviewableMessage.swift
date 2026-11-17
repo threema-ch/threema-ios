@@ -6,6 +6,15 @@ extension ImageMessageEntity: PreviewableMessage {
         caption ?? fileMessageType.localizedDescription
     }
     
+    public var privatePreviewDescription: MessagePreviewDescription {
+        if let caption {
+            MessagePreviewDescription(typeName: nil, quotedText: caption)
+        }
+        else {
+            MessagePreviewDescription(typeName: fileMessageType.localizedDescription, quotedText: nil)
+        }
+    }
+
     public var previewSymbolName: String? {
         fileMessageType.symbolName
     }

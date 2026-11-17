@@ -1,7 +1,6 @@
 #if DEBUG
     import Foundation
     import ThreemaEssentials
-    import ThreemaFramework
     import ThreemaProtocols
 
     public final class ProfileStoreMock: ProfileStoreProtocol {

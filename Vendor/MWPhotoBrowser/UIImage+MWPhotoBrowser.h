@@ -11,6 +11,7 @@
 @interface UIImage (MWPhotoBrowser)
 
 + (UIImage *)imageForResourcePath:(NSString *)path ofType:(NSString *)type inBundle:(NSBundle *)bundle;
-+ (UIImage *)clearImageWithSize:(CGSize)size;
++ (UIImage *)clearImageWithSize:(CGSize)size __attribute__((deprecated("use clearImageWithSize:traitCollection: instead")));
++ (UIImage *)clearImageWithSize:(CGSize)size traitCollection:(UITraitCollection *)traitCollection;
 
 @end

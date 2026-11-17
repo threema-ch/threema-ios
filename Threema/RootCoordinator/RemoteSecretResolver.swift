@@ -70,20 +70,6 @@ protocol RemoteSecretResolving: AnyObject {
         remoteSecretManager: any RemoteSecretManagerProtocol,
         keychainManager: any KeychainManagerProtocol
     )
-    
-    /// Sync identity and license between the in-memory stores and the keychain
-    ///
-    /// - Warning: This might be removed with IOS-6584
-    ///
-    /// - Parameter keychainManager: Keychain manager to use for syncing
-    func syncKeychain(with keychainManager: KeychainManagerProtocol) throws
-    
-    /// Sync identity between the in-memory stores and the keychain
-    ///
-    /// - Warning: This might be removed with IOS-6584
-    ///
-    /// - Parameter keychainManager: Keychain manager to use for syncing
-    func syncIdentity(with keychainManager: KeychainManagerProtocol) throws
 }
 
 // MARK: - RemoteSecretResolver
@@ -123,10 +109,6 @@ final class RemoteSecretResolver: RemoteSecretResolving {
         case timeout
         case mismatch
         case missingInfo
-        case noIdentityFound
-        case noLicenseFound
-        case unableToStoreLicense
-        case unableToStoreIdentity
         case unableToGetWorkServerURL
         case appSetupStateUnavailable
         case invalidFlow
@@ -244,7 +226,6 @@ final class RemoteSecretResolver: RemoteSecretResolving {
 
         let remoteSecretManager = try await createRemoteSecret()
         let keychainManager = KeychainManager(remoteSecretManager: remoteSecretManager)
-        try syncKeychain(with: keychainManager)
 
         return .ready(remoteSecretManager: remoteSecretManager, keychainManager: keychainManager)
     }
@@ -283,7 +264,6 @@ final class RemoteSecretResolver: RemoteSecretResolving {
 
         let remoteSecretManager = try await initializeRemoteSecretManager()
         let keychainManager = KeychainManager(remoteSecretManager: remoteSecretManager)
-        try syncKeychain(with: keychainManager)
 
         return .ready(remoteSecretManager: remoteSecretManager, keychainManager: keychainManager)
     }
@@ -364,130 +344,5 @@ final class RemoteSecretResolver: RemoteSecretResolving {
         }
         
         myIdentityStore.identity = identity.rawValue
-    }
-
-    // MARK: - Keychain Sync
-
-    // TODO: (IOS-6584) Check if we can make this private again or move it to another place
-    /// Sync identity and license between the in-memory stores and the keychain.
-    func syncKeychain(with keychainManager: KeychainManagerProtocol) throws {
-        // TODO: (IOS-6584) Check if we can change the order here
-        try syncLicense(with: keychainManager)
-        try syncIdentity(with: keychainManager)
-    }
-    
-    func syncIdentity(with keychainManager: KeychainManagerProtocol) throws {
-        // If we have a (new) identity and it is valid, we store it in the keychain.
-        // If not we try to load the one stored in keychain
-        if myIdentityStore.isValidIdentity {
-            try storeIdentity(using: keychainManager)
-        }
-        else if let identity = try keychainManager.loadIdentity() {
-            updateMyIdentityStore(with: identity)
-        }
-        else {
-            assertionFailure("No identity in store or keychain")
-            DDLogError("[RemoteSecretResolver] No identity, neither in myIdentityStore nor in keychain")
-            throw ResolverError.noIdentityFound
-        }
-    }
-    
-    private func syncLicense(with keychainManager: KeychainManagerProtocol) throws {
-        guard flavorService.isBusinessApp else {
-            return
-        }
-        
-        // If we have a license and it is valid, we store it in the keychain.
-        // If not we try to load the one stored in keychain.
-        if licenseStore.isValid() || ProcessInfoHelper.isRunningForScreenshots {
-            try storeLicense(using: keychainManager)
-        }
-        else if let license = try keychainManager.loadLicense() {
-            updateLicenseStore(with: license)
-        }
-        else {
-            DDLogError("[RemoteSecretResolver] No license, neither in LicenseStore nor in keychain")
-            
-            // This can happen if the user upgraded form a version before the license migration to Keychain in 7.0
-            // (actually 6.9, but that was never publicly released).
-            // As an immediate workaround we don't throw an error if an app migration is still pending. In the
-            // longterm we need to change the time when the sync is called (IOS-6584)
-            // TODO: (IOS-6584) Remove if after improving calling order during onboarding
-            if appLaunchManager.isAppMigrationRequired == false {
-                assertionFailure("This should normally not happen")
-                throw ResolverError.noLicenseFound
-            }
-        }
-    }
-
-    // MARK: - Identity Helpers
-
-    private func storeIdentity(using keychainManager: KeychainManagerProtocol) throws {
-        guard
-            let identity = myIdentityStore.identity,
-            let clientKey = myIdentityStore.clientKey,
-            let publicKey = myIdentityStore.publicKey,
-            let serverGroup = myIdentityStore.serverGroup
-        else {
-            assertionFailure("Missing identity fields for keychain storage")
-            DDLogError("[RemoteSecretResolver] Cannot store identity: missing fields")
-            throw ResolverError.unableToStoreIdentity
-        }
-
-        let myIdentity = MyIdentity(
-            identity: ThreemaIdentity(identity),
-            clientKey: ThreemaClientKey(clientKey),
-            publicKey: ThreemaPublicKey(publicKey),
-            serverGroup: ServerGroup(serverGroup)
-        )
-
-        // Keep the user's Easy Device Switch choice; a new identity (no keychain item yet) defaults to this device only
-        let thisDeviceOnly = (try? keychainManager.isIdentityThisDeviceOnly()) ?? true
-        try keychainManager.storeIdentity(myIdentity, thisDeviceOnly: thisDeviceOnly)
-
-        // We could already be further in the process when coming from a safe restore.
-        if AppSetup.state.rawValue < AppSetupState.identityAdded.rawValue {
-            AppSetup.state = .identityAdded
-        }
-    }
-
-    private func updateMyIdentityStore(with identity: MyIdentity) {
-        myIdentityStore.identity = identity.$identity
-        myIdentityStore.clientKey = identity.$clientKey
-        myIdentityStore.publicKey = identity.$publicKey
-        myIdentityStore.serverGroup = identity.$serverGroup
-    }
-
-    // MARK: - License Helpers
-
-    private func storeLicense(using keychainManager: KeychainManagerProtocol) throws {
-        guard
-            let username = licenseStore.licenseUsername,
-            let password = licenseStore.licensePassword
-        else {
-            assertionFailure("Missing license credentials for keychain storage")
-            DDLogError("[RemoteSecretResolver] Cannot store license: missing username or password")
-            throw ResolverError.unableToStoreLicense
-        }
-
-        let license = ThreemaLicense(
-            user: username,
-            password: password,
-            deviceID: licenseStore.licenseDeviceID,
-            onPremServer: licenseStore.onPremConfigURL
-        )
-
-        try keychainManager.storeLicense(license)
-    }
-
-    private func updateLicenseStore(with license: ThreemaLicense) {
-        licenseStore.licenseUsername = license.user
-        licenseStore.licensePassword = license.password
-        
-        if let deviceID = license.deviceID {
-            licenseStore.licenseDeviceID = deviceID
-        }
-        
-        licenseStore.onPremConfigURL = license.onPremServer
     }
 }

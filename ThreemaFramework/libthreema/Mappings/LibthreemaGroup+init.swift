@@ -29,16 +29,18 @@ extension LibthreemaGroup {
         )
 
         var pushSetting = pushSettingManager.find(forGroup: groupIdentity)
+        let notificationTriggerPolicy: GroupNotificationTriggerPolicyOverridePolicy =
+            pushSetting.mentioned ? .mentioned : .never
         let notificationTriggerPolicyOverride: GroupNotificationTriggerPolicyOverride? =
             switch pushSetting.type {
             case .off:
                 GroupNotificationTriggerPolicyOverride(
-                    policy: .never,
+                    policy: notificationTriggerPolicy,
                     expiresAt: nil
                 )
             case .offPeriod:
                 GroupNotificationTriggerPolicyOverride(
-                    policy: .never,
+                    policy: notificationTriggerPolicy,
                     expiresAt: pushSetting.periodOffTillDate?.millisecondsSince1970
                 )
             case .on:

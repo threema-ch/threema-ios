@@ -15,7 +15,7 @@ struct BackupHeaderView: View {
     var backdrop: Color?
 
     var body: some View {
-        VStack(alignment: alignment, spacing: 16) {
+        VStack(alignment: alignment, spacing: 12) {
             if let step {
                 text(step)
                     .font(.footnote.weight(.semibold))

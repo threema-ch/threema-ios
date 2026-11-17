@@ -737,11 +737,12 @@
 }
 
 - (CGFloat)iOS7TableTopInset {
-    if ([UIScreen mainScreen].bounds.size.height > 667)
+    CGFloat viewHeight = self.view.bounds.size.height;
+    if (viewHeight > 667)
         return self.navigationController.navigationBar.frame.size.height+150;   /* iPhone 6 Plus */
-    else if ([UIScreen mainScreen].bounds.size.height > 568)
+    else if (viewHeight > 568)
         return self.navigationController.navigationBar.frame.size.height+130;   /* iPhone 6 */
-    else if ([UIScreen mainScreen].bounds.size.height > 480)
+    else if (viewHeight > 480)
         return self.navigationController.navigationBar.frame.size.height+60;    /* iPhone 5 */
     else
         return self.navigationController.navigationBar.frame.size.height+30;

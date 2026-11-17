@@ -106,6 +106,7 @@ static NSString * const kNotificationMediatorMessageAck = @"MediatorMessageAck";
 #define kKeyText @"text"
 #define kKeyImage @"image"
 #define kKeyMessage @"message"
+#define kKeyMessageMarking @"messageMarking"
 #define kKeyUnread @"unread"
 #define kKeyTitle @"title"
 

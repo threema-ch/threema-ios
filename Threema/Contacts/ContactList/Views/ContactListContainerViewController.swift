@@ -120,7 +120,7 @@ final class ContactListContainerViewController: UIViewController {
     
     // MARK: - Updates
     
-    /// Passing `nil` (no destination shown) falls back to the contacts list.
+    /// Passing `nil` (no destination shown) keeps the currently shown list and only clears its selection
     public func updateSelection(for destination: ContactListCoordinator.InternalDestination?) {
 
         // Don't switch the underlying tab when search is active.
@@ -132,7 +132,10 @@ final class ContactListContainerViewController: UIViewController {
         }
 
         switch destination {
-        case .contact, nil:
+        case nil:
+            break
+
+        case .contact:
             guard let index = viewControllers.firstIndex(where: {
                 $0 is ContactListViewController
             }) else {

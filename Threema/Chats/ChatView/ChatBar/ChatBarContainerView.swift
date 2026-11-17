@@ -72,7 +72,13 @@ final class ChatBarContainerView: UIView {
         return view
     }()
 
+    private lazy var topHairlineHeightConstraint = topHairlineView.heightAnchor.constraint(
+        equalToConstant: 1 / traitCollection.displayScale
+    )
+
     private var mentionsTableViewHeightConstraint: NSLayoutConstraint?
+    /// Extends the blur below the container into the bottom safe area of the window
+    private var blurEffectViewBottomConstraint: NSLayoutConstraint?
     
     // MARK: Lifecycle
     
@@ -83,6 +89,13 @@ final class ChatBarContainerView: UIView {
             configureOldLayout()
             // This should give an effect similar to the one in the tab bar
             backgroundColor = .tertiarySystemBackground
+
+            registerForTraitChanges([
+                UITraitVerticalSizeClass.self,
+                UITraitHorizontalSizeClass.self
+            ]) { (self: ChatBarContainerView, _) in
+                self.topHairlineHeightConstraint.constant = 1 / self.traitCollection.displayScale
+            }
         }
     }
     
@@ -126,7 +139,7 @@ final class ChatBarContainerView: UIView {
         topHairlineView.translatesAutoresizingMaskIntoConstraints = false
         accessoryView.addArrangedSubview(topHairlineView)
         NSLayoutConstraint.activate([
-            topHairlineView.heightAnchor.constraint(equalToConstant: 1 / UIScreen.main.scale),
+            topHairlineHeightConstraint,
         ])
         
         addSubview(blurEffectView)
@@ -141,11 +154,16 @@ final class ChatBarContainerView: UIView {
         
         if traitCollection.horizontalSizeClass == .compact {
             // See the definition of `blurEffectView` for more information.
-            let window = UIApplication.shared.windows.first
-            let bottomPadding = window?.safeAreaInsets.bottom ?? 0
+            // The constant is updated as soon as the container is in a window, see
+            // `updateBlurEffectViewBottomPadding()`
+            let bottomConstraint = blurEffectView.bottomAnchor.constraint(
+                equalTo: bottomAnchor,
+                constant: window?.safeAreaInsets.bottom ?? 0
+            )
+            blurEffectViewBottomConstraint = bottomConstraint
             
             NSLayoutConstraint.activate([
-                blurEffectView.bottomAnchor.constraint(equalTo: bottomAnchor, constant: bottomPadding),
+                bottomConstraint,
             ])
         }
     }
@@ -341,6 +359,23 @@ final class ChatBarContainerView: UIView {
             },
             completion: onCompletion
         )
+    }
+    
+    override func didMoveToWindow() {
+        super.didMoveToWindow()
+        updateBlurEffectViewBottomPadding()
+    }
+    
+    override func safeAreaInsetsDidChange() {
+        super.safeAreaInsetsDidChange()
+        updateBlurEffectViewBottomPadding()
+    }
+    
+    private func updateBlurEffectViewBottomPadding() {
+        guard let window else {
+            return
+        }
+        blurEffectViewBottomConstraint?.constant = window.safeAreaInsets.bottom
     }
     
     @discardableResult override func becomeFirstResponder() -> Bool {

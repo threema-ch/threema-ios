@@ -105,7 +105,7 @@ final class PublicKeyView: UIView {
     // MARK: - Initialization
     
     init(for contact: ContactEntity) {
-        super.init(frame: UIScreen.main.bounds)
+        super.init(frame: .zero)
         
         self.contact = contact
         
@@ -113,7 +113,7 @@ final class PublicKeyView: UIView {
     }
     
     init(identity: String, publicKey: Data, onDismiss: (() -> Void)? = nil) {
-        super.init(frame: UIScreen.main.bounds)
+        super.init(frame: .zero)
         
         self.identity = identity
         self.publicKey = publicKey
@@ -187,8 +187,8 @@ final class PublicKeyView: UIView {
 
     public func show() {
         alpha = 0.0
-        reloadConstraints()
         SharedAppProvider.window?.addSubview(self)
+        reloadConstraints()
         UIView.animate(withDuration: 0.2) {
             self.alpha = 1.0
         }
@@ -211,7 +211,10 @@ final class PublicKeyView: UIView {
     }
     
     private func reloadConstraints() {
-        frame = UIScreen.main.bounds
+        // Cover the window this overlay was added to
+        if let superview {
+            frame = superview.bounds
+        }
         updateConstraints()
     }
     

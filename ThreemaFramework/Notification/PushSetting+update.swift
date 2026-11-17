@@ -74,6 +74,32 @@ extension PushSetting {
         }
     }
 
+    /// Like `update(syncGroup:)`: notifications are off while the override applies, and `mentioned` tells
+    /// whether a mention still notifies.
+    mutating func update(with group: LibthreemaGroup) {
+        guard let policy = group.notificationTriggerPolicyOverride else {
+            updatePeriodOffTillDate(nil)
+            type = .on
+            return
+        }
+
+        if let expiresAt = policy.expiresAt?.date {
+            updatePeriodOffTillDate(expiresAt)
+            type = .offPeriod
+        }
+        else {
+            updatePeriodOffTillDate(nil)
+            type = .off
+        }
+
+        switch policy.policy {
+        case .mentioned:
+            mentioned = true
+        case .never:
+            mentioned = false
+        }
+    }
+
     private mutating func update(with policy: ContactNotificationTriggerPolicyOverride?) {
         guard let policy else {
             updatePeriodOffTillDate(nil)

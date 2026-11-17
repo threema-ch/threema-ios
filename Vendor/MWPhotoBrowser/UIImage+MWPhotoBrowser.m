@@ -15,7 +15,11 @@
 }
 
 + (UIImage *)clearImageWithSize:(CGSize)size {
-    UIGraphicsBeginImageContextWithOptions(size, NO, [UIScreen mainScreen].scale);
+    return [self clearImageWithSize:size traitCollection:[UITraitCollection currentTraitCollection]];
+}
+
++ (UIImage *)clearImageWithSize:(CGSize)size traitCollection:(UITraitCollection *)traitCollection {
+    UIGraphicsBeginImageContextWithOptions(size, NO, traitCollection.displayScale);
     UIImage *blank = UIGraphicsGetImageFromCurrentImageContext();
     UIGraphicsEndImageContext();
     return blank;

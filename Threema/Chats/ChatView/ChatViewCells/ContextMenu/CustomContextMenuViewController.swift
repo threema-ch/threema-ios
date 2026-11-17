@@ -14,13 +14,15 @@ final class CustomContextMenuViewController: UIViewController {
     private let snapshotBounds: CGRect
     // The bounds of the chat view, needed for iPad
     private let chatViewBounds: CGRect
+    /// The bounds of the window the menu is shown in
+    private let windowBounds: CGRect
     private let isOwnMessage: Bool
     private let showEmojiPicker: Bool
     private let reactionsManager: ReactionsManager?
     private let actions: [ChatViewMessageActionsProvider.MessageActionsSection]?
     
     private lazy var transform: CGAffineTransform =
-        if snapshotBounds.height > UIScreen.main.bounds.height * 0.7 {
+        if snapshotBounds.height > windowBounds.height * 0.7 {
             Config.Animation.transformDown
         }
         else {
@@ -285,6 +287,7 @@ final class CustomContextMenuViewController: UIViewController {
         snapshot: UIView,
         snapshotBounds: CGRect,
         chatViewBounds: CGRect,
+        windowBounds: CGRect,
         isOwnMessage: Bool,
         showEmojiPicker: Bool,
         reactionsManager: ReactionsManager?,
@@ -294,6 +297,7 @@ final class CustomContextMenuViewController: UIViewController {
         self.snapshotView = snapshot
         self.snapshotBounds = snapshotBounds
         self.chatViewBounds = chatViewBounds
+        self.windowBounds = windowBounds
         self.showEmojiPicker = showEmojiPicker
         self.isOwnMessage = isOwnMessage
         self.reactionsManager = reactionsManager

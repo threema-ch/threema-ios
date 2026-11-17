@@ -13,7 +13,7 @@ struct LocalBackupRecoveryKeyConfirmationViewModelTests {
         #expect(sut.continueButtonTitle == "Continue")
         #expect(sut.headerTitle == "Confirm your key")
         #expect(sut.headerSubtitle == "Type the last digits of your recovery key to confirm you’ve saved it correctly.")
-        #expect(sut.headerIconName == "key")
+        #expect(sut.headerIconName == "key.fill")
         #expect(sut.stepLabel == "STEP 1 OF 3")
         #expect(sut.prompt == "e.g.N9CQ")
         #expect(sut.recoveryKeyHeader == "Recovery key")

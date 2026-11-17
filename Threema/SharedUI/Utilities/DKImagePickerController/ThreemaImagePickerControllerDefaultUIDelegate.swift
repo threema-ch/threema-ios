@@ -83,9 +83,11 @@ final class ThreemaImagePickerControllerDefaultUIDelegate: DKImagePickerControll
         photosArray.removeAll()
         photoAssets = assets
         
+        let bounds = imagePickerController.view.bounds
+        let scale = imagePickerController.traitCollection.displayScale
         for asset: DKAsset in assets {
-            let width = UIScreen.main.bounds.size.width * UIScreen.main.scale
-            let height = UIScreen.main.bounds.size.height * UIScreen.main.scale
+            let width = bounds.size.width * scale
+            let height = bounds.size.height * scale
             let photo = MWPhoto(asset: asset.originalAsset, targetSize: CGSize(width: width, height: height))
             photosArray.append(photo!)
         }

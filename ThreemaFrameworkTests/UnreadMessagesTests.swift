@@ -160,4 +160,53 @@ final class UnreadMessagesTests: XCTestCase {
         XCTAssertEqual(count, 1)
         XCTAssertEqual(testDataConversation1.unreadMessageCount, 1)
     }
+
+    func testReadConversationReadsItsReactions() throws {
+        let dp = testDatabase.preparer
+        let reaction = dp.save {
+            let message = dp.createTextMessage(
+                conversation: testDataConversation1,
+                isOwn: true,
+                sender: nil,
+                remoteSentDate: nil
+            )
+            return dp.createMessageReactionEntity(message: message, reaction: "🔮")
+        }
+
+        let unreadMessages = UnreadMessages(
+            messageSender: MessageSenderMock(),
+            entityManager: testDatabase.entityManager
+        )
+
+        // In the background nothing is marked as read, neither messages nor reactions
+        _ = unreadMessages.read(for: testDataConversation1, isAppInBackground: true)
+        XCTAssertNil(reaction.readAt)
+
+        _ = unreadMessages.read(for: testDataConversation1, isAppInBackground: false)
+        XCTAssertNotNil(reaction.readAt)
+    }
+
+    func testReadConversationWithoutUnreadMessagesReadsItsReactions() throws {
+        let dp = testDatabase.preparer
+        let (conversation, reaction) = dp.save {
+            let contact = dp.createContact(identity: "REACTOR1")
+            let conversation = dp.createConversation(contactEntity: contact)
+            let message = dp.createTextMessage(
+                conversation: conversation,
+                isOwn: true,
+                sender: nil,
+                remoteSentDate: nil
+            )
+            return (conversation, dp.createMessageReactionEntity(message: message, reaction: "🔮", contact: contact))
+        }
+
+        let unreadMessages = UnreadMessages(
+            messageSender: MessageSenderMock(),
+            entityManager: testDatabase.entityManager
+        )
+
+        // Nothing but the reaction is unread
+        XCTAssertEqual(unreadMessages.read(for: conversation, isAppInBackground: false), 0)
+        XCTAssertNotNil(reaction.readAt)
+    }
 }

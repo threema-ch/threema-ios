@@ -265,7 +265,15 @@ open class DKImagePickerController : UINavigationController {
     }
     
     /// Determines whether or not the rotation is enabled.
-    @objc public var allowsLandscape = false
+    @objc public var allowsLandscape = false {
+        /***** BEGIN THREEMA MODIFICATION: Orientation lock on iOS 26+ *********/
+        didSet {
+            if #available(iOS 26.0, *) {
+                self.setNeedsUpdateOfPrefersInterfaceOrientationLocked()
+            }
+        }
+        /***** END THREEMA MODIFICATION: Orientation lock on iOS 26+ *********/
+    }
     
     /// The callback block is executed when user pressed the cancel button.
     public var didCancel: (() -> Void)?
@@ -572,4 +580,13 @@ open class DKImagePickerController : UINavigationController {
             return UIInterfaceOrientationMask.portrait
         }
     }
+    
+    /***** BEGIN THREEMA MODIFICATION: Orientation lock on iOS 26+ *********/
+    /// Resizable scenes on iOS 26+ ignore `supportedInterfaceOrientations`, lock the orientation unless landscape is
+    /// allowed
+    @available(iOS 26.0, *)
+    open override var prefersInterfaceOrientationLocked: Bool {
+        return !self.allowsLandscape
+    }
+    /***** END THREEMA MODIFICATION: Orientation lock on iOS 26+ *********/
 }

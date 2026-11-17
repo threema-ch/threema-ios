@@ -124,4 +124,64 @@ extension UIBarButtonItem {
             )
         }
     }
+    
+    public static func selectButton(target: Any, selector: Selector) -> UIBarButtonItem {
+        let item = UIBarButtonItem(
+            title: #localize("select"),
+            style: .plain,
+            target: target,
+            action: selector
+        )
+        
+        if #available(iOS 26.0, *) {
+            item.tintColor = .label
+        }
+        
+        return item
+    }
+    
+    @objc public static func deleteButton(target: Any, selector: Selector) -> UIBarButtonItem {
+        if #available(iOS 26.0, *) {
+            let item = UIBarButtonItem(
+                image: UIImage(systemName: "trash"),
+                style: .plain,
+                target: target,
+                action: selector
+            )
+            item.accessibilityLabel = #localize("delete")
+            item.tintColor = .systemRed
+            return item
+        }
+        else {
+            let item = UIBarButtonItem(
+                title: #localize("delete"),
+                style: .plain,
+                target: target,
+                action: selector
+            )
+            item.tintColor = .systemRed
+            return item
+        }
+    }
+    
+    @objc public static func shareButton(target: Any, selector: Selector) -> UIBarButtonItem {
+        if #available(iOS 26.0, *) {
+            let item = UIBarButtonItem(
+                image: UIImage(systemName: "square.and.arrow.up"),
+                style: .plain,
+                target: target,
+                action: selector
+            )
+            item.accessibilityLabel = #localize("share")
+            return item
+        }
+        else {
+            return UIBarButtonItem(
+                title: #localize("share"),
+                style: .plain,
+                target: target,
+                action: selector
+            )
+        }
+    }
 }

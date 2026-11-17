@@ -43,8 +43,9 @@ extension libthreemaSwift.PollChoice {
 
 extension libthreemaSwift.PollVotes {
     init(ballotEntity: BallotEntity, userIdentity: ThreemaIdentity) {
-        // In summary mode individual votes are not known, we only the aggregate count per choice.
-        if ballotEntity.isSummary {
+        // In summary mode only the creator knows the individual votes, everyone else only knows the aggregate count
+        // per choice. So a summary poll the user created still has the votes of every voter.
+        if ballotEntity.isSummary, ballotEntity.creatorID != userIdentity.rawValue {
             var summary: [LibthreemaPollChoiceID: UInt16] = [:]
             for choice in ballotEntity.choices ?? [] {
                 summary[choice.id.uint32Value] = choice.totalVotes?.uint16Value ?? 0

@@ -156,7 +156,7 @@ final class OnPremConfigFetcher: OnPremConfigFetcherProtocol {
         if oppfString == "Unauthorized" {
             throw OnPremConfigError.unauthorized
         }
-        let config = try configVerifier.verify(oppfData: oppfString, checkExpiration: true)
+        let config = try configVerifier.verify(oppfData: oppfString)
         cachedConfig = config
 
         // Caches the new OPPF file and reset cached pins

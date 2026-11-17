@@ -8,15 +8,17 @@ struct LocalBackupSettingsView: View {
     @Environment(\.verticalSizeClass) private var verticalSizeClass
     @ScaledMetric private var scaledMetric: CGFloat = 1.0
     
-    private let headerHeight = DotHeaderView.defaultHeight
-    private let headerOverlap = DotHeaderView.defaultOverlap
+    private let headerHeight = StandardHeaderView.defaultHeight
+    private let headerOverlap = StandardHeaderView.defaultOverlap
 
     var body: some View {
         ScrollView {
             VStack(spacing: 0) {
-                DotHeaderView(
-                    icon: DotHeaderView.Icon(name: model.headerIconName, color: .accentColor),
-                    dotColor: .accentColor.opacity(0.3),
+                StandardHeaderView(
+                    icon: StandardHeaderView.Icon(
+                        name: model.headerIconName,
+                        color: .accentColor
+                    ),
                     height: headerHeight
                 )
 
@@ -82,7 +84,7 @@ struct LocalBackupSettingsView: View {
                                     .font(.body)
                                     .foregroundStyle(.primary)
                                 Spacer()
-                                Text(model.recoveryKeyTrimmed)
+                                Text(model.recoveryKeyAbbreviated)
                                     .font(.body)
                                     .foregroundStyle(.secondary)
                             }
@@ -120,12 +122,6 @@ struct LocalBackupSettingsView: View {
                             .foregroundStyle(.secondary)
                             .frame(maxWidth: .infinity, alignment: .leading)
                     }
-
-                    if model.isDefaultKey {
-                        Spacer()
-                        Image(systemName: model.checkmarkIconName)
-                            .foregroundStyle(.green)
-                    }
                 }
             } header: {
                 Text(model.includedSectionHeader)
@@ -160,13 +156,7 @@ struct LocalBackupSettingsView: View {
 
                         VStack(alignment: .leading, spacing: 12) {
                             ForEach(model.mediaItems) { item in
-                                RowView(
-                                    iconName: item.iconName,
-                                    title: item.title,
-                                    subtitle: item.subtitle,
-                                    isDefaultKey: model.isDefaultKey,
-                                    checkmarkIconName: model.checkmarkIconName
-                                )
+                                RowView(iconName: item.iconName, title: item.title, subtitle: item.subtitle)
                             }
                         }
                     }
@@ -184,8 +174,6 @@ struct LocalBackupSettingsView: View {
             let iconName: String
             let title: String
             let subtitle: String
-            let isDefaultKey: Bool
-            let checkmarkIconName: String
 
             var body: some View {
                 HStack(spacing: 16) {
@@ -200,16 +188,9 @@ struct LocalBackupSettingsView: View {
                             .font(.body)
                             .foregroundStyle(.primary)
 
-                        // TODO: Check if this is still needed?
                         Text(subtitle)
                             .font(.caption)
                             .foregroundStyle(.secondary)
-                    }
-
-                    if isDefaultKey {
-                        Spacer()
-                        Image(systemName: checkmarkIconName)
-                            .foregroundStyle(.green)
                     }
                 }
             }

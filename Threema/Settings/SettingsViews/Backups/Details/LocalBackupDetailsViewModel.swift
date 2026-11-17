@@ -16,7 +16,7 @@ final class LocalBackupDetailsViewModel {
     @ObservationIgnored var onCreateButtonTapped: () -> Void = { /* no-op */ }
     @ObservationIgnored var onKeyActionButtonTapped: () -> Void = { /* no-op */ }
 
-    var shareURL: URL {
+    var shareURL: URL? {
         manager.backupURL
     }
 
@@ -25,7 +25,7 @@ final class LocalBackupDetailsViewModel {
             return []
         }
 
-        return [
+        var items = [
             DetailItem(label: #localize("last_backup"), value: formattedDate(lastBackup.date)),
             DetailItem(label: #localize("backup_size"), value: formattedSize(lastBackup.size)),
             DetailItem(
@@ -37,9 +37,16 @@ final class LocalBackupDetailsViewModel {
                 label: #localize("media"),
                 value: includedValue(lastBackup.includesMedia),
                 isValueHighlighted: lastBackup.includesMedia
-            ),
-            DetailItem(label: #localize("backup_location"), value: backupLocation),
+            )
         ]
+        
+        if let url = shareURL {
+            let value = "\(url.deletingLastPathComponent().lastPathComponent)/\(url.lastPathComponent)"
+            items.append(
+                DetailItem(label: #localize("backup_location"), value: value)
+            )
+        }
+        return items
     }
 
     var isRecoveryKeyNavigationVisible: Bool {
@@ -49,11 +56,6 @@ final class LocalBackupDetailsViewModel {
         else {
             false
         }
-    }
-
-    private var backupLocation: String {
-        let url = manager.backupURL
-        return "\(url.deletingLastPathComponent().lastPathComponent)/\(url.lastPathComponent)"
     }
 
     private let manager: any BackupCreateManagerProtocol

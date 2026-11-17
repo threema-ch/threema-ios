@@ -4,6 +4,8 @@
 
 @property PagingDirection direction;
 @property UIPanGestureRecognizer *panGesture;
+/// Bounds size the page frames were last laid out for
+@property CGSize pageLayoutSize;
 
 @end
 
@@ -42,6 +44,17 @@
     _datasource = datasource;
     
     [self reset];
+}
+
+- (void) layoutSubviews
+{
+    [super layoutSubviews];
+
+    // The bounds change without a rotation, e.g. when unfolding a foldable or resizing a window
+    if (CGSizeEqualToSize(self.bounds.size, _pageLayoutSize) == NO) {
+        _pageLayoutSize = self.bounds.size;
+        [self resetPageFrames];
+    }
 }
 
 - (void) resetPageFrames
@@ -155,7 +168,7 @@
     self.centerView = self.leftView;
     self.leftView = [self.datasource previousView: self.bounds];
     
-    [self addSubview:self.leftView];
+    [self addPageView:self.leftView];
 
     [self placeView:self.leftView X:-self.frame.size.width Y:self.leftView.frame.origin.y];
     
@@ -180,7 +193,7 @@
     self.centerView = self.rightView;
     self.rightView = [self.datasource nextView: self.bounds];
     
-    [self addSubview:self.rightView];
+    [self addPageView:self.rightView];
 
     [self placeView:self.rightView X:self.frame.size.width Y:self.rightView.frame.origin.y];
     
@@ -230,13 +243,24 @@
     }
     
 	self.centerView = [self.datasource currentView: self.bounds];
-    [self addSubview:self.centerView];
+    [self addPageView:self.centerView];
     
     self.leftView = [self.datasource previousView: self.bounds];
-    [self addSubview:self.leftView];
+    [self addPageView:self.leftView];
 
 	self.rightView = [self.datasource nextView: self.bounds];
-    [self addSubview:self.rightView];
+    [self addPageView:self.rightView];
+}
+
+/// Pages keep the frame they had when last shown, so they are resized to the current bounds before being added
+- (void) addPageView: (UIView *) view
+{
+    if (view == nil) {
+        return;
+    }
+
+    view.frame = self.bounds;
+    [self addSubview:view];
 }
 
 - (void) notifyDelegate

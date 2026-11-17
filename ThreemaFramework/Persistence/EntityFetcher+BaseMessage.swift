@@ -60,6 +60,11 @@ extension EntityFetcher {
         return countEntities(entityName: "Message", predicate: predicate)
     }
     
+    public func unreadReactions(in conversation: ConversationEntity) -> [MessageReactionEntity]? {
+        let predicate = reactionUnreadPredicate(conversation: conversation)
+        return fetchEntities(entityName: MessageReactionEntity.entityName, predicate: predicate)
+    }
+    
     // MARK: - Message types
     
     public func textMessageEntities(for conversationEntity: ConversationEntity) -> [TextMessageEntity]? {
@@ -642,6 +647,14 @@ extension EntityFetcher {
     
     func messageUnreadPredicate(conversation: ConversationEntity) -> NSPredicate {
         NSPredicate(format: "conversation == %@ AND isOwn == NO AND read == NO ", conversation)
+    }
+    
+    func reactionUnreadPredicate(conversation: ConversationEntity) -> NSPredicate {
+        let readAtFieldName = MessageReactionEntity.Field.name(
+            for: .readAt,
+            encrypted: managedObjectContext.usesAdditionallyEncryptedModel
+        )
+        return NSPredicate(format: "message.conversation == %@ AND \(readAtFieldName) == nil", conversation)
     }
     
     func messageSenderPredicate(contactEntity: ContactEntity) -> NSPredicate {

@@ -142,9 +142,13 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 }
 
 + (NSUInteger)thumbnailSizeForCurrentDevice {
-    /* maximum thumbnail size: 50% of the screen height of the current device multiplied by the scale,
+    return [self thumbnailSizeForBounds:[UIScreen mainScreen].bounds traitCollection:[UITraitCollection currentTraitCollection]];
+}
+
++ (NSUInteger)thumbnailSizeForBounds:(CGRect)bounds traitCollection:(UITraitCollection *)traitCollection {
+    /* maximum thumbnail size: 50% of the larger dimension of the bounds multiplied by the display scale,
      and rounded to the nearest multiple of 32 */
-    int screenHeightPixels = (int)(MAX([UIScreen mainScreen].bounds.size.width, [UIScreen mainScreen].bounds.size.height) * [UIScreen mainScreen].scale);
+    int screenHeightPixels = (int)(MAX(bounds.size.width, bounds.size.height) * traitCollection.displayScale);
     
     int thumbnailSize = screenHeightPixels / 2;
     thumbnailSize -= (thumbnailSize % 32);
@@ -153,7 +157,11 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 }
 
 + (NSUInteger)fullscreenPreviewSizeForCurrentDevice {
-    return [UIScreen mainScreen].bounds.size.height;
+    return [self fullscreenPreviewSizeForBounds:[UIScreen mainScreen].bounds];
+}
+
++ (NSUInteger)fullscreenPreviewSizeForBounds:(CGRect)bounds {
+    return bounds.size.height;
 }
 
 + (double)videoMaxDurationInMinutes {

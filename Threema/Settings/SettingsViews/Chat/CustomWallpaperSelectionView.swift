@@ -1,3 +1,4 @@
+import CocoaLumberjackSwift
 import SwiftUI
 import ThreemaMacros
 
@@ -14,6 +15,9 @@ struct CustomWallpaperSelectionView: View {
     @State var isSelectingCustom = false
     @State var customImage: Image?
     @State var selectedUIImage: UIImage?
+    
+    /// Its screen determines the size wallpapers are compressed to
+    @State private var windowScene: UIWindowScene?
     
     var onDismiss: () -> Void
     
@@ -44,6 +48,7 @@ struct CustomWallpaperSelectionView: View {
                     }
                 }
             }
+            .onWindowSceneChange { windowScene = $0 }
             .navigationTitle(#localize("settings_chat_wallpaper_title"))
             .navigationBarTitleDisplayMode(.inline)
             .sheet(isPresented: $showingImagePicker) {
@@ -111,7 +116,11 @@ struct CustomWallpaperSelectionView: View {
         withAnimation {
             customImage = Image(uiImage: selectedUIImage)
         }
-        settingsVM.wallpaperStore.saveWallpaper(selectedUIImage, for: conversationID)
+        guard let screenBounds = windowScene?.screen.bounds else {
+            DDLogError("[CustomWallpaperSelectionView] Cannot save wallpaper without a window scene")
+            return
+        }
+        settingsVM.wallpaperStore.saveWallpaper(selectedUIImage, for: conversationID, screenBounds: screenBounds)
     }
 }
 

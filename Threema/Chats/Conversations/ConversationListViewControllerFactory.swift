@@ -23,9 +23,7 @@ struct ConversationListViewControllerFactory: DelegateFactory {
             isAppInBackground: isAppInBackground()
         )
         
-        let tab = ThreemaTab(.conversations)
-        conversationListViewController.tabBarItem = tab.tabBarItem
-        conversationListViewController.title = tab.title
+        conversationListViewController.title = ThreemaTab(.conversations).title
         
         return conversationListViewController
     }

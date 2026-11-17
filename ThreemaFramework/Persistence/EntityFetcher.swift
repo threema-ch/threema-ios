@@ -97,11 +97,11 @@ public final class EntityFetcher: NSObject {
             }
 
         if !managedObjectContext.usesAdditionallyEncryptedModel {
-            return fetchEntity(entityName: "MessageReaction", predicate: predicate)
+            return fetchEntity(entityName: MessageReactionEntity.entityName, predicate: predicate)
         }
         else {
             let messages = fetchEntities(
-                entityName: "MessageReaction",
+                entityName: MessageReactionEntity.entityName,
                 predicate: predicate
             ) as? [MessageReactionEntity]
             return messages?.first(where: { $0.reaction == reaction })
@@ -110,7 +110,20 @@ public final class EntityFetcher: NSObject {
     
     public func messageReactionEntities(for message: BaseMessageEntity) -> [MessageReactionEntity]? {
         let predicate = NSPredicate(format: "message == %@", message)
-        return fetchEntities(entityName: "MessageReaction", predicate: predicate)
+        return fetchEntities(entityName: MessageReactionEntity.entityName, predicate: predicate)
+    }
+    
+    /// Returns all unread emoji reactions of a message. Implicitly never returns own reactions, as they are created
+    /// with a `readAt` date.
+    /// - Parameter message: `BaseMessageEntity` to get unread reactions for
+    /// - Returns: Optional `[MessageReactionEntity]?`
+    public func unreadMessageReactionEntities(for message: BaseMessageEntity) -> [MessageReactionEntity]? {
+        let readAtFieldName = MessageReactionEntity.Field.name(
+            for: .readAt,
+            encrypted: managedObjectContext.usesAdditionallyEncryptedModel
+        )
+        let predicate = NSPredicate(format: "message == %@ AND \(readAtFieldName) == nil", message)
+        return fetchEntities(entityName: MessageReactionEntity.entityName, predicate: predicate)
     }
     
     public func messageReactionEntities(
@@ -349,7 +362,7 @@ public final class EntityFetcher: NSObject {
             }
         }
     }
-    
+
     func fileMessageObjectIDsWithDataAvailable() throws -> [NSManagedObjectID] {
         let fileDataFieldName = FileDataEntity.Field.name(
             for: .data,

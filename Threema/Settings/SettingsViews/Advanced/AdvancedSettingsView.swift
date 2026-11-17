@@ -39,6 +39,7 @@ struct AdvancedSettingsView: View {
                 Toggle(isOn: $settingsVM.validationLogging) {
                     Text(#localize("settings_advanced_debug_log_title"))
                 }
+                .disabled(TargetManager.isSandbox)
                 .onChange(of: settingsVM.validationLogging) {
                     if settingsVM.validationLogging {
                         LogManager.addLogger(for: .debugDirectoryLog)

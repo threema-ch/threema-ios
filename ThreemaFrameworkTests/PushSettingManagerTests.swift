@@ -245,4 +245,135 @@ final class PushSettingManagerTests: XCTestCase {
         encoder.outputFormatting = .sortedKeys
         return try String(data: encoder.encode(groupIdentity), encoding: .utf8)!
     }
+
+    // MARK: - Reactions
+
+    @MainActor
+    func testCanSendPushForReactionToOwnMessage() async throws {
+        let (pushSettingManager, _, message, _) = makeGroupWithOwnMessage()
+
+        // A message of our own never shows a notification, a reaction to it does
+        XCTAssertFalse(pushSettingManager.canSendPush(for: message, isReaction: false))
+        XCTAssertTrue(pushSettingManager.canSendPush(for: message, isReaction: true))
+    }
+
+    @MainActor
+    func testCanSendPushForReactionInGroupWithMentionsOnly() async throws {
+        // Our own message mentions everybody, which must not let reactions to it through
+        let (pushSettingManager, groupIdentity, ownMessage, incomingMessage) = makeGroupWithOwnMessage(
+            text: "Hello @[@@@@@@@@]"
+        )
+        await pushSettingManager.save(
+            pushSetting: PushSetting(identity: nil, groupIdentity: groupIdentity, _type: .off, mentioned: true),
+            sync: false
+        )
+
+        XCTAssertFalse(pushSettingManager.canSendPush(for: ownMessage, isReaction: true))
+
+        // A message mentioning us still gets through as before
+        XCTAssertTrue(pushSettingManager.canSendPush(for: incomingMessage, isReaction: false))
+    }
+
+    @MainActor
+    func testCanSendPushForReactionInGroupThatIsOff() async throws {
+        let (pushSettingManager, groupIdentity, message, _) = makeGroupWithOwnMessage()
+        await pushSettingManager.save(
+            pushSetting: PushSetting(identity: nil, groupIdentity: groupIdentity, _type: .off),
+            sync: false
+        )
+
+        XCTAssertFalse(pushSettingManager.canSendPush(for: message, isReaction: true))
+    }
+
+    @MainActor
+    func testCanSendPushForReactionInSingleChatFollowsChatPartner() async throws {
+        let userSettingsMock = UserSettingsMock()
+        let pushSettingManager = PushSettingManager(
+            userSettings: userSettingsMock,
+            groupManager: GroupManagerMock(),
+            entityManager: testDatabase.entityManager,
+            markupParser: MarkupParser(),
+            taskManager: TaskManagerMock(),
+            isWorkApp: false
+        )
+
+        let dbPreparer = testDatabase.preparer
+        let message = dbPreparer.save {
+            let contact = dbPreparer.createContact(identity: "PARTNER1")
+            let conversation = dbPreparer.createConversation(contactEntity: contact)
+            // Our own message has no sender, the one reacting is the chat partner
+            return dbPreparer.createTextMessage(
+                conversation: conversation,
+                isOwn: true,
+                sender: nil,
+                remoteSentDate: nil
+            )
+        }
+
+        XCTAssertTrue(pushSettingManager.canSendPush(for: message, isReaction: true))
+
+        await pushSettingManager.save(
+            pushSetting: PushSetting(identity: ThreemaIdentity("PARTNER1"), groupIdentity: nil, _type: .off),
+            sync: false
+        )
+
+        XCTAssertFalse(pushSettingManager.canSendPush(for: message, isReaction: true))
+    }
+
+    /// Group with one message of ours and one incoming message with the same text
+    private func makeGroupWithOwnMessage(text: String = "Test message") -> (
+        pushSettingManager: PushSettingManager,
+        groupIdentity: GroupIdentity,
+        ownMessage: BaseMessageEntity,
+        incomingMessage: BaseMessageEntity
+    ) {
+        let myIdentityStoreMock = MyIdentityStoreMock()
+        let userSettingsMock = UserSettingsMock()
+        let groupManagerMock = GroupManagerMock(myIdentityStoreMock)
+        let pushSettingManager = PushSettingManager(
+            userSettings: userSettingsMock,
+            groupManager: groupManagerMock,
+            entityManager: testDatabase.entityManager,
+            markupParser: MarkupParser(),
+            taskManager: TaskManagerMock(),
+            isWorkApp: false
+        )
+
+        let dbPreparer = testDatabase.preparer
+        let (creator, groupEntity, conversation) = dbPreparer.createGroup(
+            groupCreatorIdentity: "CREATOR1",
+            members: ["CREATOR1", "MEMBER01"],
+            myIdentityStoreMock: myIdentityStoreMock
+        )
+        let (ownMessage, incomingMessage) = dbPreparer.save {
+            (
+                dbPreparer.createTextMessage(
+                    conversation: conversation,
+                    text: text,
+                    isOwn: true,
+                    sender: nil,
+                    remoteSentDate: nil
+                ),
+                dbPreparer.createTextMessage(
+                    conversation: conversation,
+                    text: text,
+                    isOwn: false,
+                    sender: creator,
+                    remoteSentDate: .now
+                )
+            )
+        }
+
+        let group = Group(
+            myIdentityStore: myIdentityStoreMock,
+            userSettings: userSettingsMock,
+            pushSettingManager: PushSettingManagerMock(),
+            groupEntity: groupEntity,
+            conversation: conversation,
+            lastSyncRequest: nil
+        )
+        groupManagerMock.getGroupReturns.append(group)
+
+        return (pushSettingManager, group.groupIdentity, ownMessage, incomingMessage)
+    }
 }

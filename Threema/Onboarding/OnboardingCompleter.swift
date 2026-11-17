@@ -30,6 +30,7 @@ protocol OnboardingCompleting {
     func complete(
         remoteSecretManager: any RemoteSecretManagerProtocol,
         keychainManager: any KeychainManagerProtocol,
+        businessInjector: any BusinessInjectorProtocol,
         setupConfiguration: SetupConfiguration?,
         bootstrapMDM: any BootstrapMDMSetupProtocol
     ) async throws -> AppDependencyContainer
@@ -55,6 +56,7 @@ final class OnboardingCompleter: OnboardingCompleting {
     func complete(
         remoteSecretManager: any RemoteSecretManagerProtocol,
         keychainManager: any KeychainManagerProtocol,
+        businessInjector: any BusinessInjectorProtocol,
         setupConfiguration: SetupConfiguration?,
         bootstrapMDM: any BootstrapMDMSetupProtocol
     ) async throws -> AppDependencyContainer {
@@ -69,15 +71,7 @@ final class OnboardingCompleter: OnboardingCompleting {
             safeComponentsFactory: LiveSafeComponentsFactory()
         )
 
-        let businessInjector = BusinessInjector(
-            remoteSecretManager: remoteSecretManager
-        )
-
-        // Migrations — idempotent, safe to call even if already run by performRestore
-        try await completionService.runMigrationsAndSetup(
-            remoteSecretManager: remoteSecretManager,
-            businessInjector: businessInjector
-        )
+        try await completionService.runSetup()
 
         // Wizard-specific steps — only when coming from the setup wizard
         if let config = setupConfiguration {

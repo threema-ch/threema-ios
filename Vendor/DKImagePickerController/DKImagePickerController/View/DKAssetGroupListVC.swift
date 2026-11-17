@@ -159,6 +159,15 @@ class DKAssetGroupListVC: UITableViewController, DKGroupDataManagerObserver {
         super.viewDidLoad()
 
         self.tableView.register(DKAssetGroupCell.self, forCellReuseIdentifier: DKImageGroupCellIdentifier)
+        /***** BEGIN THREEMA MODIFICATION: trait change registration *********/
+        // Group thumbnails are fetched in pixels, refetch them for the new display scale
+        registerForTraitChanges([
+            UITraitVerticalSizeClass.self,
+            UITraitHorizontalSizeClass.self
+        ]) { (self: DKAssetGroupListVC, _) in
+            self.tableView.reloadData()
+        }
+        /***** END THREEMA MODIFICATION: trait change registration *********/
         self.tableView.rowHeight = 70
         self.tableView.separatorStyle = .none
 
@@ -229,7 +238,9 @@ class DKAssetGroupListVC: UITableViewController, DKGroupDataManagerObserver {
         cell?.accessoryView = nil
         cell?.selectedBackgroundView?.isHidden = false
         tableView.reloadData()
-        DKPopoverViewController.dismissPopoverViewController()
+        if let window = self.view.window {
+            DKPopoverViewController.dismissPopoverViewController(in: window)
+        }
     }
 
     // MARK: - UITableViewDelegate, UITableViewDataSource methods
@@ -264,7 +275,7 @@ class DKAssetGroupListVC: UITableViewController, DKGroupDataManagerObserver {
         } else {
             getImageManager().groupDataManager.fetchGroupThumbnailForGroup(
                 assetGroup.groupId,
-                size: CGSize(width: tableView.rowHeight, height: tableView.rowHeight).toPixel(),
+                size: CGSize(width: tableView.rowHeight, height: tableView.rowHeight).toPixel(traitCollection: self.traitCollection),
                 options: self.groupThumbnailRequestOptions) { image, info in
                     if cell.tag == tag {
                         cell.thumbnailImageView.image = image
@@ -290,8 +301,8 @@ class DKAssetGroupListVC: UITableViewController, DKGroupDataManagerObserver {
         }
         
         let assetGroup = getImageManager().groupDataManager.fetchGroupWithGroupId(groups[indexPath.row])
-        if ((assetGroup.momentsResult == nil) || assetGroup.momentsLoaded) {
-            DKPopoverViewController.dismissPopoverViewController()
+        if ((assetGroup.momentsResult == nil) || assetGroup.momentsLoaded), let window = self.view.window {
+            DKPopoverViewController.dismissPopoverViewController(in: window)
         }
         
         self.selectedGroup = groups[indexPath.row]

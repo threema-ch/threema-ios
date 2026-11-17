@@ -64,6 +64,27 @@ extension NSPredicate {
         )
     }
 
+    /// Groups, distribution lists and 1:1 conversations whose contact is not hidden
+    ///
+    /// Group conversations are matched explicitly, because their `contact` is the group creator, which might be hidden.
+    public static var conversationContactIsVisible: NSPredicate {
+        .or(
+            .conversationIsGroup,
+            NSPredicate(
+                format: "%K == nil",
+                #keyPath(ConversationEntity.contact)
+            ),
+            NSPredicate(
+                format: "contact.%K == nil",
+                ContactEntity.hiddenKeyPath
+            ),
+            NSPredicate(
+                format: "contact.%K == 0",
+                ContactEntity.hiddenKeyPath
+            )
+        )
+    }
+
     static func conversationWithFirstName(_ firstName: String) -> NSPredicate {
         .and(
             .not(.conversationIsGroup),

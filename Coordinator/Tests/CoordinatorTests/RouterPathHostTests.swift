@@ -180,7 +180,7 @@ private struct BoundFixture {
         // deterministically while preserving the delegate callback sequence.
         UIView.setAnimationsEnabled(false)
 
-        let window = UIWindow(frame: UIScreen.main.bounds)
+        let window = UIWindow(frame: .zero)
         let navigationController = UINavigationController()
         let rootViewController = UIViewController()
         rootViewController.title = "root"

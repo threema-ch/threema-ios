@@ -56,11 +56,17 @@ final class MessageForwardingFileMessageView: UIStackView {
     private lazy var dividerView: UIView = {
         let view = UIView()
         view.backgroundColor = .separator
+        let heightConstraint = view.heightAnchor.constraint(
+            equalToConstant: Layout.dividerHeight / traitCollection.displayScale
+        )
+        dividerHeightConstraint = heightConstraint
         NSLayoutConstraint.activate([
-            view.heightAnchor.constraint(equalToConstant: Layout.dividerHeight / UIScreen.main.scale),
+            heightConstraint,
         ])
         return view
     }()
+
+    private var dividerHeightConstraint: NSLayoutConstraint?
 
     private lazy var toggleStackView: UIStackView = {
         let stackView = UIStackView(arrangedSubviews: [toggleLabel, toggleSwitch])
@@ -418,7 +424,11 @@ final class MessageForwardingFileMessageView: UIStackView {
     }
 
     private func setupTraitRegistration() {
-        let traits: [UITrait] = [UITraitVerticalSizeClass.self, UITraitPreferredContentSizeCategory.self]
+        let traits: [UITrait] = [
+            UITraitVerticalSizeClass.self,
+            UITraitPreferredContentSizeCategory.self,
+            UITraitDisplayScale.self,
+        ]
         registerForTraitChanges(traits) { [weak self] (_: Self, previous) in
             guard let self else {
                 return
@@ -428,6 +438,9 @@ final class MessageForwardingFileMessageView: UIStackView {
             }
             if previous.verticalSizeClass != traitCollection.verticalSizeClass {
                 updateContentForCurrenSizeClass()
+            }
+            if previous.displayScale != traitCollection.displayScale {
+                dividerHeightConstraint?.constant = Layout.dividerHeight / traitCollection.displayScale
             }
         }
     }

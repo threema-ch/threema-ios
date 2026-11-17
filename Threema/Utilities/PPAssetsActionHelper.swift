@@ -81,15 +81,31 @@ final class PPAssetsActionHelper: NSObject {
         UIDevice.current.userInterfaceIdiom == .phone
     }
     
+    @available(*, deprecated, message: "Use isSizeOrLarger(height:bounds:) instead")
     func isSizeOrLarger(height: Heights) -> Bool {
-        UIScreen.main.bounds.size.height >= height.rawValue
+        isSizeOrLarger(height: height, bounds: UIScreen.main.bounds)
     }
     
+    func isSizeOrLarger(height: Heights, bounds: CGRect) -> Bool {
+        bounds.size.height >= height.rawValue
+    }
+    
+    @available(*, deprecated, message: "Use IS_4_7_INCHES_OR_LARGER(bounds:) instead")
     func IS_4_7_INCHES_OR_LARGER() -> Bool {
-        isPhone() && isSizeOrLarger(height: .Inches_4_7)
+        IS_4_7_INCHES_OR_LARGER(bounds: UIScreen.main.bounds)
     }
     
+    func IS_4_7_INCHES_OR_LARGER(bounds: CGRect) -> Bool {
+        isPhone() && isSizeOrLarger(height: .Inches_4_7, bounds: bounds)
+    }
+    
+    @available(*, deprecated, message: "Use buildAction(bounds:) instead")
     func buildAction() -> PPAssetsActionController {
+        buildAction(bounds: UIScreen.main.bounds)
+    }
+    
+    /// - Parameter bounds: Bounds of the view controller presenting the action controller
+    func buildAction(bounds: CGRect) -> PPAssetsActionController {
         var options = [PPOption]()
         
         let shareLocationImage = UIImage(
@@ -171,7 +187,7 @@ final class PPAssetsActionHelper: NSObject {
         
         config.fetchLimit = Int(UserSettings.shared().previewLimit)
         
-        config.buttonHeight = IS_4_7_INCHES_OR_LARGER() ? 50.0 : 42.0
+        config.buttonHeight = IS_4_7_INCHES_OR_LARGER(bounds: bounds) ? 50.0 : 42.0
         
         if Colors.theme == .dark {
             config.backgroundColor = UIColor(red: 0.0, green: 0.0, blue: 0.0, alpha: 0.9)

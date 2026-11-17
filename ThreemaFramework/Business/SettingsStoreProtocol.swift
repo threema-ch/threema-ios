@@ -32,6 +32,8 @@ public protocol SettingsStoreProtocol: AnyObject {
     var masterDndEndTime: String? { get set }
     var notificationType: NotificationType { get set }
     var pushShowPreview: Bool { get set }
+    var reactionNotificationsOneToOneEnabled: Bool { get set }
+    var reactionNotificationsGroupEnabled: Bool { get set }
     
     // Chat
     var wallpaperStore: WallpaperStoreProtocol { get }

@@ -5,7 +5,23 @@ import ThreemaFramework
 import ThreemaMacros
 
 enum NotificationBannerHelper {
-    static func newBanner(baseMessage: BaseMessageEntity) {
+
+    /// Banners about the reactions to a message, so a new reaction replaces its banner instead of queueing another one.
+    /// Only accessed on the main queue.
+    private static var reactionBanners = [NSManagedObjectID: FloatingNotificationBanner]()
+
+    /// Shows a banner about a message
+    /// - Parameters:
+    ///   - presentingViewController: View controller to show the banner on. Pass the root view controller to keep the
+    ///     banner visible while a sheet, alert or other modal is presented over it: banners shown on a presented view
+    ///     controller end up inside sheets and alerts.
+    ///   - baseMessage: Message the banner is about
+    ///   - reactionBody: Pass the text if the banner is about the reactions to a message of ourselves
+    static func newBanner(
+        on presentingViewController: UIViewController,
+        baseMessage: BaseMessageEntity,
+        reactionBody: String? = nil
+    ) {
         DispatchQueue.main.async {
             // Reload CoreData object because of concurrency problem
             let businessInjector = BusinessInjector.ui
@@ -58,7 +74,7 @@ enum NotificationBannerHelper {
             let bodyFont = UIFont.preferredFont(forTextStyle: .subheadline)
             
             if message.conversation.conversationCategory == .private {
-                title = #localize("private_message_label")
+                title = reactionBody == nil ? #localize("private_message_label") : #localize("private_reaction_label")
                 thumbnailImageView = nil
                 
                 if message.isGroupMessage {
@@ -104,19 +120,33 @@ enum NotificationBannerHelper {
             banner.subtitleLabel?.numberOfLines = 2
             
             if message.conversation.conversationCategory != .private {
-                banner.subtitleLabel?.attributedText = message.previewAttributedText(
-                    for: .notificationBanner,
-                    settingsStore: businessInjector.settingsStore
-                )
+                if let reactionBody {
+                    banner.subtitleLabel?.text = reactionBody
+                }
+                else {
+                    banner.subtitleLabel?.attributedText = message.previewAttributedText(
+                        for: .notificationBanner,
+                        settingsStore: businessInjector.settingsStore
+                    )
+                }
+            }
+
+            if reactionBody != nil {
+                replaceReactionBanner(for: baseMessage.objectID, with: banner)
             }
             
             banner.onTap = {
                 banner.bannerQueue.dismissAllForced()
-                // Switch to selected conversation
+                // Switch to selected conversation, scrolled to the reacted message for a reaction banner
+                var info: [AnyHashable: Any] = [kKeyConversation: message.conversation]
+                if reactionBody != nil {
+                    info[kKeyMessage] = message
+                    info[kKeyMessageMarking] = ShowConversationInformation.MessageMarking.highlight
+                }
                 NotificationCenter.default.post(
                     name: NSNotification.Name(rawValue: kNotificationShowConversation),
                     object: nil,
-                    userInfo: [kKeyConversation: message.conversation]
+                    userInfo: info
                 )
             }
             
@@ -124,11 +154,10 @@ enum NotificationBannerHelper {
                 banner.bannerQueue.removeAll()
             }
             let shadowEdgeInsets = UIEdgeInsets(top: 8, left: 2, bottom: 0, right: 2)
-            let topViewController = SceneDelegate.current?.keyWindowCurrentTopViewController
-            let edgeInsets = bannerEdgeInsets(in: topViewController?.view)
+            let edgeInsets = bannerEdgeInsets(in: presentingViewController.view)
             if Colors.theme == .dark {
                 banner.show(
-                    on: topViewController,
+                    on: presentingViewController,
                     edgeInsets: edgeInsets,
                     shadowColor: Colors.shadowNotification,
                     shadowOpacity: 0.5,
@@ -138,7 +167,7 @@ enum NotificationBannerHelper {
             }
             else {
                 banner.show(
-                    on: topViewController,
+                    on: presentingViewController,
                     edgeInsets: edgeInsets,
                     shadowColor: Colors.shadowNotification,
                     shadowOpacity: 1.0,
@@ -156,7 +185,7 @@ enum NotificationBannerHelper {
     /// its 10 pt top spacer instead of 44 pt (Dynamic Island) or 40 pt (notch). This puts the banner under the status
     /// bar, so we add the skipped difference ourselves, using the same inset thresholds as the library's
     /// `hasDynamicIsland()` / `isNotchFeaturedIPhone()` and a regular vertical size class instead of portrait.
-    /// - Parameter view: View the banner is added to (the parent view controller's view or the window)
+    /// - Parameter view: View the banner is added to (the parent view controller's view)
     private static func bannerEdgeInsets(in view: UIView?) -> UIEdgeInsets {
         var edgeInsets = UIEdgeInsets(top: 8, left: 8, bottom: 8, right: 8)
         if #available(iOS 27.0, *), let view, view.traitCollection.verticalSizeClass == .regular {
@@ -169,6 +198,28 @@ enum NotificationBannerHelper {
             }
         }
         return edgeInsets
+    }
+
+    /// Removes the banner about the previous reactions to a message, whether queued or visible, and keeps track of the
+    /// new one
+    private static func replaceReactionBanner(
+        for messageObjectID: NSManagedObjectID,
+        with banner: FloatingNotificationBanner
+    ) {
+        if let previousBanner = reactionBanners[messageObjectID] {
+            if previousBanner.isDisplaying == true {
+                previousBanner.dismiss()
+            }
+            NotificationBannerQueue.default.removeBanner(previousBanner)
+        }
+
+        // Forget the banners that are gone anyway
+        let queuedBanners = NotificationBannerQueue.default.banners
+        reactionBanners = reactionBanners.filter { _, reactionBanner in
+            reactionBanner.isDisplaying == true || queuedBanners.contains { $0 === reactionBanner }
+        }
+
+        reactionBanners[messageObjectID] = banner
     }
 
     private static func getThumbnailAudio() -> UIImageView? {
@@ -194,6 +245,7 @@ enum NotificationBannerHelper {
     }
 
     static func newBannerForStartGroupCall(
+        on presentingViewController: UIViewController,
         conversationManagedObjectID: NSManagedObjectID,
         title: String,
         body: String,
@@ -229,7 +281,7 @@ enum NotificationBannerHelper {
             colors: CustomBannerColors(),
             sideViewSize: 50.0
         )
-        // See `newBanner(baseMessage:)`
+        // See `newBanner(on:baseMessage:reactionBody:)`
         banner.overrideUserInterfaceStyle = Colors.themeUserInterfaceStyle
 
         banner.identifier = identifier
@@ -263,10 +315,10 @@ enum NotificationBannerHelper {
             banner.bannerQueue.removeAll()
         }
         let shadowEdgeInsets = UIEdgeInsets(top: 8, left: 2, bottom: 0, right: 2)
-        // Without a parent view controller the banner is added to the window
-        let edgeInsets = bannerEdgeInsets(in: SceneDelegate.current?.window)
+        let edgeInsets = bannerEdgeInsets(in: presentingViewController.view)
         if Colors.theme == .dark {
             banner.show(
+                on: presentingViewController,
                 edgeInsets: edgeInsets,
                 shadowColor: Colors.shadowNotification,
                 shadowOpacity: 0.5,
@@ -276,6 +328,7 @@ enum NotificationBannerHelper {
         }
         else {
             banner.show(
+                on: presentingViewController,
                 edgeInsets: edgeInsets,
                 shadowColor: Colors.shadowNotification,
                 shadowOpacity: 1.0,

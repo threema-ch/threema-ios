@@ -78,7 +78,9 @@ struct EmojiReactionModal: View {
                 }
             }
             .id(reactionEntry)
-            .frame(idealWidth: UIScreen.main.bounds.width / 5.5)
+            .containerRelativeFrame(.horizontal) { length, _ in
+                length / 5.5
+            }
             .onTapGesture {
                 withAnimation {
                     selectedIndex = index
@@ -217,7 +219,16 @@ extension EmojiReactionModal {
 
 typealias EmojiReactionModalViewController = UIHostingController<EmojiReactionModal>
 extension EmojiReactionModalViewController {
+    @available(*, deprecated, message: "Use sheet(_:in:) with the window of the presenting view controller")
     static func sheet(_ reactionsManager: any ReactionsModalDelegate) -> EmojiReactionModalViewController {
+        sheet(reactionsManager, in: UIApplication.shared.windows.first(where: \.isKeyWindow))
+    }
+    
+    /// - Parameter window: Window the sheet is presented in, its bottom safe area is removed from the sheet
+    static func sheet(
+        _ reactionsManager: any ReactionsModalDelegate,
+        in window: UIWindow?
+    ) -> EmojiReactionModalViewController {
         UIHostingController(
             rootView: EmojiReactionModal(model: .init(reactionsManager))
         ).then { vc in
@@ -226,7 +237,6 @@ extension EmojiReactionModalViewController {
                 sheetController.prefersGrabberVisible = true
                 sheetController.prefersScrollingExpandsWhenScrolledToEdge = true
             }
-            let window = UIApplication.shared.windows.first(where: \.isKeyWindow)
             let inverseSafeAreaInset = window?.safeAreaInsets.bottom ?? 0
             vc.additionalSafeAreaInsets = UIEdgeInsets(top: 0, left: 0, bottom: -inverseSafeAreaInset, right: 0)
         }

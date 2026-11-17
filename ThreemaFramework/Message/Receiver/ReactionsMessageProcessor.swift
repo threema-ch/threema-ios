@@ -66,8 +66,11 @@ final class ReactionsMessageProcessor: NSObject {
                     return nil
                 }
 
+                // Own reaction are always marked as read directly
+                let isOwnReaction = abstractMessage.fromIdentity == MyIdentityStore.shared().identity
                 let reactionEntity = self.entityManager.entityCreator.messageReactionEntity(
                     reaction: reactionString,
+                    readAt: isOwnReaction ? abstractMessage.date : nil,
                     message: message
                 )
                 reactionEntity.date = abstractMessage.date
@@ -154,8 +157,11 @@ final class ReactionsMessageProcessor: NSObject {
                     return nil
                 }
                 
+                // Own reaction are always marked as read directly
+                let isOwnReaction = abstractMessage.fromIdentity == MyIdentityStore.shared().identity
                 let reactionEntity = self.entityManager.entityCreator.messageReactionEntity(
                     reaction: reactionString,
+                    readAt: isOwnReaction ? abstractMessage.date : nil,
                     message: message
                 )
                 reactionEntity.date = abstractMessage.date
@@ -223,7 +229,11 @@ final class ReactionsMessageProcessor: NSObject {
         }
             
         // Map legacy reaction to new reaction
-        let reaction = entityManager.entityCreator.messageReactionEntity(reaction: ack ? "👍" : "👎", message: message)
+        let reaction = entityManager.entityCreator.messageReactionEntity(
+            reaction: ack ? "👍" : "👎",
+            readAt: date,
+            message: message
+        )
         reaction.creator = contact
         reaction.date = date
     }

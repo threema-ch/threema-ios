@@ -125,25 +125,7 @@ extension WCSessionManager {
         }
 
         Task { @MainActor in
-            let mainTabBar = SharedAppProvider.tabBarController
-            
-            guard
-                let mainTabBar,
-                let viewControllers = mainTabBar.viewControllers
-            else {
-                UIApplication.shared.isIdleTimerDisabled = false
-                return
-            }
-
-            guard viewControllers.count > kChatTabBarIndex else {
-                UIApplication.shared.isIdleTimerDisabled = false
-                return
-            }
-
-            guard
-                let chatNavVc = viewControllers[Int(kChatTabBarIndex)] as? UINavigationController,
-                let curChatVc = chatNavVc.topViewController as? ChatViewController
-            else {
+            guard let curChatVc = SharedAppProvider.appCoordinator?.visibleChatViewController else {
                 UIApplication.shared.isIdleTimerDisabled = false
                 return
             }

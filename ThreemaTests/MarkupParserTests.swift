@@ -435,13 +435,22 @@ final class MarkupParserTests: XCTestCase {
     }
 
     func testParseURLWithDataDetectorForLinks() throws {
+        let schemelessURLString: String =
+            if #available(iOS 27.2, *) {
+                // `NSDataDetector` defaults to https for URLs without a scheme since iOS 27
+                "https://threema.com"
+            }
+            else {
+                "http://threema.com"
+            }
+
         let tests: [(
             expectedAttributedString: String,
             expectedURLString: String
         )] = [
             (
                 "threema.com",
-                "http://threema.com"
+                schemelessURLString
             ),
             (
                 "http://threema.com",

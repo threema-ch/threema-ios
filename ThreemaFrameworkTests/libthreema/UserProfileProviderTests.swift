@@ -100,10 +100,10 @@ struct UserProfileProviderTests {
         let sut = makeSUT(profileStore: profileStore)
 
         profileStore.profile.workAvailabilityStatus = nil
-        #expect(try sut.get().workAvailabilityStatus == libthreemaSwift.WorkAvailabilityStatus.none)
+        #expect(try sut.get().workAvailabilityStatus == nil)
 
         profileStore.profile.workAvailabilityStatus = ProfileStatus(category: .none, text: nil)
-        #expect(try sut.get().workAvailabilityStatus == UserStatus.none)
+        #expect(try sut.get().workAvailabilityStatus == nil)
 
         profileStore.profile.workAvailabilityStatus = ProfileStatus(category: .unavailable, text: nil)
         #expect(try sut.get().workAvailabilityStatus == UserStatus.unavailable(""))

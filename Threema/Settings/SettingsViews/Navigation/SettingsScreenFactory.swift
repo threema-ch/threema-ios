@@ -216,7 +216,7 @@ final class SettingsScreenFactory {
                 LearnMoreSheetView(model: model)
             }
             let vc = UIHostingController(rootView: rootView)
-            coordinator?.presentingViewController?.present(vc, animated: true)
+            coordinator?.splitViewController.present(vc, animated: true)
         }
 
         model.onLocalDataBackupLearnMoreButtonTapped = { [weak self] in
@@ -228,7 +228,7 @@ final class SettingsScreenFactory {
                 LearnMoreSheetView(model: model)
             }
             let vc = UIHostingController(rootView: rootView)
-            coordinator?.presentingViewController?.present(vc, animated: true)
+            coordinator?.splitViewController.present(vc, animated: true)
         }
 
         return BackupCenterView(model: model)
@@ -329,10 +329,7 @@ final class SettingsScreenFactory {
     }
 
     private func makeCreatingBackupScreen() -> some View {
-        let model = LocalBackupCreateBackupViewModel(
-            manager: backupCreateManager,
-            userSettings: BusinessInjector.ui.userSettings
-        )
+        let model = LocalBackupCreateBackupViewModel(manager: backupCreateManager)
 
         model.onCancelButtonTapped = { [weak self] in
             self?.coordinator?.setPath([.backups(.settings)], animated: true)

@@ -588,14 +588,14 @@ extension URLHandler {
             return true
         }
         else if item.type == "ch.threema.myid" {
-            guard let tabBar = SharedAppProvider.tabBarController else {
+            guard let appCoordinator = SharedAppProvider.appCoordinator else {
                 return false
             }
-            tabBar.selectedIndex = Int(kMyIdentityTabBarIndex)
+            appCoordinator.switchTabIfNeeded(to: .profile)
             return true
         }
         else if item.type == "ch.threema.scanid" {
-            guard let tabBar = SharedAppProvider.tabBarController else {
+            guard let appCoordinator = SharedAppProvider.appCoordinator else {
                 return false
             }
             if !DeviceCapabilitiesManager().hasVideoCaptureDevice {
@@ -619,8 +619,9 @@ extension URLHandler {
             model.onCompletion = { result in
                 self.handleScannerResult(result)
             }
-            model.onCancel = {
-                tabBar.dismiss(animated: true)
+            model.onCancel = { [weak appCoordinator] in
+                // Dismiss from the root, as before, so the whole scanner presentation goes away.
+                appCoordinator?.rootViewController.dismiss(animated: true)
             }
             let rootView = QRCodeScannerView(model: model)
             let viewController = UIHostingController(rootView: rootView)

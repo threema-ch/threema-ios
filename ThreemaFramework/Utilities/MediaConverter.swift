@@ -1,6 +1,21 @@
 extension MediaConverter {
     
-    public static func downscaleImage(image: UIImage, toSize targetSize: CGSize, scale: CGFloat = 0.0) -> UIImage {
+    @available(*, deprecated, message: "Use downscaleImage(image:toSize:traitCollection:) instead")
+    public static func downscaleImage(image: UIImage, toSize targetSize: CGSize) -> UIImage {
+        downscaleImage(image: image, toSize: targetSize, traitCollection: UITraitCollection.current)
+    }
+    
+    public static func downscaleImage(
+        image: UIImage,
+        toSize targetSize: CGSize,
+        traitCollection: UITraitCollection
+    ) -> UIImage {
+        downscaleImage(image: image, toSize: targetSize, scale: traitCollection.displayScale)
+    }
+    
+    /// - Parameter scale: Display scale of the target. `0.0` falls back to the main screen scale, which is wrong
+    ///   in multi-window environments: pass the scale of the trait collection the image is displayed in instead
+    public static func downscaleImage(image: UIImage, toSize targetSize: CGSize, scale: CGFloat) -> UIImage {
         let actualScaleFactor = (scale == 0.0) ? UIScreen.main.scale : scale
         let size = image.size
         let imageScaleFactor = image.scale

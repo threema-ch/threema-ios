@@ -4,13 +4,30 @@ import PromiseKit
 import ThreemaEssentials
 
 public protocol UnreadMessagesProtocol {
+    /// Sends read receipts for all unread messages in conversation, for group conversation just update message read.
+    /// Will also mark all reactions for messages in the conversation as read.
+    /// - Warning: Use this function within db context perform block
+    /// - Parameters:
+    ///   - conversation: Conversation to send receipts
+    ///   - isAppInBackground: If App is in background
+    /// - Returns: The number of messages that were marked as read or zero if none were marked as read
     func read(for conversation: ConversationEntity, isAppInBackground: Bool) -> Int
+    
+    /// Sends read receipts for given unread messages in conversation, for group conversation just update message read.
+    /// Will also mark all reactions for messages in the conversation as read.
+    /// - Warning: Use this function within db context perform block
+    /// - Parameters:
+    ///   - conversation: Conversation to send receipts
+    ///   - isAppInBackground: If App is in background
+    /// - Returns: The number of messages that were marked as read or zero if none were marked as read
     func read(for messages: [BaseMessageEntity], in conversation: ConversationEntity, isAppInBackground: Bool) -> Int
     
     @discardableResult
     func count(for conversation: ConversationEntity, withPerformBlockAndWait: Bool) -> Int
+   
     @discardableResult
     func totalCount() -> Int
+   
     @discardableResult
     func totalCount(doCalcUnreadMessagesCountOf: Set<ConversationEntity>, withPerformBlockAndWait: Bool) -> Int
 }
@@ -157,16 +174,14 @@ public final class UnreadMessages: UnreadMessagesProtocol {
         return totalCount
     }
     
-    /// Sends read receipts for all unread messages in conversation, for group conversation just update message read.
-    /// - Warning: Use this function within db context perform block
-    /// - Parameters:
-    ///   - conversation: Conversation to send receipts
-    ///   - isAppInBackground: If App is in background
-    /// - Returns: The number of messages that were marked as read or zero if none were marked as read
     public func read(for conversation: ConversationEntity, isAppInBackground: Bool) -> Int {
-
         // Only send receipt if not Group
         guard let messages = entityManager.entityFetcher.unreadMessages(for: conversation) else {
+            // Reactions are read below otherwise, even if there is no unread message. They are only read if we are
+            // actually looking at the chat.
+            if !isAppInBackground, let reactionsToRead = entityManager.entityFetcher.unreadReactions(in: conversation) {
+                updateReactionRead(reactions: reactionsToRead)
+            }
             return 0
         }
 
@@ -183,7 +198,12 @@ public final class UnreadMessages: UnreadMessagesProtocol {
             DDLogVerbose("App is not in foreground do not mark as read.")
             return 0
         }
-
+        
+        // Read reactions whenever we read all message in a chat too
+        if let reactionsToRead = entityManager.entityFetcher.unreadReactions(in: conversation) {
+            updateReactionRead(reactions: reactionsToRead)
+        }
+        
         // Unread messages are only incoming messages
         var unreadMessages = [BaseMessageEntity]()
 
@@ -236,6 +256,21 @@ public final class UnreadMessages: UnreadMessagesProtocol {
                 message.readDate = Date()
                 DDLogVerbose("Message marked as read: \(message.id.hexString)")
             }
+        }
+    }
+    
+    private func updateReactionRead(reactions: [MessageReactionEntity]) {
+        // Called whenever a chat is read, most of the time without anything to save
+        guard !reactions.isEmpty else {
+            return
+        }
+
+        entityManager.performAndWaitSave {
+            let readAt = Date()
+            for reaction in reactions {
+                reaction.readAt = readAt
+            }
+            DDLogVerbose("\(reactions.count) reactions marked as read.")
         }
     }
 }

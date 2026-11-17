@@ -790,6 +790,93 @@ final class BlobManagerTests: XCTestCase {
     }
     
     @MainActor
+    func testAutoSyncReflectedOutgoingImage() async throws {
+        
+        // Arrange
+        var fileMessageEntity: FileMessageEntity!
+        let blobID = BytesUtility.generateBlobID()
+        let thumbnailID = BytesUtility.generateBlobID()
+        
+        databasePreparer.save {
+            fileMessageEntity = databasePreparer.createFileMessageEntity(
+                conversation: conversation,
+                encryptionKey: encryptionKey,
+                blobID: blobID,
+                blobThumbnailID: thumbnailID,
+                mimeType: "image/jpeg",
+                type: NSNumber(integerLiteral: 1),
+                isOwn: true
+            )
+        }
+        
+        let expectationThumbnail = expectation(description: "Basic Incoming Thumbnail Sync")
+        let thumbnailURL = try await blobURL(with: baseURLString, and: thumbnailID, direction: .incoming)
+        let response = HTTPURLResponse(url: thumbnailURL, statusCode: 200, httpVersion: nil, headerFields: nil)
+        
+        URLProtocolMock.mockResponses[thumbnailURL] = (
+            (nil, encryptedThumbnailData, response, nil),
+            {
+                expectationThumbnail.fulfill()
+            }
+        )
+        
+        let expectationDoneThumbnail = expectation(description: "Basic Incoming Blob Thumbnail Done")
+        let doneURLThumbnail = try await doneURL(with: baseURLString, and: thumbnailID)
+        let doneResponseThumbnail = HTTPURLResponse(
+            url: doneURLThumbnail,
+            statusCode: 200,
+            httpVersion: nil,
+            headerFields: nil
+        )
+        URLProtocolMock.mockResponses[doneURLThumbnail] = (
+            (nil, encryptedBlobData, doneResponseThumbnail, nil),
+            {
+                expectationDoneThumbnail.fulfill()
+            }
+        )
+        
+        let expectationData = expectation(description: "Basic Incoming Blob Sync")
+        let dataURL = try await blobURL(with: baseURLString, and: blobID, direction: .incoming)
+        
+        URLProtocolMock.mockResponses[dataURL] = (
+            (nil, encryptedBlobData, response, nil),
+            {
+                expectationData.fulfill()
+            }
+        )
+        
+        let expectationDoneData = expectation(description: "Basic Incoming Blob Data Done")
+        let doneURLData = try await doneURL(with: baseURLString, and: blobID)
+        let doneResponseData = HTTPURLResponse(url: doneURLData, statusCode: 200, httpVersion: nil, headerFields: nil)
+        URLProtocolMock.mockResponses[doneURLData] = (
+            (nil, encryptedBlobData, doneResponseData, nil),
+            {
+                expectationDoneData.fulfill()
+            }
+        )
+        
+        // Act
+        await blobManager.autoSyncBlobs(for: fileMessageEntity.objectID)
+        
+        // TODO: (IOS-3875) Timeout
+        await fulfillment(
+            of: [expectationThumbnail, expectationDoneThumbnail, expectationData, expectationDoneData],
+            timeout: 50
+        )
+        
+        // Assert
+        let actualThumbnailData = try XCTUnwrap(fileMessageEntity.blobThumbnail)
+        let actualBlobData = try XCTUnwrap(fileMessageEntity.blobData)
+        let blobProgress = fileMessageEntity.blobProgress
+        let blobError = fileMessageEntity.blobError
+        
+        XCTAssertEqual(testThumbnailData, actualThumbnailData)
+        XCTAssertEqual(testBlobData, actualBlobData)
+        XCTAssertEqual(blobProgress, nil)
+        XCTAssertEqual(blobError, false)
+    }
+    
+    @MainActor
     func testAutoSyncGIF() async throws {
         
         // Arrange
@@ -1051,6 +1138,93 @@ final class BlobManagerTests: XCTestCase {
     }
     
     @MainActor
+    func testAutoSyncReflectedOutgoingVoice() async throws {
+        
+        // Arrange
+        var fileMessageEntity: FileMessageEntity!
+        let blobID = BytesUtility.generateBlobID()
+        let thumbnailID = BytesUtility.generateBlobID()
+        
+        databasePreparer.save {
+            fileMessageEntity = databasePreparer.createFileMessageEntity(
+                conversation: conversation,
+                encryptionKey: encryptionKey,
+                blobID: blobID,
+                blobThumbnailID: thumbnailID,
+                mimeType: "audio/aac",
+                type: NSNumber(integerLiteral: 1),
+                isOwn: true
+            )
+        }
+        
+        let expectationThumbnail = expectation(description: "Basic Incoming Thumbnail Sync")
+        let thumbnailURL = try await blobURL(with: baseURLString, and: thumbnailID, direction: .incoming)
+        let response = HTTPURLResponse(url: thumbnailURL, statusCode: 200, httpVersion: nil, headerFields: nil)
+        
+        URLProtocolMock.mockResponses[thumbnailURL] = (
+            (nil, encryptedThumbnailData, response, nil),
+            {
+                expectationThumbnail.fulfill()
+            }
+        )
+        
+        let expectationDoneThumbnail = expectation(description: "Basic Incoming Blob Thumbnail Done")
+        let doneURLThumbnail = try await doneURL(with: baseURLString, and: thumbnailID)
+        let doneResponseThumbnail = HTTPURLResponse(
+            url: doneURLThumbnail,
+            statusCode: 200,
+            httpVersion: nil,
+            headerFields: nil
+        )
+        URLProtocolMock.mockResponses[doneURLThumbnail] = (
+            (nil, encryptedBlobData, doneResponseThumbnail, nil),
+            {
+                expectationDoneThumbnail.fulfill()
+            }
+        )
+        
+        let expectationData = expectation(description: "Basic Incoming Blob Sync")
+        let dataURL = try await blobURL(with: baseURLString, and: blobID, direction: .incoming)
+        
+        URLProtocolMock.mockResponses[dataURL] = (
+            (nil, encryptedBlobData, response, nil),
+            {
+                expectationData.fulfill()
+            }
+        )
+        
+        let expectationDoneData = expectation(description: "Basic Incoming Blob Data Done")
+        let doneURLData = try await doneURL(with: baseURLString, and: blobID)
+        let doneResponseData = HTTPURLResponse(url: doneURLData, statusCode: 200, httpVersion: nil, headerFields: nil)
+        URLProtocolMock.mockResponses[doneURLData] = (
+            (nil, encryptedBlobData, doneResponseData, nil),
+            {
+                expectationDoneData.fulfill()
+            }
+        )
+        
+        // Act
+        await blobManager.autoSyncBlobs(for: fileMessageEntity.objectID)
+        
+        // TODO: (IOS-3875) Timeout
+        await fulfillment(
+            of: [expectationThumbnail, expectationDoneThumbnail, expectationData, expectationDoneData],
+            timeout: 50
+        )
+        
+        // Assert
+        let actualThumbnailData = try XCTUnwrap(fileMessageEntity.blobThumbnail)
+        let actualBlobData = try XCTUnwrap(fileMessageEntity.blobData)
+        let blobProgress = fileMessageEntity.blobProgress
+        let blobError = fileMessageEntity.blobError
+        
+        XCTAssertEqual(testThumbnailData, actualThumbnailData)
+        XCTAssertEqual(testBlobData, actualBlobData)
+        XCTAssertEqual(blobProgress, nil)
+        XCTAssertEqual(blobError, false)
+    }
+    
+    @MainActor
     func testAutoSyncVideo() async throws {
         
         // Arrange
@@ -1145,7 +1319,154 @@ final class BlobManagerTests: XCTestCase {
         
         XCTAssertEqual(actualBlobData, nil)
     }
-    
+
+    @MainActor
+    func testAutoSyncOutgoingImageNotUploaded() async throws {
+
+        // Arrange
+        var fileMessageEntity: FileMessageEntity!
+        let fileDataEntity = databasePreparer.createFileDataEntity(data: testBlobData)
+        let thumbnailData = databasePreparer.createImageDataEntity(data: testThumbnailData, height: 10, width: 10)
+        databasePreparer.save {
+            fileMessageEntity = databasePreparer.createFileMessageEntity(
+                conversation: conversation,
+                encryptionKey: encryptionKey,
+                blobID: nil,
+                blobThumbnailID: nil,
+                data: fileDataEntity,
+                thumbnail: thumbnailData,
+                mimeType: "image/jpeg",
+                type: NSNumber(integerLiteral: 1),
+                isOwn: true
+            )
+        }
+
+        let uploadURL = try await blobURL(with: baseURLString, and: testBlobID, direction: .outgoing)
+        let response = HTTPURLResponse(url: uploadURL, statusCode: 200, httpVersion: nil, headerFields: nil)
+
+        URLProtocolMock.mockResponses[uploadURL] = (
+            (nil, testBlobID, response, nil),
+            {
+                XCTFail("This must no be called since we don't want an auto sync to upload.")
+            }
+        )
+
+        // Act
+        await blobManager.autoSyncBlobs(for: fileMessageEntity.objectID)
+
+        // Assert
+        XCTAssertNil(fileMessageEntity.blobIdentifier)
+        XCTAssertNil(fileMessageEntity.blobThumbnailIdentifier)
+        XCTAssertNil(fileMessageEntity.blobProgress)
+        XCTAssertFalse(fileMessageEntity.blobError)
+    }
+
+    @MainActor
+    func testAutoSyncOutgoingImageUploadFailedNotRetried() async throws {
+
+        // Arrange
+        var fileMessageEntity: FileMessageEntity!
+        let fileDataEntity = databasePreparer.createFileDataEntity(data: testBlobData)
+        let thumbnailData = databasePreparer.createImageDataEntity(data: testThumbnailData, height: 10, width: 10)
+        databasePreparer.save {
+            fileMessageEntity = databasePreparer.createFileMessageEntity(
+                conversation: conversation,
+                encryptionKey: encryptionKey,
+                blobID: nil,
+                blobThumbnailID: nil,
+                data: fileDataEntity,
+                thumbnail: thumbnailData,
+                mimeType: "image/jpeg",
+                type: NSNumber(integerLiteral: 1),
+                isOwn: true
+            )
+            fileMessageEntity.blobError = true
+        }
+
+        let uploadURL = try await blobURL(with: baseURLString, and: testBlobID, direction: .outgoing)
+        let response = HTTPURLResponse(url: uploadURL, statusCode: 200, httpVersion: nil, headerFields: nil)
+
+        URLProtocolMock.mockResponses[uploadURL] = (
+            (nil, testBlobID, response, nil),
+            {
+                XCTFail("This must no be called since we don't want an auto sync to resend failed messages.")
+            }
+        )
+
+        // Act
+        await blobManager.autoSyncBlobs(for: fileMessageEntity.objectID)
+
+        // Assert
+        XCTAssertNil(fileMessageEntity.blobIdentifier)
+        XCTAssertNil(fileMessageEntity.blobThumbnailIdentifier)
+        XCTAssertNil(fileMessageEntity.blobProgress)
+        XCTAssertTrue(fileMessageEntity.blobError)
+    }
+
+    @MainActor
+    func testAutoSyncOutgoingImageAlreadyUploaded() async throws {
+
+        // Arrange
+        var fileMessageEntity: FileMessageEntity!
+        let blobID = BytesUtility.generateBlobID()
+        let thumbnailID = BytesUtility.generateBlobID()
+        let fileDataEntity = databasePreparer.createFileDataEntity(data: testBlobData)
+        let thumbnailData = databasePreparer.createImageDataEntity(data: testThumbnailData, height: 10, width: 10)
+        databasePreparer.save {
+            fileMessageEntity = databasePreparer.createFileMessageEntity(
+                conversation: conversation,
+                encryptionKey: encryptionKey,
+                blobID: blobID,
+                blobThumbnailID: thumbnailID,
+                data: fileDataEntity,
+                thumbnail: thumbnailData,
+                mimeType: "image/jpeg",
+                type: NSNumber(integerLiteral: 1),
+                isOwn: true
+            )
+        }
+
+        let uploadURL = try await blobURL(with: baseURLString, and: testBlobID, direction: .outgoing)
+        let uploadResponse = HTTPURLResponse(url: uploadURL, statusCode: 200, httpVersion: nil, headerFields: nil)
+
+        URLProtocolMock.mockResponses[uploadURL] = (
+            (nil, testBlobID, uploadResponse, nil),
+            {
+                XCTFail("This must no be called since we don't want an auto sync to upload.")
+            }
+        )
+
+        let thumbnailURL = try await blobURL(with: baseURLString, and: thumbnailID, direction: .incoming)
+        let thumbnailResponse = HTTPURLResponse(url: thumbnailURL, statusCode: 200, httpVersion: nil, headerFields: nil)
+
+        URLProtocolMock.mockResponses[thumbnailURL] = (
+            (nil, encryptedThumbnailData, thumbnailResponse, nil),
+            {
+                XCTFail("This must no be called since we don't want an auto sync to start.")
+            }
+        )
+
+        let dataURL = try await blobURL(with: baseURLString, and: blobID, direction: .incoming)
+        let dataResponse = HTTPURLResponse(url: dataURL, statusCode: 200, httpVersion: nil, headerFields: nil)
+
+        URLProtocolMock.mockResponses[dataURL] = (
+            (nil, encryptedBlobData, dataResponse, nil),
+            {
+                XCTFail("This must no be called since we don't want an auto sync to start.")
+            }
+        )
+
+        // Act
+        await blobManager.autoSyncBlobs(for: fileMessageEntity.objectID)
+
+        // Assert
+        XCTAssertEqual(fileMessageEntity.blobIdentifier, blobID)
+        XCTAssertEqual(fileMessageEntity.blobThumbnailIdentifier, thumbnailID)
+        XCTAssertEqual(fileMessageEntity.blobData, testBlobData)
+        XCTAssertNil(fileMessageEntity.blobProgress)
+        XCTAssertFalse(fileMessageEntity.blobError)
+    }
+
     // MARK: - Helper
     
     private func blobURL(with baseURLString: String, and blobID: Data, direction: Direction) async throws -> URL {

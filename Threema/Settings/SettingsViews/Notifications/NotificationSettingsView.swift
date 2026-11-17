@@ -127,6 +127,21 @@ struct NotificationSettingsView: View {
                     )
                 }
             }
+            if ThreemaEnvironment.enableReactionNotifications {
+                Section {
+                    Toggle(isOn: $settingsVM.reactionNotificationsOneToOneEnabled) {
+                        Text(#localize("settings_notifications_reactions_single_chats"))
+                    }
+
+                    Toggle(isOn: $settingsVM.reactionNotificationsGroupEnabled) {
+                        Text(#localize("settings_notifications_reactions_group_chats"))
+                    }
+                } header: {
+                    Text(#localize("settings_notifications_reactions_header"))
+                } footer: {
+                    Text(#localize("settings_notifications_reactions_footer"))
+                }
+            }
 
             // MARK: - DND
             

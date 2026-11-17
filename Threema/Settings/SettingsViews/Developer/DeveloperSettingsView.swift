@@ -29,6 +29,7 @@ struct DeveloperSettingsView: View {
     @State var ipcCommunicationEnabled = UserSettings.shared().ipcCommunicationEnabled
     @State var distributionListsEnabled = UserSettings.shared().distributionListsEnabled
     @State var backups2Enabled = UserSettings.shared().backups2Enabled
+    @State var newMediaBrowserEnabled = UserSettings.shared().newMediaBrowserEnabled
     
     // Group Calls
     @State var groupCallsDebugMessages = UserSettings.shared().groupCallsDebugMessages
@@ -56,6 +57,13 @@ struct DeveloperSettingsView: View {
                         UserSettings.shared().backups2Enabled = backups2Enabled
                     }
                 #endif
+
+                Toggle(isOn: $newMediaBrowserEnabled) {
+                    Text(verbatim: "Enable New Media Browser")
+                }
+                .onChange(of: newMediaBrowserEnabled) {
+                    UserSettings.shared().newMediaBrowserEnabled = newMediaBrowserEnabled
+                }
             }
             header: {
                 Text(verbatim: "Feature Flags")

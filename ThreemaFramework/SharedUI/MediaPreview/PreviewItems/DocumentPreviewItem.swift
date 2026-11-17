@@ -72,9 +72,15 @@ final class DocumentPreviewItem: MediaPreviewItem {
         }
     }
     
+    @available(*, deprecated, message: "Use generateLargeThumbnail(with:traitCollection:) instead")
     func generateLargeThumbnail(with size: CGSize) -> Promise<UIImage> {
+        generateLargeThumbnail(with: size, traitCollection: UITraitCollection.current)
+    }
+    
+    func generateLargeThumbnail(with size: CGSize, traitCollection: UITraitCollection) -> Promise<UIImage> {
         Promise<Void>().then(on: itemQueue, flags: [.barrier]) { () -> Promise<UIImage> in
-            if let largeThumbnail = self.largeThumbnail {
+            // The cached thumbnail is only valid for the display scale it was generated for
+            if let largeThumbnail = self.largeThumbnail, largeThumbnail.scale == traitCollection.displayScale {
                 return .value(largeThumbnail)
             }
             return Promise { seal in
@@ -82,7 +88,7 @@ final class DocumentPreviewItem: MediaPreviewItem {
                 let request = QLThumbnailGenerator.Request(
                     fileAt: self.itemURL!,
                     size: size,
-                    scale: UIScreen.main.scale,
+                    scale: traitCollection.displayScale,
                     representationTypes: .thumbnail
                 )
                 

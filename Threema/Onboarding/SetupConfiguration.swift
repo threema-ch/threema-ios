@@ -1,8 +1,11 @@
-import RemoteSecret
+import Keychain
+import RemoteSecretProtocol
 
 /// Store setup configuration of steps after the ID is set
 final class SetupConfiguration: NSObject {
-    let remoteSecretAndKeychain: RemoteSecretAndKeychainObjC
+    let remoteSecretManager: any RemoteSecretManagerProtocol
+    let keychainManager: any KeychainManagerProtocol
+    let businessInjector: any BusinessInjectorProtocol
     
     // Parameters from `SafeViewController`
     @objc var safePassword: String?
@@ -25,12 +28,18 @@ final class SetupConfiguration: NSObject {
     
     // MARK: Lifecycle
     
-    @objc init(
-        remoteSecretAndKeychain: RemoteSecretAndKeychainObjC,
+    init(
+        remoteSecretManager: any RemoteSecretManagerProtocol,
+        keychainManager: any KeychainManagerProtocol,
+        businessInjector: any BusinessInjectorProtocol,
         mdm: MDMSetup
     ) {
-        self.remoteSecretAndKeychain = remoteSecretAndKeychain
+        self.remoteSecretManager = remoteSecretManager
+        self.keychainManager = keychainManager
+        self.businessInjector = businessInjector
+        
         super.init()
+        
         applyMDMDefaults(mdm)
     }
     

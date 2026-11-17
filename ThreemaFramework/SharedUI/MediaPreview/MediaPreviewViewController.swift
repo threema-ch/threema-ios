@@ -103,7 +103,7 @@ public final class MediaPreviewViewController: UIViewController, UIGestureRecogn
         
         setupOrUpdateRightBarButtonItem()
         
-        setupTitleView(landscape: MediaPreviewViewController.isLandscape())
+        setupTitleView(landscape: MediaPreviewViewController.isLandscape(bounds: view.bounds))
         
         setupKeyboardActions()
                 
@@ -273,7 +273,7 @@ public final class MediaPreviewViewController: UIViewController, UIGestureRecogn
         
         setupOrUpdateRightBarButtonItem()
         
-        setupTitleView(landscape: MediaPreviewViewController.isLandscape())
+        setupTitleView(landscape: MediaPreviewViewController.isLandscape(bounds: view.bounds))
     }
     
     func setupTitleView(landscape: Bool) {
@@ -302,7 +302,7 @@ public final class MediaPreviewViewController: UIViewController, UIGestureRecogn
         
         let tapAction = optionsEnabled ? { [weak self] in self?.moreButtonPressed() } : nil
         
-        let headerView = HeaderView(for: mediaData, frame: titleViewSize, tapAction: tapAction)
+        let headerView = HeaderView(for: mediaData, frame: titleViewSize, landscape: landscape, tapAction: tapAction)
         headerView.rotate(landscape: landscape, newWidth: titleViewSize.width)
 
         guard navigationItem.leftBarButtonItems?.first != nil else {
@@ -560,13 +560,15 @@ public final class MediaPreviewViewController: UIViewController, UIGestureRecogn
         }
     }
     
-    override public func willRotate(to toInterfaceOrientation: UIInterfaceOrientation, duration: TimeInterval) {
+    override public func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
+        super.viewWillTransition(to: size, with: coordinator)
+        
         selection = getCurrentlyVisibleItem()
-        DispatchQueue.main.asyncAfter(deadline: .now() + duration / 2) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + coordinator.transitionDuration / 2) {
             self.largeCollectionView.collectionViewLayout.invalidateLayout()
         }
         
-        let isLandscape = toInterfaceOrientation.isLandscape
+        let isLandscape = size.width > size.height
         setupTitleView(landscape: isLandscape)
     }
     
@@ -722,6 +724,8 @@ public final class MediaPreviewViewController: UIViewController, UIGestureRecogn
         if let userInfo = notification.userInfo {
             let endFrame = (userInfo[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue
             let endFrameY = endFrame?.origin.y ?? 0
+            // The object of keyboard notifications is the screen the keyboard frame is expressed in
+            let screen = (notification.object as? UIScreen) ?? view.window?.windowScene?.screen
             
             let duration: TimeInterval = (userInfo[UIResponder.keyboardAnimationDurationUserInfoKey] as? NSNumber)?
                 .doubleValue ?? 0
@@ -732,13 +736,13 @@ public final class MediaPreviewViewController: UIViewController, UIGestureRecogn
             
             var delay = TimeInterval(0)
             
-            if endFrameY >= UIScreen.main.bounds.size.height {
+            if let screen, endFrameY >= screen.bounds.size.height {
                 bottomLayoutConstraint?.constant = 0.0
             }
             else {
-                if let endFrame {
+                if let endFrame, let screen {
                     let safeInset: CGFloat = view.safeAreaInsets.bottom
-                    let convertedEndframe = view.convert(endFrame, from: UIScreen.main.coordinateSpace)
+                    let convertedEndframe = view.convert(endFrame, from: screen.coordinateSpace)
                     let intersection = view.frame.intersection(convertedEndframe).height
                     bottomLayoutConstraint?.constant = -max(
                         intersection - smallCollectionView.frame.height - safeInset,
@@ -820,7 +824,12 @@ extension MediaPreviewViewController: UITextFieldDelegate {
 }
 
 extension MediaPreviewViewController {
+    @available(*, deprecated, message: "Use isLandscape(bounds:) with the bounds of the view being laid out")
     static func isLandscape() -> Bool {
-        UIScreen.main.bounds.size.width > UIScreen.main.bounds.size.height
+        isLandscape(bounds: UIScreen.main.bounds)
+    }
+    
+    static func isLandscape(bounds: CGRect) -> Bool {
+        bounds.size.width > bounds.size.height
     }
 }

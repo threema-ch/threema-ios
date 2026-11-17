@@ -53,8 +53,8 @@ struct BackupInfoView: View {
             VStack {
                 BackupInfoView(
                     title: nil,
-                    content: "Important: This is an important information",
-                    textColor: Color.accentColor,
+                    content: "**Important:** This is an important information",
+                    textColor: Color.statusForegroundInfo,
                     textFont: .callout,
                     iconName: "info.circle",
                     iconColor: Color.accentColor,

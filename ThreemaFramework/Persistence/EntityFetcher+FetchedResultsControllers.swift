@@ -188,7 +188,8 @@ extension EntityFetcher {
             .not(.conversationIsArchived),
             .conversationHasLastUpdate,
             hideDistributionLists ? .not(.conversationIsDistributionList) : nil,
-            hidePrivateChats ? .not(.conversationIsPrivate) : nil
+            hidePrivateChats ? .not(.conversationIsPrivate) : nil,
+            .conversationContactIsVisible
         )
         let visibilityDescriptor = NSSortDescriptor(key: "visibility", ascending: false)
         let lastUpdateDescriptor = NSSortDescriptor(key: "lastUpdate", ascending: false)
@@ -217,7 +218,8 @@ extension EntityFetcher {
             .conversationIsArchived,
             .conversationHasLastUpdate,
             hideDistributionLists ? .not(.conversationIsDistributionList) : nil,
-            hidePrivateChats ? .not(.conversationIsPrivate) : nil
+            hidePrivateChats ? .not(.conversationIsPrivate) : nil,
+            .conversationContactIsVisible
         )
         let visibilityDescriptor = NSSortDescriptor(key: "visibility", ascending: false)
         let lastUpdateDescriptor = NSSortDescriptor(key: "lastUpdate", ascending: false)
@@ -255,11 +257,138 @@ extension EntityFetcher {
         return fetchedResultController
     }
     
+    // MARK: - FileMessages
+    
+    /// Creates a fetch results controller for the media grid in gallery
+    ///
+    /// If `mediaMessagesRequireInMemoryFiltering` is set, filter the results with `filterMediaMessages(_:cache:)`.
+    ///
+    /// - Parameter conversationID: `NSManagedObjectID` of the conversation
+    /// - Returns: NSFetchedResultsController for `BaseMessages` that can be displayed in media grid, Image, Videos
+    /// etc., no audio and files.
+    public func mediaMessagesFetchResultsController(for conversationID: NSManagedObjectID) -> NSFetchedResultsController<
+        BaseMessageEntity
+    > {
+        let fileMessageEntity = NSEntityDescription.entity(forEntityName: "FileMessage", in: managedObjectContext)!
+        let imageMessageEntity = NSEntityDescription.entity(forEntityName: "ImageMessage", in: managedObjectContext)!
+        let videoMessageEntity = NSEntityDescription.entity(forEntityName: "VideoMessage", in: managedObjectContext)!
+
+        // Encrypted values can only be checked for `nil` in the store, the rest is done by `filterMediaMessages`
+        let encrypted = mediaMessagesRequireInMemoryFiltering
+        let deletedAtFieldName = BaseMessageEntity.Field.name(for: .deletedAt, encrypted: encrypted)
+        let typeFieldName = FileMessageEntity.Field.name(for: .type, encrypted: encrypted)
+        let mimeTypeFieldName = FileMessageEntity.Field.name(for: .mimeType, encrypted: encrypted)
+
+        let hasConversationID = NSPredicate(format: "conversation == %@", conversationID)
+        let isNotDeleted = NSPredicate(format: "%K == nil", deletedAtFieldName)
+        let isMediaFileMessage = NSPredicate.and(
+            NSPredicate(format: "self.entity = %@", fileMessageEntity),
+            encrypted
+                ? NSPredicate(format: "%K != nil", typeFieldName)
+                : NSPredicate(format: "%K != 0", typeFieldName),
+            // We cannot use the general approach with "mimeType in …" here due to CoreData limitations
+            encrypted
+                ? NSPredicate(format: "%K != nil", mimeTypeFieldName)
+                : NSPredicate(format: "NOT (%K BEGINSWITH 'audio/')", mimeTypeFieldName)
+        )
+        let isImageMessage = NSPredicate(format: "self.entity = %@", imageMessageEntity)
+        let isVideoMessage = NSPredicate(format: "self.entity = %@", videoMessageEntity)
+
+        let fetchRequest = NSFetchRequest<BaseMessageEntity>(entityName: "Message")
+        
+        fetchRequest.predicate = .and(
+            hasConversationID,
+            isNotDeleted,
+            .or(isMediaFileMessage, isImageMessage, isVideoMessage)
+        )
+        fetchRequest.sortDescriptors = [NSSortDescriptor(key: "date", ascending: true)]
+        fetchRequest.fetchBatchSize = 100
+        
+        return NSFetchedResultsController<BaseMessageEntity>(
+            fetchRequest: fetchRequest,
+            managedObjectContext: managedObjectContext,
+            sectionNameKeyPath: nil,
+            cacheName: nil
+        )
+    }
+
+    /// With remote secret the type and mime type of file messages are encrypted and cannot be compared in the store
+    public var mediaMessagesRequireInMemoryFiltering: Bool {
+        managedObjectContext.usesAdditionallyEncryptedModel
+    }
+
+    /// Creation dates (`date`) of the messages matching the predicate, without loading the messages
+    public func messageDates(matching predicate: NSPredicate?) -> [NSManagedObjectID: Date] {
+        let objectIDExpression = NSExpressionDescription()
+        objectIDExpression.name = "objectID"
+        objectIDExpression.expression = NSExpression.expressionForEvaluatedObject()
+        objectIDExpression.expressionResultType = .objectIDAttributeType
+
+        let fetchRequest = NSFetchRequest<NSDictionary>(entityName: "Message")
+        fetchRequest.predicate = predicate
+        fetchRequest.resultType = .dictionaryResultType
+        fetchRequest.propertiesToFetch = [objectIDExpression, "date"]
+
+        return managedObjectContext.performAndWait {
+            var dates = [NSManagedObjectID: Date]()
+            for result in (try? managedObjectContext.fetch(fetchRequest)) ?? [] {
+                guard let objectID = result["objectID"] as? NSManagedObjectID,
+                      let date = result["date"] as? Date else {
+                    continue
+                }
+                dates[objectID] = date
+            }
+            return dates
+        }
+    }
+
+    /// Removes the results of `mediaMessagesFetchResultsController(for:)` the store could not filter
+    ///
+    /// - Parameters:
+    ///   - objectIDs: Results of the fetch request
+    ///   - cache: Results of earlier calls, so every message is only loaded once
+    /// - Returns: `objectIDs` without the messages not shown in the media browser
+    public func filterMediaMessages(
+        _ objectIDs: [NSManagedObjectID],
+        cache: inout [NSManagedObjectID: Bool]
+    ) -> [NSManagedObjectID] {
+        guard mediaMessagesRequireInMemoryFiltering else {
+            return objectIDs
+        }
+
+        managedObjectContext.performAndWait {
+            for objectID in objectIDs where cache[objectID] == nil {
+                // The store filters everything else
+                guard objectID.entity.name == "FileMessage" else {
+                    cache[objectID] = true
+                    continue
+                }
+
+                let fileMessage = try? managedObjectContext.existingObject(with: objectID) as? FileMessageEntity
+                cache[objectID] = fileMessage?.isMediaBrowserMedia ?? false
+            }
+        }
+
+        return objectIDs.filter { cache[$0] == true }
+    }
+    
     // MARK: - General
     
     @available(swift, obsoleted: 1.0, message: "Deprecated. Do not use anymore.")
     @objc public func fetchRequest(for entityName: String) -> NSFetchRequest<NSFetchRequestResult> {
         let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: entityName)
         return fetchRequest
+    }
+}
+
+// MARK: - Media browser filter
+
+extension FileMessageEntity {
+    /// Encrypted part of the store filter of `EntityFetcher.mediaMessagesFetchResultsController(for:)`, keep in sync
+    fileprivate var isMediaBrowserMedia: Bool {
+        guard let type = type?.intValue, let mimeType else {
+            return false
+        }
+        return type != 0 && !mimeType.hasPrefix("audio/")
     }
 }

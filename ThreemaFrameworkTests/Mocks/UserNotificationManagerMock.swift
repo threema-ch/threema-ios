@@ -31,7 +31,8 @@ final class UserNotificationManagerMock: UserNotificationManagerProtocol {
     func applyContent(
         from: UserNotificationContent,
         to: inout UNMutableNotificationContent,
-        silent: Bool,
-        baseMessage: BaseMessageEntity?
-    ) { }
+        silent: Bool
+    ) {
+        // No-op
+    }
 }

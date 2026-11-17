@@ -56,11 +56,13 @@ extension libthreemaSwift.UserProfile {
                 nil
             }
 
-        let workAvailabilityStatus: libthreemaSwift.WorkAvailabilityStatus =
+        // No status and the status none are stored the same way. Neither is backed up, as Consumer flavour requires.
+        // `nil` and not `.none`, which is ambiguous with `WorkAvailabilityStatus.none` in an optional.
+        let workAvailabilityStatus: libthreemaSwift.WorkAvailabilityStatus? =
             if let status = profile.workAvailabilityStatus {
                 switch status.category {
                 case .none:
-                    .none
+                    nil
                 case .unavailable:
                     .unavailable(status.text ?? String.empty)
                 case .busy:
@@ -68,7 +70,7 @@ extension libthreemaSwift.UserProfile {
                 }
             }
             else {
-                .none
+                nil
             }
 
         self.init(

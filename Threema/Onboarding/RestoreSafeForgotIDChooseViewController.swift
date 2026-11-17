@@ -40,6 +40,12 @@ final class RestoreSafeForgotIDChooseViewController: IDCreationPageViewControlle
         false
     }
     
+    /// `shouldAutorotate` is no longer consulted, lock the orientation on iOS 26+ instead
+    @available(iOS 26.0, *)
+    override public var prefersInterfaceOrientationLocked: Bool {
+        true
+    }
+    
     @objc func touchIDButton(_ sender: SetupButton) {
         if let id: String = sender.titleLabel?.text {
             choosenID = String(id[id.startIndex..<id.index(id.startIndex, offsetBy: 8)])

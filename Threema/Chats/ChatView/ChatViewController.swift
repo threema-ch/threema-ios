@@ -210,6 +210,15 @@ final class ChatViewController: UIViewController {
         self?.chatProfileViewTapped()
     }
     
+    /// Hosts `chatProfileView` while the chat is the root of its column (see `updateChatProfilePlacement()`)
+    private lazy var chatProfileBarButtonItem: UIBarButtonItem = {
+        let item = UIBarButtonItem(customView: chatProfileView)
+        if #available(iOS 26.0, *) {
+            item.hidesSharedBackground = true
+        }
+        return item
+    }()
+    
     private lazy var deleteBarButton: UIBarButtonItem = {
         let button = UIBarButtonItem(
             title: #localize("messages_delete_all_button"),
@@ -519,11 +528,15 @@ final class ChatViewController: UIViewController {
     
     private lazy var bottomComposeConstraint = view.keyboardLayoutGuide.topAnchor
     
-    /// Bottom constraint of the chat bar. Swapped between `safeAreaLayoutGuide.bottomAnchor` (keyboard hidden)
-    /// and `keyboardLayoutGuide.topAnchor` (keyboard visible). We can't pin to `keyboardLayoutGuide.topAnchor`
-    /// permanently because the guide reports a stale y-coordinate when the device orientation changes while
-    /// the app is backgrounded, leaving the chat bar floating above the bottom of the view on return.
+    /// Bottom constraint of the chat bar. Swapped between the resting position (keyboard hidden, see
+    /// `makeRestingChatBarBottomConstraint()`) and `keyboardLayoutGuide.topAnchor` (keyboard visible). We can't pin
+    /// to `keyboardLayoutGuide.topAnchor` permanently because the guide reports a stale y-coordinate when the device
+    /// orientation changes while the app is backgrounded, leaving the chat bar floating above the bottom of the view
+    /// on return.
     private var chatBarBottomConstraint: NSLayoutConstraint!
+
+    /// True while `chatBarBottomConstraint` follows the keyboard
+    private var isChatBarOnKeyboard = false
     
     /// True while a `viewWillTransition` (a screen rotation) is in flight. During this window we
     /// avoid swapping `chatBarBottomConstraint`, because iOS fires `keyboardWillHide`+`keyboardWillShow`
@@ -760,6 +773,12 @@ final class ChatViewController: UIViewController {
         DDLogVerbose("\(#function)")
         
         addObservers()
+        registerForTraitChanges([
+            UITraitVerticalSizeClass.self,
+            UITraitHorizontalSizeClass.self
+        ]) { (self: ChatViewController, _) in
+            self.wallpaperChanged()
+        }
         tableView.addGestureRecognizer(keyboardDismissGesture)
         
         configureLayout()
@@ -788,12 +807,23 @@ final class ChatViewController: UIViewController {
         checkForSpam()
     }
     
+    override func viewIsAppearing(_ animated: Bool) {
+        super.viewIsAppearing(animated)
+
+        updateRestingChatBarBottomConstraint()
+    }
+
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
         DDLogVerbose("\(#function)")
         
         hidesBottomBarWhenPushed = true
+        
+        // A collapse or expand moves the chat between the root of the detail column and a pushed screen
+        if userInterfaceMode == .default {
+            updateChatProfilePlacement()
+        }
         
         chatBarCoordinator.updateSettings()
         
@@ -1060,9 +1090,7 @@ final class ChatViewController: UIViewController {
         chatBarCoordinator.chatBarContainerView.keyboardLayoutGuide.followsUndockedKeyboard = false
         scrollToBottomButton.translatesAutoresizingMaskIntoConstraints = false
 
-        chatBarBottomConstraint = chatBarCoordinator.chatBarContainerView.bottomAnchor.constraint(
-            equalTo: view.safeAreaLayoutGuide.bottomAnchor
-        )
+        chatBarBottomConstraint = makeRestingChatBarBottomConstraint()
 
         NSLayoutConstraint.activate([
             backgroundView.topAnchor.constraint(equalTo: view.topAnchor),
@@ -1214,12 +1242,59 @@ final class ChatViewController: UIViewController {
     override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
         cellHeightCache.clear()
         super.viewWillTransition(to: size, with: coordinator)
-        wallpaperChanged()
+        updateWallpaper(for: size)
 
         isInViewTransition = true
         coordinator.animate(alongsideTransition: nil) { [weak self] _ in
-            self?.isInViewTransition = false
+            guard let self else {
+                return
+            }
+            isInViewTransition = false
+            updateRestingChatBarBottomConstraint()
+            if userInterfaceMode == .default {
+                updateChatProfilePlacement()
+            }
         }
+    }
+
+    private func makeRestingChatBarBottomConstraint() -> NSLayoutConstraint {
+        if #available(iOS 27.1, *), usesVerticalBars {
+            chatBarCoordinator.restsOnBarBaseline = true
+            let barGuide = view.layoutGuide(
+                for: .bar(onEdge: UIRectEdge.bottom, extent: ChatBarConfiguration.defaultSingleLineHeight)
+            )
+            return chatBarCoordinator.singleLineRowCenterYAnchor.constraint(equalTo: barGuide.centerYAnchor)
+        }
+
+        chatBarCoordinator.restsOnBarBaseline = false
+        return chatBarCoordinator.chatBarContainerView.bottomAnchor.constraint(
+            equalTo: view.safeAreaLayoutGuide.bottomAnchor
+        )
+    }
+
+    /// `true` where the system lays out bars vertically
+    private var usesVerticalBars: Bool {
+        if #available(iOS 27.1, *) {
+            traitCollection.verticalBarEdge != .unspecified
+        }
+        else {
+            false
+        }
+    }
+
+    private func updateRestingChatBarBottomConstraint() {
+        guard
+            !isChatBarOnKeyboard,
+            chatBarBottomConstraint != nil,
+            usesVerticalBars != chatBarCoordinator.restsOnBarBaseline
+        else {
+            return
+        }
+
+        chatBarBottomConstraint.isActive = false
+        chatBarBottomConstraint = makeRestingChatBarBottomConstraint()
+        chatBarBottomConstraint.isActive = true
+        updateContentInsetsForce()
     }
     
     /// Saves the draft, unless the chat only disappeared for a view transition.
@@ -1318,6 +1393,10 @@ final class ChatViewController: UIViewController {
     }
 
     @objc private func wallpaperChanged() {
+        updateWallpaper(for: view.bounds.size)
+    }
+    
+    private func updateWallpaper(for size: CGSize) {
         let wallpaperStore = businessInjector.settingsStore.wallpaperStore
         // If we use the default item, we have to create the pattern and apply it as color
         if !wallpaperStore.hasCustomWallpaper(for: conversation.objectID),
@@ -1330,11 +1409,14 @@ final class ChatViewController: UIViewController {
         else {
             backgroundView.backgroundColor = nil
             if let image = wallpaperStore.wallpaper(for: conversation.objectID) {
-                backgroundView.image = MediaConverter.downscaleImage(
-                    image: image,
-                    toSize: UIScreen.main.bounds.size,
-                    scale: UIScreen.main.scale
-                )
+                // Downscaling needs a non-empty target size, keep the original image if the view has no size yet
+                backgroundView.image = size.width > 0 && size.height > 0
+                    ? MediaConverter.downscaleImage(
+                        image: image,
+                        toSize: size,
+                        scale: traitCollection.displayScale
+                    )
+                    : image
             }
             else {
                 backgroundView.image = nil
@@ -1375,11 +1457,9 @@ extension ChatViewController {
         case .default:
             updateChatProfileViewSettings()
             
-            navigationItem.titleView = chatProfileView
+            updateChatProfilePlacement()
             
             navigationItem.hidesBackButton = false
-            
-            navigationItem.leftBarButtonItem = nil
             
             navigationItem.rightBarButtonItems = nil
             
@@ -1435,6 +1515,22 @@ extension ChatViewController {
         }
     }
     
+    /// A title view is centered in the navigation bar. Without a back button at the leading edge (the chat is the
+    /// root of the detail column, or the back button moved into a vertical bar) the profile view sits at the leading
+    /// edge as a bar button item instead.
+    private func updateChatProfilePlacement() {
+        if navigationController?.viewControllers.first === self || usesVerticalBars {
+            navigationItem.titleView = nil
+            // Keeps the back button, which a vertical bar shows apart from the leading items
+            navigationItem.leftItemsSupplementBackButton = true
+            navigationItem.leftBarButtonItem = chatProfileBarButtonItem
+        }
+        else {
+            navigationItem.leftBarButtonItem = nil
+            navigationItem.titleView = chatProfileView
+        }
+    }
+
     private func updateChatProfileViewSettings() {
         guard let navigationBar = navigationController?.navigationBar else {
             return
@@ -1819,32 +1915,37 @@ extension ChatViewController {
                 return
             }
             
-            guard !self.dataSource.isSelected(objectID: message.objectID) else {
-                DDLogWarn("Message is already selected so we don't highlight")
+            self.highlightAfterScroll(messageObjectID: message.objectID)
+        }
+    }
+    
+    /// Flashes the cell of the message once scrolling to it has approximately completed, unless it is selected
+    private func highlightAfterScroll(messageObjectID: NSManagedObjectID) {
+        guard !dataSource.isSelected(objectID: messageObjectID) else {
+            DDLogWarn("Message is already selected so we don't highlight")
+            return
+        }
+        
+        DispatchQueue.main.asyncAfter(
+            deadline: .now() + ChatViewConfiguration.ChatBubble.HighlightedAnimation.highlightDelayAfterScroll
+        ) { [weak self] in
+            
+            guard let indexPath = self?.dataSource
+                .indexPath(for: ChatViewDataSource.CellType.message(objectID: messageObjectID)) else {
+                DDLogWarn("Couldn't get indexPath")
                 return
             }
             
-            DispatchQueue.main.asyncAfter(
-                deadline: .now() + ChatViewConfiguration.ChatBubble.HighlightedAnimation.highlightDelayAfterScroll
-            ) { [weak self] in
-                
-                guard let indexPath = self?.dataSource
-                    .indexPath(for: ChatViewDataSource.CellType.message(objectID: message.objectID)) else {
-                    DDLogWarn("Couldn't get indexPath")
-                    return
-                }
-                
-                guard let cell = self?.tableView.cellForRow(
-                    at: indexPath
-                ) as? ChatViewBaseTableViewCell else {
-                    DDLogWarn("Couldn't get cell")
-                    return
-                }
-                cell.blinkCell(
-                    duration: ChatViewConfiguration.ChatBubble.HighlightedAnimation
-                        .highlightedDurationLong
-                )
+            guard let cell = self?.tableView.cellForRow(
+                at: indexPath
+            ) as? ChatViewBaseTableViewCell else {
+                DDLogWarn("Couldn't get cell")
+                return
             }
+            cell.blinkCell(
+                duration: ChatViewConfiguration.ChatBubble.HighlightedAnimation
+                    .highlightedDurationLong
+            )
         }
     }
     
@@ -1968,12 +2069,15 @@ extension ChatViewController {
         }
     }
     
-    private func jumpContentLoadUnsafeAndSelect(to searchedMessageObjectID: NSManagedObjectID, animated: Bool = false) {
-        jumpContentLoadUnsafe(to: searchedMessageObjectID)
+    private func jumpContentLoadUnsafeAndMark(
+        to messageObjectID: NSManagedObjectID,
+        marking: ShowConversationInformation.MessageMarking
+    ) {
+        jumpContentLoadUnsafe(to: messageObjectID)
         dataSource.initialSetupCompleted = true
         
         guard let indexPath = dataSource.indexPath(
-            for: ChatViewDataSource.CellType.message(objectID: searchedMessageObjectID)
+            for: ChatViewDataSource.CellType.message(objectID: messageObjectID)
         ) else {
             DDLogWarn("Couldn't get indexPath")
             isJumping = false
@@ -1987,11 +2091,17 @@ extension ChatViewController {
         }
         
         DispatchQueue.main.async {
-            self.dataSource.deselectAllMessages()
-            self.dataSource.didSelectRow(at: indexPath)
-            
-            // If scrollPosition is set to `.none` it will not scroll
-            self.tableView.selectRow(at: indexPath, animated: true, scrollPosition: .top)
+            switch marking {
+            case .select:
+                self.dataSource.deselectAllMessages()
+                self.dataSource.didSelectRow(at: indexPath)
+                
+                // If scrollPosition is set to `.none` it will not scroll
+                self.tableView.selectRow(at: indexPath, animated: true, scrollPosition: .top)
+                
+            case .highlight:
+                self.highlightAfterScroll(messageObjectID: messageObjectID)
+            }
             
             self.isJumping = false
             self.dataSource.initialSetupCompleted = true
@@ -2492,7 +2602,7 @@ extension ChatViewController: UITableViewDelegate {
     
     func showExistingReactions(reactionsManager: ReactionsManager) {
         present(
-            EmojiReactionModalViewController.sheet(reactionsManager),
+            EmojiReactionModalViewController.sheet(reactionsManager, in: view.window),
             animated: true
         )
     }
@@ -3098,12 +3208,18 @@ extension ChatViewController: UIScrollViewDelegate {
         }
 
         let isHiding = notification.name == UIResponder.keyboardWillHideNotification
-        let newAnchor: NSLayoutYAxisAnchor = isHiding
-            ? view.safeAreaLayoutGuide.bottomAnchor
-            : view.keyboardLayoutGuide.topAnchor
+        isChatBarOnKeyboard = !isHiding
 
         chatBarBottomConstraint.isActive = false
-        chatBarBottomConstraint = chatBarCoordinator.chatBarContainerView.bottomAnchor.constraint(equalTo: newAnchor)
+        if isHiding {
+            chatBarBottomConstraint = makeRestingChatBarBottomConstraint()
+        }
+        else {
+            chatBarCoordinator.restsOnBarBaseline = false
+            chatBarBottomConstraint = chatBarCoordinator.chatBarContainerView.bottomAnchor.constraint(
+                equalTo: view.keyboardLayoutGuide.topAnchor
+            )
+        }
         chatBarBottomConstraint.isActive = true
 
         // Match the keyboard's own animation so the chat bar slides in sync with it
@@ -3343,7 +3459,10 @@ extension ChatViewController: ChatSearchControllerDelegate {
 extension ChatViewController {
     private func chatViewDataSourceAfterFirstSnapshotApply() {
         if let messageObjectID = showConversationInformation?.messageObjectID {
-            jumpContentLoadUnsafeAndSelect(to: messageObjectID)
+            jumpContentLoadUnsafeAndMark(
+                to: messageObjectID,
+                marking: showConversationInformation?.messageMarking ?? .select
+            )
         }
         // TODO: (IOS-2014) Maybe don't show messages until restoration completes to disable flickering if restoration
         // fails and we load messages at the bottom

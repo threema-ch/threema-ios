@@ -39,25 +39,22 @@ enum GroupCallUIHelper {
 
         // Is this for the currently visible conversation?
         Task { @MainActor in
-            if let mainTabBar = SharedAppProvider.tabBarController,
-               let viewControllers = mainTabBar.viewControllers {
-                if viewControllers.count <= kChatTabBarIndex {
-                    return
+            if let curChatVc = SharedAppProvider.appCoordinator?.visibleChatViewController,
+               curChatVc.conversation.objectID == conversationManagedObjectID {
+                if UIAccessibility.isVoiceOverRunning,
+                   !curChatVc.isRecording(),
+                   !curChatVc.isPlayingAudioMessage() {
+                    let accessibilityText =
+                        "\(#localize("new_message_accessibility"))\(body)"
+                    UIAccessibility.post(notification: .announcement, argument: accessibilityText)
                 }
-                let chatNavVc = viewControllers[Int(kChatTabBarIndex)] as! UINavigationController
-                if let curChatVc = chatNavVc.topViewController as? ChatViewController,
-                   curChatVc.conversation.objectID == conversationManagedObjectID {
-                    if UIAccessibility.isVoiceOverRunning,
-                       !curChatVc.isRecording(),
-                       !curChatVc.isPlayingAudioMessage() {
-                        let accessibilityText =
-                            "\(#localize("new_message_accessibility"))\(body)"
-                        UIAccessibility.post(notification: .announcement, argument: accessibilityText)
-                    }
-                    return
-                }
+                return
+            }
+            guard let tabBarController = SharedAppProvider.tabBarController else {
+                return
             }
             NotificationBannerHelper.newBannerForStartGroupCall(
+                on: tabBarController,
                 conversationManagedObjectID: conversationManagedObjectID,
                 title: title,
                 body: body,

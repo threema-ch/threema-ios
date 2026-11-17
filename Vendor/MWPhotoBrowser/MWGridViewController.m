@@ -41,11 +41,6 @@
             (void)(_columns = 6), _columnsL = 8;
             (void)(_margin = 1), _gutter = 2;
             (void)(_marginL = 1), _gutterL = 2;
-        } else if ([UIScreen mainScreen].bounds.size.height == 480) {
-            // iPhone 3.5 inch
-            (void)(_columns = 3), _columnsL = 4;
-            (void)(_margin = 0), _gutter = 1;
-            (void)(_marginL = 1), _gutterL = 2;
         } else {
             // iPhone 4 inch
             (void)(_columns = 3), _columnsL = 5;
@@ -136,7 +131,7 @@
 #pragma mark - Layout
 
 - (CGFloat)getColumns {
-    if (UIInterfaceOrientationIsPortrait([self currentInterfaceOrientation])) {
+    if (self.view.bounds.size.height > self.view.bounds.size.width) {
         return _columns;
     } else {
         return _columnsL;
@@ -144,7 +139,7 @@
 }
 
 - (CGFloat)getMargin {
-    if (UIInterfaceOrientationIsPortrait([self currentInterfaceOrientation])) {
+    if (self.view.bounds.size.height > self.view.bounds.size.width) {
         return _margin;
     } else {
         return _marginL;
@@ -152,7 +147,7 @@
 }
 
 - (CGFloat)getGutter {
-    if (UIInterfaceOrientationIsPortrait([self currentInterfaceOrientation])) {
+    if (self.view.bounds.size.height > self.view.bounds.size.width) {
         return _gutter;
     } else {
         return _gutterL;
@@ -221,12 +216,6 @@
 - (UIEdgeInsets)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout*)collectionViewLayout insetForSectionAtIndex:(NSInteger)section {
     CGFloat margin = [self getMargin];
     return UIEdgeInsetsMake(margin, margin, margin, margin);
-}
-
-#pragma mark - Helpers
-
-- (UIInterfaceOrientation)currentInterfaceOrientation {
-    return [[[[self.view window] windowScene] effectiveGeometry] interfaceOrientation] ?: UIInterfaceOrientationUnknown;
 }
 
 @end

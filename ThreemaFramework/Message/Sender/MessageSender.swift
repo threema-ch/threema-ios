@@ -1069,9 +1069,10 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
                     }
                 }
 
-                // … if not, we create a new reaction.
+                // … if not, we create a new reaction and mark it as read directly.
                 messageReactionEntity = self.entityManager.entityCreator.messageReactionEntity(
                     reaction: reaction.rawValue,
+                    readAt: reactedAt,
                     message: message
                 ).then {
                     $0.date = reactedAt
@@ -1198,9 +1199,10 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
                     }
                 }
 
-                // If not, we create a new reaction
+                // If not, we create a new reaction and mark it as read directly.
                 messageReactionEntity = self.entityManager.entityCreator.messageReactionEntity(
                     reaction: reaction.rawValue,
+                    readAt: reactedAt,
                     message: baseMessage
                 ).then {
                     $0.date = reactedAt

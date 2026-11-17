@@ -35,11 +35,12 @@ struct LocalBackupDetailsViewModelTests {
         #expect(sut.detailItems[4].isValueHighlighted == false)
     }
 
-    @Test func `The backup written by the manager is the file offered for sharing`() {
+    @Test func `The backup written by the manager is the file offered for sharing`() throws {
         let manager = BackupCreateManagerMock()
         let sut = makeSUT(manager: manager)
 
-        #expect(sut.shareURL == manager.backupURL)
+        let backupURL = try #require(manager.backupURL)
+        #expect(sut.shareURL == backupURL)
     }
 
     // MARK: - Detail rows
@@ -50,7 +51,8 @@ struct LocalBackupDetailsViewModelTests {
             // A round number of bytes, so the expected string does not depend on how the formatter rounds.
             size: 1_500_000_000,
             includesMessages: true,
-            includesMedia: true
+            includesMedia: true,
+            fileName: "2026-02-25T06-13-20-threema.backup"
         )
         let sut = makeSUT(lastBackup: lastBackup)
 
@@ -64,7 +66,7 @@ struct LocalBackupDetailsViewModelTests {
         #expect(sut.detailItems[1].value == "1.5 GB")
         #expect(sut.detailItems[2].value == "Included")
         #expect(sut.detailItems[3].value == "Included")
-        #expect(sut.detailItems[4].value == "Documents/Backup.dat")
+        #expect(sut.detailItems[4].value == "Documents/2026-02-25T06-13-20-threema.backup")
 
         #expect(sut.detailItems.map(\.isValueHighlighted) == [false, false, true, true, false])
     }
@@ -81,7 +83,8 @@ struct LocalBackupDetailsViewModelTests {
                 date: Date(),
                 size: 42,
                 includesMessages: false,
-                includesMedia: false
+                includesMedia: false,
+                fileName: "threema.backup"
             )
         )
 
@@ -94,6 +97,7 @@ struct LocalBackupDetailsViewModelTests {
         let sut = makeSUT(lastBackup: nil)
 
         #expect(sut.detailItems.isEmpty)
+        #expect(sut.shareURL == nil)
     }
 
     // MARK: - Private methods

@@ -59,8 +59,15 @@ final class SettingsCoordinator: NSObject, Coordinator {
 
     var childCoordinators: [any Coordinator] = []
     var rootViewController: UIViewController {
-        rootNavigationController
+        splitViewController
     }
+
+    /// The tab's content: this coordinator's navigation controller as the primary column and a detail column
+    /// owned by the split view. Installed as the tab's root by `AppCoordinator`.
+    private(set) lazy var splitViewController = ThreemaTabSplitViewController(
+        tab: .settings,
+        primaryNavigationController: rootNavigationController
+    )
 
     // MARK: - Routers
 
@@ -78,15 +85,9 @@ final class SettingsCoordinator: NSObject, Coordinator {
     private lazy var settingsStore = BusinessInjector.ui.settingsStore as! SettingsStore
     private lazy var screenFactory = SettingsScreenFactory(settingsStore: settingsStore, coordinator: self)
 
-    private(set) weak var presentingViewController: ThreemaSplitViewController?
-
     private lazy var settingsViewController: SettingsViewController = {
         let settingsViewController = SettingsViewController(coordinator: self)
-
-        let tab = ThreemaTab(.settings)
-        settingsViewController.tabBarItem = tab.tabBarItem
-        settingsViewController.title = tab.title
-
+        settingsViewController.title = ThreemaTab(.settings).title
         return settingsViewController
     }()
 
@@ -95,30 +96,30 @@ final class SettingsCoordinator: NSObject, Coordinator {
     // MARK: - Lifecycle
 
     init(
-        presentingViewController: ThreemaSplitViewController,
         shareActivityRouter: any ShareActivityRouterProtocol,
         passcodeRouter: any PasscodeRouterProtocol
     ) {
-        self.presentingViewController = presentingViewController
         self.shareActivityRouter = shareActivityRouter
         self.passcodeRouter = passcodeRouter
         super.init()
 
         router.delegate = self
-        router.forwardDelegate = self
+        // The split view hides the tab bar from the primary column's callbacks, then forwards them here.
+        router.forwardDelegate = splitViewController
+        splitViewController.navigationDelegate = self
     }
 
     // MARK: - Presentation
 
     func start() {
-        /// Due to this coordinator's rootViewController being part of a
-        /// `UITabViewController`, it's not needed to present anything here.
-        /// The rootViewController is added by to the `UITabViewController`'s
-        /// viewControllers in ``AppCoordinator``'s `configureSplitViewController` method.
+        /// The split view is installed as this tab's root by ``AppCoordinator``'s
+        /// `configureTabBarController`; nothing is presented here. The split view
+        /// binds the router on appearance and on collapse/expand.
         rootNavigationController.setViewControllers(
             [settingsViewController],
             animated: false
         )
+        splitViewController.routerHandle = routerHandle
     }
 
     func finish() {
@@ -181,8 +182,8 @@ final class SettingsCoordinator: NSObject, Coordinator {
 
     // MARK: - Router binding
 
-    /// Hooks for `ThreemaSplitViewNavigationManager` to activate/deactivate this
-    /// tab's router when tab selection or the size class changes.
+    /// Hooks for the tab's split view (binding on appearance, collapse, expand)
+    /// and the tab bar controller (re-authentication on return, memory warnings).
     var routerHandle: RouterManagedTabHandle {
         RouterManagedTabHandle(
             deactivate: { [weak self] in
@@ -191,8 +192,8 @@ final class SettingsCoordinator: NSObject, Coordinator {
             activateCompact: { [weak self] in
                 self?.bindCompact()
             },
-            activateRegular: { [weak self] navigationController in
-                self?.bindRegular(into: navigationController)
+            activateRegular: { [weak self] column in
+                self?.bindRegular(into: column)
             },
             reauthenticateProtectedDestinations: { [weak self] in
                 guard
@@ -215,20 +216,19 @@ final class SettingsCoordinator: NSObject, Coordinator {
                 )
             },
             releaseMaterializedScreens: { [weak self] in
-                guard
-                    let self,
-                    !router.isBound
-                else {
+                guard let self else {
                     return
                 }
+                // Inactive tabs stay bound: unbind first so the release frees the
+                // screens, then reset both columns to their roots. The next
+                // appearance rebinds and re-materializes the stack from the path.
+                router.unbind()
                 router.releaseMaterializedScreens()
-                // The tab's own navigation controller retains the compact stack
-                // even while inactive — reset it to the root; the next
-                // activation re-materializes the stack from the path.
                 rootNavigationController.setViewControllers(
                     [settingsViewController],
                     animated: false
                 )
+                splitViewController.resetSecondaryColumn()
             }
         )
     }
@@ -249,10 +249,10 @@ final class SettingsCoordinator: NSObject, Coordinator {
     /// Regular width: the stack renders in the secondary column, rooted in a
     /// placeholder (the settings list stays in the primary column). An empty path
     /// shows just the placeholder.
-    private func bindRegular(into navigationController: UINavigationController) {
+    private func bindRegular(into column: TabSecondaryColumn) {
         router.bind(
-            to: navigationController,
-            rootViewController: ThreemaLogoViewController(rootView: ThreemaLogoView()),
+            to: column.navigationController,
+            rootViewController: column.placeholderViewController,
             rootMode: .placeholder
         ) { [weak self] destination in
             self?.makeScreen(destination)
@@ -479,19 +479,14 @@ final class SettingsCoordinator: NSObject, Coordinator {
         }
     }
 
-    /// Presenter for this tab's modals: the navigation controller the tab's
-    /// stack currently lives in — its own one when collapsed, the split view's
-    /// secondary column when expanded — so modals belong to the column the
-    /// settings screens are shown in instead of the whole split view.
-    private var modalPresenter: UIViewController? {
-        presentingViewController?.navigationController(for: .settings) ?? presentingViewController
+    /// Presenter for this tab's modals: the column the settings screens are
+    /// shown in (the tab's own navigation controller when collapsed, the detail
+    /// column when expanded) instead of the whole split view.
+    private var modalPresenter: UIViewController {
+        splitViewController.modalPresenter
     }
 
     func showRecoveryKeySlideInConfirmation() {
-        guard let modalPresenter else {
-            return
-        }
-
         let sheetViewController = screenFactory.makeRecoveryKeySheet { [weak self] in
             self?.showCreateNewRecoveryKeyAlert()
         }
@@ -500,10 +495,6 @@ final class SettingsCoordinator: NSObject, Coordinator {
     }
 
     private func showCreateNewRecoveryKeyAlert() {
-        guard let modalPresenter else {
-            return
-        }
-
         UIAlertTemplate.showAlert(
             owner: modalPresenter,
             title: #localize("backup_local_recovery_create_new_confirmation_title"),

@@ -40,8 +40,6 @@ typedef enum PagingDirection {
 
 @property CGFloat pageGap;
 
-- (void) resetPageFrames;
-
 - (void) reset;
 
 - (void) pageRight;

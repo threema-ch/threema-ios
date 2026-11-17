@@ -8,7 +8,10 @@ final class MessageForwardingBottomView: UIView {
     private enum Layout {
         static let cornerRadius: CGFloat = 8.0
         static let topPadding: CGFloat = 8.0
-        static let dividerHeight: CGFloat = 1.0 / UIScreen.main.scale
+
+        static func dividerHeight(for traitCollection: UITraitCollection) -> CGFloat {
+            1.0 / traitCollection.displayScale
+        }
 
         static var horizontalInset: CGFloat {
             16.0 + cornerRadius / 2.0
@@ -30,6 +33,10 @@ final class MessageForwardingBottomView: UIView {
         return view
     }()
 
+    private lazy var dividerHeightConstraint = dividerView.heightAnchor.constraint(
+        equalToConstant: Layout.dividerHeight(for: traitCollection)
+    )
+
     lazy var blurEffectView: UIVisualEffectView = {
         let effect = UIBlurEffect(style: .systemMaterial)
         let view = UIVisualEffectView(effect: effect)
@@ -43,6 +50,13 @@ final class MessageForwardingBottomView: UIView {
         self.model = model
         super.init(frame: .zero)
         setupView()
+
+        registerForTraitChanges([
+            UITraitVerticalSizeClass.self,
+            UITraitHorizontalSizeClass.self
+        ]) { (self: MessageForwardingBottomView, _) in
+            self.dividerHeightConstraint.constant = Layout.dividerHeight(for: self.traitCollection)
+        }
     }
 
     @available(*, unavailable)
@@ -156,7 +170,7 @@ final class MessageForwardingBottomView: UIView {
             ),
 
             dividerView.topAnchor.constraint(equalTo: topAnchor),
-            dividerView.heightAnchor.constraint(equalToConstant: Layout.dividerHeight),
+            dividerHeightConstraint,
             dividerView.leadingAnchor.constraint(equalTo: leadingAnchor),
             dividerView.trailingAnchor.constraint(equalTo: trailingAnchor),
         ])

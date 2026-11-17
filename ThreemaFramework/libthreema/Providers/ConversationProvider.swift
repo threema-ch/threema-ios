@@ -30,8 +30,8 @@ final class ConversationProvider: libthreemaSwift.ConversationProvider {
     }
 
     func addMessages(messages: [libthreemaSwift.MessageState]) throws {
-        do {
-            try entityManager.performAndWait {
+        try entityManager.performAndWait {
+            do {
                 // 1. For each message of messages:
                 // 2. Add each message of messages to the referred conversation³.
                 for message in messages {
@@ -91,6 +91,7 @@ final class ConversationProvider: libthreemaSwift.ConversationProvider {
                         baseMessageEntity.messageMarkers = messageMarkersEntity
                     }
 
+                    let now = Date.now
                     for reaction in message.reactions {
                         var reactionCreator: ContactEntity?
                         if reaction.creatorIdentity != self.userIdentity.rawValue {
@@ -104,24 +105,27 @@ final class ConversationProvider: libthreemaSwift.ConversationProvider {
                             reactionCreator = contactEntity
                         }
 
-                        let messageReactionEntity = self.entityManager.entityCreator.messageReactionEntity(
-                            reaction: reaction.emoji.codepoint,
-                            message: baseMessageEntity
-                        )
                         guard let reactionCreatedAt = reaction.createdAt.date else {
                             throw ConversationProviderError.invalidDate
                         }
+                        // We mark restored reactions as read, so they will not be in notifications again and do not
+                        // need to be marked as read again.
+                        let messageReactionEntity = self.entityManager.entityCreator.messageReactionEntity(
+                            reaction: reaction.emoji.codepoint,
+                            readAt: now,
+                            message: baseMessageEntity
+                        )
                         messageReactionEntity.date = reactionCreatedAt
                         messageReactionEntity.creator = reactionCreator
                     }
                 }
-            }
 
-            try entityManager.save()
-        }
-        catch {
-            entityManager.rollback()
-            throw error
+                try self.entityManager.save()
+            }
+            catch {
+                self.entityManager.rollback()
+                throw error
+            }
         }
     }
 

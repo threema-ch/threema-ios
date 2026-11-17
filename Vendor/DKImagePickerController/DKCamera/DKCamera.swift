@@ -587,6 +587,14 @@ open class DKCamera: UIViewController, AVCaptureMetadataOutputObjectsDelegate {
         return false
     }
     
+    /***** BEGIN THREEMA MODIFICATION: Orientation lock on iOS 26+ *********/
+    /// `shouldAutorotate` is no longer consulted, the camera UI follows the device motion itself
+    @available(iOS 26.0, *)
+    open override var prefersInterfaceOrientationLocked: Bool {
+        return true
+    }
+    /***** END THREEMA MODIFICATION: Orientation lock on iOS 26+ *********/
+    
     open func setupMotionManager() {
         self.motionManager.accelerometerUpdateInterval = 0.5
         self.motionManager.gyroUpdateInterval = 0.5

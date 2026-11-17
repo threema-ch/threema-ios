@@ -43,7 +43,7 @@ public final class KeyboardResizeCenterY {
     @objc private func keyboardDidShow(notification: NSNotification) {
         if let keyboardSize = (notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)?
             .cgRectValue {
-            let offset: CGFloat = UIScreen.main.bounds.height - resizeView.frame.maxY - keyboardSize.height - 10
+            let offset: CGFloat = parentView.bounds.height - resizeView.frame.maxY - keyboardSize.height - 10
             if offset < 0 {
                 offsetCenterY = NSLayoutConstraint(
                     item: resizeView,

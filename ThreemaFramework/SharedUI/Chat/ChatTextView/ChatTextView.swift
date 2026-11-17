@@ -199,26 +199,33 @@ public final class ChatTextView: UITextView {
             return customMinHeight ?? minHeight
         }
 
-        let isLandscape = UIDevice.current.orientation.isLandscape && traitCollection.verticalSizeClass == .compact
-        let screenHeight = UIScreen.main.bounds.height
+        let isLandscape = traitCollection.verticalSizeClass == .compact
+        let lineHeight = font?.lineHeight ?? minHeight
+        let verticalInsets = textContainerInset.top + textContainerInset.bottom
+
+        // The available height is the height of the window. Until the text view is in one, only limit the number of
+        // lines.
+        guard let windowHeight = window?.bounds.height else {
+            return lineHeight * CGFloat(ChatBarConfiguration.maxNumberOfLinesPortrait) + verticalInsets
+        }
 
         let maxLines =
             if isLandscape {
-                screenHeight > 320
+                windowHeight > 320
                     ? CGFloat(ChatBarConfiguration.maxNumberOfLinesLandscape)
                     : CGFloat(ChatBarConfiguration.maxNumberOfLinesLandscapeSmallScreen)
             }
             else {
-                screenHeight <= 568
+                windowHeight <= 568
                     ? CGFloat(ChatBarConfiguration.maxNumberOfLinesPortraitSmallScreen)
                     : CGFloat(ChatBarConfiguration.maxNumberOfLinesPortrait)
             }
 
-        let lineBasedMax = (font?.lineHeight ?? minHeight) * maxLines + textContainerInset.top + textContainerInset.bottom
+        let lineBasedMax = lineHeight * maxLines + verticalInsets
 
-        // Cap at 1/3 of screen height regardless of orientation; landscape is naturally smaller due to swapped
+        // Cap at 1/3 of window height regardless of orientation; landscape is naturally smaller due to swapped
         // dimensions
-        return min(lineBasedMax, screenHeight * 0.3)
+        return min(lineBasedMax, windowHeight * 0.3)
     }
 
     private var prevSingleLineHeight: CGFloat = 0.0

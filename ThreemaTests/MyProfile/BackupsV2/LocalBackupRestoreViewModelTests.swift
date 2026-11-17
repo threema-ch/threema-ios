@@ -33,19 +33,19 @@ struct LocalBackupRestoreViewModelTests {
     @Test func `In progress state resources are correctly set in the primary language`() {
         let sut = LocalBackupRestoreViewModel(state: .inProgress)
 
-        #expect(sut.state.headerIconName == "arrow.trianglehead.clockwise")
+        #expect(sut.state.headerIconName == "arrow.down.circle.fill")
         #expect(sut.headerTitle == "Restoring Backup")
         #expect(sut.headerSubtitle == "This may take a few minutes depending on your backup size.")
 
         #expect(sut.currentPhase == .userData)
         #expect(sut.restoreItems.map(\.title) == stepTitles)
-        #expect(sut.restoreItems.map(\.state) == [.inProgress, .waiting, .waiting, .waiting, .waiting, .waiting])
+        #expect(sut.restoreItems.map(\.state) == [.inProgress, .waiting, .waiting, .waiting])
     }
 
     @Test func `Complete state resources are correctly set in the primary language`() {
         let sut = LocalBackupRestoreViewModel(state: .complete)
 
-        #expect(sut.state.headerIconName == "checkmark.circle")
+        #expect(sut.state.headerIconName == "checkmark.circle.fill")
         #expect(sut.headerTitle == "Restoring Complete")
         #expect(sut.headerSubtitle == "The app is ready to be used!")
 
@@ -57,7 +57,7 @@ struct LocalBackupRestoreViewModelTests {
         let sut = LocalBackupRestoreViewModel(state: .failed)
         sut.apply(DataRestoreProgress.mock(phase: .messages))
 
-        #expect(sut.state.headerIconName == "exclamationmark.circle")
+        #expect(sut.state.headerIconName == "exclamationmark.circle.fill")
         #expect(sut.headerTitle == "Restoring Failed")
         #expect(
             sut.headerSubtitle ==
@@ -65,17 +65,17 @@ struct LocalBackupRestoreViewModelTests {
         )
 
         #expect(sut.restoreItems.map(\.title) == stepTitles)
-        #expect(sut.restoreItems.map(\.state) == [.done, .done, .done, .done, .done, .failed])
+        #expect(sut.restoreItems.map(\.state) == [.done, .failed, .failed, .failed])
     }
 
     @Test(arguments: [
-        (Phase.userData, [ItemState.inProgress, .waiting, .waiting, .waiting, .waiting, .waiting]),
-        (.contacts, [.done, .inProgress, .waiting, .waiting, .waiting, .waiting]),
-        (.distributionLists, [.done, .done, .waiting, .waiting, .waiting, .waiting]),
-        (.groups, [.done, .done, .inProgress, .waiting, .waiting, .waiting]),
-        (.cspNonces, [.done, .done, .done, .inProgress, .waiting, .waiting]),
-        (.polls, [.done, .done, .done, .done, .inProgress, .waiting]),
-        (.messages, [.done, .done, .done, .done, .done, .inProgress]),
+        (Phase.userData, [ItemState.inProgress, .waiting, .waiting, .waiting]),
+        (.contacts, [.inProgress, .waiting, .waiting, .waiting]),
+        (.distributionLists, [.done, .inProgress, .waiting, .waiting]),
+        (.groups, [.done, .inProgress, .waiting, .waiting]),
+        (.cspNonces, [.done, .inProgress, .waiting, .waiting]),
+        (.polls, [.done, .inProgress, .waiting, .waiting]),
+        (.messages, [.done, .inProgress, .waiting, .waiting]),
     ])
     func `Steps before the reported phase are done and later ones are waiting`(
         phase: Phase,
@@ -93,7 +93,17 @@ struct LocalBackupRestoreViewModelTests {
         sut.apply(DataRestoreProgress.mock(phase: .contacts))
         sut.apply(DataRestoreProgress.mock(phase: .messages))
 
-        #expect(sut.restoreItems.map(\.state) == [.done, .done, .done, .done, .done, .inProgress])
+        #expect(sut.restoreItems.map(\.state) == [.done, .inProgress, .waiting, .waiting])
+    }
+
+    @Test func `Media and finalizing are never in progress as the restore reports no phase for them`() {
+        let sut = LocalBackupRestoreViewModel(state: .inProgress)
+
+        for phase in Phase.allCases {
+            sut.apply(DataRestoreProgress.mock(phase: phase))
+
+            #expect(sut.restoreItems.suffix(2).map(\.state) == [.waiting, .waiting])
+        }
     }
 
     @Test func `A restore that completes leaves every step done`() async {
@@ -117,7 +127,7 @@ struct LocalBackupRestoreViewModelTests {
         #expect(sut.state == .failed)
         #expect(sut.currentPhase == .polls)
         #expect(sut.restoreError?.title == "Restore failed")
-        #expect(sut.restoreItems.map(\.state) == [.done, .done, .done, .done, .failed, .failed])
+        #expect(sut.restoreItems.map(\.state) == [.done, .failed, .failed, .failed])
     }
 
     @Test func `A restore that fails before reporting a phase settles every step as failed`() async {
@@ -174,12 +184,10 @@ struct LocalBackupRestoreViewModelTests {
     }
 
     private let stepTitles = [
-        "Restoring user data",
-        "Restoring contacts",
-        "Restoring groups",
-        "Restoring nonces",
-        "Restoring polls",
-        "Restoring messages",
+        "Preparing restore",
+        "Restoring your chats",
+        "Restoring your media",
+        "Finalizing restore",
     ]
 
     private func makeSUT(

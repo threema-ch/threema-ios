@@ -104,11 +104,11 @@ final class ChatBarEditedMessageView: UIView {
         
         if #available(iOS 26, *) {
             contentStackView.isLayoutMarginsRelativeArrangement = true
-            contentStackView.layoutMargins = .init(
+            contentStackView.directionalLayoutMargins = .init(
                 top: Config.glassLayoutMargins,
-                left: Config.glassLayoutMargins,
+                leading: Config.glassLayoutMargins,
                 bottom: Config.glassLayoutMargins,
-                right: Config.glassLayoutMargins
+                trailing: Config.glassLayoutMargins
             )
         }
         

@@ -36,6 +36,9 @@ class CoreDataContactListProvider<Entity: NSObject, BusinessEntity: NSObject>: N
         super.init()
         fetchedResultsController.delegate = self
         try? fetchedResultsController.performFetch()
+        // Seeded synchronously so the first subscriber gets the fetched content instead of an empty placeholder,
+        // which would show the content unavailable view until the asynchronous delegate update arrives
+        snapshotSubject.value = snapshot(of: fetchedResultsController)
 
         Publishers.Merge(
             userSettings.publisher(for: \.hideStaleContacts).dropFirst().map { _ in () },

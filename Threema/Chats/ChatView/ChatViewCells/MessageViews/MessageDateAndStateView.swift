@@ -150,9 +150,16 @@ final class MessageDateAndStateView: UIView {
         statusImageView.translatesAutoresizingMaskIntoConstraints = false
         markersView.translatesAutoresizingMaskIntoConstraints = false
                 
+        // Together with the required symbol offsets from the trailing end, a required leading constraint asks for a
+        // minimum width that transient layout passes (e.g. a split view collapse) don't always provide. Breaking a
+        // required constraint in a table view cell can corrupt the Auto Layout engine, which then throws when the cell
+        // is deallocated.
+        let dateLabelLeadingConstraint = dateLabel.leadingAnchor.constraint(greaterThanOrEqualTo: leadingAnchor)
+        dateLabelLeadingConstraint.priority = .required - 1
+
         NSLayoutConstraint.activate([
             dateLabel.topAnchor.constraint(equalTo: topAnchor),
-            dateLabel.leadingAnchor.constraint(greaterThanOrEqualTo: leadingAnchor),
+            dateLabelLeadingConstraint,
             dateLabel.bottomAnchor.constraint(equalTo: bottomAnchor),
         ])
     }

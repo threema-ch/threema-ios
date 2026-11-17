@@ -14,6 +14,10 @@ extension LocationMessageEntity: PreviewableMessage {
         }
     }
     
+    public var privatePreviewDescription: MessagePreviewDescription {
+        MessagePreviewDescription(typeName: #localize("location"), quotedText: poiName ?? poiAddress)
+    }
+
     public var previewSymbolName: String? {
         "mappin.circle.fill"
     }

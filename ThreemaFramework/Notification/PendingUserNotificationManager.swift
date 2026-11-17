@@ -4,6 +4,7 @@ import Foundation
 import Intents
 import PromiseKit
 import ThreemaEssentials
+import ThreemaMacros
 
 public enum UserNotificationStage: String, CaseIterable {
     case initial
@@ -13,79 +14,157 @@ public enum UserNotificationStage: String, CaseIterable {
 }
 
 public protocol PendingUserNotificationManagerProtocol {
-    func pendingUserNotification(for threemaPushNotification: ThreemaPushNotification, stage: UserNotificationStage)
+    /// Create or update pending user notification for threema push.
+    /// - Parameters:
+    ///     - for: `ThreemaPushNotification`
+    ///     - stage: `UserNotificationStage` for the notification, usually is `.initial`
+    /// - Returns: Optional `PendingUserNotification`
+    func pendingUserNotification(
+        for threemaPushNotification: ThreemaPushNotification,
+        stage: UserNotificationStage
+    )
         -> PendingUserNotification?
+    
+    /// Create or update pending user notification for an abstract message.
+    /// - Parameters:
+    ///     - for: `AbstractMessage`
+    ///     - stage: `UserNotificationStage` for the notification. Not used for fetching the pending notification,
+    /// usually is `.abstract`
+    /// - Returns: Optional `PendingUserNotification`
     func pendingUserNotification(
         for abstractMessage: AbstractMessage,
         stage: UserNotificationStage
     ) -> PendingUserNotification?
+    
+    /// Create or update pending user notification for abstract message and set given base message.
+    /// - Parameters:
+    ///     - for: `AbstractMessage`
+    ///     - baseMessage: Created or edited message
+    ///     - stage: Stage for the notification, usually is `.base` or `.final`
+    /// - Returns: Optional `PendingUserNotification`
     func pendingUserNotification(
         for abstractMessage: AbstractMessage,
         baseMessage: BaseMessageEntity,
         stage: UserNotificationStage
     ) -> PendingUserNotification?
-    func pendingUserNotification(for boxedMessage: BoxedMessage, stage: UserNotificationStage)
+    
+    func pendingUserNotification(
+        for boxedMessage: BoxedMessage,
+        stage: UserNotificationStage
+    )
         -> PendingUserNotification?
+    
+    /// Start timed notification for incoming message.
+    /// - Parameter pendingUserNotification: Informations about incoming message
+    /// - Returns: `true` if pending user notification successfully processed, shown or suppressed notification
     func startTimedUserNotification(pendingUserNotification: PendingUserNotification) -> Guarantee<Bool>
+    
+    /// Start test notification (necessary for customer support).
+    /// - Parameters:
+    ///     - payload: Information about test push
+    ///     - completion: Notification's completion handler
     func startTestUserNotification(payload: [AnyHashable: Any], completion: @escaping () -> Void)
+   
+    /// Edit threema web notification content.
+    /// - Parameter payload: Information about threema web push
+    /// - Returns: User notification for user notification center
     func editThreemaWebNotification(payload: [AnyHashable: Any]) -> UNMutableNotificationContent
+    
+    /// Remove all timed user notifications from notification center for pending user notification.
+    /// - Parameter pendingUserNotification: Remove all timed notifications for this pending user notification
     func removeAllTimedUserNotifications(pendingUserNotification: PendingUserNotification)
+    
+    /// Add pending user notification as processed.
+    /// - Parameter pendingUserNotification: Adding pending user notification as processed
     func addAsProcessed(pendingUserNotification: PendingUserNotification)
+    
+    /// Check is pending user notification processed.
+    /// - Returns: `true` if pending user notification processed otherwise false
     func isProcessed(pendingUserNotification: PendingUserNotification) -> Bool
+    
+    /// Get a list of pending user notifications are not pending in notification center.
+    /// - Returns: Pending user notifications or nil
     func pendingUserNotificationsAreNotPending() -> [PendingUserNotification]?
+    
     func isValid(pendingUserNotification: PendingUserNotification) -> Bool
+    
+    /// Loads the lists of pending and processed user notifications.
     func loadAll()
 }
 
 public final class PendingUserNotificationManager: NSObject, PendingUserNotificationManagerProtocol {
 
-    private let userNotificationManager: UserNotificationManagerProtocol
-    private let userNotificationCenterManager: UserNotificationCenterManagerProtocol
-    private let pushSettingManager: PushSettingManagerProtocol
-    private let entityManager: EntityManager
-
+    // MARK: - Static
+    // Pending
     private static var pendingUserNotifications: [PendingUserNotification]?
     public static let pendingQueue = DispatchQueue(label: "ch.threema.PendingUserNotificationManager.pendingQueue")
-
+    static var pathPendingUserNotifications: String {
+        var path: String?
+        if path == nil {
+            path = FileUtility.shared.appDataDirectory(appGroupID: AppGroup.groupID())!
+                .appendingPathComponent("PendingUserNotifications").path
+        }
+        return path!
+    }
+    
+    // Processed
+    public static let processedUserNotificationsFileName = "ProcessedUserNotifications"
     private static var processedUserNotifications: [String]?
     private static let maxProcessedUserNotificationsCount = 300
     private static let processedQueue = DispatchQueue(label: "ch.threema.PendingUserNotificationManager.processedQueue")
+    static var pathProcessedUserNotifications: String {
+        var path: String?
+        if path == nil {
+            path = FileUtility.shared.appDataDirectory(appGroupID: AppGroup.groupID())!
+                .appendingPathComponent(processedUserNotificationsFileName).path
+        }
+        return path!
+    }
 
-    public static let processedUserNotificationsFileName = "ProcessedUserNotifications"
+    // MARK: - Private properties
+    
+    private let userNotificationManager: any UserNotificationManagerProtocol
+    private let userNotificationCenterManager: any UserNotificationCenterManagerProtocol
+    private let pushSettingManager: any PushSettingManagerProtocol
+    private let entityManager: EntityManager
+    private let userSettings: any UserSettingsProtocol
 
+    // MARK: - Lifecycle
+    
     required init(
-        userNotificationManager: UserNotificationManagerProtocol,
-        userNotificationCenterManager: UserNotificationCenterManagerProtocol,
-        pushSettingManager: PushSettingManagerProtocol,
-        entityManager: EntityManager
+        userNotificationManager: any UserNotificationManagerProtocol,
+        userNotificationCenterManager: any UserNotificationCenterManagerProtocol,
+        pushSettingManager: any PushSettingManagerProtocol,
+        entityManager: EntityManager,
+        userSettings: any UserSettingsProtocol
     ) {
         self.userNotificationManager = userNotificationManager
         self.userNotificationCenterManager = userNotificationCenterManager
         self.pushSettingManager = pushSettingManager
         self.entityManager = entityManager
+        self.userSettings = userSettings
         super.init()
 
         loadAll()
     }
     
     public convenience init(
-        userNotificationManager: UserNotificationManagerProtocol,
-        pushSettingManager: PushSettingManagerProtocol,
-        entityManager: EntityManager
+        userNotificationManager: any UserNotificationManagerProtocol,
+        pushSettingManager: any PushSettingManagerProtocol,
+        entityManager: EntityManager,
+        userSettings: any UserSettingsProtocol
     ) {
         self.init(
             userNotificationManager: userNotificationManager,
             userNotificationCenterManager: UserNotificationCenterManager(),
             pushSettingManager: pushSettingManager,
-            entityManager: entityManager
+            entityManager: entityManager,
+            userSettings: userSettings
         )
     }
     
-    /// Create or update pending user notification for threema push.
-    /// - Parameters:
-    ///     - for: Threema push
-    ///     - stage: Stage for the notification, usually is 'initial'
-    /// - Returns: Pending user notification or nil
+    // MARK: - Public functions
+    
     public func pendingUserNotification(
         for threemaPushNotification: ThreemaPushNotification,
         stage: UserNotificationStage
@@ -102,11 +181,6 @@ public final class PendingUserNotificationManager: NSObject, PendingUserNotifica
         return pendingUserNotification
     }
     
-    /// Create or update pending user notification for abstract message.
-    /// - Parameters:
-    ///     - for: Abstract message
-    ///     - stage: Stage for the notification. Not used for fetching the pending notification
-    /// - Returns: Pending user notification or nil, usually is 'abstract'
     public func pendingUserNotification(
         for abstractMessage: AbstractMessage,
         stage: UserNotificationStage
@@ -123,12 +197,6 @@ public final class PendingUserNotificationManager: NSObject, PendingUserNotifica
         return pendingUserNotification
     }
 
-    /// Create or update pending user notification for abstract message and set given base message.
-    /// - Parameters:
-    ///     - for: Abstract message
-    ///     - baseMessage: Created or edited message
-    ///     - stage: Stage for the notification, usually is 'base' or 'final'
-    /// - Returns: Pending user notification or nil
     public func pendingUserNotification(
         for abstractMessage: AbstractMessage,
         baseMessage: BaseMessageEntity,
@@ -139,12 +207,23 @@ public final class PendingUserNotificationManager: NSObject, PendingUserNotifica
             identity: abstractMessage.fromIdentity,
             messageID: abstractMessage.messageID
         ) {
+            // Reactions of everybody to the same message update one and the same notification, all other
+            // notifications are per sender and message
+            let contentKey: PendingUserNotificationKey? =
+                if abstractMessage is ReactionMessage || abstractMessage is GroupReactionMessage {
+                    PendingUserNotificationKey.reactionKey(reactedMessageID: baseMessage.id)
+                }
+                else {
+                    PendingUserNotificationKey.key(
+                        identity: abstractMessage.fromIdentity,
+                        messageID: baseMessage.id
+                    )
+                }
+
             PendingUserNotificationManager.pendingQueue.sync {
                 pendingUserNotification = getPendingUserNotification(key: key)
-                pendingUserNotification?.contentKey = PendingUserNotificationKey.key(
-                    identity: abstractMessage.fromIdentity,
-                    messageID: baseMessage.id
-                ) ?? key
+                pendingUserNotification?.abstractMessage = abstractMessage
+                pendingUserNotification?.contentKey = contentKey ?? key
                 pendingUserNotification?.baseMessage = baseMessage
                 pendingUserNotification?.stage = stage
                 PendingUserNotificationManager.savePendingUserNotifications()
@@ -168,9 +247,6 @@ public final class PendingUserNotificationManager: NSObject, PendingUserNotifica
         return pendingUserNotification
     }
 
-    /// Start timed notification for incoming message.
-    /// - Parameter pendingUserNotification: Informations about incoming message
-    /// - Returns: True pending user notification successfully processed, showed or suppressed notification
     @discardableResult public func startTimedUserNotification(pendingUserNotification: PendingUserNotification)
         -> Guarantee<Bool> {
         Guarantee { seal in
@@ -184,12 +260,16 @@ public final class PendingUserNotificationManager: NSObject, PendingUserNotifica
                 pendingUserNotification.abstractMessage is EditGroupMessage,
                 pendingUserNotification.baseMessage != nil,
                 userNotificationCenterManager.isDelivered(contentKey: pendingUserNotification.contentKey) {
-
                 // In general we will not display a notification for an edit message, but if a notification has already
                 // been
                 // delivered, the content of the notification will be changed. Therefore `canShowUserNotification` is
                 // not
                 // validated in this case.
+            }
+            else if pendingUserNotification.abstractMessage is ReactionMessage ||
+                pendingUserNotification.abstractMessage is GroupReactionMessage,
+                pendingUserNotification.baseMessage != nil {
+                // We only show a notification for reactions if there is a base message for them.
             }
             else {
                 guard pendingUserNotification.abstractMessage?.canShowUserNotification() ?? true else {
@@ -230,14 +310,20 @@ public final class PendingUserNotificationManager: NSObject, PendingUserNotifica
                 return
             }
             
+            let isReactionNotification = pendingUserNotification.abstractMessage is ReactionMessage
+                || pendingUserNotification.abstractMessage is GroupReactionMessage
+
             // Add notification or suppress it
             var suppress = false
             var silent = false
-                    
+
             if let pushSetting = pushSettingManager.pushSetting(for: pendingUserNotification) {
                 if userNotificationContent.isGroupMessage {
                     if let baseMessage = pendingUserNotification.baseMessage {
-                        suppress = !pushSettingManager.canSendPush(for: baseMessage) || !pushSetting
+                        suppress = !pushSettingManager.canSendPush(
+                            for: baseMessage,
+                            isReaction: isReactionNotification
+                        ) || !pushSetting
                             .canSendPushGroupCallStartMessage(for: pendingUserNotification.abstractMessage)
                     }
                     else {
@@ -263,22 +349,84 @@ public final class PendingUserNotificationManager: NSObject, PendingUserNotifica
                 return
             }
             
+            // If we got a reaction notification, but there are no longer any reactions for the message, we make sure to
+            // remove any existing
+            // notifications for the affected message already visible.
+            if isReactionNotification, let baseMessageObjectID = pendingUserNotification.baseMessage?.objectID {
+                let (isOwnMessage, reactionCount) = entityManager.performAndWait {
+                    guard let baseMessage = self.entityManager.entityFetcher
+                        .existingObject(with: baseMessageObjectID) as? BaseMessageEntity else {
+                        return (true, 0)
+                    }
+                    let reactionCount = self.entityManager.entityFetcher
+                        .unreadMessageReactionEntities(for: baseMessage)?.count ?? 0
+                    return (baseMessage.isOwnMessage, reactionCount)
+                }
+
+                guard isOwnMessage else {
+                    DDLogWarn(
+                        "[Push] Reaction not for own message. Suppressed push, removing from pending, key: \(pendingUserNotification.contentKey)"
+                    )
+                    userNotificationCenterManager.remove(
+                        contentKey: pendingUserNotification.contentKey,
+                        exceptStage: nil,
+                        justPending: true
+                    )
+                    seal(false)
+                    return
+                }
+                
+                if reactionCount == 0 {
+                    DDLogWarn(
+                        "[Push] No reactions to show. Suppressed push, removing from pending, key: \(pendingUserNotification.contentKey)"
+                    )
+                    userNotificationCenterManager.remove(
+                        contentKey: pendingUserNotification.contentKey,
+                        exceptStage: nil,
+                        justPending: false
+                    )
+                    seal(false)
+                    return
+                }
+
+                let contentKey = pendingUserNotification.contentKey
+                if pendingUserNotification.isReactionWithdrawal,
+                   !userNotificationCenterManager.isDelivered(contentKey: contentKey),
+                   !UserNotificationStage.allCases.contains(where: {
+                       userNotificationCenterManager.isPending(contentKey: contentKey, stage: $0)
+                   }) {
+                    DDLogNotice("[Push] Reaction withdrawn, but no notification to update, key: \(contentKey)")
+                    seal(false)
+                    return
+                }
+            }
+            
             var notification = UNMutableNotificationContent()
             userNotificationManager.applyContent(
                 from: userNotificationContent,
                 to: &notification,
-                silent: silent,
-                baseMessage: pendingUserNotification.baseMessage
+                silent: silent
             )
                         
-            let businessInjector = BusinessInjector()
-            let notificationType = NotificationType.type(for: businessInjector.userSettings.notificationType)
+            let notificationType = NotificationType.type(for: userSettings.notificationType)
                         
             // Add communication notification if enabled
             guard case .complete = notificationType, let interaction = pendingUserNotification.interaction else {
                 // Add standard notification
                 addPendingUserNotification(for: notification, with: pendingUserNotification, seal: seal)
                 return
+            }
+
+            // Siri announces group messages from the content title, not from the intent's sender
+            if userNotificationContent.isGroupMessage,
+               let fromName = userNotificationContent.fromName,
+               !notification.title.isEmpty,
+               notification.title != fromName {
+                notification.title = String.localizedStringWithFormat(
+                    #localize("notification_group_message_title"),
+                    fromName,
+                    notification.title
+                )
             }
 
             // Donating
@@ -340,7 +488,12 @@ public final class PendingUserNotificationManager: NSObject, PendingUserNotifica
         with pendingUserNotification: PendingUserNotification,
         seal: @escaping (Bool) -> Void
     ) {
-        
+        // Taking a reaction back only updates the notification about the others, it must not alert again
+        if pendingUserNotification.isReactionWithdrawal {
+            notification.sound = nil
+            notification.interruptionLevel = .passive
+        }
+
         userNotificationCenterManager.add(
             contentKey: pendingUserNotification.contentKey,
             stage: pendingUserNotification.stage,
@@ -362,10 +515,6 @@ public final class PendingUserNotificationManager: NSObject, PendingUserNotifica
         }
     }
     
-    /// Start test notification (necessary for customer support).
-    /// - Parameters:
-    ///     - payload: Information about test push
-    ///     - completion: Notification's completion handler
     public func startTestUserNotification(payload: [AnyHashable: Any], completion: @escaping () -> Void) {
         let notificationContent = userNotificationManager.testNotificationContent(payload: payload)
 
@@ -383,15 +532,10 @@ public final class PendingUserNotificationManager: NSObject, PendingUserNotifica
         }
     }
     
-    /// Edit threema web notification content.
-    /// - Parameter payload: Information about threema web push
-    /// - Returns: User notification for user notification center
     public func editThreemaWebNotification(payload: [AnyHashable: Any]) -> UNMutableNotificationContent {
         userNotificationManager.threemaWebNotificationContent(payload: payload)
     }
 
-    /// Remove all timed user notifications from notification center for pending user notification.
-    /// - Parameter pendingUserNotification: Remove all timed notifications for this pending user notification
     public func removeAllTimedUserNotifications(pendingUserNotification: PendingUserNotification) {
         DDLogNotice("[Push] Removing all notifications from \(#function)")
         userNotificationCenterManager.remove(
@@ -401,8 +545,6 @@ public final class PendingUserNotificationManager: NSObject, PendingUserNotifica
         )
     }
     
-    /// Add pending user notification as processed.
-    /// - Parameter pendingUserNotification: Adding pending user notification as processed
     public func addAsProcessed(pendingUserNotification: PendingUserNotification) {
         // A processed notification is done, so it must not stay pending: otherwise only the (limited) processed list
         // keeps `showIsNotPending()` from showing it again. Async, because this is also called on `pendingQueue`.
@@ -441,8 +583,6 @@ public final class PendingUserNotificationManager: NSObject, PendingUserNotifica
         }
     }
     
-    /// Check is pending user notification processed.
-    /// - Returns:True if pending user notification processed otherwise false
     public func isProcessed(pendingUserNotification: PendingUserNotification) -> Bool {
         var isProcessed = isProcessed(key: pendingUserNotification.key)
         if !isProcessed,
@@ -466,8 +606,6 @@ public final class PendingUserNotificationManager: NSObject, PendingUserNotifica
         }
     }
     
-    /// Get a list of pending user notifications are not pending in notification center.
-    /// - Returns: Pending user notifications or nil
     public func pendingUserNotificationsAreNotPending() -> [PendingUserNotification]? {
         guard let pendingUserNotifications = PendingUserNotificationManager.pendingUserNotifications,
               !pendingUserNotifications.isEmpty else {
@@ -499,7 +637,6 @@ public final class PendingUserNotificationManager: NSObject, PendingUserNotifica
         return true
     }
 
-    /// Loads the lists of pending and processed user notifications.
     public func loadAll() {
         let fileUtility = FileUtility.shared!
         
@@ -617,7 +754,7 @@ public final class PendingUserNotificationManager: NSObject, PendingUserNotifica
         PendingUserNotificationManager.processedUserNotifications = nil
     }
     
-    fileprivate static func savePendingUserNotifications() {
+    private static func savePendingUserNotifications() {
         let fileUtility = FileUtility.shared!
         
         do {
@@ -683,24 +820,6 @@ public final class PendingUserNotificationManager: NSObject, PendingUserNotifica
                 "[Push] Unable to write \(pathProcessedUserNotifications) file: \(error)"
             )
         }
-    }
-    
-    static var pathPendingUserNotifications: String {
-        var path: String?
-        if path == nil {
-            path = FileUtility.shared.appDataDirectory(appGroupID: AppGroup.groupID())!
-                .appendingPathComponent("PendingUserNotifications").path
-        }
-        return path!
-    }
-    
-    static var pathProcessedUserNotifications: String {
-        var path: String?
-        if path == nil {
-            path = FileUtility.shared.appDataDirectory(appGroupID: AppGroup.groupID())!
-                .appendingPathComponent(processedUserNotificationsFileName).path
-        }
-        return path!
     }
     
     private func getPendingUserNotification(key: String) -> PendingUserNotification? {

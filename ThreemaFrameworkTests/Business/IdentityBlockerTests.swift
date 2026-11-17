@@ -47,8 +47,10 @@ struct IdentityBlockerTests {
     @Test func `8: If unknown contacts are blocked and the contact is not hidden it is not blocked`() async throws {
         let testIdentity = try ThreemaIdentity(identity: "ABCDEFGH")
         
-        let contactEntity = testDatabase.preparer.createContact(identity: testIdentity.rawValue)
-        contactEntity.isHidden = false
+        testDatabase.preparer.save {
+            let contactEntity = testDatabase.preparer.createContact(identity: testIdentity.rawValue)
+            contactEntity.isHidden = false
+        }
         
         let identityBlocker = createIdentityBlocker(blockUnknown: true)
         
@@ -60,8 +62,10 @@ struct IdentityBlockerTests {
         let testGroupCreateIdentity = try ThreemaIdentity(identity: "CREATOR0")
         let testIdentity = try ThreemaIdentity(identity: "ABCDEFGH")
         
-        let contactEntity = testDatabase.preparer.createContact(identity: testIdentity.rawValue)
-        contactEntity.isHidden = true
+        testDatabase.preparer.save {
+            let contactEntity = testDatabase.preparer.createContact(identity: testIdentity.rawValue)
+            contactEntity.isHidden = true
+        }
         
         testDatabase.preparer.createGroup(
             groupCreatorIdentity: testGroupCreateIdentity.rawValue,
@@ -76,8 +80,10 @@ struct IdentityBlockerTests {
     @Test func `10: If unknown contacts are blocked and the contact is hidden it is blocked`() async throws {
         let testIdentity = try ThreemaIdentity(identity: "ABCDEFGH")
         
-        let contactEntity = testDatabase.preparer.createContact(identity: testIdentity.rawValue)
-        contactEntity.isHidden = true
+        testDatabase.preparer.save {
+            let contactEntity = testDatabase.preparer.createContact(identity: testIdentity.rawValue)
+            contactEntity.isHidden = true
+        }
         
         let identityBlocker = createIdentityBlocker(blockUnknown: true)
         
@@ -88,14 +94,18 @@ struct IdentityBlockerTests {
     ) async throws {
         let testIdentity = try ThreemaIdentity(identity: "ABCDEFGH")
         
-        let contactEntity = testDatabase.preparer.createContact(identity: testIdentity.rawValue)
-        contactEntity.isHidden = true
+        testDatabase.preparer.save {
+            let contactEntity = testDatabase.preparer.createContact(identity: testIdentity.rawValue)
+            contactEntity.isHidden = true
+        }
         
         let (_, groupEntity, _) = testDatabase.preparer.createGroup(
             groupCreatorIdentity: testIdentity.rawValue,
             members: []
         )
-        groupEntity.state = GroupState.left.rawValue as NSNumber
+        testDatabase.preparer.save {
+            groupEntity.state = GroupState.left.rawValue as NSNumber
+        }
         
         let identityBlocker = createIdentityBlocker(blockUnknown: true)
         

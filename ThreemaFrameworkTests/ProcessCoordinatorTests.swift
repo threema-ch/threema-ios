@@ -69,7 +69,7 @@ final class ProcessCoordinatorTests {
                 fromAppType: AppGroupTypeApp,
                 myState: .requested,
                 myAppType: AppGroupTypeShareExtension,
-                newState: .using
+                newState: .requested
             ),
             TestCaseAccessState(
                 receivedState: .unused,
@@ -192,7 +192,7 @@ final class ProcessCoordinatorTests {
                 fromAppType: AppGroupTypeApp,
                 myState: .requested,
                 myAppType: AppGroupTypeNotificationExtension,
-                newState: .using
+                newState: .requested
             ),
             TestCaseAccessState(
                 receivedState: .unused,
@@ -315,7 +315,7 @@ final class ProcessCoordinatorTests {
                 fromAppType: AppGroupTypeShareExtension,
                 myState: .requested,
                 myAppType: AppGroupTypeApp,
-                newState: .using
+                newState: .requested
             ),
             TestCaseAccessState(
                 receivedState: .unused,
@@ -438,7 +438,7 @@ final class ProcessCoordinatorTests {
                 fromAppType: AppGroupTypeShareExtension,
                 myState: .requested,
                 myAppType: AppGroupTypeNotificationExtension,
-                newState: .using
+                newState: .requested
             ),
             TestCaseAccessState(
                 receivedState: .unused,
@@ -561,7 +561,7 @@ final class ProcessCoordinatorTests {
                 fromAppType: AppGroupTypeNotificationExtension,
                 myState: .requested,
                 myAppType: AppGroupTypeApp,
-                newState: .using
+                newState: .requested
             ),
             TestCaseAccessState(
                 receivedState: .unused,
@@ -683,7 +683,7 @@ final class ProcessCoordinatorTests {
                 fromAppType: AppGroupTypeNotificationExtension,
                 myState: .requested,
                 myAppType: AppGroupTypeShareExtension,
-                newState: .using
+                newState: .requested
             ),
             TestCaseAccessState(
                 receivedState: .unused,
@@ -806,7 +806,7 @@ final class ProcessCoordinatorTests {
         }
     }
 
-    @Test func testAppRequestAccess() async throws {
+    @Test func testAppRequestAccessChangeToUsingAfterTimeout() async throws {
         let processCoordinator = ProcessCoordinator(
             myAppType: AppGroupTypeApp,
             state: .requested,
@@ -819,6 +819,42 @@ final class ProcessCoordinatorTests {
         #expect(state == .using)
 
         try #require(ddLoggerMock.exists(message: "[Darwin] No answer to request access"))
+    }
+
+    @Test(
+        "Change the `state` to `using` only after at least one additional `unused` message has been received",
+        arguments: [false, true]
+    )
+    func testAppRequestAccessChangeToUsingAfterSecondIncomingUnused(sendTwoUnusedMessages: Bool) async throws {
+        let userSettingsMock = UserSettingsMock()
+        userSettingsMock.ipcSecretPrefix = BytesUtility.generateRandomBytes(length: 8)
+
+        let processCoordinator = ProcessCoordinator(
+            myAppType: AppGroupTypeApp,
+            state: .requested,
+            serverConnector: ServerConnectorMock(),
+            userSettings: userSettingsMock
+        )
+
+        @Sendable func postUsing() {
+            DarwinNotificationCenter.shared.post(.notificationName(
+                appType: AppGroupTypeNotificationExtension,
+                secret: userSettingsMock.ipcSecretPrefix!.hexString,
+                state: .unused
+            ))
+        }
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(30)) {
+            postUsing()
+
+            if sendTwoUnusedMessages {
+                postUsing()
+            }
+        }
+
+        let state = await processCoordinator.requestAccess(pollingTimeout: 700)
+
+        #expect(state == (sendTwoUnusedMessages ? .using : .requested))
     }
 
     @Test func testIsNotificationExtensionRequestedAppPostRequested() async throws {

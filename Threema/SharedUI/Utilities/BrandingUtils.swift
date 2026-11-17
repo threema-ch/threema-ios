@@ -87,14 +87,16 @@ public enum BrandingUtils {
         var totalFreeWidth: CGFloat = navigationController.navigationBar.frame.width
         var frame = CGRect.zero
         
-        // Subtract NavbarItems
+        // Subtract NavbarItems. The title view is centered in the bar, so the wider side (bar margin plus items)
+        // limits it on both sides.
         let leftItemsWidth = navigationItem.leftBarButtonItems?.reduce(CGFloat(0)) {
             $0 + ($1.customView?.frame.width ?? ($1.width > 0 ? $1.width : 44))
         } ?? 0
         let rightItemsWidth = navigationItem.rightBarButtonItems?.reduce(CGFloat(0)) {
             $0 + ($1.customView?.frame.width ?? ($1.width > 0 ? $1.width : 44))
         } ?? 0
-        totalFreeWidth -= leftItemsWidth + rightItemsWidth
+        let margins = navigationController.navigationBar.directionalLayoutMargins
+        totalFreeWidth -= 2 * max(margins.leading + leftItemsWidth, margins.trailing + rightItemsWidth)
     
         // Scale
         while !hasCorrectSize, height > 0 {

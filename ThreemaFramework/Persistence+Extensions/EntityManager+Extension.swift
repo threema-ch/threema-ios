@@ -24,24 +24,21 @@ extension EntityManager {
         setLastUpdate: Bool = true,
         keepContactHidden: Bool = false
     ) -> ConversationEntity? {
-        let conversation = entityFetcher.conversationEntity(for: contactEntity.identity)
+        var conversation = entityFetcher.conversationEntity(for: contactEntity.identity)
 
         if createIfNotExisting, conversation == nil {
-            let conversation = entityCreator.conversationEntity(setLastUpdate: setLastUpdate)
-            conversation.contact = contactEntity
+            let newConversation = entityCreator.conversationEntity(setLastUpdate: setLastUpdate)
+            newConversation.contact = contactEntity
 
             if contactEntity.showOtherThreemaTypeIcon {
                 // Add work info as first message
                 let systemMessage = entityCreator.systemMessageEntity(
                     for: .contactOtherAppInfo,
-                    in: conversation
+                    in: newConversation
                 )
                 systemMessage.remoteSentDate = Date()
             }
-            return conversation
-        }
-        else if createIfNotExisting, conversation == nil {
-            DDLogError("Create conversation failed")
+            conversation = newConversation
         }
 
         // Check if the contact still needs to be hidden
@@ -180,14 +177,16 @@ extension EntityManager {
             }
 
             // Apply contact entity and conversation to current DB context
-            if let conversationObjectID = resultObjectIDs.conversationObjectID {
-                result.conversation = dbContext.current.object(with: conversationObjectID) as? ConversationEntity
-            }
-            if let senderObjectID = resultObjectIDs.senderObjectID {
-                result.sender = dbContext.current.object(with: senderObjectID) as? ContactEntity
-            }
-            if let receiverObjectID = resultObjectIDs.receiverObjectID {
-                result.receiver = dbContext.current.object(with: receiverObjectID) as? ContactEntity
+            dbContext.current.performAndWait {
+                if let conversationObjectID = resultObjectIDs.conversationObjectID {
+                    result.conversation = dbContext.current.object(with: conversationObjectID) as? ConversationEntity
+                }
+                if let senderObjectID = resultObjectIDs.senderObjectID {
+                    result.sender = dbContext.current.object(with: senderObjectID) as? ContactEntity
+                }
+                if let receiverObjectID = resultObjectIDs.receiverObjectID {
+                    result.receiver = dbContext.current.object(with: receiverObjectID) as? ContactEntity
+                }
             }
         }
 
@@ -219,7 +218,9 @@ extension EntityManager {
         }
 
         if let objectID {
-            dbContext.current.object(with: objectID)
+            dbContext.current.performAndWait {
+                _ = dbContext.current.object(with: objectID)
+            }
         }
 
         return objectID != nil
@@ -275,7 +276,9 @@ extension EntityManager {
                 // Apply `ContactEntity` to current DB context
                 if let objectID {
                     DDLogNotice("Apply contact entity \(identity) to current DB context")
-                    contactEntity = dbContext.current.object(with: objectID) as? ContactEntity
+                    contactEntity = dbContext.current.performAndWait {
+                        dbContext.current.object(with: objectID) as? ContactEntity
+                    }
                 }
             }
 
@@ -385,10 +388,12 @@ extension EntityManager {
                 // Apply message to current DB context
                 if let messageObjectID {
                     DDLogNotice("Apply message \(abstractMessage.messageID.hexString) to current DB context")
-                    message = dbContext.current.object(with: messageObjectID) as? BaseMessageEntity
-                    guard !(message?.delivered.boolValue ?? false) else {
-                        DDLogWarn("Message ID \(abstractMessage.messageID.hexString) already processed")
-                        throw ThreemaProtocolError.messageAlreadyProcessed
+                    try dbContext.current.performAndWait {
+                        message = dbContext.current.object(with: messageObjectID) as? BaseMessageEntity
+                        guard !(message?.delivered.boolValue ?? false) else {
+                            DDLogWarn("Message ID \(abstractMessage.messageID.hexString) already processed")
+                            throw ThreemaProtocolError.messageAlreadyProcessed
+                        }
                     }
                 }
             }

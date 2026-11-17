@@ -233,6 +233,27 @@ final class RemoteSecretResolvingMock: RemoteSecretResolving {
     }
 }
 
+// MARK: - BusinessResolvingMock
+
+final class BusinessResolvingMock: BusinessResolving {
+    
+    /// Result handed back by `resolve(with:and:)`. Defaults to an error so a test only reaches the setup wizard when
+    /// it says so; tests that need to get past resolution set a `.ready` result explicitly.
+    var readyBusinessResolverResult: Result<any BusinessInjectorProtocol, Error> = .failure(
+        BusinessResolver.Error.noIdentityFound
+    )
+    
+    private(set) var resolveCallCount = 0
+    
+    func resolve(
+        with remoteSecretManager: any RemoteSecretManagerProtocol,
+        and keychainManager: any KeychainManagerProtocol
+    ) async throws -> any BusinessInjectorProtocol {
+        resolveCallCount += 1
+        return try readyBusinessResolverResult.get()
+    }
+}
+
 // MARK: - OnboardingCompletingMock
 
 @MainActor
@@ -261,6 +282,7 @@ final class OnboardingCompletingMock: OnboardingCompleting {
     func complete(
         remoteSecretManager: any RemoteSecretManagerProtocol,
         keychainManager: any KeychainManagerProtocol,
+        businessInjector: any BusinessInjectorProtocol,
         setupConfiguration: SetupConfiguration?,
         bootstrapMDM: any BootstrapMDMSetupProtocol
     ) async throws -> AppDependencyContainer {
@@ -287,14 +309,14 @@ final class SafeRestoringMock: SafeRestoring {
     /// Error thrown by `prepareRestore(with:)`, if any.
     var prepareError: Error?
 
-    /// Error thrown by `performRestore(preparation:remoteSecretManager:)`, if any.
+    /// Error thrown by `performRestore(preparation:businessInjector:)`, if any.
     var performError: Error?
 
     /// Phase 1's result. Set by `prepareRestore` from the info it receives.
     private(set) var preparation: SafeRestorePreparation?
 
     private(set) var calls: [Call] = []
-    private(set) var capturedRemoteSecretManager: (any RemoteSecretManagerProtocol)?
+    private(set) var capturedBusinessInjector: (any BusinessInjectorProtocol)?
 
     func prepareRestore(with info: OnboardingRestoreSafeInformation) async throws -> SafeRestorePreparation {
         calls.append(.prepareRestore(identity: info.identity))
@@ -319,10 +341,10 @@ final class SafeRestoringMock: SafeRestoring {
 
     func performRestore(
         preparation: SafeRestorePreparation,
-        remoteSecretManager: any RemoteSecretManagerProtocol
+        businessInjector: any BusinessInjectorProtocol
     ) async throws {
         calls.append(.performRestore(restoreIdentityOnly: preparation.restoreIdentityOnly))
-        capturedRemoteSecretManager = remoteSecretManager
+        capturedBusinessInjector = businessInjector
 
         if let performError {
             throw performError

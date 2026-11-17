@@ -15,10 +15,6 @@ final class RootCoordinator: Coordinator {
         }) as? AppCoordinator
     }
     
-    var tabBarController: UITabBarController? {
-        appCoordinator?.tabBarController
-    }
-
     private var onboardingCoordinator: OnboardingCoordinator? {
         childCoordinators.first(where: {
             $0 is OnboardingCoordinator
@@ -275,9 +271,11 @@ final class RootCoordinator: Coordinator {
             forName: UIScreen.capturedDidChangeNotification,
             object: nil,
             queue: .main,
-            using: { [weak self] _ in
+            using: { [weak self] notification in
+                // The object is the screen whose capture state changed
+                let screen = notification.object as? UIScreen
                 Task { @MainActor in
-                    guard UIScreen.main.isCaptured else {
+                    guard screen?.isCaptured == true else {
                         return
                     }
                     self?.showScreenshotPrevention()
@@ -414,12 +412,18 @@ final class RootCoordinator: Coordinator {
             flavorService: AppFlavorService(),
             hasPreexistingData: bootstrap.appLaunchManager.hasPreexistingDatabaseFile
         )
+        let businessResolver = BusinessResolver(
+            myIdentityStore: bootstrap.bootstrapIdentityStore.store,
+            licenseStore: bootstrap.licenseStore.store,
+            flavorService: bootstrap.flavorService
+        )
         let onboardingCoordinator = OnboardingCoordinator(
             bootstrap: bootstrap,
             bootstrapMDMSetup: bootstrapMDMSetup,
             delegate: self,
             window: window,
-            remoteSecretResolver: remoteSecretResolver
+            remoteSecretResolver: remoteSecretResolver,
+            businessResolver: businessResolver
         )
         
         childCoordinators.append(onboardingCoordinator)
@@ -514,11 +518,11 @@ final class RootCoordinator: Coordinator {
         )
         childCoordinators.append(appCoordinator)
 
-        // NOTE: Do NOT attach the split view to the window here. `appCoordinator.start()` configures the
-        // split view's columns/tabs and THEN sets it as the window root and calls `makeKeyAndVisible()`.
-        // Attaching + showing the still-unconfigured split view first caused a second `makeKeyAndVisible`
-        // / root swap, which left the `.doubleColumn` split view compact-but-NOT-collapsed on launch (the
-        // empty logo screen that only a real size-class transition / rotation could recover).
+        // NOTE: Do NOT attach the tab bar controller to the window here. `appCoordinator.start()` configures
+        // the tabs (each a split view) and THEN sets it as the window root and calls `makeKeyAndVisible()`.
+        // Attaching + showing an unconfigured root first caused a second `makeKeyAndVisible` / root swap,
+        // which left the previous split view root compact-but-NOT-collapsed on launch (an empty logo screen
+        // that only a real size-class transition could recover). Keep the ordering.
         appCoordinator.start()
 
         childDidFinish(loadingCoordinator)

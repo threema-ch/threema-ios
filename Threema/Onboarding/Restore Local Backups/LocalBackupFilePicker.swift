@@ -6,10 +6,6 @@ import UniformTypeIdentifiers
 final class LocalBackupFilePicker: NSObject {
 
     /// Content types the picker offers.
-    ///
-    /// A backup is written as `*.dat` and `dat` is not a registered extension, so
-    /// there is no backup specific type to filter on. The broadest data types are what reliably keeps the file
-    /// selectable — at the cost of every other file being selectable too.
     private static let contentTypes: [UTType] = [.data, .item]
 
     private weak var presenter: UIViewController?

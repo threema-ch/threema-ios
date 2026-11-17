@@ -221,16 +221,97 @@ final class QRCodeCameraViewController: UIViewController {
         }
     }
 
+    /// Smallest code we expect, in millimeters, e.g. an identity QR code on a phone screen
+    private static let minimumCodeSize: Float = 40
+
+    /// Upper bound for the initial zoom, so the preview still shows enough to aim with
+    private static let maxInitialZoomFactor: CGFloat = 4
+
+    /// Zooms in so the user holds the phone at least at the camera's minimum focus distance while the code still
+    /// fills the preview. Without it, Pro models (minimum focus distance ~20 cm) are held too close and stay blurry.
+    /// See Apple's AVCamBarcode sample.
     private func setInitialZoomFactor() {
-        do {
-            guard let videoDevice else {
-                return
+        guard let videoDevice else {
+            return
+        }
+
+        // On a virtual camera zoom 1.0 is the ultra wide camera, the wide camera takes over at the first switch-over
+        // factor. The calculation is based on the wide camera, as on a device without a virtual camera.
+        let wideCamera = videoDevice.constituentDevices
+            .first { $0.deviceType == .builtInWideAngleCamera } ?? videoDevice
+        let wideZoomFactor = videoDevice.isVirtualDevice
+            ? CGFloat(videoDevice.virtualDeviceSwitchOverVideoZoomFactors.first?.doubleValue ?? 1.0)
+            : 1.0
+
+        var zoomFactor: CGFloat = 1.0
+
+        // Millimeters, -1 if unknown
+        let minimumFocusDistance = Float(wideCamera.minimumFocusDistance)
+        if minimumFocusDistance > 0 {
+            let dimensions = CMVideoFormatDescriptionGetDimensions(wideCamera.activeFormat.formatDescription)
+            let previewFillPercentage = Float(dimensions.height) / Float(dimensions.width)
+            let halfFieldOfView = wideCamera.activeFormat.videoFieldOfView / 2 * .pi / 180
+            let minimumSubjectDistance = (Self.minimumCodeSize / previewFillPercentage) / tan(halfFieldOfView)
+
+            if minimumSubjectDistance < minimumFocusDistance {
+                zoomFactor = CGFloat(minimumFocusDistance / minimumSubjectDistance)
             }
+        }
+
+        zoomFactor = wideZoomFactor * min(zoomFactor, Self.maxInitialZoomFactor)
+        zoomFactor = min(zoomFactor, videoDevice.activeFormat.videoMaxZoomFactor)
+
+        do {
             try videoDevice.lockForConfiguration()
             defer { videoDevice.unlockForConfiguration() }
-            videoDevice.videoZoomFactor = 1.0
+            videoDevice.videoZoomFactor = max(1.0, zoomFactor)
         }
-        catch { /* no-op */ }
+        catch {
+            DDLogWarn("[QRCodeCamera] Could not set the initial zoom factor: \(error)")
+        }
+    }
+
+    /// Continuous autofocus on the center, restricted to near subjects, so it settles faster on a code
+    private func configureFocus() {
+        guard let videoDevice else {
+            return
+        }
+
+        do {
+            try videoDevice.lockForConfiguration()
+            defer { videoDevice.unlockForConfiguration() }
+
+            if videoDevice.isFocusModeSupported(.continuousAutoFocus) {
+                videoDevice.focusMode = .continuousAutoFocus
+            }
+            if videoDevice.isAutoFocusRangeRestrictionSupported {
+                videoDevice.autoFocusRangeRestriction = .near
+            }
+            if videoDevice.isFocusPointOfInterestSupported {
+                videoDevice.focusPointOfInterest = CGPoint(x: 0.5, y: 0.5)
+            }
+        }
+        catch {
+            DDLogWarn("[QRCodeCamera] Could not configure the focus: \(error)")
+        }
+    }
+
+    /// Prefers a virtual camera, which switches to the ultra wide camera for codes held close (macro), like the
+    /// Camera app
+    private static func preferredVideoDevice() -> AVCaptureDevice? {
+        let deviceTypes: [AVCaptureDevice.DeviceType] = [
+            .builtInTripleCamera,
+            .builtInDualWideCamera,
+            .builtInWideAngleCamera,
+        ]
+
+        for deviceType in deviceTypes {
+            if let device = AVCaptureDevice.default(deviceType, for: .video, position: .back) {
+                return device
+            }
+        }
+
+        return AVCaptureDevice.default(for: .video)
     }
 
     private func setupCaptureSessionIfNeeded() {
@@ -238,12 +319,10 @@ final class QRCodeCameraViewController: UIViewController {
             return
         }
 
-        guard let device = AVCaptureDevice.default(for: .video) else {
+        guard let device = Self.preferredVideoDevice() else {
             return
         }
         videoDevice = device
-
-        setInitialZoomFactor()
 
         let session = AVCaptureSession()
 
@@ -255,6 +334,10 @@ final class QRCodeCameraViewController: UIViewController {
         }
 
         session.addInput(input)
+
+        // After adding the input, which can change the active format and with it the field of view
+        setInitialZoomFactor()
+        configureFocus()
 
         let queue = DispatchQueue(label: "ch.threema.app.qrmetadata.serialQueue")
         let output = AVCaptureMetadataOutput()
@@ -376,13 +459,12 @@ extension QRCodeCameraViewController: AVCaptureMetadataOutputObjectsDelegate {
         didOutput metadataObjects: [AVMetadataObject],
         from connection: AVCaptureConnection
     ) {
-        stopRunning()
+        // Keep running for a code that can't be read yet, e.g. while still blurry. Restarting the session would
+        // reset the autofocus every time, so it never settles.
         guard let scannedCode = getFirstCodeFromMetadata(metadataObjects) else {
-            Task { @MainActor [weak self] in
-                self?.resumeRunning()
-            }
             return
         }
+        stopRunning()
 
         Task { @MainActor [weak self] in
             guard let self else {
@@ -391,7 +473,7 @@ extension QRCodeCameraViewController: AVCaptureMetadataOutputObjectsDelegate {
             systemFeedbackManager.vibrate()
             removeCornersPathLayers()
             addCornersPathLayer(from: scannedCode)
-            try await Task.sleep(seconds: 0.25)
+            try? await Task.sleep(seconds: 0.25)
             onCompletion?(scannedCode.value)
         }
     }

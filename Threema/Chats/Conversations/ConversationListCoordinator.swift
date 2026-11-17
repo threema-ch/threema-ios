@@ -17,8 +17,15 @@ final class ConversationListCoordinator: NSObject, Coordinator, ChatViewControll
 
     var childCoordinators = [any Coordinator]()
     var rootViewController: UIViewController {
-        rootNavigationController
+        splitViewController
     }
+
+    /// The tab's content: this coordinator's navigation controller as the primary column and a detail column
+    /// owned by the split view. Installed as the tab's root by `AppCoordinator`.
+    private(set) lazy var splitViewController = ThreemaTabSplitViewController(
+        tab: .conversations,
+        primaryNavigationController: rootNavigationController
+    )
 
     private let router = NavigationRouter()
 
@@ -38,7 +45,6 @@ final class ConversationListCoordinator: NSObject, Coordinator, ChatViewControll
 
     private lazy var rootNavigationController = StatusNavigationController()
 
-    private weak var presentingViewController: ThreemaSplitViewController?
     private let viewControllerForDestination: (
         InternalDestination,
         ShowConversationInformation?
@@ -49,14 +55,29 @@ final class ConversationListCoordinator: NSObject, Coordinator, ChatViewControll
         isPasscodeRequired: { [weak self] in
             self?.isPasscodeRequired() == true
         }(),
+        // Prompts are presented in the current context (see `authenticateThenShow`).
+        // Expanded: the column the chats are shown in, so the prompt covers the
+        // detail column and the list stays visible. Collapsed: the tab bar
+        // controller, so the prompt covers the tab bar as well; a column
+        // presentation would sit below the floating bar, as the list defines the
+        // presentation context.
         rootViewController: { [weak self] in
-            guard let viewController = self?.presentingViewController?.viewControllers.last else {
-                fatalError("ThreemaSplitViewController is missing a view controller.")
+            guard let self else {
+                fatalError("ConversationListCoordinator is gone while a passcode prompt is requested.")
             }
 
-            return viewController
+            if splitViewController.isCompactLayout, let tabBarController = splitViewController.tabBarController {
+                return tabBarController
+            }
+            return splitViewController.modalPresenter
         }()
     )
+
+    /// The passcode prompt on screen: where it was presented, and how to ask
+    /// again. A collapse takes the secondary column off screen while UIKit
+    /// still counts the prompt as presented there, and presenting the shared
+    /// prompt again from another presenter raises; `bindCompact` moves it.
+    private var openPasscodePrompt: (presenter: UIViewController, request: () -> Void)?
 
     /// Per-show chat configuration (precomposed text, image, scroll target).
     /// Set right before the path changes and consumed when the router
@@ -88,7 +109,6 @@ final class ConversationListCoordinator: NSObject, Coordinator, ChatViewControll
     }
 
     init(
-        presentingViewController: ThreemaSplitViewController,
         conversationListViewControllerFactory: ConversationListViewControllerFactory,
         viewControllerForDestination: @escaping (
             InternalDestination,
@@ -96,16 +116,17 @@ final class ConversationListCoordinator: NSObject, Coordinator, ChatViewControll
         ) -> UIViewController?,
         isPasscodeRequired: @autoclosure @escaping () -> Bool
     ) {
-        self.presentingViewController = presentingViewController
         self.conversationListViewControllerFactory = conversationListViewControllerFactory
         self.viewControllerForDestination = viewControllerForDestination
         self.isPasscodeRequired = isPasscodeRequired
         super.init()
 
+        // The split view hides the tab bar from the primary column's callbacks, then forwards them here.
         router.delegate = self
-        router.forwardDelegate = self
+        router.forwardDelegate = splitViewController
         primaryRouter.delegate = self
-        primaryRouter.forwardDelegate = self
+        primaryRouter.forwardDelegate = splitViewController
+        splitViewController.navigationDelegate = self
     }
 
     /// `.archivedConversationList` is a list-type destination: in regular width
@@ -118,14 +139,14 @@ final class ConversationListCoordinator: NSObject, Coordinator, ChatViewControll
     // MARK: - Presentation
 
     func start() {
-        /// Due to this coordinator's rootViewController being part of a
-        /// `UITabViewController`, it's not needed to present anything here.
-        /// The rootViewController is added by to the `UITabViewController`'s
-        /// viewControllers in ``AppCoordinator``'s `configureSplitViewController` method.
+        /// The split view is installed as this tab's root by ``AppCoordinator``'s
+        /// `configureTabBarController`; nothing is presented here. The split view
+        /// binds the routers on appearance and on collapse/expand.
         rootNavigationController.setViewControllers(
             [conversationListViewController],
             animated: false
         )
+        splitViewController.routerHandle = routerHandle
     }
 
     func finish() {
@@ -211,8 +232,7 @@ final class ConversationListCoordinator: NSObject, Coordinator, ChatViewControll
     /// Guard-then-mutate: the path only changes after authentication succeeded,
     /// so cancelling requires no rollback.
     private func authenticateThenShow(_ target: [InternalDestination]) {
-        passcodeRouter.requireAuthenticationIfNeeded(
-            style: .currentContext,
+        requireAuthentication(
             onCancel: { [weak self] in
                 // The path never changed — just clear the row highlight from the tap.
                 self?.conversationListViewController.removeSelectedConversation()
@@ -226,9 +246,49 @@ final class ConversationListCoordinator: NSObject, Coordinator, ChatViewControll
         )
     }
 
+    /// Presents the passcode prompt in the current context and records it as
+    /// `openPasscodePrompt` until it is answered.
+    private func requireAuthentication(
+        onCancel: @escaping () -> Void,
+        onSuccess: @escaping () -> Void
+    ) {
+        openPasscodePrompt = (
+            presenter: passcodeRouter.rootViewController(),
+            request: { [weak self] in
+                self?.requireAuthentication(onCancel: onCancel, onSuccess: onSuccess)
+            }
+        )
+        passcodeRouter.requireAuthenticationIfNeeded(
+            style: .currentContext,
+            onCancel: { [weak self] in
+                self?.openPasscodePrompt = nil
+                onCancel()
+            },
+            onSuccess: { [weak self] in
+                self?.openPasscodePrompt = nil
+                onSuccess()
+            }
+        )
+    }
+
+    /// Asks again on the current presenter if the open prompt was presented
+    /// on another one (the secondary column, before a collapse).
+    private func moveOpenPasscodePromptToCurrentPresenter() {
+        guard
+            let openPasscodePrompt,
+            openPasscodePrompt.presenter !== passcodeRouter.rootViewController(),
+            let prompt = openPasscodePrompt.presenter.presentedViewController
+        else {
+            return
+        }
+
+        self.openPasscodePrompt = nil
+        prompt.dismiss(animated: false, completion: openPasscodePrompt.request)
+    }
+
     private func dismissPasscodeIfNeeded() {
         guard
-            presentingViewController?.isCollapsed == false,
+            !splitViewController.isCollapsed,
             selectedConversation?.conversationCategory == .private
         else {
             return
@@ -236,13 +296,14 @@ final class ConversationListCoordinator: NSObject, Coordinator, ChatViewControll
 
         passcodeRouter.rootViewController().presentedViewController?
             .dismiss(animated: false)
+        openPasscodePrompt = nil
         resetSelection()
     }
 
     // MARK: - Router binding
 
-    /// Hooks for `ThreemaSplitViewNavigationManager` to activate/deactivate this
-    /// tab's router when tab selection or the size class changes.
+    /// Hooks for the tab's split view (binding on appearance, collapse, expand)
+    /// and the tab bar controller (re-authentication on return, memory warnings).
     var routerHandle: RouterManagedTabHandle {
         RouterManagedTabHandle(
             deactivate: { [weak self] in
@@ -252,8 +313,8 @@ final class ConversationListCoordinator: NSObject, Coordinator, ChatViewControll
             activateCompact: { [weak self] in
                 self?.bindCompact()
             },
-            activateRegular: { [weak self] navigationController in
-                self?.bindRegular(into: navigationController)
+            activateRegular: { [weak self] column in
+                self?.bindRegular(into: column)
             },
             reauthenticateProtectedDestinations: { [weak self] in
                 guard
@@ -266,8 +327,7 @@ final class ConversationListCoordinator: NSObject, Coordinator, ChatViewControll
                 // closes it but keeps the list part of the path (e.g. the
                 // archived list). (With no passcode set this succeeds
                 // immediately.)
-                passcodeRouter.requireAuthenticationIfNeeded(
-                    style: .currentContext,
+                requireAuthentication(
                     onCancel: { [weak self] in
                         guard let self else {
                             return
@@ -284,11 +344,7 @@ final class ConversationListCoordinator: NSObject, Coordinator, ChatViewControll
                 )
             },
             releaseMaterializedScreens: { [weak self] in
-                guard
-                    let self,
-                    !router.isBound,
-                    !primaryRouter.isBound
-                else {
+                guard let self else {
                     return
                 }
 
@@ -299,15 +355,18 @@ final class ConversationListCoordinator: NSObject, Coordinator, ChatViewControll
                     return
                 }
 
+                // Inactive tabs stay bound: unbind first so the release frees the
+                // screens, then reset both columns to their roots. The next
+                // appearance rebinds and re-materializes the stack from the path.
+                primaryRouter.unbind()
+                router.unbind()
                 router.releaseMaterializedScreens()
                 primaryRouter.releaseMaterializedScreens()
-                // The tab's own navigation controller retains the compact stack
-                // even while inactive — reset it to the root; the next
-                // activation re-materializes the stack from the path.
                 rootNavigationController.setViewControllers(
                     [conversationListViewController],
                     animated: false
                 )
+                splitViewController.resetSecondaryColumn()
             }
         )
     }
@@ -337,13 +396,14 @@ final class ConversationListCoordinator: NSObject, Coordinator, ChatViewControll
         }
 
         scheduleSelectionSync()
+        moveOpenPasscodePromptToCurrentPresenter()
     }
 
     /// Regular width: the path is split across the columns. List-type
     /// destinations (the archived list) stay in the primary column on top of the
     /// conversation list; conversations render in the secondary column, rooted in
     /// a placeholder. An empty path shows just list and placeholder.
-    private func bindRegular(into navigationController: UINavigationController) {
+    private func bindRegular(into column: TabSecondaryColumn) {
         let combined = path
         isRegularBound = true
 
@@ -370,8 +430,8 @@ final class ConversationListCoordinator: NSObject, Coordinator, ChatViewControll
         }
 
         router.bind(
-            to: navigationController,
-            rootViewController: ThreemaLogoViewController(rootView: ThreemaLogoView()),
+            to: column.navigationController,
+            rootViewController: column.placeholderViewController,
             rootMode: .placeholder
         ) { [weak self] destination in
             self?.makeScreen(destination)
@@ -421,7 +481,7 @@ final class ConversationListCoordinator: NSObject, Coordinator, ChatViewControll
             return
         }
 
-        if presentingViewController?.isCollapsed == false {
+        if !splitViewController.isCollapsed {
             let conversation = shownChatViewController?.conversation
             conversationListViewController.selectionManager.allowSelectionSetting = true
             conversationListViewController.setSelection(for: conversation)
@@ -519,8 +579,8 @@ extension ConversationListCoordinator: ConversationListViewControllerDelegate {
         // Dismiss anything presented on top (e.g. single/group details, share sheets)
         chatViewController.presentedViewController?.dismiss(animated: false)
 
-        if presentingViewController?.isCollapsed == false {
-            // iPadOS (expanded): clear coordinator state and reset the secondary column.
+        if !splitViewController.isCollapsed {
+            // Expanded: clear coordinator state and reset the secondary column.
             resetSelection()
         }
         else {

@@ -24,8 +24,6 @@
 	<string></string>
 	<key>ThreemaBlobUploadURLv6</key>
 	<string></string>
-	<key>ThreemaCoreDataVersion</key>
-	<string>$(COREDATA_VERSION)</string>
 	<key>ThreemaRendezvousServerURL</key>
 	<string></string>
 	<key>ThreemaMediatorBlobDoneURL</key>

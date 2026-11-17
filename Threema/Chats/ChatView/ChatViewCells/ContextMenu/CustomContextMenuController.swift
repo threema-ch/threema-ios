@@ -27,6 +27,7 @@ final class CustomContextMenuController: CustomContextMenuViewControllerDelegate
             snapshot: snapshot,
             snapshotBounds: snapshotBounds,
             chatViewBounds: chatViewBounds,
+            windowBounds: window.bounds,
             isOwnMessage: isOwnMessage,
             showEmojiPicker: showEmojiPicker,
             reactionsManager: reactionsManager,

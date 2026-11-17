@@ -86,7 +86,7 @@ struct LocalBackupRecoveryKeySheetView: View {
         var body: some View {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(model.recoveryKeyTrimmed)
+                    Text(model.recoveryKeyAbbreviated)
                         .font(.body)
                         .foregroundStyle(.primary)
 

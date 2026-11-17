@@ -72,6 +72,8 @@ public final class SettingsStore: SettingsStoreInternalProtocol, SettingsStorePr
         self.pushShowPreview = userSettings.pushDecrypt
         self.pushSound = userSettings.pushSound
         self.pushGroupSound = userSettings.pushGroupSound
+        self.reactionNotificationsOneToOneEnabled = userSettings.reactionNotificationsOneToOneEnabled
+        self.reactionNotificationsGroupEnabled = userSettings.reactionNotificationsGroupEnabled
         self.enableMasterDnd = userSettings.enableMasterDnd
         self.masterDndWorkingDays = Set<Int>(userSettings.masterDndWorkingDays.array as? [Int] ?? [])
         self.masterDndStartTime = userSettings.masterDndStartTime
@@ -367,6 +369,24 @@ public final class SettingsStore: SettingsStoreInternalProtocol, SettingsStorePr
         }
     }
     
+    @Published public var reactionNotificationsOneToOneEnabled: Bool {
+        didSet {
+            guard userSettings.reactionNotificationsOneToOneEnabled != reactionNotificationsOneToOneEnabled else {
+                return
+            }
+            updateUserSettingsAsync()
+        }
+    }
+    
+    @Published public var reactionNotificationsGroupEnabled: Bool {
+        didSet {
+            guard userSettings.reactionNotificationsGroupEnabled != reactionNotificationsGroupEnabled else {
+                return
+            }
+            updateUserSettingsAsync()
+        }
+    }
+    
     @Published public var enableMasterDnd: Bool {
         didSet {
             guard userSettings.enableMasterDnd != enableMasterDnd else {
@@ -437,9 +457,9 @@ public final class SettingsStore: SettingsStoreInternalProtocol, SettingsStorePr
             updateUserSettings()
             switch wallpaperType {
             case .empty:
-                wallpaperStore.saveDefaultWallpaper(nil)
+                wallpaperStore.deleteDefaultWallpaper()
             case .threema:
-                wallpaperStore.saveDefaultWallpaper(nil)
+                wallpaperStore.deleteDefaultWallpaper()
             case .custom:
                 break
             }
@@ -902,6 +922,8 @@ public final class SettingsStore: SettingsStoreInternalProtocol, SettingsStorePr
         compareAndAssign(&userSettings.pushDecrypt, pushShowPreview)
         compareAndAssign(&userSettings.pushSound, pushSound)
         compareAndAssign(&userSettings.pushGroupSound, pushGroupSound)
+        compareAndAssign(&userSettings.reactionNotificationsOneToOneEnabled, reactionNotificationsOneToOneEnabled)
+        compareAndAssign(&userSettings.reactionNotificationsGroupEnabled, reactionNotificationsGroupEnabled)
         compareAndAssign(&userSettings.enableMasterDnd, enableMasterDnd)
 
         if Set<Int>(userSettings.masterDndWorkingDays.array as? [Int] ?? []) != masterDndWorkingDays {
@@ -981,6 +1003,8 @@ public final class SettingsStore: SettingsStoreInternalProtocol, SettingsStorePr
         compareAndAssign(&pushShowPreview, userSettings.pushDecrypt)
         compareAndAssign(&pushSound, userSettings.pushSound)
         compareAndAssign(&pushGroupSound, userSettings.pushGroupSound)
+        compareAndAssign(&reactionNotificationsOneToOneEnabled, userSettings.reactionNotificationsOneToOneEnabled)
+        compareAndAssign(&reactionNotificationsGroupEnabled, userSettings.reactionNotificationsGroupEnabled)
         compareAndAssign(&enableMasterDnd, userSettings.enableMasterDnd)
         compareAndAssign(&masterDndWorkingDays, Set<Int>(userSettings.masterDndWorkingDays.array as? [Int] ?? []))
         compareAndAssign(&masterDndStartTime, userSettings.masterDndStartTime)

@@ -18,12 +18,12 @@ final class GroupCallCollectionView: UICollectionView, UICollectionViewDelegate 
     init(groupCallViewModel: GroupCallViewModel) {
         self.viewModel = groupCallViewModel
 
-        super.init(
-            frame: .zero,
-            collectionViewLayout: GroupCallLayoutProvider.createLayout(
-                numberOfParticipants: viewModel.numberOfParticipants,
-                view: UIView()
-            )
+        super.init(frame: .zero, collectionViewLayout: UICollectionViewFlowLayout())
+        
+        // The layout sizes the cells with the bounds of the collection view until `updateLayout(view:)` is called
+        collectionViewLayout = GroupCallLayoutProvider.createLayout(
+            numberOfParticipants: viewModel.numberOfParticipants,
+            view: self
         )
 
         backgroundColor = .black

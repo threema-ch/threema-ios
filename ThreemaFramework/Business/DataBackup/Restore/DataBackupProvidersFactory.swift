@@ -13,17 +13,28 @@ struct DataBackupProvidersFactory {
     private let makeProfileStore: (ThreemaIdentity) -> any ProfileStoreProtocol
     private let userSettings: any UserSettingsProtocol
     private let entityManager: EntityManager
+    private let makeContactStore: () -> any ContactStoreProtocol
+    private let makePushSettingManager: () -> any PushSettingManagerProtocol
 
     // MARK: - Lifecycle
 
+    /// - Parameters:
+    ///   - makeContactStore: Builds the contact store the contacts are read from and written to. Tests pass a stand-in,
+    ///     so a restore does not reach the app's shared one.
+    ///   - makePushSettingManager: Builds the push setting manager of the contacts and groups. Tests pass one on
+    ///     throwaway storage, because the default one opens the app's database.
     init(
         makeProfileStore: @escaping (ThreemaIdentity) -> any ProfileStoreProtocol,
         userSettings: any UserSettingsProtocol,
-        entityManager: EntityManager
+        entityManager: EntityManager,
+        makeContactStore: @escaping () -> any ContactStoreProtocol = { ContactStore.shared() },
+        makePushSettingManager: @escaping () -> any PushSettingManagerProtocol = { PushSettingManager() }
     ) {
         self.makeProfileStore = makeProfileStore
         self.userSettings = userSettings
         self.entityManager = entityManager
+        self.makeContactStore = makeContactStore
+        self.makePushSettingManager = makePushSettingManager
     }
 
     // MARK: - Internal methods
@@ -41,13 +52,13 @@ struct DataBackupProvidersFactory {
             contacts: ContactProvider(
                 userIdentity: identity,
                 userSettings: userSettings,
-                contactStore: ContactStore.shared(),
-                pushSettingManager: PushSettingManager(),
+                contactStore: makeContactStore(),
+                pushSettingManager: makePushSettingManager(),
                 entityManager: entityManager
             ),
             groups: GroupProvider(
                 userIdentity: identity,
-                pushSettingManager: PushSettingManager(),
+                pushSettingManager: makePushSettingManager(),
                 entityManager: entityManager
             ),
             distributionLists: DistributionListProvider(),

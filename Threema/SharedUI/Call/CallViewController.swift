@@ -1352,7 +1352,7 @@ extension CallViewController {
                 newSize = size ?? CGSize(width: maxSize, height: 268.0)
             }
             
-            if UIDevice.current.orientation == .landscapeLeft || UIDevice.current.orientation == .landscapeRight {
+            if view.bounds.width > view.bounds.height {
                 if traitCollection.horizontalSizeClass == .regular {
                     maxSize = 270.0
                 }
@@ -1443,11 +1443,16 @@ extension CallViewController {
         )
     }
     
+    /// Uses the view size instead of `UIApplication.shared.statusBarOrientation`, which no longer reports portrait on
+    /// iOS 27
+    private var isViewPortrait: Bool {
+        view.bounds.height > view.bounds.width
+    }
+
     private func updateRemoteVideoContentMode(videoView: RTCVideoRenderer) {
         if let remoteRenderer = delegate?.remoteVideoRenderer() as? RTCMTLVideoView,
            remoteRenderer.isEqual(videoView) {
-            if UIApplication.shared.statusBarOrientation.isPortrait,
-               isRemoteVideoPortrait {
+            if isViewPortrait, isRemoteVideoPortrait {
                 remoteRenderer.videoContentMode = .scaleAspectFill
             }
             else {
@@ -1730,12 +1735,11 @@ extension CallViewController: AVRoutePickerViewDelegate {
 
 extension CallViewController: RTCVideoViewDelegate {
     func videoView(_ videoView: RTCVideoRenderer, didChangeVideoSize size: CGSize) {
-        isRemoteVideoPortrait = size.height > size.width
-        updateRemoteVideoContentMode(videoView: videoView)
-        
         if let remoteRenderer = delegate?.remoteVideoRenderer() as? RTCMTLVideoView,
            remoteRenderer.isEqual(videoView) {
             DDLogNotice("[Call Debug] Remote Video view did change size: \(size))")
+            isRemoteVideoPortrait = size.height > size.width
+            updateRemoteVideoContentMode(videoView: videoView)
         }
         if let localRenderer = delegate?.localVideoRenderer(),
            localRenderer.isEqual(videoView) {

@@ -12,6 +12,10 @@ final class ContactStoreMock: NSObject, ContactStoreProtocol {
     var addContactCalls = [String]()
     var addAsWorkCalls = [String]()
 
+    /// When set, `addAsWork(identities:contactSyncer:)` adds the identities to its `workIdentities`, like
+    /// `ContactStore` does. Otherwise the calls are only recorded.
+    var userSettings: UserSettingsProtocol?
+
     required init(callOnCompletion: Bool, _ contact: ContactEntity? = nil, errorHandler: NSError? = nil) {
         self.callOnCompletion = callOnCompletion
         self.contact = contact
@@ -169,6 +173,12 @@ final class ContactStoreMock: NSObject, ContactStoreProtocol {
     func addAsWork(identities: NSOrderedSet, contactSyncer mediatorSyncableContacts: MediatorSyncableContacts?) {
         for item in identities {
             addAsWorkCalls.append(item as! String)
+        }
+
+        if let userSettings {
+            let workIdentities = NSMutableOrderedSet(orderedSet: userSettings.workIdentities ?? NSOrderedSet())
+            workIdentities.union(identities)
+            userSettings.workIdentities = workIdentities
         }
     }
 

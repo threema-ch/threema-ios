@@ -13,8 +13,11 @@ import UIKit
 @MainActor
 struct OnboardingCoordinatorTests {
 
+    private let testDatabase = TestDatabase()
+    
     init() {
         AppGroup.setGroupID("group.ch.threema")
+        FileUtilitySetter.setInitialFileUtility()
     }
 
     // MARK: - MDM Flow Decision
@@ -217,13 +220,18 @@ struct OnboardingCoordinatorTests {
 
     // MARK: - Setup Wizard
 
-    @Test("A resumed setup presents the wizard once the remote secret resolves")
+    @Test("A resumed setup presents the wizard once the remote secret and business injector resolves")
     func directSetupWizardPresentsTheWizard() async {
         let fixture = makeFixture(
             configureAppLaunchManager: { $0.shouldDirectlyShowSetupWizard = true },
             configureRemoteSecretResolver: {
                 $0.readyRemoteSecretResolverResult = .success(
                     Self.readyRemoteSecretResolverResult
+                )
+            },
+            configureBusinessResolver: {
+                $0.readyBusinessResolverResult = .success(
+                    readyBusinessResolverResult()
                 )
             }
         )
@@ -232,6 +240,7 @@ struct OnboardingCoordinatorTests {
         await drainTasks()
 
         #expect(fixture.remoteSecretResolver.resolveCallCount == 1)
+        #expect(fixture.businessResolver.resolveCallCount == 1)
         #expect(fixture.licenseStore.performUpdateWorkInfoCount == 1)
         #expect(fixture.splash.contains(.presentPageViewController))
     }
@@ -247,16 +256,23 @@ struct OnboardingCoordinatorTests {
         await drainTasks()
 
         #expect(fixture.remoteSecretResolver.resolveCallCount == 1)
-        #expect(!fixture.splash.contains(.presentPageViewController))
+        #expect(fixture.splash.contains(.presentPageViewController) == false)
     }
 
     @Test("Keeping an existing identity marks it as added and presents the wizard")
     func keepingTheExistingIdentityPresentsTheWizard() async {
         let fixture = makeFixture(
             configureKeychain: { $0.currentIdentity = ThreemaIdentity("ECHOECHO") },
-            configureRemoteSecretResolver: { $0.readyRemoteSecretResolverResult = .success(
-                Self.readyRemoteSecretResolverResult
-            ) }
+            configureRemoteSecretResolver: {
+                $0.readyRemoteSecretResolverResult = .success(
+                    Self.readyRemoteSecretResolverResult
+                )
+            },
+            configureBusinessResolver: {
+                $0.readyBusinessResolverResult = .success(
+                    readyBusinessResolverResult()
+                )
+            }
         )
 
         defer { AppSetup.state = .notSetup }
@@ -266,6 +282,29 @@ struct OnboardingCoordinatorTests {
 
         // Advancing the state early keeps the keychain data from being wiped later on.
         #expect(AppSetup.state == .identityAdded)
+        #expect(fixture.splash.contains(.presentPageViewController))
+    }
+    
+    @Test("Completing an ID backup restore creates remote secret and business injector and presents the wizard")
+    func idBackupRestoreResolvesRemoteSecretAndBusinessInjectorAndPresentsTheWizard() async {
+        let fixture = makeFixture(
+            configureRemoteSecretResolver: {
+                $0.readyRemoteSecretResolverResult = .success(
+                    Self.readyRemoteSecretResolverResult
+                )
+            },
+            configureBusinessResolver: {
+                $0.readyBusinessResolverResult = .success(
+                    readyBusinessResolverResult()
+                )
+            }
+        )
+        
+        fixture.coordinator.splashViewControllerDidCompleteRestoreIdentity(splashArgument())
+        await drainTasks()
+        
+        #expect(fixture.remoteSecretResolver.resolveCallCount == 1)
+        #expect(fixture.businessResolver.resolveCallCount == 1)
         #expect(fixture.splash.contains(.presentPageViewController))
     }
 
@@ -564,6 +603,9 @@ struct OnboardingCoordinatorTests {
         let fixture = makeFixture(
             configureRemoteSecretResolver: { $0.readyRemoteSecretResolverResult = .success(
                 Self.readyRemoteSecretResolverResult
+            ) },
+            configureBusinessResolver: { $0.readyBusinessResolverResult = .success(
+                readyBusinessResolverResult()
             ) }
         )
 
@@ -579,21 +621,27 @@ struct OnboardingCoordinatorTests {
         #expect(fixture.remoteSecretResolver.resolveCallCount == 1)
     }
 
-    @Test("Phase two receives the remote secret resolved between the phases")
-    func safeRestorePassesTheResolvedRemoteSecretToPhaseTwo() async {
-        let remoteSecretManager = RemoteSecretManagerMock(isRemoteSecretEnabled: false)
-        let fixture = makeFixture(configureRemoteSecretResolver: {
-            $0.readyRemoteSecretResolverResult = .success(
-                .ready(remoteSecretManager: remoteSecretManager, keychainManager: KeychainManagerMock())
-            )
-        })
+    @Test("Phase two receives the business injector resolved between the phases")
+    func safeRestorePassesTheResolvedBusinessInjectorToPhaseTwo() async {
+        let businessInjector = BusinessInjectorMock(entityManager: testDatabase.entityManager)
+        
+        let fixture = makeFixture(
+            configureRemoteSecretResolver: {
+                $0.readyRemoteSecretResolverResult = .success(
+                    Self.readyRemoteSecretResolverResult
+                )
+            },
+            configureBusinessResolver: {
+                $0.readyBusinessResolverResult = .success(businessInjector)
+            }
+        )
 
         await fixture.coordinator.handleSafeRestore(
             info: Self.safeRestoreInformation,
             presenter: SafeRestorePresentingMock()
         )
 
-        #expect(fixture.safeRestore.capturedRemoteSecretManager as? RemoteSecretManagerMock === remoteSecretManager)
+        #expect(fixture.safeRestore.capturedBusinessInjector === businessInjector)
     }
 
     @Test("Safe restore completes onboarding without a setup configuration")
@@ -601,6 +649,9 @@ struct OnboardingCoordinatorTests {
         let fixture = makeFixture(
             configureRemoteSecretResolver: { $0.readyRemoteSecretResolverResult = .success(
                 Self.readyRemoteSecretResolverResult
+            ) },
+            configureBusinessResolver: { $0.readyBusinessResolverResult = .success(
+                readyBusinessResolverResult()
             ) }
         )
 
@@ -609,7 +660,6 @@ struct OnboardingCoordinatorTests {
             presenter: SafeRestorePresentingMock()
         )
 
-        // performRestore already ran the migrations and Safe activation the wizard steps would do.
         #expect(fixture.completer.callCount == 1)
         #expect(fixture.completer.didCaptureNilSetupConfiguration == true)
     }
@@ -654,6 +704,9 @@ struct OnboardingCoordinatorTests {
             configureRemoteSecretResolver: { $0.readyRemoteSecretResolverResult = .success(
                 Self.readyRemoteSecretResolverResult
             ) },
+            configureBusinessResolver: { $0.readyBusinessResolverResult = .success(
+                readyBusinessResolverResult()
+            ) },
             configureSafeRestore: { $0.performError = TestError.restoreFailed }
         )
         let presenter = SafeRestorePresentingMock()
@@ -673,6 +726,9 @@ struct OnboardingCoordinatorTests {
         let fixture = makeFixture(
             configureRemoteSecretResolver: { $0.readyRemoteSecretResolverResult = .success(
                 Self.readyRemoteSecretResolverResult
+            ) },
+            configureBusinessResolver: { $0.readyBusinessResolverResult = .success(
+                readyBusinessResolverResult()
             ) }
         )
         let presenter = SafeRestorePresentingMock()
@@ -786,12 +842,12 @@ struct OnboardingCoordinatorTests {
     ) {
         let remoteSecretManager = RemoteSecretManagerMock(isRemoteSecretEnabled: false)
         let keychainManager = KeychainManagerMock()
+        let businessInjector = BusinessInjectorMock(entityManager: testDatabase.entityManager)
 
         let configuration = SetupConfiguration(
-            remoteSecretAndKeychain: RemoteSecretAndKeychainObjC(
-                remoteSecretManager: remoteSecretManager,
-                keychainManager: keychainManager
-            ),
+            remoteSecretManager: remoteSecretManager,
+            keychainManager: keychainManager,
+            businessInjector: businessInjector,
             mdm: MDMSetup()
         )
 
@@ -807,6 +863,10 @@ struct OnboardingCoordinatorTests {
             keychainManager: KeychainManagerMock()
         )
     }
+    
+    private func readyBusinessResolverResult() -> any BusinessInjectorProtocol {
+        BusinessInjectorMock(entityManager: testDatabase.entityManager)
+    }
 
     private struct Fixture {
         let coordinator: OnboardingCoordinator
@@ -819,6 +879,7 @@ struct OnboardingCoordinatorTests {
         let backupStore: BootstrapBackupStoreMock
         let identityCreator: BootstrapIdentityCreatorMock
         let remoteSecretResolver: RemoteSecretResolvingMock
+        let businessResolver: BusinessResolvingMock
         let completer: OnboardingCompletingMock
         let safeRestore: SafeRestoringMock
         let delegate: OnboardingCoordinatorDelegateMock
@@ -835,6 +896,7 @@ struct OnboardingCoordinatorTests {
         configureBackupStore: @MainActor (BootstrapBackupStoreMock) -> Void = { _ in },
         configureIdentityCreator: @MainActor (BootstrapIdentityCreatorMock) -> Void = { _ in },
         configureRemoteSecretResolver: @MainActor (RemoteSecretResolvingMock) -> Void = { _ in },
+        configureBusinessResolver: @MainActor (BusinessResolvingMock) -> Void = { _ in },
         configureSafeRestore: @MainActor (SafeRestoringMock) -> Void = { _ in }
     ) -> Fixture {
         let appLaunchManager = AppLaunchManagerMock()
@@ -878,6 +940,9 @@ struct OnboardingCoordinatorTests {
 
         let remoteSecretResolver = RemoteSecretResolvingMock()
         configureRemoteSecretResolver(remoteSecretResolver)
+        
+        let businessResolver = BusinessResolvingMock()
+        configureBusinessResolver(businessResolver)
 
         let completer = OnboardingCompletingMock(error: TestError.completionFailed)
 
@@ -890,6 +955,7 @@ struct OnboardingCoordinatorTests {
             delegate: delegate,
             window: UIWindow(),
             remoteSecretResolver: remoteSecretResolver,
+            businessResolver: businessResolver,
             splash: splash,
             onboardingCompleter: completer,
             restoreSafeManager: safeRestore
@@ -906,6 +972,7 @@ struct OnboardingCoordinatorTests {
             backupStore: backupStore,
             identityCreator: identityCreator,
             remoteSecretResolver: remoteSecretResolver,
+            businessResolver: businessResolver,
             completer: completer,
             safeRestore: safeRestore,
             delegate: delegate

@@ -112,7 +112,8 @@ public struct Poll: Identifiable, Hashable {
         }
 
         let allVoterIDs = Set(participants.map(\.identity))
-        let respondedIDs = Set(choices.flatMap { $0.voters.map(\.identity) })
+        // A vote with no selected choice (abstention) still counts as a response
+        let respondedIDs = Set(entityChoices.flatMap { ($0.result ?? []).map(\.participantID) })
         let nonRespondentIDs = allVoterIDs.subtracting(respondedIDs)
 
         self.id = entity.objectID

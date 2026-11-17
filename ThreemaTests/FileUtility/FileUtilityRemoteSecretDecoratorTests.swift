@@ -81,7 +81,9 @@ struct FileUtilityRemoteSecretDecoratorTests {
     @Test("Encrypt or decrypt when data is empty with remote secret enabled")
     func testEmptyDataWithRemoteSecret() throws {
         let (fileUtilityDecorator, _, _, cryptoMock) = try makeSUT(isRemoteSecretEnabled: true)
-        let testURL = fileUtilityDecorator.appTemporaryDirectory.appendingPathComponent("empty_file.txt")
+        // Tests run in parallel: every test writes its own file
+        let testURL = fileUtilityDecorator.appTemporaryDirectory
+            .appendingPathComponent("empty_file_remote_secret.txt")
 
         defer { cleanupTestFile(at: testURL) }
 
@@ -109,7 +111,8 @@ struct FileUtilityRemoteSecretDecoratorTests {
     @Test("Does not encrypt or decrypt when data is empty")
     func testEmptyDataWithoutRemoteSecret() throws {
         let (fileUtilityDecorator, _, _, cryptoMock) = try makeSUT(isRemoteSecretEnabled: false)
-        let testURL = fileUtilityDecorator.appTemporaryDirectory.appendingPathComponent("empty_file.txt")
+        let testURL = fileUtilityDecorator.appTemporaryDirectory
+            .appendingPathComponent("empty_file_no_remote_secret.txt")
 
         defer { cleanupTestFile(at: testURL) }
 
@@ -125,7 +128,8 @@ struct FileUtilityRemoteSecretDecoratorTests {
     @Test("Write handles nil data", arguments: [true, false])
     func testWriteHandlesNilDataCorrectly(isRemoteSecretEnabled: Bool) throws {
         let (fileUtilityDecorator, _, _, cryptoMock) = try makeSUT(isRemoteSecretEnabled: isRemoteSecretEnabled)
-        let testURL = FileManager.default.temporaryDirectory.appendingPathComponent("nil_write.txt")
+        let testURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("nil_write_\(isRemoteSecretEnabled).txt")
 
         defer { cleanupTestFile(at: testURL) }
 

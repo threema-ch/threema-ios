@@ -15,7 +15,7 @@ final class AppCoordinator: NSObject, Coordinator {
     weak var parentCoordinator: (any Coordinator)?
     var childCoordinators: [any Coordinator] = []
     var rootViewController: UIViewController {
-        splitViewController
+        tabBarController
     }
 
     private var window: UIWindow
@@ -35,23 +35,18 @@ final class AppCoordinator: NSObject, Coordinator {
     )
     
     // MARK: - Views
-    
-    private(set) lazy var splitViewController = ThreemaSplitViewController()
-    
-    /// Once Objective-C is removed, `tabBarController` should be made `private`.
-    var tabBarController: ThreemaTabBarController {
-        splitViewController.threemaTabBarController
-    }
-    
+
+    /// The window root: one `UITab` per tab coordinator, each showing the coordinator's split view
+    private(set) lazy var tabBarController = ThreemaTabBarController()
+
     private var presentedViewController: UIViewController? {
-        splitViewController.presentedViewController
+        tabBarController.presentedViewController
     }
     
     // MARK: - Tabs
     
     private(set) lazy var contactListCoordinator: ContactListCoordinator = {
         let coordinator = ContactListCoordinator(
-            presentingViewController: splitViewController,
             businessInjector: businessInjector,
             contactListContainerFactory: ContactListContainerViewControllerFactory(
                 businessInjector: businessInjector,
@@ -134,10 +129,9 @@ final class AppCoordinator: NSObject, Coordinator {
     
     private(set) lazy var conversationListCoordinator: ConversationListCoordinator = {
         let coordinator = ConversationListCoordinator(
-            presentingViewController: splitViewController,
             conversationListViewControllerFactory: ConversationListViewControllerFactory(
                 isRegularSizeClass: { [weak self] in
-                    self?.splitViewController.isCollapsed == false
+                    self?.conversationListCoordinator.splitViewController.isCollapsed == false
                 }(),
                 /// Using `UIApplication.shared` here until we have the app state component.
                 isLoadedInBackground: UIApplication.shared.applicationState == .background,
@@ -161,7 +155,9 @@ final class AppCoordinator: NSObject, Coordinator {
 
                     let chatVC = ChatViewController(
                         for: conversation,
-                        isRegularSizeClass: { [weak self] in self?.splitViewController.isCollapsed == false },
+                        isRegularSizeClass: { [weak self] in
+                            self?.conversationListCoordinator.splitViewController.isCollapsed == false
+                        },
                         initialUnreadCount: businessInjector.unreadMessages.totalCount(),
                         showConversationInformation: information
                     )
@@ -170,7 +166,7 @@ final class AppCoordinator: NSObject, Coordinator {
                 case .archivedConversationList:
                     return ArchivedConversationListViewController(
                         delegate: conversationListCoordinator,
-                        isRegularSizeClass: splitViewController.isCollapsed == false,
+                        isRegularSizeClass: conversationListCoordinator.splitViewController.isCollapsed == false,
                         // Pops are reconciled by the coordinator's NavigationRouter;
                         // nothing to reset here anymore.
                         didDisappear: { }
@@ -184,7 +180,6 @@ final class AppCoordinator: NSObject, Coordinator {
     
     private(set) lazy var profileCoordinator: ProfileCoordinator = {
         let coordinator = ProfileCoordinator(
-            presentingViewController: splitViewController,
             businessInjector: businessInjector,
             shareActivityRouter: shareActivityRouter,
             modalRouter: modalRouter,
@@ -195,7 +190,6 @@ final class AppCoordinator: NSObject, Coordinator {
     
     private lazy var settingsCoordinator: SettingsCoordinator = {
         let coordinator = SettingsCoordinator(
-            presentingViewController: splitViewController,
             shareActivityRouter: shareActivityRouter,
             passcodeRouter: passcodeRouter
         )
@@ -238,13 +232,13 @@ final class AppCoordinator: NSObject, Coordinator {
     }
 
     func start() {
-        configureSplitViewController()
+        configureTabBarController()
 
-        window.rootViewController = splitViewController
+        window.rootViewController = tabBarController
         // Anchor the theme override on the root view controller as well as the window, so iPadOS tab-switch
         // transitions (rendered outside the window's trait environment) resolve the app theme instead of the
         // system appearance. See `Colors.update(rootViewController:)`.
-        Colors.update(rootViewController: splitViewController)
+        Colors.update(rootViewController: tabBarController)
         window.makeKeyAndVisible()
 
         performPostStartSetup()
@@ -632,8 +626,7 @@ final class AppCoordinator: NSObject, Coordinator {
             // reacting to navigation notifications afterwards.
             finish()
 
-            tabBarController.viewControllers = []
-            splitViewController.reset()
+            tabBarController.reset()
             window.rootViewController = nil
         }
     }
@@ -651,15 +644,15 @@ final class AppCoordinator: NSObject, Coordinator {
             guard let self else {
                 return
             }
-            splitViewController.switchTabIfNeeded(to: .conversations)
+            tabBarController.select(.conversations)
             conversationListCoordinator.show(conversation: conversation, information: info)
         }
     }
 
     /// Dismisses `presentedViewController` and switches tab
     func switchTabIfNeeded(to tab: ThreemaTab) {
-        dismissModal { [splitViewController] in
-            splitViewController.switchTabIfNeeded(to: tab)
+        dismissModal { [tabBarController] in
+            tabBarController.select(tab)
         }
     }
 
@@ -674,7 +667,7 @@ final class AppCoordinator: NSObject, Coordinator {
                     return
                 }
 
-                splitViewController.switchTabIfNeeded(to: ThreemaTab(tab))
+                tabBarController.select(ThreemaTab(tab))
 
                 switch tab {
                 case .contacts:
@@ -702,22 +695,10 @@ final class AppCoordinator: NSObject, Coordinator {
         }
     }
     
-    // MARK: - Layout management
+    // MARK: - Tab bar configuration
     
-    private func configureSplitViewController() {
-        let navigationThreemaLogoViewController = ThreemaLogoViewControllerFactory.threemaLogoNavigationController()
-
-        // The tab bar container's column placement is owned by `ThreemaSplitViewController`: it is installed in
-        // the `.compact` column in `init()` (required so the split view collapses on compact width on first
-        // launch) and moved to `.primary` for regular widths by `placeTabBarContainer(forCompact:)`. Setting
-        // `.primary` here would pull the same instance back out of the `.compact` column — this runs after the
-        // window is already key and visible — and reintroduce the empty-logo-on-launch bug.
-        splitViewController.setViewController(
-            navigationThreemaLogoViewController,
-            for: .secondary
-        )
-        
-        /// Create and start the tab coordinators explicitly — a lazy accessor with
+    private func configureTabBarController() {
+        /// Create and start the tab coordinators explicitly - a lazy accessor with
         /// side effects would hide the ordering and allow accidental re-starts.
         let tabCoordinators: [any Coordinator] = [
             contactListCoordinator,
@@ -731,38 +712,24 @@ final class AppCoordinator: NSObject, Coordinator {
             coordinator.start()
         }
 
-        /// For now we keep as is. Ideally, the navigation would already be
-        /// part of the rootViewController.
-        let viewControllers: [UIViewController] = [
-            contactListCoordinator.rootViewController,
-            conversationListCoordinator.rootViewController,
-            profileCoordinator.rootViewController,
-            settingsCoordinator.rootViewController,
-        ]
-        
-        tabBarController.viewControllers = viewControllers
-
-        let navigationManager = splitViewController.navigationManager
-        navigationManager.registerRouterManagedTab(
-            .contacts,
-            handle: contactListCoordinator.routerHandle
-        )
-        navigationManager.registerRouterManagedTab(
-            .conversations,
-            handle: conversationListCoordinator.routerHandle
-        )
-        navigationManager.registerRouterManagedTab(
-            .profile,
-            handle: profileCoordinator.routerHandle
-        )
-        navigationManager.registerRouterManagedTab(
-            .settings,
-            handle: settingsCoordinator.routerHandle
+        // Each tab shows its coordinator's split view. The conversations tab is selected explicitly:
+        // UIKit's default is the first tab (contacts).
+        tabBarController.configureTabs(
+            [
+                .contacts: contactListCoordinator.rootViewController,
+                .conversations: conversationListCoordinator.rootViewController,
+                .profile: profileCoordinator.rootViewController,
+                .settings: settingsCoordinator.rootViewController,
+            ],
+            initialTab: .conversations
         )
 
-        // We must set the conversations tab as the default. This is because, by default, the selectedIndex is 0, which
-        // corresponds to the contact tab.
-        switchTabIfNeeded(to: .conversations)
+        // The tab bar controller drives passcode re-authentication on tab return and memory-warning
+        // releases through the same handles the split views use for binding.
+        tabBarController.registerRouterManagedTab(.contacts, handle: contactListCoordinator.routerHandle)
+        tabBarController.registerRouterManagedTab(.conversations, handle: conversationListCoordinator.routerHandle)
+        tabBarController.registerRouterManagedTab(.profile, handle: profileCoordinator.routerHandle)
+        tabBarController.registerRouterManagedTab(.settings, handle: settingsCoordinator.routerHandle)
     }
 
     private func observeNotifications() {
@@ -787,7 +754,7 @@ final class AppCoordinator: NSObject, Coordinator {
         animated: Bool = true,
         completion: @escaping () -> Void
     ) {
-        guard let presentedViewController = splitViewController.presentedViewController else {
+        guard let presentedViewController = tabBarController.presentedViewController else {
             completion()
             return
         }
@@ -842,6 +809,28 @@ final class AppCoordinator: NSObject, Coordinator {
         }
     }
     
+    // MARK: - Visible chat
+
+    /// The chat on top of the conversations tab's active column, while that tab is selected
+    var visibleChatViewController: ChatViewController? {
+        guard tabBarController.selectedThreemaTab == .conversations else {
+            return nil
+        }
+
+        return conversationListCoordinator.splitViewController.activeNavigationController
+            .topViewController as? ChatViewController
+    }
+
+    /// `true` when the visible chat is the one-to-one chat with `contact`
+    func isShowingChat(for contact: ContactEntity) -> Bool {
+        visibleChatViewController?.isChat(for: contact) == true
+    }
+
+    /// Unread badge on the conversations tab; zero clears it
+    func updateConversationsBadge(_ count: Int) {
+        tabBarController.setBadge(count > 0 ? String(count) : nil, for: .conversations)
+    }
+
     // MARK: - Helpers
     
     func showModal(for viewController: UIViewController) {
@@ -849,32 +838,27 @@ final class AppCoordinator: NSObject, Coordinator {
     }
     
     func showThreemaSafe() {
-        // Go through the split view controller so the profile tab's router is
-        // activated by the store/restore cycle (a raw selectedIndex change is not).
-        splitViewController.switchTabIfNeeded(to: .profile)
+        // Go through the tab bar controller so the switch is bookkept (re-authentication on return).
+        tabBarController.select(.profile)
 
         profileCoordinator.navigateToThreemaSafe()
     }
     
     func showNotificationSettings() {
-        // Go through the split view controller so the settings tab's router is
-        // activated by the store/restore cycle (a raw selectedIndex change is not).
-        splitViewController.switchTabIfNeeded(to: .settings)
+        // Go through the tab bar controller so the switch is bookkept (re-authentication on return).
+        tabBarController.select(.settings)
         
         settingsCoordinator.show(.notifications)
     }
     
     func canDisplayNotificationToast(for message: BaseMessageEntity) -> Bool {
         guard
-            let navigationController = splitViewController.navigationController(
-                for: tabBarController.selectedThreemaTab
-            ),
-            let chatViewController = navigationController.topViewController as? ChatViewController,
+            let chatViewController = visibleChatViewController,
             chatViewController.isDisplayingChat(for: message.conversation)
         else {
             return true
         }
-        
+
         return false
     }
     
@@ -892,7 +876,7 @@ final class AppCoordinator: NSObject, Coordinator {
         }
         
         UIAlertTemplate.showAlert(
-            owner: splitViewController,
+            owner: tabBarController,
             title: #localize("alert_jb_detected_title"),
             message: #localize("alert_jb_detected_message"),
             titleOk: #localize("push_reminder_not_now"),
@@ -909,7 +893,7 @@ final class AppCoordinator: NSObject, Coordinator {
 
 extension AppCoordinator: EnterLicenseDelegate {
     func licenseConfirmed() {
-        splitViewController.dismiss(animated: true) { [weak self] in
+        tabBarController.dismiss(animated: true) { [weak self] in
             guard let self else {
                 return
             }

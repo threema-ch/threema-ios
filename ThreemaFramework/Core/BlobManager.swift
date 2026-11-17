@@ -96,20 +96,25 @@ public actor BlobManager: BlobManagerProtocol {
     public func autoSyncBlobs(for objectID: NSManagedObjectID) async {
         var shouldSync = false
         
-        // We check if the message is of the right type, and if it is incoming since we do not want to automatically
-        // send failed messages again
+        // We check if the message is of the right type, and if it is incoming or a reflected outgoing message pending
+        // download since we do not want to automatically send failed messages again
         let em = entityManager
         var blobID: String?
         var blobThumbnailID: String?
 
         await em.performSave {
-            guard let message = em.entityFetcher.existingObject(with: objectID) as? FileMessageProvider,
-                  !message.blobIsOutgoing else {
+            guard let message = em.entityFetcher.existingObject(with: objectID) as? FileMessageProvider else {
                 return
             }
-            
+
             blobID = message.blobIdentifier?.hexString
             blobThumbnailID = message.blobThumbnailIdentifier?.hexString
+
+            if message.blobIsOutgoing {
+                guard case .outgoing(.pendingDownload) = message.dataState else {
+                    return
+                }
+            }
 
             switch message.fileMessageType {
             case .image, .sticker, .animatedImage, .animatedSticker, .voice:

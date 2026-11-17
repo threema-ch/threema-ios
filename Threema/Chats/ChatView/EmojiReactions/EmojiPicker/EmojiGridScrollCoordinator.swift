@@ -29,6 +29,8 @@ enum EmojiSectionToolbar {
     struct BaseModifier: ViewModifier {
         @StateObject var model: ScrollGridCoordinator = .init()
         @Binding var toolbarVisible: Bool
+        /// Bottom edge of the picker in the global coordinate space, i.e. the height of the window it is shown in
+        @State private var windowHeight: CGFloat = 0
         
         func body(content: Content) -> some View {
             ZStack(alignment: .bottom) {
@@ -40,13 +42,18 @@ enum EmojiSectionToolbar {
                                 return
                             }
                             Task {
-                                if midY < Int(UIScreen.main.bounds.height / 2) + 50, midY > 100 {
+                                if midY < Int(windowHeight / 2) + 50, midY > 100 {
                                     model.didScroll(section)
                                 }
                             }
                         }
                     })
                     .environmentObject(model)
+            }
+            .onGeometryChange(for: CGFloat.self) { proxy in
+                proxy.frame(in: .global).maxY
+            } action: { newValue in
+                windowHeight = newValue
             }
             .safeAreaInset(edge: .bottom) {
                 EmojiToolBar()

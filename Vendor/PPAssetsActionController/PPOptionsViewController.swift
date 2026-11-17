@@ -87,6 +87,11 @@ class PPOptionsViewController: UITableViewController {
         /***** BEGIN THREEMA MODIFICATION: Fix section header padding *********/
         tableView.sectionHeaderTopPadding = 0.0
         /***** END THREEMA MODIFICATION: Fix section header padding *********/
+        
+        // Row visibility depends on the vertical size class, see `PPAssetsActionConfig.isLandscape(traitCollection:)`
+        registerForTraitChanges([UITraitVerticalSizeClass.self]) { (self: PPOptionsViewController, _) in
+            self.refresh()
+        }
     }
     
     override func updateViewConstraints() {
@@ -131,7 +136,7 @@ class PPOptionsViewController: UITableViewController {
         let isIpad = UIDevice.current.userInterfaceIdiom == .pad
         switch section {
         case 0:
-            if selctionCount > 0 && (!config.isLandscape() || (config.isLandscape() && isIpad)) && assetManager.authorizationStatus() == .authorized  && config.showGalleryPreview {
+            if selctionCount > 0 && (!config.isLandscape(traitCollection: traitCollection) || (config.isLandscape(traitCollection: traitCollection) && isIpad)) && assetManager.authorizationStatus() == .authorized  && config.showGalleryPreview {
                 if config.showAdditionalOptionWhenAssetIsSelected {
                     return 2
                 } else {
@@ -139,7 +144,7 @@ class PPOptionsViewController: UITableViewController {
                 }
             } else {
                 var count = options.count + 1;
-                if config.showReplacementOptionInLandscape() || assetManager.isUnauthorizedAndCameraAvailable() {
+                if config.showReplacementOptionInLandscape(traitCollection: traitCollection) || assetManager.isUnauthorizedAndCameraAvailable() {
                     count += 1
                 }
                 return count
@@ -163,11 +168,11 @@ class PPOptionsViewController: UITableViewController {
             cell.textLabel?.textAlignment = config.textAlignment
             
             var specifiedRow = 0
-            if config.showReplacementOptionInLandscape() || assetManager.isUnauthorizedAndCameraAvailable() {
+            if config.showReplacementOptionInLandscape(traitCollection: traitCollection) || assetManager.isUnauthorizedAndCameraAvailable() {
                 specifiedRow = 1
             }
             
-            if indexPath.row == specifiedRow && (!config.showReplacementOptionInLandscape() || assetManager.isUnauthorizedAndCameraAvailable()) {
+            if indexPath.row == specifiedRow && (!config.showReplacementOptionInLandscape(traitCollection: traitCollection) || assetManager.isUnauthorizedAndCameraAvailable()) {
                 if selctionCount > 0 && !config.showOptionsWhenAssetIsSelected {
                     cell.textLabel?.text = NSLocalizedString(selctionCount == 1 ? "add_item_caption" : "add_items_caption", comment: "")
                 } else {
@@ -181,12 +186,12 @@ class PPOptionsViewController: UITableViewController {
                     }
                 }
             } else {
-                if indexPath.row == 0 && (config.showReplacementOptionInLandscape() || assetManager.isUnauthorizedAndCameraAvailable()) {
+                if indexPath.row == 0 && (config.showReplacementOptionInLandscape(traitCollection: traitCollection) || assetManager.isUnauthorizedAndCameraAvailable()) {
                     cell.textLabel?.text = config.previewReplacementText
                     if config.previewReplacementIcon != nil {
                         cell.imageView?.image = config.previewReplacementIcon
                     }
-                } else if indexPath.row == 1 && (config.showReplacementOptionInLandscape() || assetManager.isUnauthorizedAndCameraAvailable()) {
+                } else if indexPath.row == 1 && (config.showReplacementOptionInLandscape(traitCollection: traitCollection) || assetManager.isUnauthorizedAndCameraAvailable()) {
                     if config.useOwnSnapButton && config.ownSnapButtonText != nil {
                         cell.textLabel?.text = config.ownSnapButtonText
                         if config.ownSnapButtonIcon != nil {
@@ -216,7 +221,7 @@ class PPOptionsViewController: UITableViewController {
                     }
                     /***** END THREEMA MODIFICATION: Use custom text for additional option *********/
                 } else {
-                    let row = config.showReplacementOptionInLandscape() || assetManager.isUnauthorizedAndCameraAvailable() ? indexPath.row - 2 : indexPath.row - 1
+                    let row = config.showReplacementOptionInLandscape(traitCollection: traitCollection) || assetManager.isUnauthorizedAndCameraAvailable() ? indexPath.row - 2 : indexPath.row - 1
                     cell.textLabel?.text = options[row].title
                     cell.imageView?.image = options[row].icon
                 }
@@ -224,14 +229,14 @@ class PPOptionsViewController: UITableViewController {
             
             var optionsCount = options.count
             let isIpad = UIDevice.current.userInterfaceIdiom == .pad
-            if selctionCount > 0 && !config.showOptionsWhenAssetIsSelected && (!config.isLandscape() || (config.isLandscape() && isIpad)) && assetManager.authorizationStatus() == .authorized && config.showGalleryPreview{
+            if selctionCount > 0 && !config.showOptionsWhenAssetIsSelected && (!config.isLandscape(traitCollection: traitCollection) || (config.isLandscape(traitCollection: traitCollection) && isIpad)) && assetManager.authorizationStatus() == .authorized && config.showGalleryPreview{
                 optionsCount = 1
             } else {
-                if config.showReplacementOptionInLandscape() || assetManager.isUnauthorizedAndCameraAvailable() {
+                if config.showReplacementOptionInLandscape(traitCollection: traitCollection) || assetManager.isUnauthorizedAndCameraAvailable() {
                     optionsCount += 1
                 }
             }
-            if indexPath.row == 0 && ((config.isLandscape() && !isIpad) || UIAccessibility.isVoiceOverRunning || assetManager.authorizationStatus() != .authorized || !config.showGalleryPreview) {
+            if indexPath.row == 0 && ((config.isLandscape(traitCollection: traitCollection) && !isIpad) || UIAccessibility.isVoiceOverRunning || assetManager.authorizationStatus() != .authorized || !config.showGalleryPreview) {
                 if cellWidth == nil {
                     cellWidth = cell.bounds.size.width
                 }
@@ -309,18 +314,18 @@ class PPOptionsViewController: UITableViewController {
         if indexPath.section == 1 {
             delegate?.optionsViewControllerShouldBeDismissed(self)
         } else {
-            if indexPath.row == 0 && (config.showReplacementOptionInLandscape() || assetManager.isUnauthorizedAndCameraAvailable()) {
+            if indexPath.row == 0 && (config.showReplacementOptionInLandscape(traitCollection: traitCollection) || assetManager.isUnauthorizedAndCameraAvailable()) {
                 delegate?.optionsViewControllerDidRequestPreviewReplacementOption(self)
             } else if indexPath.row == 0 {
                 delegate?.optionsViewControllerDidRequestTopOption(self)
-            } else if indexPath.row == 1 && (config.showReplacementOptionInLandscape() || assetManager.isUnauthorizedAndCameraAvailable()) {
+            } else if indexPath.row == 1 && (config.showReplacementOptionInLandscape(traitCollection: traitCollection) || assetManager.isUnauthorizedAndCameraAvailable()) {
                 delegate?.optionsViewControllerDidRequestTopOption(self)
             }
             else if indexPath.row > 0 {
                 if selctionCount > 0 && config.showAdditionalOptionWhenAssetIsSelected && config.additionalOptionText != nil {
                     delegate?.optionsViewControllerDidRequestOwnOption(self)
                 } else {
-                    if config.showReplacementOptionInLandscape() || assetManager.isUnauthorizedAndCameraAvailable() {
+                    if config.showReplacementOptionInLandscape(traitCollection: traitCollection) || assetManager.isUnauthorizedAndCameraAvailable() {
                         options[indexPath.row - 2].handler()
                     } else {
                         options[indexPath.row - 1].handler()

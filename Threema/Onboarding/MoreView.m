@@ -16,6 +16,8 @@
 
 @property CGRect originalRect;
 @property BOOL isShown;
+/// Set when expanding starts and cleared when collapsing starts, unlike `isShown`
+@property BOOL isExpanded;
 
 @property UIImageView *iconView;
 @property UILabel *moreLabel;
@@ -97,23 +99,13 @@
 
 - (void)showMoreView {
     self.userInteractionEnabled = NO;
+    _isExpanded = YES;
     _messageLabel.text = _moreMessageText;
     _originalRect = self.frame;
     _messageLabel.hidden = NO;
     _messageLabel.alpha = 0.0;
     
-    CGRect buttonRect = [self rect:_okButton.frame centerHorizontalIn:self.frame round:YES];
-    _okButton.frame = buttonRect;
-    
-    CGRect rect = CGRectMake(self.frame.origin.x, self.frame.origin.y + -(CGRectGetMinY(_okButton.frame)), self.frame.size.width, self.frame.size.height - -(CGRectGetMinY(_okButton.frame)));
-    CGFloat width = CGRectGetMaxX(_mainView.frame) - rect.origin.x - 2 * X_PADDING;
-    rect = CGRectMake(rect.origin.x, rect.origin.y, width, rect.size.height);
-    if (_centerMoreView) {
-        rect = CGRectMake((self.window.frame.size.width - rect.size.width)/2, (_mainView.frame.size.height - rect.size.height)/2, rect.size.width, rect.size.height);
-        _okButton.frame = CGRectMake((rect.size.width - buttonRect.size.width)/2, buttonRect.origin.y, buttonRect.size.width, buttonRect.size.height);
-    } else {
-        _okButton.frame = CGRectMake(((rect.size.width - buttonRect.size.width) / 2) + X_PADDING, buttonRect.origin.y, buttonRect.size.width, buttonRect.size.height);
-    }
+    CGRect rect = [self layOutOKButtonInExpandedFrame];
     UIViewAnimationOptions options = UIViewAnimationOptionBeginFromCurrentState;
     [UIView animateWithDuration:0.3 delay:0.0 options:options animations:^{
         self.frame = rect;
@@ -133,6 +125,7 @@
 
 - (void)hideMoreView {
     self.userInteractionEnabled = NO;
+    _isExpanded = NO;
     _mainView.alpha = 0.0;
     _mainView.hidden = NO;
     _okButton.hidden = YES;
@@ -157,6 +150,33 @@
     } else {
         [self showMoreView];
     }
+}
+
+- (void)moveCollapsedFrameToOrigin:(CGPoint)origin {
+    if (_isExpanded == NO) {
+        self.frame = CGRectMake(origin.x, origin.y, self.frame.size.width, self.frame.size.height);
+        return;
+    }
+
+    _originalRect = CGRectMake(origin.x, origin.y, _originalRect.size.width, _originalRect.size.height);
+    self.frame = [self layOutOKButtonInExpandedFrame];
+}
+
+/// Centers the OK button in the expanded frame for `originalRect` and returns that frame
+- (CGRect)layOutOKButtonInExpandedFrame {
+    CGRect buttonRect = [self rect:_okButton.frame centerHorizontalIn:_originalRect round:YES];
+    
+    CGRect rect = CGRectMake(_originalRect.origin.x, _originalRect.origin.y + -(CGRectGetMinY(buttonRect)), _originalRect.size.width, _originalRect.size.height - -(CGRectGetMinY(buttonRect)));
+    CGFloat width = CGRectGetMaxX(_mainView.frame) - rect.origin.x - 2 * X_PADDING;
+    rect = CGRectMake(rect.origin.x, rect.origin.y, width, rect.size.height);
+    if (_centerMoreView) {
+        rect = CGRectMake((self.window.frame.size.width - rect.size.width)/2, (_mainView.frame.size.height - rect.size.height)/2, rect.size.width, rect.size.height);
+        _okButton.frame = CGRectMake((rect.size.width - buttonRect.size.width)/2, buttonRect.origin.y, buttonRect.size.width, buttonRect.size.height);
+    } else {
+        _okButton.frame = CGRectMake(((rect.size.width - buttonRect.size.width) / 2) + X_PADDING, buttonRect.origin.y, buttonRect.size.width, buttonRect.size.height);
+    }
+    
+    return rect;
 }
 
 - (CGRect)rect:(CGRect)rect centerHorizontalIn:(CGRect)outerRect round:(BOOL)round {

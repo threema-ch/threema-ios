@@ -3,6 +3,8 @@
 @interface IDCreationPageViewController ()
 
 @property UIView *infoIconView;
+/// Main content frame the more view was last positioned for
+@property CGRect moreViewLayoutMainRect;
 
 @end
 
@@ -11,36 +13,25 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
 
-    CGRect mainRect = _mainContentView.frame;
-    
-    CGFloat bottomInset = self.view.safeAreaInsets.bottom;
-    if (bottomInset > 0) {
-        mainRect.size.height -= 20.0;
-    }
-    
-    // stick to lower left corner of main view
-    CGRect rect = CGRectMake(CGRectGetMinX(mainRect), CGRectGetMaxY(mainRect), _moreView.frame.size.width, _moreView.frame.size.height);
-    _moreView.frame = rect;
-
     UITapGestureRecognizer *tapGesture = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tappedMoreMessage:)];
     [_moreView addGestureRecognizer:tapGesture];
     _moreView.userInteractionEnabled = YES;
     [_moreView.okButton addTarget:self action:@selector(tappedMoreMessage:) forControlEvents:UIControlEventTouchUpInside];
 }
 
-- (void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation {
-    [super didRotateFromInterfaceOrientation:fromInterfaceOrientation];
-    
+- (void)viewDidLayoutSubviews {
+    [super viewDidLayoutSubviews];
+
+    // The more view has no autoresizing mask; repositioning it on every layout pass would interrupt its expand and
+    // collapse animations
     CGRect mainRect = _mainContentView.frame;
-        
-    CGFloat bottomInset = self.view.safeAreaInsets.bottom;
-    if (bottomInset > 0) {
-        mainRect.size.height -= 20.0;
+    if (CGRectEqualToRect(mainRect, _moreViewLayoutMainRect)) {
+        return;
     }
-    
+
+    _moreViewLayoutMainRect = mainRect;
     // stick to lower left corner of main view
-    CGRect rect = CGRectMake(CGRectGetMinX(mainRect), CGRectGetMaxY(mainRect), _moreView.frame.size.width, _moreView.frame.size.height);
-    _moreView.frame = rect;
+    [_moreView moveCollapsedFrameToOrigin:CGPointMake(CGRectGetMinX(mainRect), CGRectGetMaxY(mainRect))];
 }
 
 - (void)adaptToSmallScreen {

@@ -69,25 +69,17 @@ final class OnboardingRestoreLocalBackupManager {
 
     // MARK: - Phase 2: Data
 
-    /// Migrates the app onto `remoteSecretManager` and reads the backup in, reporting progress as it goes.
+    /// Reads the backup in, reporting progress as it goes.
     ///
-    /// - Precondition: ``restoreIdentity(from:recoveryKey:)`` ran on this backup, and `remoteSecretManager` is the one
-    ///   resolved for the identity it returned.
+    /// - Precondition: ``restoreIdentity(from:recoveryKey:)`` ran on this backup
     func restoreData(
         from backupURL: URL,
-        recoveryKey: String,
-        remoteSecretManager: any RemoteSecretManagerProtocol
+        recoveryKey: String
     ) -> AsyncThrowingStream<DataRestoreProgress, any Error> {
         let (stream, continuation) = AsyncThrowingStream<DataRestoreProgress, any Error>.makeStream()
 
         let task = Task {
             do {
-                try await SetupApp.runDatabaseMigrationIfNeeded(remoteSecretManager: remoteSecretManager)
-
-                try await SetupApp.runAppMigrationIfNeeded(
-                    businessInjector: BusinessInjector(remoteSecretManager: remoteSecretManager)
-                )
-
                 let hasSecurityScope = backupURL.startAccessingSecurityScopedResource()
 
                 defer {

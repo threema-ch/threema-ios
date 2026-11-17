@@ -40,7 +40,12 @@ final class IntentHandler: IntentHandling {
             return handleMessageIntent(messageIntent)
         }
         else if let callIntent = userActivity.interaction?.intent as? INStartCallIntent {
-            return handleCallIntent(callIntent)
+            return handleCallIntent(contacts: callIntent.contacts)
+        }
+        // Call recents deliver this deprecated intent, because it is the call intent declared in
+        // `NSUserActivityTypes`
+        else if let audioCallIntent = userActivity.interaction?.intent as? INStartAudioCallIntent {
+            return handleCallIntent(contacts: audioCallIntent.contacts)
         }
         else if userActivity.activityType == NSUserActivityTypeBrowsingWeb,
                 let url = userActivity.webpageURL {
@@ -111,10 +116,10 @@ final class IntentHandler: IntentHandling {
         return true
     }
 
-    private func handleCallIntent(_ intent: INStartCallIntent) -> Bool {
+    private func handleCallIntent(contacts: [INPerson]?) -> Bool {
         DDLogNotice("[IntentHandler] Handle start call intent")
 
-        guard let personHandle = intent.contacts?.first?.personHandle?.value else {
+        guard let personHandle = contacts?.first?.personHandle?.value else {
             DDLogWarn("[IntentHandler] Start call intent has no person handle")
             return false
         }

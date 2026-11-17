@@ -24,8 +24,6 @@
 	<string>https://blobp-upload.threema.ch/upload?persist={persistBlob}</string>
 	<key>ThreemaBlobUploadURLv6</key>
 	<string>https://ds-blobp-upload.threema.ch/upload?persist={persistBlob}</string>
-	<key>ThreemaCoreDataVersion</key>
-	<string>$(COREDATA_VERSION)</string>
 	<key>ThreemaRendezvousServerURL</key>
 	<string>wss://rendezvous-{rendezvousPathPrefix4}.threema.ch/{rendezvousPathPrefix8}</string>
 	<key>ThreemaMediatorBlobDoneURL</key>

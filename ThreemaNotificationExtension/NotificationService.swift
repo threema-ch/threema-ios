@@ -213,7 +213,8 @@ final class NotificationService: UNNotificationServiceExtension {
                     isWorkApp: TargetManager.isBusinessApp
                 ),
                 pushSettingManager: businessInjector.pushSettingManager,
-                entityManager: businessInjector.entityManager
+                entityManager: businessInjector.entityManager,
+                userSettings: businessInjector.userSettings
             )
             
             // Create pendingUserNotification only for message notifications, not for keep alive checks
@@ -633,7 +634,8 @@ final class NotificationService: UNNotificationServiceExtension {
                 isWorkApp: TargetManager.isBusinessApp
             ),
             pushSettingManager: businessInjector.pushSettingManager,
-            entityManager: businessInjector.entityManager
+            entityManager: businessInjector.entityManager,
+            userSettings: businessInjector.userSettings
         )
         
         pendingUserNotificationManager?.startTestUserNotification(
@@ -670,7 +672,8 @@ final class NotificationService: UNNotificationServiceExtension {
                 isWorkApp: TargetManager.isBusinessApp
             ),
             pushSettingManager: businessInjector.pushSettingManager,
-            entityManager: businessInjector.entityManager
+            entityManager: businessInjector.entityManager,
+            userSettings: businessInjector.userSettings
         )
         
         if bestAttemptContent.userInfo["3mw"] is [AnyHashable: Any] {

@@ -27,10 +27,6 @@ final class AppCoordinatorNotificationHandler {
         coordinator.profileCoordinator
     }
     
-    private var splitViewController: ThreemaSplitViewController {
-        coordinator.splitViewController
-    }
-    
     private var tabBarController: ThreemaTabBarController {
         coordinator.tabBarController
     }
@@ -290,7 +286,7 @@ final class AppCoordinatorNotificationHandler {
         let selectedConversation = conversationListCoordinator.selectedConversation
         
         guard
-            splitViewController.isCollapsed == false,
+            !conversationListCoordinator.splitViewController.isCollapsed,
             deletedConversation == selectedConversation,
             tabBarController.selectedThreemaTab == .conversations
         else {
@@ -319,7 +315,7 @@ final class AppCoordinatorNotificationHandler {
         _ notification: Notification
     ) {
         guard
-            splitViewController.isCollapsed == false,
+            !contactListCoordinator.splitViewController.isCollapsed,
             let deletedContact = notification.userInfo?[
                 kKeyContact
             ] as? ContactEntity,
@@ -378,8 +374,8 @@ final class AppCoordinatorNotificationHandler {
 
     private func handleMemoryWarningNotification() {
         // Free the inactive tabs' materialized screens; they are re-created
-        // from the tabs' paths on the next activation.
-        splitViewController.navigationManager.releaseMaterializedScreens()
+        // from the tabs' paths on the next appearance.
+        tabBarController.releaseInactiveTabs()
     }
     
     // MARK: Color Theme Changed Notification
@@ -403,11 +399,11 @@ final class AppCoordinatorNotificationHandler {
         SharedAppProvider.window
             .map(Colors.update(window:))
 
-        Colors.update(rootViewController: splitViewController)
+        Colors.update(rootViewController: tabBarController)
 
         Colors.update(tabBar: tabBarController.tabBar)
                 
-        splitViewController.setNeedsStatusBarAppearanceUpdate()
+        tabBarController.setNeedsStatusBarAppearanceUpdate()
     }
 
     // MARK: License Missing Notification
@@ -441,7 +437,7 @@ final class AppCoordinatorNotificationHandler {
         coordinator.appContainer.wcSessionManager.stopAndForgetAllSessions()
 
         coordinator.dismissModal { [weak self] in
-            self?.splitViewController.present(viewController, animated: false) {
+            self?.tabBarController.present(viewController, animated: false) {
                 guard let errorMessage else {
                     return
                 }

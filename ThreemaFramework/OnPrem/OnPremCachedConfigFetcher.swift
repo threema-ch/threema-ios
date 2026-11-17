@@ -23,9 +23,7 @@ final class OnPremCachedConfigFetcher: OnPremConfigFetcherProtocol {
                 if oppfData == "Unauthorized" {
                     throw OnPremConfigError.unauthorized
                 }
-                // An expired cached OPPF is still needed for the pinning and the remote secret to download the new
-                // one. The expiration is checked for every downloaded OPPF.
-                let config = try configVerifier.verify(oppfData: oppfData, checkExpiration: false)
+                let config = try configVerifier.verify(oppfData: oppfData)
                 cachedConfig = config
                 
                 completionHandler(.success(config))

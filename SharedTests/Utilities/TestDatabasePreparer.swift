@@ -447,12 +447,14 @@ public final class TestDatabasePreparer {
         message: BaseMessageEntity,
         reaction: String,
         date: Date = Date(),
+        readAt: Date? = nil,
         contact: ContactEntity? = nil
     ) -> MessageReactionEntity {
         MessageReactionEntity(
             context: objCnx,
             date: date,
             reaction: reaction,
+            readAt: readAt,
             contact: contact,
             message: message
         )

@@ -12,7 +12,16 @@ struct WizardGroupBoxStyle: GroupBoxStyle {
         }
         .multilineTextAlignment(.center)
         .fixedSize(horizontal: false, vertical: true)
-        .frame(maxWidth: horizontalSizeClass == .regular ? UIScreen.main.bounds.width - 200.0 : .infinity)
+        .apply {
+            if horizontalSizeClass == .regular {
+                $0.containerRelativeFrame(.horizontal) { length, _ in
+                    length - 200.0
+                }
+            }
+            else {
+                $0.frame(maxWidth: .infinity)
+            }
+        }
         .padding(.all, 10.0)
     }
 }

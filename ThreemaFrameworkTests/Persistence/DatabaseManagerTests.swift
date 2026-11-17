@@ -329,6 +329,15 @@ final class DatabaseManagerTests {
         )
     }
 
+    @Test(arguments: [DatabaseManager.databaseModelName, DatabaseManager.databaseEncryptedModelName])
+    func `Current model version has the expected version identifier`(modelName: String) throws {
+        let modelURL = try #require(BundleUtil.url(forResource: modelName, withExtension: "momd"))
+        let model = try #require(NSManagedObjectModel(contentsOf: modelURL))
+
+        let identifiers = model.versionIdentifiers.compactMap { $0 as? String }
+        #expect(identifiers == ["\(modelName)V\(DatabaseManager.databaseModelVersion)"])
+    }
+
     /// Creates a physical ThreemaData database for testing.
     /// - Parameter forMigration: True causes a dynamically change of the model to force a migration
     private func createTestDB(forMigration: Bool = false) {

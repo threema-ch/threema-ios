@@ -11,6 +11,7 @@ struct StorageManagementConversationView: View {
     @ObservedObject var model: Model
    
     @State var showExport = false
+    @State private var showMediaCountsByEntity = false
     
     init(businessInjector: BusinessInjectorProtocol, conversation: ConversationEntity? = nil) {
         self.businessInjector = businessInjector
@@ -104,10 +105,25 @@ struct StorageManagementConversationView: View {
             showActionSheet(.messages)
         }
         
-        SectionView(amount: $model.totalMediaCount, section: .files) {
+        SectionView(
+            amount: $model.totalMediaCount,
+            section: .files,
+            headerTapAction: model.isSingleConversation ? nil : { showMediaCountsByEntity = true }
+        ) {
             showActionSheet(.files)
         }
         .padding(.bottom, 8)
+        .alert(Text(verbatim: "Media Message Entities"), isPresented: $showMediaCountsByEntity) {
+            Button(#localize("ok"), role: .cancel) { }
+        } message: {
+            let counts = model.mediaCountsByEntity
+            Text(verbatim: """
+                FileMessageEntity: \(counts.fileMessages)
+                ImageMessageEntity: \(counts.imageMessages)
+                VideoMessageEntity: \(counts.videoMessages)
+                AudioMessageEntity: \(counts.audioMessages)
+                """)
+        }
         
         // TODO: (IOS-5768) We added the temporary fix to remove draft for a conversation in `safeMode`. See ticket for more information.
         if SettingsBundleHelper.safeMode {

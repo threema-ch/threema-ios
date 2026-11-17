@@ -23,19 +23,36 @@ public final class BackupRestoreDataManager: BackupRestoreDataManagerProtocol {
     ///     driving it on the main context deadlocks the app.
     ///   - fileUtility: Reads the backup file. Must not be one that decrypts with the remote secret: the backup is the
     ///     user's own file, encrypted with the recovery key alone.
-    public init(
+    public convenience init(
         myIdentityStore: any MyIdentityStoreProtocol,
         makeProfileStore: @escaping (ThreemaIdentity) -> any ProfileStoreProtocol = { ProfileStore(myIdentity: $0) },
         userSettings: any UserSettingsProtocol,
         entityManager: EntityManager,
         fileUtility: any FileUtilityProtocol
     ) {
-        self.myIdentityStore = myIdentityStore
-        self.providersFactory = DataBackupProvidersFactory(
-            makeProfileStore: makeProfileStore,
-            userSettings: userSettings,
-            entityManager: entityManager
+        self.init(
+            myIdentityStore: myIdentityStore,
+            providersFactory: DataBackupProvidersFactory(
+                makeProfileStore: makeProfileStore,
+                userSettings: userSettings,
+                entityManager: entityManager
+            ),
+            entityManager: entityManager,
+            fileUtility: fileUtility
         )
+    }
+
+    /// Takes the providers from `providersFactory`, so a test can run the restore on throwaway storage.
+    ///
+    /// - Parameter entityManager: The one `providersFactory` writes through. Must be a background one, as above.
+    init(
+        myIdentityStore: any MyIdentityStoreProtocol,
+        providersFactory: DataBackupProvidersFactory,
+        entityManager: EntityManager,
+        fileUtility: any FileUtilityProtocol
+    ) {
+        self.myIdentityStore = myIdentityStore
+        self.providersFactory = providersFactory
         self.entityManager = entityManager
         self.fileUtility = fileUtility
     }

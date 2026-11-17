@@ -10,7 +10,7 @@ struct LocalBackupCreateBackupViewModelTests {
     @Test func `Shared resources are correctly set in the primary language`() {
         let sut = makeSUT()
 
-        #expect(sut.state.headerIconName == "key")
+        #expect(sut.state.headerIconName == "arrow.down.circle.fill")
         #expect(sut.cancelButtonTitle == "Cancel")
         #expect(sut.dismissButtonTitle == "Dismiss")
         #expect(sut.continueButtonTitle == "Continue")
@@ -51,14 +51,14 @@ struct LocalBackupCreateBackupViewModelTests {
         let sut = makeSUT()
         sut.apply(DataBackupProgress.mock(phase: .messages))
 
-        #expect(sut.state.headerIconName == "key")
+        #expect(sut.state.headerIconName == "arrow.down.circle.fill")
         #expect(sut.headerTitle == "Creating backup")
         #expect(sut.headerSubtitle == "This may take a few minutes depending on your backup size.")
         #expect(sut.headerStep == "STEP 3 OF 3")
         #expect(sut.note == "Do not lock your screen or force-close the app.")
 
         #expect(sut.exportItems.map(\.title) == stepTitles)
-        #expect(sut.exportItems.map(\.state) == [.done, .done, .done, .done, .done, .inProgress, .waiting])
+        #expect(sut.exportItems.map(\.state) == [.done, .inProgress, .waiting, .waiting])
     }
 
     @Test func `Complete state resources are correctly set in the primary language`() {
@@ -66,7 +66,7 @@ struct LocalBackupCreateBackupViewModelTests {
         sut.apply(DataBackupProgress.mock(phase: .finalizing))
         sut.state = .complete
 
-        #expect(sut.state.headerIconName == "checkmark.circle")
+        #expect(sut.state.headerIconName == "checkmark.circle.fill")
         #expect(sut.headerTitle == "Backup Complete")
         #expect(sut.headerSubtitle == "Your messages and media have been encrypted and saved securely.")
         #expect(sut.headerStep == "STEP 3 OF 3")
@@ -81,25 +81,25 @@ struct LocalBackupCreateBackupViewModelTests {
         sut.apply(DataBackupProgress.mock(phase: .finalizing))
         sut.state = .failed
 
-        #expect(sut.state.headerIconName == "exclamationmark.circle")
+        #expect(sut.state.headerIconName == "exclamationmark.circle.fill")
         #expect(sut.headerTitle == "Backup failed")
         #expect(sut.headerSubtitle == "Your backup could not be completed. No data was lost.")
         #expect(sut.headerStep == nil)
         #expect(sut.note == "Do not lock your screen or force-close the app.")
 
         #expect(sut.exportItems.map(\.title) == stepTitles)
-        #expect(sut.exportItems.map(\.state) == [.done, .done, .done, .done, .done, .done, .failed])
+        #expect(sut.exportItems.map(\.state) == [.done, .done, .done, .failed])
     }
 
     @Test(arguments: [
-        (Phase.userData, [ItemState.inProgress, .waiting, .waiting, .waiting, .waiting, .waiting, .waiting]),
-        (.contacts, [.done, .inProgress, .waiting, .waiting, .waiting, .waiting, .waiting]),
-        (.distributionLists, [.done, .done, .waiting, .waiting, .waiting, .waiting, .waiting]),
-        (.groups, [.done, .done, .inProgress, .waiting, .waiting, .waiting, .waiting]),
-        (.cspNonces, [.done, .done, .done, .inProgress, .waiting, .waiting, .waiting]),
-        (.polls, [.done, .done, .done, .done, .inProgress, .waiting, .waiting]),
-        (.messages, [.done, .done, .done, .done, .done, .inProgress, .waiting]),
-        (.finalizing, [.done, .done, .done, .done, .done, .done, .inProgress]),
+        (Phase.userData, [ItemState.inProgress, .waiting, .waiting, .waiting]),
+        (.contacts, [.inProgress, .waiting, .waiting, .waiting]),
+        (.distributionLists, [.done, .inProgress, .waiting, .waiting]),
+        (.groups, [.done, .inProgress, .waiting, .waiting]),
+        (.cspNonces, [.done, .inProgress, .waiting, .waiting]),
+        (.polls, [.done, .inProgress, .waiting, .waiting]),
+        (.messages, [.done, .inProgress, .waiting, .waiting]),
+        (.finalizing, [.done, .done, .done, .inProgress]),
     ])
     func `Steps before the reported phase are done and later ones are waiting`(
         phase: Phase,
@@ -116,25 +116,32 @@ struct LocalBackupCreateBackupViewModelTests {
 
         // Only the most recent snapshot is buffered, so the phases in between can be missed entirely.
         sut.apply(DataBackupProgress.mock(phase: .contacts))
-        sut.apply(DataBackupProgress.mock(phase: .messages))
+        sut.apply(DataBackupProgress.mock(phase: .finalizing))
 
-        #expect(sut.exportItems.map(\.state) == [.done, .done, .done, .done, .done, .inProgress, .waiting])
+        #expect(sut.exportItems.map(\.state) == [.done, .done, .done, .inProgress])
     }
 
     @Test func `A step that runs shows in progress others are done or waiting`() {
         let sut = makeSUT()
 
         sut.apply(DataBackupProgress.mock(phase: .contacts))
-        #expect(sut.exportItems[1].statusText == "In progress")
+        #expect(sut.exportItems[0].statusText == "In progress")
 
         sut.apply(DataBackupProgress.mock(phase: .polls))
-        #expect(sut.exportItems[4].statusText == "In progress")
+        #expect(sut.exportItems[1].statusText == "In progress")
 
         // Steps that are not running show their state instead.
-        #expect(sut.exportItems[2].statusText == "Done")
-        #expect(sut.exportItems[3].statusText == "Done")
-        #expect(sut.exportItems[5].statusText == "Waiting…")
-        #expect(sut.exportItems[6].statusText == "Waiting…")
+        #expect(sut.exportItems[0].statusText == "Done")
+        #expect(sut.exportItems[2].statusText == "Waiting…")
+        #expect(sut.exportItems[3].statusText == "Waiting…")
+    }
+
+    @Test func `A backup without media has no media step`() {
+        let sut = makeSUT(includesMedia: false)
+        sut.apply(DataBackupProgress.mock(phase: .messages))
+
+        #expect(sut.exportItems.map(\.title) == ["Preparing backup", "Backing up your chats", "Finalizing backup"])
+        #expect(sut.exportItems.map(\.state) == [.done, .inProgress, .waiting])
     }
 
     func `A step without items to count shows its state`() {
@@ -169,7 +176,7 @@ struct LocalBackupCreateBackupViewModelTests {
         #expect(sut.currentPhase == .messages)
         #expect(sut.backupError?.title == "Backup Error")
         #expect(sut.backupError?.content == "The mock backup failed.")
-        #expect(sut.exportItems.map(\.state) == [.done, .done, .done, .done, .done, .failed, .failed])
+        #expect(sut.exportItems.map(\.state) == [.done, .failed, .failed, .failed])
     }
 
     @Test func `A backup that fails before reporting a phase settles every step as failed`() async {
@@ -199,7 +206,7 @@ struct LocalBackupCreateBackupViewModelTests {
 
     @Test func `Calling startBackup twice starts only one backup`() async {
         let manager = BackupCreateManagerMock(createBehavior: .immediateSuccess)
-        let sut = LocalBackupCreateBackupViewModel(manager: manager, userSettings: .mock)
+        let sut = LocalBackupCreateBackupViewModel(manager: manager)
 
         sut.startBackup()
         sut.startBackup()
@@ -214,7 +221,7 @@ struct LocalBackupCreateBackupViewModelTests {
 
     @Test func `A backup that completes is recorded`() async {
         let manager = BackupCreateManagerMock(createBehavior: .immediateSuccess)
-        let sut = LocalBackupCreateBackupViewModel(manager: manager, userSettings: .mock)
+        let sut = LocalBackupCreateBackupViewModel(manager: manager)
 
         await sut.runBackup()
 
@@ -224,7 +231,7 @@ struct LocalBackupCreateBackupViewModelTests {
 
     @Test func `A backup that fails is not recorded`() async {
         let manager = BackupCreateManagerMock(createBehavior: .immediateFailure)
-        let sut = LocalBackupCreateBackupViewModel(manager: manager, userSettings: .mock)
+        let sut = LocalBackupCreateBackupViewModel(manager: manager)
 
         await sut.runBackup()
 
@@ -234,7 +241,7 @@ struct LocalBackupCreateBackupViewModelTests {
 
     @Test func `A cancelled backup is not recorded`() async {
         let manager = BackupCreateManagerMock(createBehavior: .idle)
-        let sut = LocalBackupCreateBackupViewModel(manager: manager, userSettings: .mock)
+        let sut = LocalBackupCreateBackupViewModel(manager: manager)
 
         let task = Task { await sut.runBackup() }
         task.cancel()
@@ -246,7 +253,7 @@ struct LocalBackupCreateBackupViewModelTests {
     @Test func `A backup that cannot be recorded is reported as failed`() async {
         let manager = BackupCreateManagerMock(createBehavior: .immediateSuccess)
         manager.mockRecordError = .recordFailed
-        let sut = LocalBackupCreateBackupViewModel(manager: manager, userSettings: .mock)
+        let sut = LocalBackupCreateBackupViewModel(manager: manager)
 
         await sut.runBackup()
 
@@ -262,23 +269,20 @@ struct LocalBackupCreateBackupViewModelTests {
     typealias Phase = DataBackupProgress.Phase
 
     private let stepTitles = [
-        "Exporting user data",
-        "Exporting contacts",
-        "Exporting groups",
-        "Exporting nonces",
-        "Exporting polls",
-        "Exporting messages",
+        "Preparing backup",
+        "Backing up your chats",
+        "Backing up your media",
         "Finalizing backup",
     ]
 
     private func makeSUT(
         createBehavior: BackupCreateManagerMock.CreateBehavior = .idle,
-        userSettings: any UserSettingsProtocol = .mock
+        includesMedia: Bool = true
     ) -> LocalBackupCreateBackupViewModel {
-        LocalBackupCreateBackupViewModel(
-            manager: BackupCreateManagerMock(createBehavior: createBehavior),
-            userSettings: userSettings
-        )
+        let manager = BackupCreateManagerMock(createBehavior: createBehavior)
+        manager.backupSettings.includesMedia = includesMedia
+
+        return LocalBackupCreateBackupViewModel(manager: manager)
     }
 
     /// Waits for `condition` by letting other tasks run, and records an issue if it does not hold in time.

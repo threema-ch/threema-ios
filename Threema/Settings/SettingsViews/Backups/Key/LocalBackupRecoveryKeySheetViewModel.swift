@@ -20,8 +20,8 @@ final class LocalBackupRecoveryKeySheetViewModel {
     let currentKeyLabel = #localize("current_key")
     let title = #localize("Recovery_Key")
 
-    var recoveryKeyTrimmed: String {
-        manager.currentRecoveryKey.trimmedValue
+    var recoveryKeyAbbreviated: String {
+        manager.currentRecoveryKey.abbreviatedValue
     }
 
     var titleRowHeight: CGFloat {

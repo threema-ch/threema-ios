@@ -3,7 +3,7 @@ import Ed25519
 import Foundation
 
 protocol OnPremConfigVerifierProtocol {
-    func verify(oppfData: String, checkExpiration: Bool) throws -> OnPremConfig
+    func verify(oppfData: String) throws -> OnPremConfig
 }
 
 final class OnPremConfigVerifier: OnPremConfigVerifierProtocol {
@@ -14,12 +14,10 @@ final class OnPremConfigVerifier: OnPremConfigVerifierProtocol {
         self.trustedPublicKeys = trustedPublicKeys
     }
     
-    /// - Parameters:
-    ///   - oppfData: The OPPF data to verify
-    ///   - checkExpiration: Whether an expired license throws `licenseExpired`
+    /// - Parameter oppfData: The OPPF data to verify
     ///
     /// - Returns: the resulting JSON document
-    func verify(oppfData: String, checkExpiration: Bool) throws -> OnPremConfig {
+    func verify(oppfData: String) throws -> OnPremConfig {
         guard let trustedPublicKeys else {
             DDLogError("Missing config public keys")
             throw OnPremConfigError.missingPublicKeys
@@ -80,10 +78,6 @@ final class OnPremConfigVerifier: OnPremConfigVerifierProtocol {
         // that the expiration date is defined as "not valid after")
         let expires = config.license.expires + 86400
         if expires < Date() {
-            guard checkExpiration else {
-                DDLogWarn("License of the OPPF expired on \(config.license.expires), ignored for the cached OPPF")
-                return config
-            }
             throw OnPremConfigError.licenseExpired
         }
         

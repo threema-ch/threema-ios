@@ -16,6 +16,7 @@ extension StorageManagementConversationView {
         
         @Published var totalMessagesCount = 0
         @Published var totalMediaCount = 0
+        @Published var mediaCountsByEntity = MessageFetcher.MediaMessageCounts()
         
         @Published var deleteInProgress = false {
             willSet {
@@ -220,11 +221,11 @@ extension StorageManagementConversationView {
             _ conversations: Set<ConversationEntity>
         ) {
             var messagesCount = 0
-            var mediaCount = 0
+            var mediaCounts = MessageFetcher.MediaMessageCounts()
             for conversation in conversations {
                 let fetcher = MessageFetcher(for: conversation, with: backgroundEntityManager)
                 messagesCount += fetcher.count()
-                mediaCount += fetcher.mediaCount()
+                mediaCounts = mediaCounts + fetcher.mediaCountsByEntity()
             }
             
             DispatchQueue.main.async { [weak self] in
@@ -232,7 +233,8 @@ extension StorageManagementConversationView {
                     return
                 }
                 totalMessagesCount = messagesCount
-                totalMediaCount = mediaCount
+                totalMediaCount = mediaCounts.total
+                mediaCountsByEntity = mediaCounts
             }
         }
         

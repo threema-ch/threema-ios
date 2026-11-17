@@ -3,11 +3,9 @@ import Foundation
 
 final class OnPremConfigVerifierMock: OnPremConfigVerifierProtocol {
     private(set) var verifyCalls = [String]()
-    private(set) var checkExpirationCalls = [Bool]()
 
-    func verify(oppfData: String, checkExpiration: Bool) throws -> OnPremConfig {
+    func verify(oppfData: String) throws -> OnPremConfig {
         verifyCalls.append(oppfData)
-        checkExpirationCalls.append(checkExpiration)
 
         return OnPremConfig(
             version: "1.0",

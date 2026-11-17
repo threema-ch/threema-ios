@@ -165,4 +165,10 @@ public final class UserSettingsMock: NSObject, UserSettingsProtocol {
     public var backups2Enabled = false
 
     public var localBackupDebugRecoveryKeyEnabled = false
+
+    public var newMediaBrowserEnabled = false
+    
+    public var reactionNotificationsOneToOneEnabled = true
+    
+    public var reactionNotificationsGroupEnabled = true
 }

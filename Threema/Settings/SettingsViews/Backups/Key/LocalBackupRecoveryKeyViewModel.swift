@@ -28,7 +28,8 @@ final class LocalBackupRecoveryKeyViewModel {
 
     let deleteIconName = "trash"
     let errorIconName = "exclamationmark.circle"
-    let headerIconName = "key"
+    let headerIconName = "key.fill"
+    let headerIconRotationDegrees = 24.0
     let createKeyIconName = "chevron.forward"
 
     let cancelButtonTitle = #localize("cancel")
@@ -116,7 +117,7 @@ final class LocalBackupRecoveryKeyViewModel {
     }
 
     func copyKeyButtonTapped() {
-        UIPasteboard.general.set(string: currentRecoveryKey.rawValue, sensitiveContent: .secretAllDevices)
+        UIPasteboard.general.set(string: currentRecoveryKey.prettyFormatted, sensitiveContent: .secretAllDevices)
         didCopyKey = true
     }
 
@@ -158,7 +159,10 @@ final class LocalBackupRecoveryKeyViewModel {
     }
 
     /// Splits the recovery key raw string into fixed-size chunks and groups them into rows for display.
-    func keyRows(columnsPerRow: Int, charactersPerColumn: Int = 4) -> [KeyRow] {
+    func keyRows(
+        columnsPerRow: Int,
+        charactersPerColumn: Int = BackupEncryptionKey.groupSize
+    ) -> [KeyRow] {
         let characters = Array(currentRecoveryKey.rawValue)
 
         let cells = stride(from: 0, to: characters.count, by: charactersPerColumn)

@@ -25,9 +25,8 @@ public final class RemoteSecretProvider: Sendable {
     // TODO: (IOS-5387) Replace this by exposing `PersistenceManager` in `BusinessInjector` and remove this
     /// The current `RemoteSecretManagerProtocol`.
     ///
-    /// - In the **new coordinator flow**: set by `AppLaunchSequenceManager` / `OnboardingCoordinator`
+    /// - Set by `AppLaunchSequenceManager` / `OnboardingCoordinator`
     ///   after RS is resolved.
-    /// - In the **legacy flow**: set by `RemoteSecretProvider.set` (via the bridge).
     ///
     /// - Precondition: Must be set before any component accesses it. Accessing before
     ///   initialization is a programming error (force-unwrap crash, same as the old global).

@@ -25,7 +25,7 @@ import UIKit
 ///
 /// # Solution chosen
 ///
-/// ## iOS 17 and 18
+/// ## iOS 18
 ///
 /// We set the profile view to a fixed width, based on the width of the whole navigation bar minus an offset on both
 /// ends (`combinedLeadingAndTrailingOffset` in `ChatViewConfiguration.Profile`). This offset is a compromise to stay at
@@ -40,6 +40,12 @@ import UIKit
 /// Similar to before (iOS 18) we set the profile view to a fixed size, but because with Liquid Glass the back
 /// button is bigger it varies if there is any unread message or none.  (`combinedLeadingAndTrailingOffset` &
 /// `combinedLeadingAndTrailingOffsetWithUnreadMessages` in `ChatViewConfiguration.Profile`)
+///
+/// ## Without a back button
+///
+/// When the chat is the root of the split view's detail column there is no back button, and a centered title view
+/// would leave an empty gap at the leading edge. The chat then hosts this view in a leading bar button item: the
+/// chat appears in place there, so the bar button item fade-in drawback below does not apply.
 ///
 /// # Other solutions considered
 ///

@@ -253,7 +253,6 @@ final class AppLaunchSequenceManager {
             case let .ready(remoteSecretManager, keychainManager):
                 remoteSecretFailureCount = 0
                 return await continueAfterRemoteSecret(
-                    resolver: resolver,
                     remoteSecretManager: remoteSecretManager,
                     keychainManager: keychainManager
                 )
@@ -325,7 +324,6 @@ final class AppLaunchSequenceManager {
                 remoteSecretManager: remoteSecretManager
             )
             return await continueAfterRemoteSecret(
-                resolver: resolver,
                 remoteSecretManager: remoteSecretManager,
                 keychainManager: keychainManager
             )
@@ -338,26 +336,20 @@ final class AppLaunchSequenceManager {
     // MARK: - Private
 
     private func continueAfterRemoteSecret(
-        resolver: any RemoteSecretResolving,
         remoteSecretManager: any RemoteSecretManagerProtocol,
         keychainManager: any KeychainManagerProtocol
     ) async -> LaunchResult {
-        RemoteSecretProvider.setRemoteSecretManager(remoteSecretManager)
-
         do {
-            // The identity is used for certain app migrations, thus we ensure it is synced. On the other hand, the
-            // license might be migrated (e.g. the migration to Keychain in 7.0 (actually 6.9, but that was never
-            // publicly released)), thus we only sync it after the migrations
-            try resolver.syncIdentity(with: keychainManager)
+            let businessResolver = BusinessResolver(
+                myIdentityStore: bootstrap.bootstrapIdentityStore.store,
+                licenseStore: bootstrap.licenseStore.store,
+                flavorService: bootstrap.flavorService
+            )
             
-            try await SetupApp.runDatabaseMigrationIfNeeded(remoteSecretManager: remoteSecretManager)
-            
-            let businessInjector = BusinessInjector(remoteSecretManager: remoteSecretManager)
-            
-            try await SetupApp.runAppMigrationIfNeeded(businessInjector: businessInjector)
-            
-            // Sync license and to ensure everything runs flawless we sync the identity one more time
-            try resolver.syncKeychain(with: keychainManager)
+            let businessInjector = try await businessResolver.resolve(
+                with: remoteSecretManager,
+                and: keychainManager
+            )
 
             let passcodeLock = KKPasscodeLockAdapter()
             

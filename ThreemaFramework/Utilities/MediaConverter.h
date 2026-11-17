@@ -14,8 +14,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark - Thumbnails
 
-+ (NSUInteger)thumbnailSizeForCurrentDevice;
-+ (NSUInteger)fullscreenPreviewSizeForCurrentDevice;
++ (NSUInteger)thumbnailSizeForCurrentDevice __attribute__((deprecated("use thumbnailSizeForBounds:traitCollection: instead")));
++ (NSUInteger)thumbnailSizeForBounds:(CGRect)bounds traitCollection:(UITraitCollection *)traitCollection;
++ (NSUInteger)fullscreenPreviewSizeForCurrentDevice __attribute__((deprecated("use fullscreenPreviewSizeForBounds: instead")));
++ (NSUInteger)fullscreenPreviewSizeForBounds:(CGRect)bounds;
 
 + (nullable UIImage *)getThumbnailForImage:(UIImage *)orig;
 + (nullable UIImage *)getThumbnailForSticker:(UIImage *)orig;

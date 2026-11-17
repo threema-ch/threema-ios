@@ -53,13 +53,16 @@ final class OnboardingCoordinator: Coordinator {
     
     // MARK: - Properties
     
-    let bootstrap: BootstrapContainer
-    let bootstrapMDMSetup: any BootstrapMDMSetupProtocol
-    weak var delegate: OnboardingCoordinatorDelegate?
-    weak var window: UIWindow?
+    private let bootstrap: BootstrapContainer
+    private let bootstrapMDMSetup: any BootstrapMDMSetupProtocol
+    
+    private weak var delegate: OnboardingCoordinatorDelegate?
+    private weak var window: UIWindow?
+    
     private let remoteSecretResolver: any RemoteSecretResolving
+    private let businessResolver: any BusinessResolving
 
-    private(set) lazy var licenseService = LicenseService(
+    private lazy var licenseService = LicenseService(
         licenseStore: bootstrap.licenseStore,
         flavorService: bootstrap.flavorService,
         licenseMDMSetup: bootstrapMDMSetup.mdmSetup,
@@ -68,7 +71,7 @@ final class OnboardingCoordinator: Coordinator {
 
     private let onboardingCompleter: any OnboardingCompleting
 
-    private(set) lazy var bootstrapIdentityService = BootstrapIdentityService(
+    private lazy var bootstrapIdentityService = BootstrapIdentityService(
         bootstrapIdentityStore: bootstrap.bootstrapIdentityStore,
         bootstrapIdentityCreator: bootstrap.bootstrapIdentityCreator,
         bootstrapKeychainManager: bootstrap.bootstrapKeychainManager,
@@ -109,7 +112,8 @@ final class OnboardingCoordinator: Coordinator {
     /// What a finished local backup restore still needs to complete onboarding with.
     private var localBackupOnboardingCompletion: (
         remoteSecretManager: any RemoteSecretManagerProtocol,
-        keychainManager: any KeychainManagerProtocol
+        keychainManager: any KeychainManagerProtocol,
+        businessInjector: any BusinessInjectorProtocol,
     )?
 
     // MARK: - Initialization
@@ -120,6 +124,7 @@ final class OnboardingCoordinator: Coordinator {
         delegate: OnboardingCoordinatorDelegate,
         window: UIWindow,
         remoteSecretResolver: any RemoteSecretResolving,
+        businessResolver: any BusinessResolving,
         splash: (any SplashPresenting)? = nil,
         onboardingCompleter: (any OnboardingCompleting)? = nil,
         restoreSafeManager: (any SafeRestoring)? = nil
@@ -129,6 +134,7 @@ final class OnboardingCoordinator: Coordinator {
         self.delegate = delegate
         self.window = window
         self.remoteSecretResolver = remoteSecretResolver
+        self.businessResolver = businessResolver
         self.onboardingCompleter = onboardingCompleter ?? OnboardingCompleter(bootstrap: bootstrap)
         self.restoreSafeManager = restoreSafeManager ?? OnboardingRestoreSafeManager()
         self.splash = splash ?? Self.makeSplashViewController()
@@ -335,17 +341,18 @@ final class OnboardingCoordinator: Coordinator {
         
     private func proceedToSetupWizard() async throws {
         let (remoteSecretManager, keychainManager) = try await resolveRemoteSecret()
-        updateFileUtility(remoteSecretManager: remoteSecretManager)
-        RemoteSecretProvider.setRemoteSecretManager(remoteSecretManager)
+        let businessInjector = try await businessResolver.resolve(
+            with: remoteSecretManager,
+            and: keychainManager
+        )
         
         bootstrap.licenseStore.performUpdateWorkInfo()
         
         splash.presentPageViewController(
             with: SetupConfiguration(
-                remoteSecretAndKeychain: RemoteSecretAndKeychainObjC(
-                    remoteSecretManager: remoteSecretManager,
-                    keychainManager: keychainManager
-                ),
+                remoteSecretManager: remoteSecretManager,
+                keychainManager: keychainManager,
+                businessInjector: businessInjector,
                 mdm: bootstrapMDMSetup.mdmSetup
             )
         )
@@ -432,31 +439,9 @@ final class OnboardingCoordinator: Coordinator {
         
         window.rootViewController = previousVC
         
-        let (remoteSecretManager, keychainManager) = try resolver.continueAfterFetch(
+        return try resolver.continueAfterFetch(
             remoteSecretManager: fetchedRSManager
         )
-        try resolver.syncKeychain(with: keychainManager)
-        return (remoteSecretManager, keychainManager)
-    }
-
-    /// Updates `FileUtility.shared` with the RS-aware decorator.
-    /// Replaces the side-effect from `RemoteSecretProvider.remoteSecretManager` didSet.
-
-    // TODO: Remove this and its call sites once it is confirmed on device that the provider covers it.
-    //
-    // `RemoteSecretProvider.setRemoteSecretManager(_:)`, which every call site here invokes on the very next line,
-    // already installs a `FileUtilityRemoteSecretDecorator` built from the same `FileUtility()` and the same whitelist
-    // — see `RemoteSecretProvider.set(_:)`. So the decorator this installs is replaced by an identical one
-    // immediately, and nothing runs in between to observe the difference. `AppLaunchSequenceManager` sets the provider
-    // without calling anything like this, and so does the identity pass of `OnboardingRestoreLocalBackupManager`,
-    // which is the shortest path to prove it. Kept for now because it predates the data backup work and the claim is
-    // untested outside of reading the code.
-    private func updateFileUtility(remoteSecretManager: any RemoteSecretManagerProtocol) {
-        FileUtility.updateSharedInstance(with: FileUtilityRemoteSecretDecorator(
-            wrapped: FileUtility(),
-            remoteSecretManager: remoteSecretManager,
-            whitelist: Set(RemoteSecretFileEncryptionWhitelist.whiteList)
-        ))
     }
     
     private func showEncryptedDataDetected() {
@@ -833,8 +818,9 @@ extension OnboardingCoordinator: SplashViewControllerDelegate {
         do {
             try await SpinnerPresenter.presentSpinner(in: presenter.view) {
                 try await completeOnboarding(
-                    remoteSecretManager: setupConfiguration.remoteSecretAndKeychain.remoteSecretManager,
-                    keychainManager: setupConfiguration.remoteSecretAndKeychain.keychainManager,
+                    remoteSecretManager: setupConfiguration.remoteSecretManager,
+                    keychainManager: setupConfiguration.keychainManager,
+                    businessInjector: setupConfiguration.businessInjector,
                     setupConfiguration: setupConfiguration
                 )
             }
@@ -919,22 +905,25 @@ extension OnboardingCoordinator {
 
             // Resolve RS via the coordinator's own resolver (handles all cases incl. .needsFetch)
             let (remoteSecretManager, keychainManager) = try await resolveRemoteSecret()
-            updateFileUtility(remoteSecretManager: remoteSecretManager)
-            RemoteSecretProvider.setRemoteSecretManager(remoteSecretManager)
+            
+            // Migrations and business injector creation
+            let businessInjector = try await businessResolver.resolve(
+                with: remoteSecretManager,
+                and: keychainManager
+            )
 
-            // Phase 2: migrations + Safe restore + Safe activation
+            // Phase 2: Safe restore + Safe activation
             try await restoreSafeManager.performRestore(
                 preparation: preparation,
-                remoteSecretManager: remoteSecretManager
+                businessInjector: businessInjector
             )
             
             LogManager.removeLogger(for: .safeRestoreFileLog)
 
-            // Complete onboarding directly — safe restore already handled
-            // migrations + Safe, so no setupConfiguration needed
             try await completeOnboarding(
                 remoteSecretManager: remoteSecretManager,
-                keychainManager: keychainManager
+                keychainManager: keychainManager,
+                businessInjector: businessInjector
             )
 
             presenter.safeRestoreDidFinish()
@@ -944,20 +933,22 @@ extension OnboardingCoordinator {
         }
     }
 
-    /// Shared completion path: given RS + keychain, run post-setup steps and finish onboarding.
+    /// Shared completion path: given RS, keychain and business injector, run post-setup steps and finish onboarding.
     ///
     /// - Parameter setupConfiguration: When coming from the setup wizard, contains the user's
     ///   choices (nickname, email, phone, contacts, Safe password). When coming from safe restore,
-    ///   pass `nil` — migrations and Safe activation were already handled by `performRestore`.
+    ///   pass `nil`.
     @MainActor
     private func completeOnboarding(
         remoteSecretManager: any RemoteSecretManagerProtocol,
         keychainManager: any KeychainManagerProtocol,
+        businessInjector: any BusinessInjectorProtocol,
         setupConfiguration: SetupConfiguration? = nil
     ) async throws {
         let appContainer = try await onboardingCompleter.complete(
             remoteSecretManager: remoteSecretManager,
             keychainManager: keychainManager,
+            businessInjector: businessInjector,
             setupConfiguration: setupConfiguration,
             bootstrapMDM: bootstrapMDMSetup
         )
@@ -1102,7 +1093,8 @@ extension OnboardingCoordinator {
                 do {
                     try await completeOnboarding(
                         remoteSecretManager: completion.remoteSecretManager,
-                        keychainManager: completion.keychainManager
+                        keychainManager: completion.keychainManager,
+                        businessInjector: completion.businessInjector
                     )
                 }
                 catch {
@@ -1129,33 +1121,33 @@ extension OnboardingCoordinator {
 
     /// Sequences the two passes of a local backup restore around the remote secret.
     ///
-    /// The identity lives *inside* the backup and the remote secret cannot be resolved without it —
-    /// `resolveRemoteSecret()` ends in `syncKeychain(with:)`, which throws `noIdentityFound` when the identity is in
-    /// neither the store nor the keychain. `OnboardingRestoreLocalBackupManager` therefore hands the identity over
-    /// first, and reads the rest of the backup in once the app stands on the secret resolved for it.
+    /// The identity lives *inside* the backup and the remote secret cannot be resolved without it.
+    /// `OnboardingRestoreLocalBackupManager` therefore hands the identity over first, and reads the rest of the backup
+    /// in once the app stands on the secret resolved for it.
     ///
-    /// - Returns: What `completeOnboarding(remoteSecretManager:keychainManager:)` needs. Onboarding is deliberately
-    ///   not completed here: that would drop the user into the chats the moment the restore finishes, instead of
-    ///   leaving the restore screen up until they tap "Continue to Chats".
+    /// - Returns: What `completeOnboarding(remoteSecretManager:keychainManager:businessInjector:)` needs. Onboarding is
+    ///   deliberately not completed here: that would drop the user into the chats the moment the restore finishes,
+    ///   instead of leaving the restore screen up until they tap "Continue to Chats".
     private func performLocalBackupRestore(
         backupURL: URL,
         recoveryKey: String,
         onProgress: @escaping LocalBackupRestoreViewModel.ProgressHandler
     ) async throws -> (
         remoteSecretManager: any RemoteSecretManagerProtocol,
-        keychainManager: any KeychainManagerProtocol
+        keychainManager: any KeychainManagerProtocol,
+        businessInjector: any BusinessInjectorProtocol
     ) {
         _ = try await restoreLocalBackupManager.restoreIdentity(from: backupURL, recoveryKey: recoveryKey)
 
         let (remoteSecretManager, keychainManager) = try await resolveRemoteSecret()
+        let businessInjector = try await businessResolver.resolve(
+            with: remoteSecretManager,
+            and: keychainManager
+        )
 
-        updateFileUtility(remoteSecretManager: remoteSecretManager)
-        RemoteSecretProvider.setRemoteSecretManager(remoteSecretManager)
-
-        let progressUpdates = await restoreLocalBackupManager.restoreData(
+        let progressUpdates = restoreLocalBackupManager.restoreData(
             from: backupURL,
-            recoveryKey: recoveryKey,
-            remoteSecretManager: remoteSecretManager
+            recoveryKey: recoveryKey
         )
 
         for try await progress in progressUpdates {
@@ -1164,6 +1156,6 @@ extension OnboardingCoordinator {
             }
         }
 
-        return (remoteSecretManager, keychainManager)
+        return (remoteSecretManager, keychainManager, businessInjector)
     }
 }

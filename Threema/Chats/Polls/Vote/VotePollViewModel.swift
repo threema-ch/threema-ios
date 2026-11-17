@@ -64,6 +64,7 @@ final class VotePollViewModel: ObservableObject {
     private var pollObserver: PollObserver?
     private var preSelectedChoices: [NSManagedObjectID] = []
     private var isVoteAllowed = true
+    private var didVote = false
     private var didLoad = false
     
     private lazy var entityManager = BusinessInjector.ui.entityManager
@@ -130,6 +131,7 @@ final class VotePollViewModel: ObservableObject {
         }
         
         updateVoteAllowed(for: entity)
+        didVote = entity.localIdentityDidVote(myIdentity: identityStore.identity)
         showCloseButton = entity.canEdit(myIdentity: identityStore.identity)
         
         poll = manager.getPoll(for: pollID)
@@ -169,7 +171,8 @@ final class VotePollViewModel: ObservableObject {
     }
     
     private func updateVoteEnabled() {
-        isVoteEnabled = isVoteAllowed && didChangeSelection
+        // An empty selection is a valid vote (abstention), so a first vote needs no selection change
+        isVoteEnabled = isVoteAllowed && (didChangeSelection || !didVote)
     }
     
     private func updateVoteAllowed(for entity: BallotEntity) {

@@ -376,4 +376,72 @@ final class EntityObserverTests: XCTestCase {
 
         XCTAssertEqual(groupNameChanged, "GRP2")
     }
+
+    func testCancelSubscriptionAfterPermanentObjectIDReplacement() throws {
+        let entityManager = testDatabase.entityManager
+        let conversation = entityManager.performAndWait {
+            entityManager.entityCreator.conversationEntity()
+        }
+        XCTAssertTrue(conversation.objectID.isTemporaryID)
+
+        let expect = expectation(description: "no conversation change after cancel")
+        expect.isInverted = true
+
+        let subscriptionToken = EntityObserver.shared.subscribe(
+            managedObject: conversation,
+            for: [.updated]
+        ) { _, _ in
+            expect.fulfill()
+        }
+
+        entityManager.performAndWaitSave {
+            conversation.groupName = "GRP1"
+        }
+        XCTAssertFalse(conversation.objectID.isTemporaryID)
+
+        subscriptionToken.cancel()
+
+        entityManager.performAndWaitSave {
+            conversation.groupName = "GRP2"
+        }
+
+        wait(for: [expect], timeout: 1)
+    }
+
+    func testBusinessAbstractionDeleteManagedObjectAfterPermanentObjectIDReplacement() throws {
+        let entityManager = testDatabase.entityManager
+        let conversation = entityManager.performAndWait {
+            entityManager.entityCreator.conversationEntity()
+        }
+        XCTAssertTrue(conversation.objectID.isTemporaryID)
+
+        var expectedDeletedManagedObject: NSManagedObject?
+        var expectedReason: EntityObserver.EntityChangedReason?
+
+        let expect = expectation(description: "conversation delete")
+
+        let subscriptionToken = EntityObserver.shared.subscribe(
+            managedObject: conversation,
+            for: [.deleted]
+        ) { managedObject, reason in
+            expectedDeletedManagedObject = managedObject
+            expectedReason = reason
+
+            expect.fulfill()
+        }
+
+        entityManager.performAndWaitSave {
+            conversation.groupName = "GRP1"
+        }
+        XCTAssertFalse(conversation.objectID.isTemporaryID)
+
+        entityManager.performAndWaitSave {
+            entityManager.entityDestroyer.delete(conversation: conversation)
+        }
+
+        wait(for: [expect], timeout: 1)
+
+        XCTAssertEqual(expectedDeletedManagedObject?.objectID, conversation.objectID)
+        XCTAssertEqual(expectedReason, .deleted)
+    }
 }

@@ -11,7 +11,7 @@ final class HeaderView: UIView {
     private var viewButton: UIButton
     private var stackView: UIStackView
     
-    init(for mediaPreviewItems: [MediaPreviewItem], frame: CGRect, tapAction: (() -> Void?)? = nil) {
+    init(for mediaPreviewItems: [MediaPreviewItem], frame: CGRect, landscape: Bool, tapAction: (() -> Void?)? = nil) {
         self.titleLabel = UILabel()
         self.viewButton = UIButton(frame: frame)
         self.stackView = UIStackView(frame: frame)
@@ -21,7 +21,7 @@ final class HeaderView: UIView {
         self.tapAction = tapAction
         configureView(titleViewSize: frame)
         updateTitleLabel(mediaPreviewItems: mediaPreviewItems)
-        rotate(landscape: UIDevice.current.orientation.isLandscape, newWidth: frame.width)
+        rotate(landscape: landscape, newWidth: frame.width)
         
         stackView.centerXAnchor.constraint(equalTo: centerXAnchor).isActive = true
         stackView.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
@@ -57,7 +57,11 @@ final class HeaderView: UIView {
         )
     }
     
-    @available(*, deprecated, message: "Use init(for mediaPreviewItems : [MediaPreviewItem], frame : CGRect)")
+    @available(
+        *,
+        deprecated,
+        message: "Use init(for mediaPreviewItems : [MediaPreviewItem], frame : CGRect, landscape : Bool)"
+    )
     required init?(coder: NSCoder) {
         DDLogError("Use init(for: Conversation)")
         fatalError("init(coder:) has not been implemented")

@@ -14,4 +14,7 @@ IB_DESIGNABLE
 
 - (void)toggle;
 
+/// Moves the collapsed view to `origin`; while expanded, lays out the expanded view for the moved collapsed frame
+- (void)moveCollapsedFrameToOrigin:(CGPoint)origin;
+
 @end

@@ -508,6 +508,29 @@ public final class DateFormatter: NSObject {
         }
     }
     
+    /// Localized month, with the year if it is not this calendar year
+    ///
+    /// Examples in multiple locales:
+    /// - February, December 2019 (en_US)
+    /// - Februar, Dezember 2019 (de_DE)
+    /// - février, décembre 2019 (fr_CH)
+    ///
+    /// - Parameter date: Date to format
+    /// - Returns: Localized month and maybe year
+    public static func relativeMonth(for date: Date) -> String {
+        if isDateInThisCalendarYear(date) {
+            if monthDateFormatter == nil {
+                monthDateFormatter = dateFormatter(for: "MMMM")
+            }
+            return monthDateFormatter!.string(from: date)
+        }
+        
+        if monthAndYearDateFormatter == nil {
+            monthAndYearDateFormatter = dateFormatter(for: "MMMMyyyy")
+        }
+        return monthAndYearDateFormatter!.string(from: date)
+    }
+    
     // MARK: - Accessibility formats
     
     /// Localized date and time for accessibility
@@ -730,6 +753,8 @@ public final class DateFormatter: NSObject {
         mediumWeekdayDayMonthAndShortTimeDateFormatter = nil
         longWeekdayDayMonthAndYearDateFormatter = nil
         mediumWeekdayDayMonthYearAndTimeDateFormatter = nil
+        monthDateFormatter = nil
+        monthAndYearDateFormatter = nil
         
         accessibilityDateTimeDateFormatter = nil
         accessibilityRelativeDateTimeDateFormatter = nil
@@ -763,6 +788,8 @@ public final class DateFormatter: NSObject {
     private static var mediumWeekdayDayMonthAndShortTimeDateFormatter: Foundation.DateFormatter?
     private static var longWeekdayDayMonthAndYearDateFormatter: Foundation.DateFormatter?
     private static var mediumWeekdayDayMonthYearAndTimeDateFormatter: Foundation.DateFormatter?
+    private static var monthDateFormatter: Foundation.DateFormatter?
+    private static var monthAndYearDateFormatter: Foundation.DateFormatter?
     
     private static var accessibilityDateTimeDateFormatter: Foundation.DateFormatter?
     private static var accessibilityRelativeDateTimeDateFormatter: Foundation.DateFormatter?

@@ -215,7 +215,7 @@ final class GroupProvider: libthreemaSwift.GroupProvider {
                 integerLiteral: GroupEntity.GroupState(libthreemaUserState: group.userState).rawValue
             )
         )
-        let conversationEntity = self.entityManager.entityCreator.conversationEntity()
+        let conversationEntity = self.entityManager.entityCreator.conversationEntity(setLastUpdate: false)
         conversationEntity.groupID = groupEntity.groupID
         conversationEntity.groupMyIdentity = self.userIdentity.rawValue
 
@@ -233,9 +233,8 @@ final class GroupProvider: libthreemaSwift.GroupProvider {
         }
 
         conversationEntity.groupName = group.name
-        if let lastUpdateAt = group.lastUpdateAt {
-            conversationEntity.lastUpdate = lastUpdateAt.date
-        }
+        // No last update means there is no conversation with the group yet, so it stays out of the conversation list
+        conversationEntity.lastUpdate = group.lastUpdateAt?.date
 
         conversationEntity.category = ConversationEntity.Category(group.conversationCategory)?.rawValue as? NSNumber ?? NSNumber(
             integerLiteral: ConversationEntity.Category.default.rawValue
@@ -249,6 +248,20 @@ final class GroupProvider: libthreemaSwift.GroupProvider {
             conversationEntity.groupImage = try self.imageDataEntity(for: imageData)
             conversationEntity.groupImageSetDate = .now
         }
+
+        // TODO: (IOS-6087) Backup Compatibility: Migrate push setting into the DB
+        let groupIdentity = GroupIdentity(libthreemaGroupIdentity: group.identity)
+        let semaphore = DispatchSemaphore(value: 0)
+
+        Task {
+            var pushSetting = self.pushSettingManager.find(forGroup: groupIdentity)
+            pushSetting.update(with: group)
+            await self.pushSettingManager.save(pushSetting: pushSetting, sync: false)
+
+            semaphore.signal()
+        }
+
+        semaphore.wait()
     }
 
     private func imageDataEntity(for imageData: Data) throws -> ImageDataEntity {

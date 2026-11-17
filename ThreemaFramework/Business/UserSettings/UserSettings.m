@@ -16,6 +16,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 
 NSString * const kFeatureDistributionListsEnabled = @"FEATURE_DISTRIBUTION_LISTS_ENABLED";
 NSString * const kFeatureBackups2Enabled = @"FEATURE_BACKUPS_2_ENABLED";
+NSString * const kFeatureNewMediaBrowserEnabled = @"FEATURE_NEW_MEDIA_BROWSER_ENABLED";
 NSString * const kLocalBackupDebugRecoveryKeyEnabled = @"FEATURE_BACKUPS_2_DEBUG_RECOVERY_KEY_ENABLED";
 NSString * const kPreferenceInterfaceStyleKey = @"PREFERENCE_INTERFACE_STYLE";
 NSString * const kPreferenceAllowScreenshotKey = @"AllowScreenshot";
@@ -134,9 +135,12 @@ typedef NS_ENUM(NSInteger, ThreemaAudioMessagePlaySpeed) {
 @synthesize ipcSecretPrefix;
 @synthesize distributionListsEnabled;
 @synthesize backups2Enabled;
+@synthesize newMediaBrowserEnabled;
 @synthesize localBackupDebugRecoveryKeyEnabled;
 
 @synthesize didShowIdentityThisDeviceOnly;
+@synthesize reactionNotificationsOneToOneEnabled;
+@synthesize reactionNotificationsGroupEnabled;
 
 /// Deprecated Keys, please add keys if they are removed:
 /// - `featureFlagEnableNoMIMETypeFileMessagesFilter`
@@ -271,7 +275,10 @@ static UserSettings *instance;
                                         [NSNumber numberWithUnsignedInteger:[TargetManagerObjC isBusinessApp] ? WallpaperTypeEmpty : WallpaperTypeThreema], @"WallpaperType",
                                         [NSNumber numberWithBool:NO], kFeatureDistributionListsEnabled,
                                         [NSNumber numberWithBool:NO], kFeatureBackups2Enabled,
+                                        [NSNumber numberWithBool:NO], kFeatureNewMediaBrowserEnabled,
                                         [NSNumber numberWithBool:NO], kLocalBackupDebugRecoveryKeyEnabled,
+                                        [NSNumber numberWithBool:YES], @"ReactionNotificationsOneToOneEnabled",
+                                        [NSNumber numberWithBool:YES], @"ReactionNotificationsGroupEnabled",
                                         [NSNumber numberWithInteger: [TargetManagerObjC isBusinessApp] ? UserInterfacePreferenceDark : UserInterfacePreferenceSystem], kPreferenceInterfaceStyleKey, // Default Dark mode for Business App
                                      nil];
                                      //Keys `EvaluatedPolicyDomainStateApp` and `EvaluatedPolicyDomainStateShareExtension` are intentionally not set, since we need them to be `nil` the first time.
@@ -339,7 +346,8 @@ static UserSettings *instance;
     sortOrderFirstName = [defaults boolForKey:@"SortOrderFirstName"];
     displayOrderFirstName = [defaults boolForKey:@"DisplayOrderFirstName"];
 
-    validationLogging = [defaults boolForKey:@"ValidationLogging"];
+    // Debug logging is always on in sandbox builds, regardless of the stored value
+    validationLogging = TargetManagerObjC.isSandbox || [defaults boolForKey:@"ValidationLogging"];
     enableIPv6 = [defaults boolForKey:@"EnableIPv6"];
     companyDirectory = [defaults boolForKey:@"CompanyDirectory"];
 
@@ -434,11 +442,14 @@ static UserSettings *instance;
     }
 
     localBackupDebugRecoveryKeyEnabled = [defaults boolForKey:kLocalBackupDebugRecoveryKeyEnabled];
+    newMediaBrowserEnabled = [defaults boolForKey:kFeatureNewMediaBrowserEnabled];
 
     ipcCommunicationEnabled = [defaults boolForKey:@"IPCEnabled"];
 
     ipcSecretPrefix = [defaults objectForKey:@"IPCSecretPrefix"];
     didShowIdentityThisDeviceOnly = [defaults boolForKey:@"DidShowIdentityThisDeviceOnly"];
+    reactionNotificationsOneToOneEnabled = [defaults boolForKey: @"ReactionNotificationsOneToOneEnabled"];
+    reactionNotificationsGroupEnabled = [defaults boolForKey: @"ReactionNotificationsGroupEnabled"];
 }
 
 - (void)setAppMigratedToVersion:(NSInteger)newAppMigratedToVersion {
@@ -663,6 +674,10 @@ static UserSettings *instance;
 }
 
 - (void)setValidationLogging:(BOOL)newValidationLogging {
+    if (TargetManagerObjC.isSandbox) {
+        validationLogging = YES;
+        return;
+    }
     validationLogging = newValidationLogging;
     [defaults setBool:validationLogging forKey:@"ValidationLogging"];
     [defaults synchronize];
@@ -966,6 +981,12 @@ static UserSettings *instance;
     [defaults synchronize];
 }
 
+- (void)setNewMediaBrowserEnabled:(BOOL)newValue {
+    newMediaBrowserEnabled = newValue;
+    [defaults setBool:newMediaBrowserEnabled forKey:kFeatureNewMediaBrowserEnabled];
+    [defaults synchronize];
+}
+
 - (void)setLocalBackupDebugRecoveryKeyEnabled:(BOOL)newValue {
     localBackupDebugRecoveryKeyEnabled = newValue;
     [defaults setBool:localBackupDebugRecoveryKeyEnabled forKey:kLocalBackupDebugRecoveryKeyEnabled];
@@ -987,6 +1008,18 @@ static UserSettings *instance;
 - (void)setDidShowIdentityThisDeviceOnly:(BOOL)newDidShowIdentityThisDeviceOnly {
     didShowIdentityThisDeviceOnly = newDidShowIdentityThisDeviceOnly;
     [defaults setBool:didShowIdentityThisDeviceOnly forKey:@"DidShowIdentityThisDeviceOnly"];
+    [defaults synchronize];
+}
+
+- (void)setReactionNotificationsOneToOneEnabled:(BOOL)newReactionNotificationsOneToOneEnabled {
+    reactionNotificationsOneToOneEnabled = newReactionNotificationsOneToOneEnabled;
+    [defaults setBool:reactionNotificationsOneToOneEnabled forKey:@"ReactionNotificationsOneToOneEnabled"];
+    [defaults synchronize];
+}
+
+- (void)setReactionNotificationsGroupEnabled:(BOOL)newReactionNotificationsGroupEnabled {
+    reactionNotificationsGroupEnabled = newReactionNotificationsGroupEnabled;
+    [defaults setBool:reactionNotificationsGroupEnabled forKey:@"ReactionNotificationsGroupEnabled"];
     [defaults synchronize];
 }
 

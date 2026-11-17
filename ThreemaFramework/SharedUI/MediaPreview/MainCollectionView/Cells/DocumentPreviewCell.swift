@@ -33,7 +33,26 @@ final class DocumentPreviewCell: ScreenWidthSizedCell, QLPreviewControllerDelega
     private let lineWidth: CGFloat = 4.0
     private let cornerRadius: CGFloat = 6.0
     
+    /// Thumbnail of the shown large preview, nil while it is not shown
+    private var largePreviewThumbnail: UIImage?
+    
+    override func awakeFromNib() {
+        super.awakeFromNib()
+        
+        registerForTraitChanges([
+            UITraitVerticalSizeClass.self,
+            UITraitHorizontalSizeClass.self
+        ]) { (self: DocumentPreviewCell, _) in
+            guard self.largePreviewThumbnail != nil, let item = self.item else {
+                return
+            }
+            // Generates the thumbnail and its border for the new display scale
+            self.loadDocument(item)
+        }
+    }
+    
     override func prepareForReuse() {
+        largePreviewThumbnail = nil
         showLoadingScreen()
     }
     
@@ -72,7 +91,7 @@ final class DocumentPreviewCell: ScreenWidthSizedCell, QLPreviewControllerDelega
             height: sourceSize.height + 2 * lineWidth
         )
         
-        UIGraphicsBeginImageContextWithOptions(finalSize, false, UIScreen.main.scale)
+        UIGraphicsBeginImageContextWithOptions(finalSize, false, traitCollection.displayScale)
         guard let context = UIGraphicsGetCurrentContext() else {
             return source
         }
@@ -128,11 +147,12 @@ final class DocumentPreviewCell: ScreenWidthSizedCell, QLPreviewControllerDelega
     
     func loadDocument(_ newItem: DocumentPreviewItem) {
         item = newItem
-        _ = item?.generateLargeThumbnail(with: bounds.size).done { [self] thumbnail in
+        _ = item?.generateLargeThumbnail(with: bounds.size, traitCollection: traitCollection).done { [self] thumbnail in
             loadingView.isHidden = true
             previewContentView.isHidden = false
             smallPreviewContentView.isHidden = true
             
+            largePreviewThumbnail = thumbnail
             largePreviewImageView.image = imageWithBorder(from: thumbnail)
             largePreviewImageView.isHidden = false
             
